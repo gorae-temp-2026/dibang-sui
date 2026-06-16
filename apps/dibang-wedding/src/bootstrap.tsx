@@ -3,6 +3,9 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { DAppKitProvider } from '@mysten/dapp-kit-react'
+import { dAppKit } from './lib/dapp-kit'
+import { ZkLoginProvider } from './providers/ZkLoginProvider'
 import { AuthProvider } from './providers/AuthProvider'
 // CSS는 SPA entry 관례에 따라 top-level import 유지 (FOUC 방지).
 import './App.css'
@@ -25,11 +28,15 @@ export function mount(): void {
   createRoot(rootEl).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </BrowserRouter>
+        <DAppKitProvider dAppKit={dAppKit}>
+          <ZkLoginProvider>
+            <BrowserRouter>
+              <AuthProvider>
+                <App />
+              </AuthProvider>
+            </BrowserRouter>
+          </ZkLoginProvider>
+        </DAppKitProvider>
       </QueryClientProvider>
     </StrictMode>,
   )

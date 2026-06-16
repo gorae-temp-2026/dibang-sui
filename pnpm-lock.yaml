@@ -38,9 +38,18 @@ importers:
       '@gorae/invitation-ui':
         specifier: workspace:*
         version: link:../../packages/invitation-ui
+      '@gorae/sui-sdk':
+        specifier: workspace:^
+        version: link:../../packages/sui-sdk
       '@gorae/web-utils':
         specifier: workspace:*
         version: link:../../packages/web-utils
+      '@mysten/dapp-kit-react':
+        specifier: ^2.1.2
+        version: 2.1.2(@mysten/sui@2.18.0(typescript@6.0.3))(@types/react@19.2.14)(react@19.2.5)(typescript@6.0.3)
+      '@mysten/sui':
+        specifier: ^2.0.0
+        version: 2.18.0(typescript@6.0.3)
       '@supabase/supabase-js':
         specifier: ^2.105.4
         version: 2.105.4
