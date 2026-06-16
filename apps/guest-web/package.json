@@ -18,8 +18,11 @@
   "dependencies": {
     "@gorae/contracts": "workspace:*",
     "@gorae/invitation-ui": "workspace:*",
+    "@gorae/sui-sdk": "workspace:^",
     "@gorae/web-utils": "workspace:*",
     "@hey-api/client-fetch": "^0.13.1",
+    "@mysten/dapp-kit-react": "^2.1.2",
+    "@mysten/sui": "^2.0.0",
     "@supabase/supabase-js": "^2.105.4",
     "@t3-oss/env-core": "^0.13.11",
     "@tailwindcss/vite": "^4.2.4",

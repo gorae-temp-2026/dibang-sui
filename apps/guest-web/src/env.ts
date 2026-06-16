@@ -23,6 +23,16 @@ export const env = createEnv({
     // Go API base URL. @gorae/contracts 런타임(runtime/hey-api.ts)이 직접 읽는다.
     // 미설정 시 codegen 기본값 http://localhost:8080. 멀티포트: LOCAL→8080 / DEV→8081 / PROD→8082.
     VITE_API_BASE_URL: z.string().url().optional(),
+
+    // Sui 온체인 (선택 — 미설정 시 @gorae/sui-sdk의 testnet 기본값 사용)
+    VITE_SUI_NETWORK: z.enum(['testnet', 'mainnet', 'devnet']).optional(),
+    VITE_SUI_PACKAGE_ID: z.string().optional(),
+    VITE_SUI_IUM_REGISTRY_ID: z.string().optional(),
+    // zkLogin / sponsor (선택 — 미설정 시 해당 기능 비활성)
+    VITE_GOOGLE_CLIENT_ID: z.string().optional(),
+    VITE_SALT_SERVER_URL: z.string().url().optional(),
+    VITE_ZK_PROVER_URL: z.string().url().optional(),
+    VITE_SPONSOR_URL: z.string().url().optional(),
   },
   runtimeEnv: import.meta.env,
   emptyStringAsUndefined: true,
