@@ -1,0 +1,3 @@
+ALTER TABLE v3_moi_visits RENAME TO v3_lounge_entries;
+ALTER INDEX idx_v3_moi_visits_moi_id RENAME TO idx_v3_lounge_entries_moi_id;
+ALTER INDEX idx_v3_moi_visits_place_id RENAME TO idx_v3_lounge_entries_place_id;

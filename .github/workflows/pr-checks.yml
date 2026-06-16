@@ -1,0 +1,231 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [dev, main]
+
+# 동일 PR의 새 push가 들어오면 기존 진행분 취소(Actions 분 절약).
+concurrency:
+  group: pr-checks-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # 1) Backend build + test (-race)
+  # ─────────────────────────────────────────────────────────────
+  go-build-test:
+    name: Backend (go build + go test -race)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.4'
+          cache: true
+          cache-dependency-path: apps/api/go.sum
+
+      - name: go build
+        run: go build ./...
+
+      - name: go test -race
+        run: go test ./... -race -count=1
+
+  # ─────────────────────────────────────────────────────────────
+  # 2) Frontend build (dibang-wedding, guest-web)
+  # ─────────────────────────────────────────────────────────────
+  frontend-build:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build dibang-wedding
+        run: pnpm --filter dibang-wedding build
+
+      - name: Build guest-web
+        run: pnpm --filter guest-web build
+
+  # ─────────────────────────────────────────────────────────────
+  # 3) Codegen integrity (api-contract.yaml 변경 시 generated 파일
+  #    동기화 누락을 PR에서 차단)
+  # ─────────────────────────────────────────────────────────────
+  codegen-integrity:
+    name: Codegen integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.4'
+          cache: true
+          cache-dependency-path: apps/api/go.sum
+
+      - name: Install oapi-codegen
+        run: go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+
+      - name: Install sqlc
+        # 로컬 sqlc 버전과 핀(헤더 주석 한 줄 차이로 codegen diff 발생 방지).
+        # 로컬 업그레이드 시 이 핀도 같이 올린다.
+        run: go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Run codegen (TS sdk + Go strict + sqlc)
+        run: |
+          pnpm --filter '@gorae/contracts' generate
+          (cd apps/api && sqlc generate)
+
+      - name: Verify no diff
+        run: |
+          if ! git diff --exit-code -- \
+              apps/api/server/server.gen.go \
+              apps/api/server/models.gen.go \
+              apps/api/db/*.sql.go \
+              packages/contracts/src/ ; then
+            echo "::error::codegen 산출물이 동기화되지 않았습니다. 로컬에서 'pnpm --filter @gorae/contracts generate' 와 'sqlc generate' 실행 후 결과를 커밋하세요."
+            exit 1
+          fi
+
+  # ─────────────────────────────────────────────────────────────
+  # 4) Go lint (golangci-lint, minimal 룰셋 = .golangci.yml)
+  # ─────────────────────────────────────────────────────────────
+  go-lint:
+    name: Backend lint (golangci-lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.4'
+          cache: true
+          cache-dependency-path: apps/api/go.sum
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          # install-mode: goinstall — 미리 빌드된 바이너리 대신 setup-go의 Go 1.25로
+          # source에서 빌드. golangci-lint 사전 빌드 바이너리는 Go 1.24까지라
+          # 'go 1.25 코드 거부' 호환 문제를 회피하기 위함.
+          install-mode: goinstall
+          version: latest
+          working-directory: apps/api
+          args: --timeout=5m
+
+  # ─────────────────────────────────────────────────────────────
+  # 5) Frontend lint (eslint, 각 앱 자체 config)
+  # ─────────────────────────────────────────────────────────────
+  frontend-lint:
+    name: Frontend lint (eslint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    # PR 시스템 첫 도입 시점엔 기존 코드의 누적 eslint 결함(16 errors + 5 warnings)이
+    # 누락된 상태라 차단으로 가면 회귀. continue-on-error로 일단 가드를 약화하고,
+    # 별도 후속 PR(feat/eslint-cleanup)에서 errors 정리 후 false로 되돌린다.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint (dibang-wedding)
+        run: pnpm --filter dibang-wedding exec eslint . --max-warnings=0
+
+      - name: ESLint (guest-web)
+        run: pnpm --filter guest-web exec eslint . --max-warnings=0
+
+      - name: ESLint (admin)
+        run: pnpm --filter admin exec eslint . --max-warnings=0
+
+  # ─────────────────────────────────────────────────────────────
+  # 6) Frontend lint — env 직접 참조 차단 (env-rule only, 차단 활성)
+  #
+  # 누적 ESLint 결함 때문에 frontend-lint 가 continue-on-error 인 동안에도,
+  # 새로 도입된 env 직접 참조 금지 룰(no-restricted-syntax) 만은 무조건 차단한다.
+  # eslint.config.env-rule.mjs 가 단일 룰만 적용한 별도 config — flat config + --no-config-lookup 로
+  # 각 앱의 자체 config 와 격리.
+  # 컨벤션: _code_convention/ENV_MANAGEMENT.md
+  # ─────────────────────────────────────────────────────────────
+  frontend-lint-env-rule:
+    name: Frontend lint — env 직접 참조 차단 (env-rule)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint (env-rule only)
+        # warnings 는 --quiet 으로 출력 자체 억제, errors(env 직접 참조) 만 차단.
+        # eslint.config.env-rule.mjs 의 noInlineConfig 가 코드의 eslint-disable 주석을 무력화하면서
+        # "no effect" warning 을 만드는데, 그건 차단 대상이 아니다.
+        run: |
+          pnpm exec eslint \
+            apps/guest-web/src \
+            apps/dibang-wedding/src \
+            apps/admin/src \
+            --config eslint.config.env-rule.mjs \
+            --no-config-lookup \
+            --quiet

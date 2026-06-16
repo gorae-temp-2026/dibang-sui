@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+<!-- 신랑 #3 · 기쁜 점프 (squash & stretch + anticipation) - scope prefix: gj -->
+<style>
+  .gj-whale  { transform-box: view-box; transform-origin: 200px 240px; animation: gj-jump 1.6s cubic-bezier(0.5,0,0.5,1) infinite; }
+  .gj-body   { transform-box: view-box; transform-origin: 200px 240px; animation: gj-squash 1.6s cubic-bezier(0.5,0,0.5,1) infinite; }
+  .gj-hat    { transform-box: view-box; transform-origin: 200px 170px; animation: gj-hat 1.6s cubic-bezier(0.5,0,0.5,1) infinite; }
+  .gj-bowtie { transform-box: view-box; transform-origin: 225px 295px; animation: gj-bow 1.6s ease-in-out infinite; }
+
+  @keyframes gj-jump {
+    0%,100% { transform: translateY(0); }
+    15%     { transform: translateY(6px); }
+    50%     { transform: translateY(-38px); }
+    85%     { transform: translateY(6px); }
+  }
+  @keyframes gj-squash {
+    0%,100% { transform: scale(1,1); }
+    15%     { transform: scale(1.15,0.85); }
+    40%     { transform: scale(0.92,1.12); }
+    60%     { transform: scale(0.95,1.05); }
+    85%     { transform: scale(1.15,0.85); }
+  }
+  @keyframes gj-hat {
+    0%,100% { transform: translateY(0) rotate(0); }
+    15%     { transform: translateY(3px) rotate(-2deg); }
+    45%     { transform: translateY(-6px) rotate(6deg); }
+    60%     { transform: translateY(-10px) rotate(-3deg); }
+    85%     { transform: translateY(3px) rotate(2deg); }
+  }
+  @keyframes gj-bow { 0%,100%{transform:rotate(0)} 50%{transform:rotate(-6deg)} }
+</style>
+<defs>
+  <radialGradient id="gj-bg" cx="50%" cy="45%" r="70%">
+    <stop offset="0%" stop-color="#FFF7E0"/><stop offset="100%" stop-color="#FFE0D0"/>
+  </radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#gj-bg)"/>
+<g class="gj-whale"><g class="gj-body">
+  <path d="M 100 240 Q 55 202 25 170 Q 48 214 82 240 Q 48 266 25 310 Q 55 278 100 240 Z" fill="#3B5F8A"/>
+  <ellipse cx="200" cy="240" rx="118" ry="82" fill="#4A7BB0"/>
+  <ellipse cx="205" cy="272" rx="92" ry="40" fill="#E8F0F8"/>
+  <path d="M 175 310 Q 150 345 138 350 Q 172 335 192 315 Z" fill="#3B5F8A"/>
+  <circle cx="268" cy="220" r="13" fill="white"/>
+  <circle cx="271" cy="223" r="9" fill="#1A1A2E"/>
+  <circle cx="274" cy="218" r="3.5" fill="white"/>
+  <path d="M 258 202 Q 270 198 282 204" stroke="#1A1A2E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="258" cy="252" rx="14" ry="6" fill="#FFB6C1" opacity="0.7"/>
+  <path d="M 286 250 Q 296 265 310 255" stroke="#1A1A2E" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <g class="gj-hat">
+    <ellipse cx="200" cy="172" rx="58" ry="8" fill="#1A1A1A"/>
+    <rect x="170" y="115" width="60" height="55" fill="#1A1A1A"/>
+    <ellipse cx="200" cy="115" rx="30" ry="6" fill="#2C2C2C"/>
+    <rect x="170" y="152" width="60" height="7" fill="#A01028"/>
+  </g>
+  <g class="gj-bowtie">
+    <path d="M 195 295 L 219 280 L 219 310 Z" fill="#C41E3A"/>
+    <path d="M 255 295 L 231 280 L 231 310 Z" fill="#C41E3A"/>
+    <rect x="218" y="286" width="14" height="18" fill="#8B0000" rx="2"/>
+  </g>
+</g></g>
+</svg>

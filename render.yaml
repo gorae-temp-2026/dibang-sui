@@ -1,0 +1,134 @@
+# render.yaml — digital-guestbook-v3 Render Blueprint
+# dev: dev 브랜치, prod: main 브랜치
+# sync: false 항목은 Render 대시보드에서 값 설정 필요
+
+services:
+  # ── DEV (dev 브랜치) ───────────────────────────────────────
+
+  # API Dev (Go)
+  - type: web
+    name: v3-api-dev
+    runtime: go
+    region: singapore
+    plan: free
+    branch: dev
+    rootDir: apps/api
+    buildCommand: go build -o api-server .
+    startCommand: ./api-server
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # 청사진(faea79e) 2분리 — 미설정 시 v3-uploads-public/private fallback
+      - key: UPLOAD_BUCKET_PUBLIC
+        sync: false
+      - key: UPLOAD_BUCKET_PRIVATE
+        sync: false
+
+  # dibang-wedding Dev (Static)
+  - type: web
+    name: v3-dibang-wedding-dev
+    runtime: static
+    branch: dev
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter dibang-wedding build
+    staticPublishPath: apps/dibang-wedding/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_SITE_URL
+        sync: false
+      - key: VITE_GUEST_WEB_URL
+        sync: false
+      - key: VITE_API_BASE_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # guest-web Dev (Static)
+  - type: web
+    name: v3-guest-web-dev
+    runtime: static
+    branch: dev
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter guest-web build
+    staticPublishPath: apps/guest-web/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # ── PROD (main 브랜치) ─────────────────────────────────────
+
+  # API Prod (Go)
+  - type: web
+    name: v3-api
+    runtime: go
+    region: singapore
+    plan: free
+    branch: main
+    rootDir: apps/api
+    buildCommand: go build -o api-server .
+    startCommand: ./api-server
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # 청사진(faea79e) 2분리 — prod 적용 전 별도 운영 작업으로 두 버킷 생성·RLS 정책·데이터 이관 필요
+      - key: UPLOAD_BUCKET_PUBLIC
+        sync: false
+      - key: UPLOAD_BUCKET_PRIVATE
+        sync: false
+
+  # dibang-wedding Prod (Static)
+  - type: web
+    name: v3-dibang-wedding
+    runtime: static
+    branch: main
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter dibang-wedding build
+    staticPublishPath: apps/dibang-wedding/dist
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_SITE_URL
+        sync: false
+      - key: VITE_GUEST_WEB_URL
+        sync: false
+      - key: VITE_API_BASE_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # guest-web Prod (Static)
+  - type: web
+    name: v3-guest-web
+    runtime: static
+    branch: main
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter guest-web build
+    staticPublishPath: apps/guest-web/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

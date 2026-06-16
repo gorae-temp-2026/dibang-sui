@@ -1,0 +1,320 @@
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router';
+import { useMachine } from '@xstate/react';
+import type { FeedItem } from '@gorae/contracts';
+import { loungeV2Machine } from '../machines/loungeV2.machine';
+import { buildDisplayUrl, buildSharePhotoUploadPath } from '../lib/external-urls';
+import { useGetLounge } from '../queries/lounge-feed/useGetLounge';
+import { useGetWedding } from '../queries/lounge-feed/useGetWedding';
+import { useGetFeed } from '../queries/lounge-feed/useGetFeed';
+import { useGetAnnouncements } from '../queries/lounge-feed/useGetAnnouncements';
+import { useCreateAnnouncement } from '../queries/lounge-feed/useCreateAnnouncement';
+import { useDeleteAnnouncement } from '../queries/lounge-feed/useDeleteAnnouncement';
+import { useEnsureLoungeCheckIn } from '../queries/lounge-feed/useEnsureLoungeCheckIn';
+import { useMemoriesRealtime } from '../queries/lounge-v2/useMemoriesRealtime';
+import { useRecordGuestbookMessageView } from '../queries/lounge-v2/useRecordGuestbookMessageView';
+import { useGetMe } from '../queries/shared/useGetMe';
+import { useWarmth } from '../hooks/lounge-v2/useWarmth';
+import { useStoryGroups } from '../hooks/lounge-v2/useStoryGroups';
+import { useComposeMemory } from '../hooks/lounge-v2/useComposeMemory';
+import { TopBarV2 } from '../components/lounge-v2/TopBarV2';
+import { LoungeHeroCard } from '../components/lounge-v2/LoungeHeroCard';
+import { AnnounceMarquee } from '../components/lounge-v2/AnnounceMarquee';
+import { StoryStrip } from '../components/lounge-v2/StoryStrip';
+import { FeedCardModal } from '../components/lounge-v2/FeedCardModal';
+import { LiveCelebration } from '../components/lounge-v2/LiveCelebration';
+import { GatheringLog } from '../components/lounge-v2/GatheringLog';
+import { LoungeFab } from '../components/lounge-v2/LoungeFab';
+import { ComposeModal } from '../components/lounge-v2/ComposeModal';
+import { AnnouncementForm } from '../components/lounge-feed/AnnouncementForm';
+
+// 웨딩 라운지 V2 — 섹션 합성 페이지 (/lounge/:loungeId/v2).
+// V1 LoungeFeedPage는 무수정. 같은 라운지 데이터를 V2 정보구조로 재배치.
+
+export function LoungeV2Page() {
+  const { loungeId } = useParams<{ loungeId: string }>();
+  const navigate = useNavigate();
+  const [state, send] = useMachine(loungeV2Machine);
+  const touchStartY = useRef(0);
+  const pullDistance = useRef(0);
+  const observerRef = useRef<HTMLDivElement>(null);
+
+  const [openStoryKey, setOpenStoryKey] = useState<string | null>(null);
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [announceOpen, setAnnounceOpen] = useState(false);
+
+  // 입장 시 LoungeCheckIn 자동 생성 (V1 패턴, 1회만)
+  useEnsureLoungeCheckIn(loungeId);
+
+  const loungeQuery = useGetLounge(loungeId ?? '');
+  const weddingId = loungeQuery.data?.wedding_id;
+  const weddingQuery = useGetWedding(weddingId);
+  const feedQuery = useGetFeed(loungeId ?? '');
+  const announcementsQuery = useGetAnnouncements(loungeId ?? '');
+  const createAnnouncement = useCreateAnnouncement(loungeId ?? '');
+  const deleteAnnouncement = useDeleteAnnouncement(loungeId ?? '');
+  const meQuery = useGetMe();
+
+  // Memory Realtime 구독 (SCENARIOS.md S-06: 즉시 반영)
+  useMemoriesRealtime(loungeId ?? '');
+
+  // 컴포즈(작성) + view 기록 — 자식 컴포넌트가 직접 호출하던 데이터 책임을 컨테이너로 끌어올림.
+  const compose = useComposeMemory(loungeId ?? '');
+  const recordView = useRecordGuestbookMessageView();
+
+  // 호스트 판별 — 공지 FAB 노출 여부 결정용 (호스트에게만 노출).
+  const myId = meQuery.data?.id;
+  const wedding = weddingQuery.data;
+
+  // 공지 등록자 측(신랑측/신부측) 매핑 — Announcement.host_id → 측 (#54)
+  const hostSideMap: Record<string, string> = {};
+  if (wedding) {
+    const h = wedding.hosts;
+    [h.host_groom_id, h.host_groom_father_id, h.host_groom_mother_id].forEach((id) => { if (id) hostSideMap[id] = '신랑측'; });
+    [h.host_bride_id, h.host_bride_father_id, h.host_bride_mother_id].forEach((id) => { if (id) hostSideMap[id] = '신부측'; });
+  }
+  const isHost = !!myId && !!wedding && [
+    wedding.hosts.host_groom_id,
+    wedding.hosts.host_bride_id,
+    wedding.hosts.host_groom_father_id,
+    wedding.hosts.host_groom_mother_id,
+    wedding.hosts.host_bride_father_id,
+    wedding.hosts.host_bride_mother_id,
+  ].includes(myId);
+
+  const allItems: FeedItem[] = feedQuery.data?.pages.flatMap((p) => p.data) ?? [];
+  const warmth = useWarmth(allItems);
+  const storyGroups = useStoryGroups(allItems);
+  const feedGroups = useMemo(() => storyGroups.filter((g) => g.hasFeed), [storyGroups]);
+  // 라운지 이름 마스킹용 호스트(신랑·신부·양가 혼주) 실명 집합 — 이 6명만 실명 노출.
+  const hostNames = useMemo(() => {
+    const i = weddingQuery.data?.info;
+    return new Set(
+      [
+        i?.groom_name,
+        i?.bride_name,
+        i?.groom_father_name,
+        i?.groom_mother_name,
+        i?.bride_father_name,
+        i?.bride_mother_name,
+      ].filter((n): n is string => !!n),
+    );
+  }, [weddingQuery.data]);
+  const announcements = announcementsQuery.data?.data ?? [];
+  const currentAnnouncement = announcements[0];
+
+  const handleSubmitAnnouncement = (msg: string) => {
+    if (!loungeId) return Promise.resolve();
+    return new Promise<void>((resolve, reject) => {
+      createAnnouncement.mutate(
+        { path: { loungeId }, body: { message: msg } },
+        {
+          onSuccess: () => {
+            setAnnounceOpen(false);
+            resolve();
+          },
+          onError: (err) => reject(err),
+        },
+      );
+    });
+  };
+
+  const handleDeleteAnnouncement = () => {
+    if (!loungeId || !currentAnnouncement) return;
+    deleteAnnouncement.mutate({ announcementId: currentAnnouncement.id, loungeId });
+  };
+
+  // xState ↔ TanStack Query 동기화
+  useEffect(() => {
+    if (feedQuery.isSuccess && state.matches('loading')) send({ type: 'LOAD_SUCCESS' });
+    if (feedQuery.isError && state.matches('loading'))
+      send({ type: 'LOAD_ERROR', error: feedQuery.error ? String(feedQuery.error) : 'Unknown error' });
+  }, [feedQuery.isSuccess, feedQuery.isError, feedQuery.error, state, send]);
+
+  // 무한스크롤
+  useEffect(() => {
+    const el = observerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && feedQuery.hasNextPage && !feedQuery.isFetchingNextPage) {
+          feedQuery.fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+    // feedQuery 객체 전체는 매 렌더마다 새 참조 — 필요 필드만 명시(무한 재구독 회피).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedQuery.hasNextPage, feedQuery.isFetchingNextPage, feedQuery.fetchNextPage]);
+
+  // 풀다운 새로고침
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0]?.clientY ?? 0;
+  }, []);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    pullDistance.current = (e.touches[0]?.clientY ?? 0) - touchStartY.current;
+  }, []);
+  const handleTouchEnd = useCallback(() => {
+    if (pullDistance.current > 80 && state.matches('idle')) {
+      send({ type: 'REFRESH' });
+      feedQuery.refetch().then(
+        () => send({ type: 'REFRESH_SUCCESS' }),
+        (err: unknown) =>
+          send({ type: 'REFRESH_ERROR', error: err instanceof Error ? err.message : 'Refresh failed' }),
+      );
+    }
+    pullDistance.current = 0;
+  }, [state, send, feedQuery]);
+
+  if (!loungeId) {
+    return <div className="p-4 text-base text-lng-muted">[에러] loungeId가 없습니다</div>;
+  }
+
+  const info = weddingQuery.data?.info;
+  const isLoading = (loungeQuery.isLoading || weddingQuery.isLoading) && !info;
+
+  return (
+    <div
+      className="relative mx-auto min-h-screen max-w-[480px] bg-lng-surface pb-[96px]"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      <TopBarV2
+        title={info ? `${info.groom_name} · ${info.bride_name}의 라운지` : '라운지'}
+        warmthLabel={warmth.label}
+      />
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-lng-line border-t-lng-brand" />
+        </div>
+      ) : (
+        <>
+          <LoungeHeroCard
+            groomName={info?.groom_name ?? ''}
+            brideName={info?.bride_name ?? ''}
+            groomFatherName={info?.groom_father_name}
+            groomMotherName={info?.groom_mother_name}
+            brideFatherName={info?.bride_father_name}
+            brideMotherName={info?.bride_mother_name}
+            warmthLabel={warmth.label}
+            onSharePhoto={() => navigate(buildSharePhotoUploadPath(loungeId))}
+          />
+
+          <AnnounceMarquee announcements={announcements} hostSideMap={hostSideMap} />
+
+          <StoryStrip groups={storyGroups} onOpenStory={setOpenStoryKey} hostNames={hostNames} />
+
+          <LiveCelebration items={allItems} hostNames={hostNames} />
+
+          {state.matches('refreshing') && (
+            <p className="py-3 text-center text-sm text-lng-muted">새로고침 중...</p>
+          )}
+
+          {state.matches('error') ? (
+            <div className="mx-4 my-6 rounded-2xl border border-lng-line bg-white p-4 text-center">
+              <p className="mb-2 text-sm text-lng-coral">{state.context.errorMessage}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  send({ type: 'RETRY' });
+                  feedQuery.refetch();
+                }}
+                className="rounded-lg border border-lng-line bg-lng-surface px-4 py-1.5 text-sm text-lng-ink"
+              >
+                재시도
+              </button>
+            </div>
+          ) : (
+            <GatheringLog items={allItems} hostNames={hostNames} />
+          )}
+
+          <div ref={observerRef} className="h-px" />
+          {feedQuery.isFetchingNextPage && (
+            <div className="flex items-center justify-center py-4">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-lng-line border-t-lng-brand" />
+            </div>
+          )}
+        </>
+      )}
+
+      {/* FAB 스택 — LoungeFab(라운드 사각형 + 레이블) 세로 쌓기, 한 단 85px.
+          위에서부터 공지(260, 호스트 전용) → 디스플레이(175) → 메모리(90).
+          사진 공유는 FAB에서 LoungeHeroCard 우측하단 버튼으로 이동(2026-06-12 피드백). */}
+
+      {/* Announcement FAB — issue #31. 공지 작성은 호스트 전용 — 하객에게는 노출하지 않는다. */}
+      {isHost && (
+        <LoungeFab label="공지" ariaLabel="공지 작성" bottom={260} onClick={() => setAnnounceOpen(true)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden="true">
+            <path d="M3 11v2l12 4.5V6.5L3 11z" />
+            <path d="M15 8.5a3.2 3.2 0 0 1 0 7" />
+            <path d="M6 13.2V17l3.2 1.1v-3.7" />
+          </svg>
+        </LoungeFab>
+      )}
+
+      {/* 디스플레이 FAB — guest-web /display 새 탭. */}
+      <LoungeFab
+        label="디스플레이"
+        ariaLabel="디스플레이 띄우기"
+        bottom={175}
+        disabled={!weddingId}
+        onClick={() => weddingId && window.open(buildDisplayUrl(weddingId), '_blank', 'noopener,noreferrer')}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden="true">
+          <rect x="2" y="4" width="20" height="13" rx="2" />
+          <path d="M8 21h8M12 17v4" />
+          <path d="M7 9.5h7M7 12.5h4" />
+        </svg>
+      </LoungeFab>
+
+      {/* 메모리(온기 작성) FAB — ComposeModal 오픈. */}
+      <LoungeFab label="메모리" bottom={90} onClick={() => setComposeOpen(true)}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </LoungeFab>
+
+      {/* Announcement Modal — issue #31 */}
+      {announceOpen && loungeId && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" onClick={() => setAnnounceOpen(false)}>
+          <div className="m-4 w-full max-w-[420px] rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-bold">공지 작성</h3>
+              <button type="button" aria-label="닫기" onClick={() => setAnnounceOpen(false)} className="text-2xl leading-none">&times;</button>
+            </div>
+            <AnnouncementForm
+              currentAnnouncement={currentAnnouncement}
+              onSubmit={handleSubmitAnnouncement}
+              onDelete={handleDeleteAnnouncement}
+              isSubmitting={createAnnouncement.isPending}
+              isDeleting={deleteAnnouncement.isPending}
+            />
+          </div>
+        </div>
+      )}
+
+      <FeedCardModal
+        groups={feedGroups}
+        openKey={openStoryKey}
+        onClose={() => setOpenStoryKey(null)}
+        onItemView={(itemId) => recordView.mutate(itemId)}
+        hostNames={hostNames}
+      />
+      <ComposeModal
+        isOpen={composeOpen}
+        onClose={() => setComposeOpen(false)}
+        currentUserName={meQuery.data?.name ?? '나'}
+        onSubmit={compose.submit}
+        isUploading={compose.isUploading}
+        isPosting={compose.isPosting}
+        uploadError={compose.uploadError}
+        postError={compose.postError}
+      />
+    </div>
+  );
+}

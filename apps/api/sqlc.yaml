@@ -1,0 +1,26 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "db/queries/"
+    schema: "db/queries/"
+    gen:
+      go:
+        package: "db"
+        out: "db"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_empty_slices: true
+        # v3_lounge_check_ins.recipient_slot/relation_category/relation_detail은 도메인상 nullable.
+        # ListLoungeCheckIns 쿼리에서 LEFT JOIN LATERAL + COALESCE 결과도 nullable이지만 sqlc v1.30이
+        # LATERAL nullability를 추론 못 해 NOT NULL로 생성 → NULL 스캔 시 panic. pgtype.Text로 강제.
+        # v3_guestbook_entries의 동명 컬럼은 NOT NULL이라 별도 override 불필요.
+        overrides:
+          - column: "v3_lounge_check_ins.recipient_slot"
+            go_type: "github.com/jackc/pgx/v5/pgtype.Text"
+          - column: "v3_lounge_check_ins.relation_category"
+            go_type: "github.com/jackc/pgx/v5/pgtype.Text"
+          - column: "v3_lounge_check_ins.relation_detail"
+            go_type: "github.com/jackc/pgx/v5/pgtype.Text"
+          # jsonb 컬럼은 SQL에서 convert_from($n,'UTF8')::jsonb로 캐스트해 바인딩.
+          # simple_protocol에서 []byte→bytea text literal 문제를 SQL 단에서 해결.
+          # Go 타입은 []byte 유지 (sqlc 기본).

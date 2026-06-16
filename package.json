@@ -1,0 +1,27 @@
+{
+  "name": "digital-guestbook-v3",
+  "private": true,
+  "scripts": {
+    "dev:wedding": "pnpm --filter dibang-wedding dev",
+    "dev:guest": "pnpm --filter guest-web dev",
+"dev:api": "cd apps/api && go run .",
+    "dev:api:local": "cd apps/api && go run . -env localhost",
+    "dev:api:dev": "cd apps/api && go run . -env dev",
+    "dev:api:prod": "cd apps/api && go run . -env prod",
+    "build:wedding": "pnpm --filter dibang-wedding build",
+    "build:guest": "pnpm --filter guest-web build",
+    "build": "pnpm build:wedding && pnpm build:guest",
+    "lint": "pnpm --filter dibang-wedding lint && pnpm --filter guest-web lint",
+    "generate": "pnpm --filter @gorae/contracts generate",
+    "env:status": "scripts/use-env.sh status",
+    "env:dev": "scripts/use-env.sh dev",
+    "env:prod": "scripts/use-env.sh prod"
+  },
+  "devDependencies": {
+    "eslint": "^10.3.0",
+    "eslint-plugin-project-structure": "^3.14.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.59.1"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

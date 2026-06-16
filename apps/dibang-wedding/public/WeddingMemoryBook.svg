@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-29.5 0 500 380" width="500" height="380">
+  <defs>
+    <!-- Cover gradient -->
+    <linearGradient id="cover" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f7f3ee;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ede7df;stop-opacity:1" />
+    </linearGradient>
+    <!-- Spine gradient -->
+    <linearGradient id="spine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7a6d5b;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#6b5d4d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8a7d6b;stop-opacity:1" />
+    </linearGradient>
+    <!-- Page edge -->
+    <linearGradient id="pageEdge" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f0ebe4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0d8ce;stop-opacity:1" />
+    </linearGradient>
+    <!-- Gold text -->
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#c9a96e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#d4b978;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b8935a;stop-opacity:1" />
+    </linearGradient>
+    <!-- Soft shadow -->
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="6" flood-color="#00000025"/>
+    </filter>
+    <!-- Inner shadow for depth -->
+    <filter id="innerGlow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+      <feOffset dx="1" dy="1" result="offsetBlur"/>
+      <feComposite in="SourceGraphic" in2="offsetBlur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Page edges (visible at right and bottom, slight offset from cover) -->
+  <!-- Right side pages -->
+  <rect x="418" y="52" width="8" height="278" rx="1" fill="url(#pageEdge)" stroke="#d5cdc2" stroke-width="0.3"/>
+  <!-- Individual page lines -->
+  <line x1="419" y1="55" x2="419" y2="327" stroke="#ddd6cc" stroke-width="0.3"/>
+  <line x1="421" y1="55" x2="421" y2="327" stroke="#ddd6cc" stroke-width="0.3"/>
+  <line x1="423" y1="55" x2="423" y2="327" stroke="#ddd6cc" stroke-width="0.3"/>
+
+  <!-- Bottom pages -->
+  <rect x="28" y="330" width="395" height="8" rx="1" fill="url(#pageEdge)" stroke="#d5cdc2" stroke-width="0.3"/>
+  <line x1="30" y1="332" x2="420" y2="332" stroke="#ddd6cc" stroke-width="0.3"/>
+  <line x1="30" y1="334" x2="420" y2="334" stroke="#ddd6cc" stroke-width="0.3"/>
+  <line x1="30" y1="336" x2="420" y2="336" stroke="#ddd6cc" stroke-width="0.3"/>
+
+  <!-- Spine (left side) -->
+  <rect x="15" y="42" width="14" height="296" rx="2" fill="url(#spine)" stroke="#5a4d3d" stroke-width="0.5"/>
+  <!-- Spine detail lines -->
+  <line x1="20" y1="55" x2="20" y2="325" stroke="#5a4d3d" stroke-width="0.3" opacity="0.4"/>
+  <line x1="25" y1="48" x2="25" y2="332" stroke="#8a7d6b" stroke-width="0.3" opacity="0.3"/>
+
+  <!-- Front cover -->
+  <g filter="url(#shadow)">
+    <rect x="29" y="40" width="390" height="290" rx="3" fill="url(#cover)" stroke="#d5cdc2" stroke-width="0.8"/>
+
+    <!-- Subtle cover texture lines -->
+    <line x1="29" y1="40" x2="419" y2="40" stroke="#e8e0d6" stroke-width="0.5"/>
+    <line x1="29" y1="330" x2="419" y2="330" stroke="#ddd5ca" stroke-width="0.5"/>
+  </g>
+
+  <!-- Elegant border frame -->
+  <rect x="55" y="65" width="340" height="240" rx="1" fill="none" stroke="#c4a265" stroke-width="0.5" opacity="0.35"/>
+
+  <!-- Corner ornaments -->
+  <!-- Top-left -->
+  <path d="M55,80 L55,65 L70,65" fill="none" stroke="#c4a265" stroke-width="1.2" opacity="0.5"/>
+  <path d="M60,70 L65,65" fill="none" stroke="#c4a265" stroke-width="0.6" opacity="0.3"/>
+
+  <!-- Top-right -->
+  <path d="M380,65 L395,65 L395,80" fill="none" stroke="#c4a265" stroke-width="1.2" opacity="0.5"/>
+  <path d="M385,65 L390,70" fill="none" stroke="#c4a265" stroke-width="0.6" opacity="0.3"/>
+
+  <!-- Bottom-left -->
+  <path d="M55,290 L55,305 L70,305" fill="none" stroke="#c4a265" stroke-width="1.2" opacity="0.5"/>
+  <path d="M60,300 L65,305" fill="none" stroke="#c4a265" stroke-width="0.6" opacity="0.3"/>
+
+  <!-- Bottom-right -->
+  <path d="M380,305 L395,305 L395,290" fill="none" stroke="#c4a265" stroke-width="1.2" opacity="0.5"/>
+  <path d="M385,305 L390,300" fill="none" stroke="#c4a265" stroke-width="0.6" opacity="0.3"/>
+
+  <!-- Decorative line above text -->
+  <line x1="185" y1="155" x2="265" y2="155" stroke="#c4a265" stroke-width="0.6" opacity="0.45"/>
+
+  <!-- "WEDDING" text -->
+  <text x="225" y="185"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="22"
+        font-weight="normal"
+        letter-spacing="8"
+        fill="url(#gold)"
+        text-anchor="middle">
+    WEDDING
+  </text>
+
+  <!-- "MEMORY BOOK" text -->
+  <text x="225" y="212"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="14"
+        font-weight="normal"
+        letter-spacing="5"
+        fill="url(#gold)"
+        text-anchor="middle">
+    MEMORY BOOK
+  </text>
+
+  <!-- Decorative line below text -->
+  <line x1="185" y1="225" x2="265" y2="225" stroke="#c4a265" stroke-width="0.6" opacity="0.45"/>
+
+  <!-- Small diamond ornament -->
+  <polygon points="225,237 228,241 225,245 222,241" fill="#c4a265" opacity="0.35"/>
+</svg>

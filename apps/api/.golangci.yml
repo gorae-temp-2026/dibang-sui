@@ -1,0 +1,30 @@
+# golangci-lint 룰셋.
+# 컨벤션: _code_convention/ENV_MANAGEMENT.md
+#
+# 도입 의도: os.Getenv 직접 호출 차단 (forbidigo).
+# 기존 코드 누적 결함 회귀를 막기 위해 forbidigo 만 활성화. 다른 lint 룰 도입은 별도 작업.
+
+run:
+  timeout: 5m
+
+linters:
+  disable-all: true
+  enable:
+    - forbidigo
+
+linters-settings:
+  forbidigo:
+    forbid:
+      - p: ^os\.Getenv$
+        msg: "os.Getenv 직접 호출 금지. server.LoadConfig() 의 Config struct 또는 cmd 도구의 cmdConfig 사용. 컨벤션: _code_convention/ENV_MANAGEMENT.md"
+    analyze-types: false
+    exclude-godoc-examples: true
+
+issues:
+  exclude-use-default: false
+  exclude-rules:
+    # 테스트 파일은 env 직접 읽기 허용 (예: 통합 테스트의 DATABASE_URL 로드, config 검증 자체).
+    # 운영 코드 main.go / config.go / cmd/*/main.go 만 차단 대상.
+    - path: _test\.go$
+      linters:
+        - forbidigo

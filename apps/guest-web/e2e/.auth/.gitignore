@@ -1,0 +1,4 @@
+# storageState 파일은 액세스 토큰 포함 — 절대 커밋 금지
+# TESTING.md § 운영 - 6. 아티팩트 저장 위치
+*
+!.gitignore

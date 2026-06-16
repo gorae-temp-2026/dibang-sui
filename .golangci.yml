@@ -1,0 +1,39 @@
+# golangci-lint minimal 룰셋 (PR 시스템 첫 도입)
+#
+# - 명백한 결함만 잡는 6 룰. 점진적으로 gosimple·gocritic·revive·gosec 등 추가 가능.
+# - 자세한 옵션: https://golangci-lint.run/usage/linters/
+
+run:
+  timeout: 5m
+  # golangci-lint latest(v1.64.x)는 Go 1.24 빌드라 1.25 코드 분석 시 거부 →
+  # 분석 대상 Go 버전을 1.24로 명시(우리 코드는 1.25-only 신문법 미사용이라 영향 없음).
+  # golangci-lint v2.x 또는 Go 1.25 호환 빌드 등장하면 이 줄 제거.
+  go: '1.24'
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck       # 반환 error 무시 차단
+    - govet          # Go 표준 정적 분석 (printf·shadow 등)
+    - staticcheck    # 광범위 정적 분석 (불필요 코드·잘못된 패턴)
+    - unused         # 미사용 변수·함수·struct field
+    - ineffassign    # 사용 안 되는 할당
+    # - typecheck    # 비활성: golangci-lint(v1.64.x, Go 1.24 빌드)가 go.mod의 'go 1.25'를
+    #                # 거부하는 호환 문제. go build/go test가 동일 타입 검증을 하니 중복 가드.
+    #                # golangci-lint v2.x 또는 Go 1.25 호환 빌드 등장 시 재활성.
+
+linters-settings:
+  errcheck:
+    # 명시적으로 _ = ...로 무시한 경우는 통과.
+    check-blank: false
+
+issues:
+  # 자동 생성 코드 (codegen 산출물) 룰 적용 제외.
+  exclude-files:
+    - '.*\.gen\.go$'
+    - '.*\.sql\.go$'
+  # 테스트 파일은 errcheck 일부 완화.
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck

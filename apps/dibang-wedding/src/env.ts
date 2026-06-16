@@ -1,0 +1,26 @@
+// 환경변수 스키마 — 부팅 시점 검증의 SSOT.
+// 컨벤션: _code_convention/ENV_MANAGEMENT.md
+//
+// 사용 규칙:
+//   - 본 모듈의 `env` 객체로만 환경변수 접근. `import.meta.env.*` 직접 참조 금지.
+//   - 새 키 추가 시 (a) .env.example (b) 본 스키마 (c) 사용처 세 곳을 같이 갱신.
+//   - import 자체로 검증이 트리거된다 (bootstrap.tsx 최상단에서 import).
+
+import { createEnv } from '@t3-oss/env-core'
+import { z } from 'zod'
+
+export const env = createEnv({
+  clientPrefix: 'VITE_',
+  client: {
+    // Supabase (필수)
+    VITE_SUPABASE_URL: z.string().url(),
+    VITE_SUPABASE_ANON_KEY: z.string().min(1),
+
+    // 외부 URL (선택 — 미설정 시 코드 측 fallback)
+    VITE_API_BASE_URL: z.string().url().optional(),
+    VITE_GUEST_WEB_URL: z.string().url().optional(),
+    VITE_SITE_URL: z.string().url().optional(),
+  },
+  runtimeEnv: import.meta.env,
+  emptyStringAsUndefined: true,
+})

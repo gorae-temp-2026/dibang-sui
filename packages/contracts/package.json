@@ -1,0 +1,24 @@
+{
+  "name": "@gorae/contracts",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./sdk.gen": "./src/sdk.gen.ts",
+    "./client.gen": "./src/client.gen.ts",
+    "./zod.gen": "./src/zod.gen.ts",
+    "./@tanstack/react-query.gen": "./src/@tanstack/react-query.gen.ts"
+  },
+  "scripts": {
+    "generate:ts": "openapi-ts",
+    "generate:go": "cd ../../apps/api && oapi-codegen --config oapi-codegen-models.yaml ../../packages/contracts/api-contract.yaml && oapi-codegen --config oapi-codegen-server.yaml ../../packages/contracts/api-contract.yaml",
+    "generate": "pnpm generate:ts && pnpm generate:go"
+  },
+  "devDependencies": {
+    "@hey-api/client-fetch": "^0.13.1",
+    "@hey-api/openapi-ts": "^0.97.1",
+    "@tanstack/react-query": "^5.100.9",
+    "zod": "^4.4.3"
+  }
+}

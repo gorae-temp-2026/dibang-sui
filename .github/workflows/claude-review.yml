@@ -1,0 +1,46 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [dev, main]
+  issue_comment:
+    types: [created]
+
+# 같은 PR의 새 push가 들어오면 기존 리뷰 진행분 취소.
+concurrency:
+  group: claude-review-${{ github.head_ref || github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  claude-review:
+    name: Claude code review
+    # PR 자동 트리거 또는 코멘트에 @claude 멘션이 있을 때만 실행.
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request != null &&
+       contains(github.event.comment.body, '@claude'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write  # anthropics/claude-code-action OIDC 인증 (CLAUDE_CODE_OAUTH_TOKEN과 함께)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # diff·history 분석을 위해 전체 받기
+
+      - name: Run Claude code review
+        uses: anthropics/claude-code-action@v1
+        with:
+          # 인증: Claude Code Max 구독자의 OAuth 토큰을 사용해 구독 크레딧 내에서 동작.
+          # (Anthropic API key 별도 발급·청구 불필요. Pro/무료 사용자는 anthropic_api_key로 전환.)
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # 리뷰 규칙은 별도 파일로 분리(.github/claude-review-rules.md)하여
+          # repo 컨벤션 변경 시 yaml 수정 없이 룰만 갱신.
+          system_prompt_file: .github/claude-review-rules.md
+          # 권한: 코멘트만, 자동 커밋·푸시 비활성.
+          allow_pr_commits: false
