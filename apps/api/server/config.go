@@ -38,6 +38,18 @@ type Config struct {
 	UploadDriver        string `envconfig:"UPLOAD_DRIVER"`
 	UploadBucketPublic  string `envconfig:"UPLOAD_BUCKET_PUBLIC"  default:"v3-uploads-public"`
 	UploadBucketPrivate string `envconfig:"UPLOAD_BUCKET_PRIVATE" default:"v3-uploads-private"`
+
+	// zkLogin — Salt 도출 master secret + Google OAuth client id(=ID 토큰 audience).
+	// 미설정 시 /zklogin/salt 비활성(코드 측 분기). master secret은 절대 로그 금지.
+	ZkLoginMasterSecret string `envconfig:"ZKLOGIN_MASTER_SECRET"`
+	GoogleClientID      string `envconfig:"GOOGLE_CLIENT_ID"`
+
+	// Sponsor — 가스 대납 sponsor 키페어(bech32 suiprivkey) + 기본 가스 예산.
+	// 미설정 시 /sponsor/execute 비활성. 키는 절대 로그 금지.
+	SponsorPrivateKey string `envconfig:"SPONSOR_PRIVATE_KEY"`
+	SponsorGasBudget  string `envconfig:"SPONSOR_GAS_BUDGET" default:"30000000"`
+	SuiNetwork        string `envconfig:"SUI_NETWORK"        default:"testnet"`
+	SuiPackageID      string `envconfig:"SUI_PACKAGE_ID"`
 }
 
 // LoadConfig 는 환경변수를 읽어 Config 를 채운다. 필수 키 누락 시 error 반환.

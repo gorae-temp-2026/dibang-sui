@@ -15,3 +15,5 @@ export * from './rsvp';
 export * from './moi';
 export * from './ium';
 export * from './queries';
+export * from './zklogin';
+export * from './sponsor';

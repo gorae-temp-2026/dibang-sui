@@ -144,6 +144,16 @@ func main() {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("ok"))
 	})
+
+	// zkLogin Salt 엔드포인트 (커스텀 라우트). master secret + Google client id 둘 다 있어야 활성.
+	// (audience 미설정 시 검증기가 fail-closed 이므로 GOOGLE_CLIENT_ID 없이 켜지 않는다.)
+	if cfg.ZkLoginMasterSecret == "" || cfg.GoogleClientID == "" {
+		log.Println("WARN: ZKLOGIN_MASTER_SECRET 또는 GOOGLE_CLIENT_ID 미설정 — POST /zklogin/salt 비활성")
+	} else {
+		zkSvc := api.NewZkLoginService(cfg.ZkLoginMasterSecret, api.NewGoogleJWTVerifier(cfg.GoogleClientID))
+		r.Post("/zklogin/salt", api.NewZkLoginSaltHandler(zkSvc))
+		log.Println("zkLogin: POST /zklogin/salt enabled")
+	}
 	if localUpload {
 		// 로컬 드라이버 한정 단일 파일 서빙(디렉토리 리스팅 없음)
 		r.Get("/uploads/*", api.NewServeUploadFile())
