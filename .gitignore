@@ -17,6 +17,9 @@ tmp/
 apps/api/uploads/
 apps/api/gorae-api
 
+# Move 빌드 산출물 (Move.lock은 커밋, build/는 재생성 가능 → 제외)
+contracts/*/build/
+
 # E2E 실행 기록의 스크린샷은 용량 큼·재생성 가능 → 커밋 제외 (SUMMARY/steps는 커밋)
 _e2e_test/runs/*/screenshots/
 .env.localhost

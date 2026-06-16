@@ -1,0 +1,7 @@
+[package]
+name = "dibang_wedding"
+edition = "2024"
+
+# Sui 1.45+ — Sui / MoveStdlib 등 프레임워크는 암묵적 의존성이라 명시하지 않는다.
+# Sui CLI 1.63+ — named address는 [package] name에서 파생되므로 [addresses] 섹션도 두지 않는다.
+[dependencies]
