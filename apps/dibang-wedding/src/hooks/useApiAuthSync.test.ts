@@ -68,4 +68,14 @@ describe('useApiAuthSync', () => {
     renderHook(() => useApiAuthSync(makeSession('')))
     expect(setConfig).toHaveBeenCalledWith({ headers: {} })
   })
+
+  it('session 없고 devAuth 있음 → X-Dev-Auth 헤더 설치', () => {
+    renderHook(() => useApiAuthSync(null, '0xdev'))
+    expect(setConfig).toHaveBeenCalledWith({ headers: { 'X-Dev-Auth': '0xdev' } })
+  })
+
+  it('session 있으면 devAuth 무시하고 Authorization 우선', () => {
+    renderHook(() => useApiAuthSync(makeSession('tok-1'), '0xdev'))
+    expect(setConfig).toHaveBeenCalledWith({ headers: { Authorization: 'Bearer tok-1' } })
+  })
 })

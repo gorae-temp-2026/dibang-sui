@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useAuth } from '../providers/AuthContext';
 import { useSignInWithGoogle } from '../queries/auth/useSignInWithGoogle';
 import { useSignInWithPassword } from '../queries/auth/useSignInWithPassword';
+import { useZkLogin } from '../providers/ZkLoginProvider';
 import { env } from '../env';
 import { DibangWordmark } from '@gorae/invitation-ui';
 
@@ -34,6 +35,7 @@ export function LoginPage() {
   const [devPassword, setDevPassword] = useState('');
   const signInGoogle = useSignInWithGoogle();
   const signInPassword = useSignInWithPassword();
+  const zk = useZkLogin();
   const isDisabled = signInGoogle.isPending || signInPassword.isPending;
 
   // 이미 로그인된 사용자가 /login 에 진입하면 redirect 쿼리(또는 기본 /my-wedding)로 보낸다.
@@ -130,6 +132,18 @@ export function LoginPage() {
             >
               {signInPassword.isPending ? '로그인 중...' : '이메일로 로그인'}
             </button>
+
+            <button
+              onClick={() => zk.devLogin()}
+              className="w-full rounded-xl border border-soft-sky bg-pale-sky/40 px-5 py-3 text-base font-medium text-navy hover:bg-pale-sky/60 transition-colors"
+            >
+              🔑 DEV 지갑 로그인 (zkLogin 우회·온체인 테스트)
+            </button>
+            {zk.isAuthenticated && (
+              <p className="text-xs text-navy break-all rounded-lg bg-pale-sky/30 px-3 py-2">
+                지갑 주소: {zk.address}
+              </p>
+            )}
           </>
         )}
       </div>

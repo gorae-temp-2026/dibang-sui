@@ -28,7 +28,7 @@ func TestAuthMiddlewareJITProvisionGuarded(t *testing.T) {
 		return nil
 	}
 	served := 0
-	h := AuthMiddleware(ts.URL, "anon", ensure)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := AuthMiddleware(ts.URL, "anon", ensure, false, "")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		served++
 		_, ok := UserIDFromContext(r.Context())
 		assert.True(t, ok, "userID가 컨텍스트에 있어야 함")
@@ -56,7 +56,7 @@ func TestAuthMiddlewareEnsureFailureNonBlocking(t *testing.T) {
 		return errors.New("db down")
 	}
 	served := false
-	h := AuthMiddleware(ts.URL, "anon", ensure)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := AuthMiddleware(ts.URL, "anon", ensure, false, "")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		served = true
 		_, ok := UserIDFromContext(r.Context())
 		assert.True(t, ok)
@@ -92,4 +92,48 @@ func TestDeriveDisplayName(t *testing.T) {
 			assert.Equal(t, c.want, deriveDisplayName(c.fullName, c.metaName, c.email))
 		})
 	}
+}
+
+// Dev 우회: DEV_AUTH_BYPASS=true + X-Dev-Auth 헤더 시 Supabase 검증 없이 고정 dev user 주입.
+func TestAuthMiddlewareDevBypass(t *testing.T) {
+	devID := uuid.New().String()
+	var ensuredID pgtype.UUID
+	ensure := func(_ context.Context, id pgtype.UUID, email, _ string) error {
+		ensuredID = id
+		assert.Equal(t, "dev@localhost", email)
+		return nil
+	}
+	served := false
+	// Supabase URL이 invalid여도 우회 경로라 호출 자체가 일어나지 않아야 한다.
+	h := AuthMiddleware("http://invalid.invalid", "anon", ensure, true, devID)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		served = true
+		uid, ok := UserIDFromContext(r.Context())
+		assert.True(t, ok, "dev 우회로 userID 주입")
+		assert.True(t, uid.Valid)
+		w.WriteHeader(http.StatusOK)
+	}))
+	req := httptest.NewRequest(http.MethodGet, "/weddings", nil)
+	req.Header.Set("X-Dev-Auth", devID)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+	assert.True(t, served, "dev 우회로 요청 처리됨")
+	assert.True(t, ensuredID.Valid, "EnsureUser가 dev uid로 호출됨")
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+// Dev 우회 비활성(devBypass=false)이면 X-Dev-Auth가 있어도 무시 — 토큰 없으니 soft 통과(userID 없음).
+func TestAuthMiddlewareDevBypassDisabled(t *testing.T) {
+	devID := uuid.New().String()
+	served := false
+	h := AuthMiddleware("http://invalid.invalid", "anon", nil, false, devID)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		served = true
+		_, ok := UserIDFromContext(r.Context())
+		assert.False(t, ok, "우회 비활성 + 토큰 없음 → userID 없음")
+		w.WriteHeader(http.StatusOK)
+	}))
+	req := httptest.NewRequest(http.MethodGet, "/weddings", nil)
+	req.Header.Set("X-Dev-Auth", devID)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+	assert.True(t, served)
 }

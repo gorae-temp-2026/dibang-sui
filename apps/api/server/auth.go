@@ -57,13 +57,34 @@ func deriveDisplayName(fullName, name, email string) string {
 // AuthMiddleware validates Bearer tokens by calling Supabase Auth API.
 // Soft middleware: requests without tokens pass through for public endpoints.
 // Handlers that need auth call UserIDFromContext.
-func AuthMiddleware(supabaseURL, supabaseAnonKey string, ensure EnsureUserFunc) func(http.Handler) http.Handler {
+func AuthMiddleware(supabaseURL, supabaseAnonKey string, ensure EnsureUserFunc, devBypass bool, devUserID string) func(http.Handler) http.Handler {
 	userEndpoint := fmt.Sprintf("%s/auth/v1/user", strings.TrimRight(supabaseURL, "/"))
 	// 가드: uid당 미들웨어 인스턴스 생애 1회만 EnsureUser 시도(핫패스 쓰기 방지). 실패 시 미저장→다음 요청 재시도.
 	var ensured sync.Map
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Dev 인증 우회 (localhost·dev 전용): DEV_AUTH_BYPASS=true + X-Dev-Auth 헤더 시
+			// Supabase 검증 없이 고정 dev user를 주입한다. prod는 DEV_AUTH_BYPASS 미설정으로 완전 비활성.
+			if devBypass && devUserID != "" && r.Header.Get("X-Dev-Auth") != "" {
+				var devUID pgtype.UUID
+				if err := devUID.Scan(devUserID); err == nil {
+					if ensure != nil {
+						if _, done := ensured.Load(devUserID); !done {
+							if err := ensure(r.Context(), devUID, "dev@localhost", "DEV"); err != nil {
+								log.Printf("auth(dev): EnsureUser failed: %v", err)
+							} else {
+								ensured.Store(devUserID, struct{}{})
+							}
+						}
+					}
+					ctx := context.WithValue(r.Context(), userIDContextKey, devUID)
+					ctx = context.WithValue(ctx, emailContextKey, "dev@localhost")
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				}
+			}
+
 			token := extractBearerToken(r)
 			if token == "" {
 				next.ServeHTTP(w, r)

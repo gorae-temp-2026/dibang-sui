@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router'
 import { useAuth } from './providers/AuthContext'
+import { useZkLogin } from './providers/ZkLoginProvider'
 import { MainLayout } from './layouts/MainLayout'
 import { LoginPage } from './pages/LoginPage'
 import { MyWeddingPage } from './pages/MyWeddingPage'
@@ -25,9 +26,11 @@ const AUTH_PATHS = ['/login', '/auth/callback'];
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
+  const { isAuthenticated } = useZkLogin();
   const location = useLocation();
 
-  if (session) return <>{children}</>;
+  // zkLogin/dev 세션도 인증으로 인정(zkLogin이 Supabase 로그인 대체 — VISION §3).
+  if (session || isAuthenticated) return <>{children}</>;
 
   const currentPath = location.pathname + location.search;
   const redirectPath = AUTH_PATHS.includes(location.pathname) ? '/my-wedding' : currentPath;

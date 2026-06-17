@@ -304,10 +304,13 @@ type V3Wedding struct {
 	BrideFatherAccount  []byte             `json:"bride_father_account"`
 	BrideMotherAccount  []byte             `json:"bride_mother_account"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	SuiWeddingID        pgtype.Text        `json:"sui_wedding_id"`
+	SuiVaultID          pgtype.Text        `json:"sui_vault_id"`
 }
 
 type V3WeddingLounge struct {
-	ID        pgtype.UUID `json:"id"`
-	WeddingID pgtype.UUID `json:"wedding_id"`
-	Name      string      `json:"name"`
+	ID          pgtype.UUID `json:"id"`
+	WeddingID   pgtype.UUID `json:"wedding_id"`
+	Name        string      `json:"name"`
+	SuiLoungeID pgtype.Text `json:"sui_lounge_id"`
 }

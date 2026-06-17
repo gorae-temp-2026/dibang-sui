@@ -27,7 +27,7 @@ const INITIAL_BRIDE_ACCOUNTS: AccountSlot[] = [
 
 export type HostRole = 'groom' | 'bride';
 
-interface InvitationFormState {
+export interface InvitationFormState {
   // Host role (내가 어떤 역할인지)
   myRole: HostRole;
 

@@ -20,6 +20,7 @@ import {
   zkLoginAddress,
   buildZkLoginSignature,
   sponsoredExecute,
+  executeAndAssert,
   ephemeralKeypairFromSession,
   loadSession,
   saveSession,
@@ -40,6 +41,7 @@ if (env.VITE_SUI_PACKAGE_ID) {
 }
 
 const PENDING_KEY = 'dibang.zklogin.pending'
+const DEV_KEY = 'dibang.dev.sk'
 
 interface PendingLogin {
   ephemeralSecretKey: string
@@ -51,8 +53,12 @@ interface ZkLoginContextValue {
   session: ZkLoginSession | null
   address: string | null
   isAuthenticated: boolean
+  /** dev keypair 세션 여부(온보딩 게이트 등 dev 우회 판별용). */
+  isDev: boolean
   /** Google OAuth로 리다이렉트해 로그인 시작. */
   login: (redirectUri: string) => Promise<void>
+  /** [DEV 전용] 고정 dev keypair로 즉시 세션 — Google OAuth 없는 헤드리스 테스트용. */
+  devLogin: () => void
   /** OAuth 콜백 후 URL 프래그먼트의 id_token으로 세션을 완성. */
   completeLoginFromUrl: () => Promise<boolean>
   logout: () => void
@@ -71,6 +77,18 @@ async function fetchCurrentEpoch(network: SuiNetwork): Promise<number> {
 export function ZkLoginProvider({ children }: { children: ReactNode }) {
   // sessionStorage의 기존 세션으로 초기화(브라우저 전용 SPA — effect 내 setState 불필요).
   const [session, setSession] = useState<ZkLoginSession | null>(() => loadSession())
+  // [DEV] Google OAuth 없이 고정 keypair로 로그인(헤드리스 테스트). 버튼은 import.meta.env.DEV에서만 노출.
+  // sessionStorage에 비밀키를 저장해 새로고침·라우팅 후에도 dev 세션을 유지(Playwright 테스트용).
+  const [devKeypair, setDevKeypair] = useState<Ed25519Keypair | null>(() => {
+    const sk = sessionStorage.getItem(DEV_KEY)
+    return sk ? Ed25519Keypair.fromSecretKey(sk) : null
+  })
+  const devLogin = useCallback(() => {
+    const sk = env.VITE_DEV_PRIVATE_KEY
+    if (!sk) throw new Error('VITE_DEV_PRIVATE_KEY 미설정 — dev 로그인 비활성')
+    sessionStorage.setItem(DEV_KEY, sk)
+    setDevKeypair(Ed25519Keypair.fromSecretKey(sk))
+  }, [])
 
   const login = useCallback(async (redirectUri: string) => {
     const clientId = env.VITE_GOOGLE_CLIENT_ID
@@ -137,10 +155,18 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     clearSession()
     setSession(null)
+    sessionStorage.removeItem(DEV_KEY)
+    setDevKeypair(null)
   }, [])
 
   const executeOnchain = useCallback(
     async (tx: Transaction): Promise<string> => {
+      // [DEV] dev keypair 세션이면 zkLogin proof·sponsor 없이 keypair로 직접 서명·실행.
+      if (devKeypair) {
+        const devClient = createJsonRpcClient((env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet')
+        const res = await executeAndAssert(devClient, { transaction: tx, signer: devKeypair })
+        return res.digest
+      }
       if (!session) throw new Error('zkLogin 세션 없음 — 먼저 로그인하세요')
       if (!session.proofInputs) throw new Error('ZK 증명 없음 — VITE_ZK_PROVER_URL 설정 필요')
       const sponsorUrl = env.VITE_SPONSOR_URL
@@ -170,20 +196,22 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       })
       return res.digest
     },
-    [session],
+    [session, devKeypair],
   )
 
   const value = useMemo<ZkLoginContextValue>(
     () => ({
       session,
-      address: session?.address ?? null,
-      isAuthenticated: !!session,
+      address: devKeypair?.toSuiAddress() ?? session?.address ?? null,
+      isAuthenticated: !!session || !!devKeypair,
+      isDev: !!devKeypair,
       login,
+      devLogin,
       completeLoginFromUrl,
       logout,
       executeOnchain,
     }),
-    [session, login, completeLoginFromUrl, logout, executeOnchain],
+    [session, devKeypair, login, devLogin, completeLoginFromUrl, logout, executeOnchain],
   )
 
   return <ZkLoginContext.Provider value={value}>{children}</ZkLoginContext.Provider>

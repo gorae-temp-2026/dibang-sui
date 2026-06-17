@@ -72,13 +72,16 @@ func main() {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.AllowedOriginsList(),
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Dev-Auth"},
 		AllowCredentials: true,
 	}))
 
 	// Auth middleware — Supabase API 위임
-	r.Use(api.AuthMiddleware(cfg.SupabaseURL, cfg.SupabaseAnonKey, userSvc.EnsureUser))
+	r.Use(api.AuthMiddleware(cfg.SupabaseURL, cfg.SupabaseAnonKey, userSvc.EnsureUser, cfg.DevAuthBypass, cfg.DevUserID))
 	log.Println("Auth: Supabase API auth middleware enabled")
+	if cfg.DevAuthBypass {
+		log.Println("⚠️  Auth: DEV_AUTH_BYPASS 활성 — X-Dev-Auth 헤더로 인증 우회(dev/localhost 전용, prod 금지)")
+	}
 
 	// AdminGuard — /admin/* 경로는 허용 이메일만. ADMIN_EMAIL은 콤마 구분.
 	adminEmails := cfg.AdminEmails()

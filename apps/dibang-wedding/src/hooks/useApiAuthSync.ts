@@ -11,12 +11,15 @@ import { client } from '@gorae/contracts/client.gen';
  *
  * session.access_token 이 변할 때마다 setConfig 호출. null 이면 헤더 제거.
  */
-export function useApiAuthSync(session: Session | null): void {
+export function useApiAuthSync(session: Session | null, devAuth?: string | null): void {
   useEffect(() => {
     if (session?.access_token) {
       client.setConfig({ headers: { Authorization: `Bearer ${session.access_token}` } });
+    } else if (devAuth) {
+      // dev 지갑 세션: Supabase 토큰이 없을 때 X-Dev-Auth 헤더로 api dev 우회(localhost 전용).
+      client.setConfig({ headers: { 'X-Dev-Auth': devAuth } });
     } else {
       client.setConfig({ headers: {} });
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, devAuth]);
 }

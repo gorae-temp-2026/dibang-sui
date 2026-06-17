@@ -50,6 +50,11 @@ type Config struct {
 	SponsorGasBudget  string `envconfig:"SPONSOR_GAS_BUDGET" default:"30000000"`
 	SuiNetwork        string `envconfig:"SUI_NETWORK"        default:"testnet"`
 	SuiPackageID      string `envconfig:"SUI_PACKAGE_ID"`
+
+	// Dev 인증 우회 (localhost·dev 전용). 기본 false. ★prod .env에 절대 넣지 않는다.
+	// true일 때만 X-Dev-Auth 헤더로 고정 DEV_USER_ID 를 인증(Supabase 검증 우회) — 헤드리스 온체인 테스트용.
+	DevAuthBypass bool   `envconfig:"DEV_AUTH_BYPASS" default:"false"`
+	DevUserID     string `envconfig:"DEV_USER_ID"`
 }
 
 // LoadConfig 는 환경변수를 읽어 Config 를 채운다. 필수 키 누락 시 error 반환.

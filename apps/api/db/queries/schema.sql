@@ -215,7 +215,8 @@ CREATE TABLE public.v3_users (
 CREATE TABLE public.v3_wedding_lounges (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     wedding_id uuid NOT NULL,
-    name text NOT NULL
+    name text NOT NULL,
+    sui_lounge_id text
 );
 
 CREATE TABLE public.v3_weddings (
@@ -248,7 +249,9 @@ CREATE TABLE public.v3_weddings (
     groom_mother_account jsonb,
     bride_father_account jsonb,
     bride_mother_account jsonb,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    sui_wedding_id text,
+    sui_vault_id text
 );
 
 ALTER TABLE ONLY public.v3_feed_hearts

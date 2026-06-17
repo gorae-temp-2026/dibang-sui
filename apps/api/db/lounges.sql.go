@@ -53,7 +53,7 @@ func (q *Queries) GetWeddingIDByLoungeID(ctx context.Context, id pgtype.UUID) (p
 const insertLounge = `-- name: InsertLounge :one
 INSERT INTO v3_wedding_lounges (wedding_id, name)
 VALUES ($1, $2)
-RETURNING id, wedding_id, name
+RETURNING id, wedding_id, name, sui_lounge_id
 `
 
 type InsertLoungeParams struct {
@@ -64,6 +64,11 @@ type InsertLoungeParams struct {
 func (q *Queries) InsertLounge(ctx context.Context, arg InsertLoungeParams) (V3WeddingLounge, error) {
 	row := q.db.QueryRow(ctx, insertLounge, arg.WeddingID, arg.Name)
 	var i V3WeddingLounge
-	err := row.Scan(&i.ID, &i.WeddingID, &i.Name)
+	err := row.Scan(
+		&i.ID,
+		&i.WeddingID,
+		&i.Name,
+		&i.SuiLoungeID,
+	)
 	return i, err
 }
