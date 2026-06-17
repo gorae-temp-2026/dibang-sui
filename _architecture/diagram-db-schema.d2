@@ -1,0 +1,471 @@
+direction: up
+
+v3_users: {
+  shape: sql_table
+    email: text   
+
+    name: text   
+
+    phone: text   
+
+    profile_image_url: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+  }
+
+v3_mois: {
+  shape: sql_table
+    equipped_items: jsonb   
+
+    id: uuid  {constraint: primary_key} 
+
+    user_id: uuid {constraint: foreign_key}  
+
+  }
+v3_mois.user_id -> v3_users.id
+
+v3_moi_items: {
+  shape: sql_table
+    name: text   
+
+    slot: text   
+
+    type: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    moi_id: uuid {constraint: foreign_key}  
+
+  }
+v3_moi_items.moi_id -> v3_mois.id
+
+v3_weddings: {
+  shape: sql_table
+    bride_father_deceased: boolean   
+
+    bride_mother_deceased: boolean   
+
+    groom_father_deceased: boolean   
+
+    groom_mother_deceased: boolean   
+
+    date: date   
+
+    bride_account: jsonb   
+
+    bride_father_account: jsonb   
+
+    bride_mother_account: jsonb   
+
+    groom_account: jsonb   
+
+    groom_father_account: jsonb   
+
+    groom_mother_account: jsonb   
+
+    bride_name: text   
+
+    groom_name: text   
+
+    status: text   
+
+    time: text   
+
+    venue_address: text   
+
+    venue_name: text   
+
+    bride_father_name: text   
+
+    bride_mother_name: text   
+
+    groom_father_name: text   
+
+    groom_mother_name: text   
+
+    venue_hall: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    host_bride_father_id: uuid {constraint: foreign_key}  
+
+    host_bride_id: uuid {constraint: foreign_key}  
+
+    host_bride_mother_id: uuid {constraint: foreign_key}  
+
+    host_groom_father_id: uuid {constraint: foreign_key}  
+
+    host_groom_id: uuid {constraint: foreign_key}  
+
+    host_groom_mother_id: uuid {constraint: foreign_key}  
+
+  }
+v3_weddings.host_bride_father_id -> v3_users.id
+v3_weddings.host_bride_id -> v3_users.id
+v3_weddings.host_bride_mother_id -> v3_users.id
+v3_weddings.host_groom_father_id -> v3_users.id
+v3_weddings.host_groom_id -> v3_users.id
+v3_weddings.host_groom_mother_id -> v3_users.id
+
+v3_wedding_lounges: {
+  shape: sql_table
+    name: text   
+
+    id: uuid  {constraint: primary_key} 
+
+    wedding_id: uuid {constraint: foreign_key}  
+
+  }
+v3_wedding_lounges.wedding_id -> v3_weddings.id
+
+v3_moi_gather_places: {
+  shape: sql_table
+    type: text   
+
+    id: uuid  {constraint: primary_key} 
+
+    lounge_id: uuid {constraint: foreign_key}  
+
+  }
+v3_moi_gather_places.lounge_id -> v3_wedding_lounges.id
+
+v3_mobile_invitations: {
+  shape: sql_table
+    heart_count: integer   
+
+    visited_count: integer   
+
+    gallery_photos: jsonb   
+
+    cover_text_config: jsonb   
+
+    design_template_id: text   
+
+    slug: text   
+
+    cover_image: text   
+
+    custom_message: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    wedding_id: uuid {constraint: foreign_key}  
+
+  }
+v3_mobile_invitations.wedding_id -> v3_weddings.id
+
+v3_guestbook_entries: {
+  shape: sql_table
+    guest_name: text   
+
+    recipient_slot: text   
+
+    relation_category: text   
+
+    relation_detail: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    lounge_id: uuid {constraint: foreign_key}  
+
+    guest_id: uuid {constraint: foreign_key}  
+
+  }
+v3_guestbook_entries.guest_id -> v3_users.id
+v3_guestbook_entries.lounge_id -> v3_wedding_lounges.id
+
+v3_host_announcements: {
+  shape: sql_table
+    is_pinned: boolean   
+
+    message: text   
+
+    created_at: timestamp with time zone   
+
+    deleted_at: timestamp with time zone   
+
+    updated_at: timestamp with time zone   
+
+    host_id: uuid {constraint: foreign_key}  
+
+    id: uuid  {constraint: primary_key} 
+
+    lounge_id: uuid {constraint: foreign_key}  
+
+  }
+v3_host_announcements.host_id -> v3_users.id
+v3_host_announcements.lounge_id -> v3_wedding_lounges.id
+
+v3_interior_items: {
+  shape: sql_table
+    position: jsonb   
+
+    name: text   
+
+    status: text   
+
+    type: text   
+
+    image: text   
+
+    size: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    moi_gather_place_id: uuid {constraint: foreign_key}  
+
+  }
+v3_interior_items.moi_gather_place_id -> v3_moi_gather_places.id
+
+v3_iums: {
+  shape: sql_table
+    relation_label: text   
+
+    relation_type: text   
+
+    created_at: timestamp with time zone   
+
+    from_user_id: uuid {constraint: foreign_key}  
+
+    id: uuid  {constraint: primary_key} 
+
+    to_user_id: uuid {constraint: foreign_key}  
+
+  }
+v3_iums.from_user_id -> v3_users.id
+v3_iums.to_user_id -> v3_users.id
+
+v3_cash_gifts: {
+  shape: sql_table
+    amount: integer   
+
+    guest_name: text   
+
+    pay_method: text   
+
+    recipient_slot: text   
+
+    relation_category: text   
+
+    relation_detail: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    wedding_id: uuid {constraint: foreign_key}  
+
+    guest_id: uuid {constraint: foreign_key}  
+
+    guestbook_entry_id: uuid {constraint: foreign_key}  
+
+  }
+v3_cash_gifts.guest_id -> v3_users.id
+v3_cash_gifts.guestbook_entry_id -> v3_guestbook_entries.id
+v3_cash_gifts.wedding_id -> v3_weddings.id
+
+v3_feed_comments: {
+  shape: sql_table
+    message: text   
+
+    target_type: text   
+
+    created_at: timestamp with time zone   
+
+    deleted_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    target_id: uuid   
+
+    user_id: uuid {constraint: foreign_key}  
+
+  }
+v3_feed_comments.user_id -> v3_users.id
+
+v3_feed_hearts: {
+  shape: sql_table
+    target_type: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    target_id: uuid   
+
+    user_id: uuid {constraint: foreign_key}  
+
+  }
+v3_feed_hearts.user_id -> v3_users.id
+
+v3_guestbook_message_views: {
+  shape: sql_table
+    viewed_at: timestamp with time zone   
+
+    guestbook_message_id: uuid {constraint: foreign_key}  
+
+    id: uuid  {constraint: primary_key} 
+
+    viewer_id: uuid {constraint: foreign_key}  
+
+  }
+v3_guestbook_message_views.guestbook_message_id -> v3_guestbook_messages.id
+v3_guestbook_message_views.viewer_id -> v3_users.id
+
+v3_guestbook_messages: {
+  shape: sql_table
+    message: text   
+
+    created_at: timestamp with time zone   
+
+    guestbook_entry_id: uuid {constraint: foreign_key}  
+
+    id: uuid  {constraint: primary_key} 
+
+    lounge_id: uuid {constraint: foreign_key}  
+
+  }
+v3_guestbook_messages.guestbook_entry_id -> v3_guestbook_entries.id
+v3_guestbook_messages.lounge_id -> v3_wedding_lounges.id
+
+v3_host_invites: {
+  shape: sql_table
+    slot: text   
+
+    status: text   
+
+    token: text   
+
+    created_at: timestamp with time zone   
+
+    accepted_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    wedding_id: uuid {constraint: foreign_key}  
+
+    invited_user_id: uuid {constraint: foreign_key}  
+
+  }
+v3_host_invites.invited_user_id -> v3_users.id
+v3_host_invites.wedding_id -> v3_weddings.id
+
+v3_lounge_check_ins: {
+  shape: sql_table
+    visitor_name: text   
+
+    recipient_slot: text   
+
+    relation_category: text   
+
+    relation_detail: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    lounge_id: uuid {constraint: foreign_key}  
+
+    user_id: uuid {constraint: foreign_key}  
+
+  }
+v3_lounge_check_ins.lounge_id -> v3_wedding_lounges.id
+v3_lounge_check_ins.user_id -> v3_users.id
+
+v3_memories: {
+  shape: sql_table
+    text: text   
+
+    photo_url: text   
+
+    created_at: timestamp with time zone   
+
+    deleted_at: timestamp with time zone   
+
+    author_user_id: uuid {constraint: foreign_key}  
+
+    id: uuid  {constraint: primary_key} 
+
+    lounge_id: uuid {constraint: foreign_key}  
+
+  }
+v3_memories.author_user_id -> v3_users.id
+v3_memories.lounge_id -> v3_wedding_lounges.id
+
+v3_memory_book_photos: {
+  shape: sql_table
+    display_order: integer   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    photo_id: uuid {constraint: foreign_key}  
+
+    selected_by: uuid {constraint: foreign_key}  
+
+    wedding_id: uuid {constraint: foreign_key}  
+
+  }
+v3_memory_book_photos.photo_id -> v3_shared_photos.id
+v3_memory_book_photos.selected_by -> v3_users.id
+v3_memory_book_photos.wedding_id -> v3_weddings.id
+
+v3_mobile_invitation_photos: {
+  shape: sql_table
+    sort_order: integer   
+
+    file_size: integer   
+
+    storage_path: text   
+
+    sub_kind: text   
+
+    file_name: text   
+
+    mime_type: text   
+
+    created_at: timestamp with time zone   
+
+    id: uuid  {constraint: primary_key} 
+
+    invitation_id: uuid {constraint: foreign_key}  
+
+  }
+v3_mobile_invitation_photos.invitation_id -> v3_mobile_invitations.id
+
+v3_shared_photos: {
+  shape: sql_table
+    file_size: integer   
+
+    storage_path: text   
+
+    file_name: text   
+
+    mime_type: text   
+
+    created_at: timestamp with time zone   
+
+    guest_user_id: uuid {constraint: foreign_key}  
+
+    id: uuid  {constraint: primary_key} 
+
+    lounge_id: uuid {constraint: foreign_key}  
+
+  }
+v3_shared_photos.guest_user_id -> v3_users.id
+v3_shared_photos.lounge_id -> v3_wedding_lounges.id
+

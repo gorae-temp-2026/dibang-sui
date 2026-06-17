@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>DB Schema — Print (A4 portrait × 2 = A3 landscape)</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+  /*
+    각 .page = A4 세로 1장 (21cm × 29.7cm)
+    SVG 이미지를 42cm 폭으로 확대해 두고,
+    1페이지는 좌측 21cm만, 2페이지는 우측 21cm만 보이게 함.
+    → 좌우로 붙이면 A3 가로(42 × 29.7cm) 한 장 효과.
+    현재 SVG 비율(5452:3474 ≈ 1.569:1)이므로
+    높이 = 42 / 1.569 ≈ 26.77cm → A4 세로(29.7cm) 안에 들어감.
+    위·아래 여백 (29.7 - 26.77) / 2 ≈ 1.47cm 씩 두고 수직 중앙 정렬.
+   */
+  .page {
+    width: 21cm;
+    height: 29.7cm;
+    overflow: hidden;
+    position: relative;
+    page-break-after: always;
+    page-break-inside: avoid;
+    break-after: page;
+    break-inside: avoid;
+  }
+  .page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+  .page img {
+    position: absolute;
+    width: 42cm;          /* A4 세로 폭의 2배 = 확대 배율 */
+    height: auto;
+    display: block;
+    top: 1.47cm;          /* (A4 세로 29.7cm - SVG 높이 26.77cm) / 2, 수직 중앙 정렬 */
+  }
+
+  /* 1페이지: 왼쪽 절반 */
+  .page-1 img { left: 0; }
+  /* 2페이지: 오른쪽 절반 */
+  .page-2 img { left: -21cm; }
+</style>
+</head>
+<body>
+  <div class="page page-1"><img src="diagram-db-schema.svg" alt=""></div>
+  <div class="page page-2"><img src="diagram-db-schema.svg" alt=""></div>
+</body>
+</html>

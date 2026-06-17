@@ -1,0 +1,2152 @@
+direction: right
+
+endpoints: {
+  label: "API Endpoints"
+
+  Users: {
+    label: "Users"
+
+    getMe: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/users/me"
+      policy: "owner"
+      summary: "내 프로필 조회"
+    }
+    updateMe: {
+      shape: sql_table
+      style.fill: "#f59e0b"
+      method: "PATCH"
+      path: "/users/me"
+      policy: "owner"
+      summary: "내 프로필 수정"
+    }
+    getUser: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/users/{userId}"
+      policy: "unknown"
+      summary: "[우선 구현 예정·이름 마스킹 의존] [authenticated] 사용자 공개 프로필 조회"
+    }
+    getMyWeddings: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/users/me/weddings"
+      policy: "owner"
+      summary: "내가 Host인 결혼식 목록"
+    }
+    getMyParticipatedWeddings: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/users/me/participated-weddings"
+      policy: "authenticated"
+      summary: "내가 참여한 결혼식 목록"
+    }
+    listMyIums: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/users/me/iums"
+      policy: "unknown"
+      summary: "[미구현·추후] [owner] 내 이음 목록"
+    }
+  }
+
+  Weddings: {
+    label: "Weddings"
+
+    createWedding: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/weddings"
+      policy: "authenticated"
+      summary: "결혼식 만들기 (Lounge + GatherPlace + Invitation 포함)"
+    }
+    getWedding: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/weddings/{weddingId}"
+      policy: "public"
+      summary: "결혼식 상세 조회"
+    }
+    updateWedding: {
+      shape: sql_table
+      style.fill: "#f59e0b"
+      method: "PATCH"
+      path: "/weddings/{weddingId}"
+      policy: "host"
+      summary: "결혼식 정보 수정"
+    }
+  }
+
+  Invitations: {
+    label: "Invitations"
+
+    createInvitation: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/weddings/{weddingId}/invitations"
+      policy: "host"
+      summary: "기존 결혼식에 청첩장 추가"
+    }
+    getInvitation: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/invitations/{slug}"
+      policy: "public"
+      summary: "공유 링크로 청첩장 조회"
+    }
+    heartInvitation: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/invitations/{slug}/heart"
+      policy: "public"
+      summary: "청첩장 하트"
+    }
+    updateInvitation: {
+      shape: sql_table
+      style.fill: "#f59e0b"
+      method: "PATCH"
+      path: "/weddings/{weddingId}/invitations/{invitationId}"
+      policy: "host"
+      summary: "청첩장 수정"
+    }
+    deleteInvitation: {
+      shape: sql_table
+      method: "DELETE"
+      path: "/weddings/{weddingId}/invitations/{invitationId}"
+      policy: "host"
+      summary: "청첩장 삭제 (최소 1개 유지)"
+    }
+    shareInvitation: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/weddings/{weddingId}/invitations/{invitationId}/share"
+      policy: "host"
+      summary: "공유 링크 조회"
+    }
+    listMobileInvitationPhotos: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/weddings/{weddingId}/invitations/{invitationId}/photos"
+      policy: "host"
+      summary: "청첩장 사진 목록 (sub_kind, sort_order asc)"
+    }
+    createMobileInvitationPhoto: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/weddings/{weddingId}/invitations/{invitationId}/photos"
+      policy: "host"
+      summary: "청첩장 사진 등록 (presigned PUT 후 storage_path 메타 저장)"
+    }
+  }
+
+  Lounges: {
+    label: "Lounges"
+
+    getLounge: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/lounges/{loungeId}"
+      policy: "authenticated"
+      summary: "라운지 정보 조회"
+    }
+    getMyLoungeCheckIn: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/lounges/{loungeId}/entries/mine"
+      policy: "authenticated"
+      summary: "내 라운지 입장 기록 조회"
+    }
+    createLoungeCheckIn: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/lounges/{loungeId}/entries"
+      policy: "authenticated"
+      summary: "라운지 입장 (LoungeCheckIn 생성)"
+    }
+    listSharedPhotos: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/lounges/{loungeId}/shared-photos"
+      policy: "authenticated"
+      summary: "공유 사진 목록. host = 라운지 전체, 입장자 = 본인 것만"
+    }
+    createSharedPhoto: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/lounges/{loungeId}/shared-photos"
+      policy: "authenticated"
+      summary: "공유 사진 등록. guest_user_id = ctx user 강제. 100장/하객 한도는 서버 트랜잭션 검증"
+    }
+    downloadSharedPhotosZip: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/lounges/{loungeId}/shared-photos/zip"
+      policy: "host"
+      summary: "하객 그룹별 공유 사진 일괄 ZIP 다운로드 (archive/zip 스트리밍)"
+    }
+  }
+
+  Guestbook: {
+    label: "Guestbook"
+
+    listGuestbookEntries: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/lounges/{loungeId}/guestbook"
+      policy: "public"
+      summary: "방명록 목록"
+    }
+    createGuestbookEntry: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/lounges/{loungeId}/guestbook"
+      policy: "public"
+      summary: "방명록 작성"
+    }
+    getMyGuestbookEntry: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/lounges/{loungeId}/guestbook/mine"
+      policy: "authenticated"
+      summary: "내 방명록 조회"
+    }
+    createGuestbookMessage: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/guestbook/{entryId}/message"
+      policy: "public"
+      summary: "방명록 메세지 생성 (참석 기록에 연결)"
+    }
+    recordGuestbookMessageView: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/guestbook/messages/{messageId}/view"
+      policy: "authenticated"
+      summary: "피드(방명록 메세지) 조회 기록 — 본인 제외·중복 멱등"
+    }
+    claimGuestbookEntry: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/guestbook/{entryId}/claim"
+      policy: "authenticated"
+      summary: "비로그인 방명록을 현재 유저에 연결"
+    }
+  }
+
+  Announcements: {
+    label: "Announcements"
+
+    listAnnouncements: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/lounges/{loungeId}/announcements"
+      policy: "public"
+      summary: "공지 목록"
+    }
+    createAnnouncement: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/lounges/{loungeId}/announcements"
+      policy: "host"
+      summary: "공지 발행"
+    }
+    updateAnnouncement: {
+      shape: sql_table
+      style.fill: "#f59e0b"
+      method: "PATCH"
+      path: "/announcements/{announcementId}"
+      policy: "host"
+      summary: "공지 수정"
+    }
+    deleteAnnouncement: {
+      shape: sql_table
+      method: "DELETE"
+      path: "/announcements/{announcementId}"
+      policy: "host"
+      summary: "공지 삭제 (soft delete)"
+    }
+  }
+
+  Feed: {
+    label: "Feed"
+
+    listFeed: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/lounges/{loungeId}/feed"
+      policy: "authenticated"
+      summary: "라운지 피드 통합 조회"
+    }
+  }
+
+  FeedHearts: {
+    label: "FeedHearts"
+
+    toggleFeedHeart: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/feed-hearts"
+      policy: "authenticated"
+      summary: "피드 하트 토글"
+    }
+  }
+
+  FeedComments: {
+    label: "FeedComments"
+
+    createFeedComment: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/feed-comments"
+      policy: "authenticated"
+      summary: "피드 댓글 작성"
+    }
+    listFeedComments: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/feed-comments"
+      policy: "authenticated"
+      summary: "피드 댓글 목록"
+    }
+    deleteFeedComment: {
+      shape: sql_table
+      method: "DELETE"
+      path: "/feed-comments/{commentId}"
+      policy: "authenticated"
+      summary: "피드 댓글 삭제 (본인만)"
+    }
+  }
+
+  GatherPlaces: {
+    label: "GatherPlaces"
+
+    getGatherPlace: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/gather-places/{placeId}"
+      policy: "unknown"
+      summary: "[미구현·추후] [public] MoiGatherPlace 상세"
+    }
+    listLoungeCheckIns: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/gather-places/{placeId}/check-ins"
+      policy: "public"
+      summary: "방문 모이 목록"
+    }
+  }
+
+  InteriorItems: {
+    label: "InteriorItems"
+
+    listInteriorItems: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/gather-places/{placeId}/interior-items"
+      policy: "unknown"
+      summary: "[미구현·추후] [public] 인테리어 아이템 목록"
+    }
+    createInteriorItem: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/gather-places/{placeId}/interior-items"
+      policy: "unknown"
+      summary: "[미구현·추후] [host] 인테리어 아이템 추가"
+    }
+    placeInteriorItem: {
+      shape: sql_table
+      style.fill: "#f59e0b"
+      method: "PATCH"
+      path: "/interior-items/{itemId}/position"
+      policy: "unknown"
+      summary: "[미구현·추후] [host] 아이템 배치 (position 설정)"
+    }
+    unplaceInteriorItem: {
+      shape: sql_table
+      method: "DELETE"
+      path: "/interior-items/{itemId}/position"
+      policy: "unknown"
+      summary: "[미구현·추후] [host] 아이템 배치 해제"
+    }
+  }
+
+  Mois: {
+    label: "Mois"
+
+    getMyMoi: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/mois/me"
+      policy: "unknown"
+      summary: "[미구현·추후] [owner] 내 모이 조회"
+    }
+    getMoi: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/mois/{moiId}"
+      policy: "unknown"
+      summary: "[미구현·추후 — 재구현 시 §3 소유자 이름 마스킹 필수] [public] 특정 모이 조회"
+    }
+  }
+
+  MoiItems: {
+    label: "MoiItems"
+
+    listMyMoiItems: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/mois/me/items"
+      policy: "unknown"
+      summary: "[미구현·추후] [owner] 내 모이 아이템 목록"
+    }
+    equipMoiItem: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/mois/me/items/{itemId}/equip"
+      policy: "unknown"
+      summary: "[미구현·추후] [owner] 모이 아이템 장착"
+    }
+    unequipMoiItem: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/mois/me/items/{itemId}/unequip"
+      policy: "unknown"
+      summary: "[미구현·추후] [owner] 모이 아이템 해제"
+    }
+    sendMoiItem: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/mois/me/items/{itemId}/send"
+      policy: "unknown"
+      summary: "[미구현·추후] [owner] 모이 아이템 선물"
+    }
+  }
+
+  CashGifts: {
+    label: "CashGifts"
+
+    createCashGift: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/cash-gifts"
+      policy: "public"
+      summary: "축의금 기록"
+    }
+    listCashGifts: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/weddings/{weddingId}/cash-gifts"
+      policy: "auth"
+      summary: "축의금 장부 목록"
+    }
+    hostCreateCashGift: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/weddings/{weddingId}/cash-gifts"
+      policy: "auth"
+      summary: "축의금 수동 추가 (호스트)"
+    }
+    getCashGiftsSummary: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/weddings/{weddingId}/cash-gifts/summary"
+      policy: "auth"
+      summary: "축의금 요약 (총액, 건수, 참석)"
+    }
+    updateCashGift: {
+      shape: sql_table
+      style.fill: "#f59e0b"
+      method: "PATCH"
+      path: "/weddings/{weddingId}/cash-gifts/{giftId}"
+      policy: "auth"
+      summary: "축의금 수정"
+    }
+    deleteCashGift: {
+      shape: sql_table
+      method: "DELETE"
+      path: "/weddings/{weddingId}/cash-gifts/{giftId}"
+      policy: "auth"
+      summary: "축의금 삭제"
+    }
+  }
+
+  HostInvites: {
+    label: "HostInvites"
+
+    listHostInvites: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/weddings/{weddingId}/host-invites"
+      policy: "host"
+      summary: "부모님 초대 목록"
+    }
+    createHostInvite: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/weddings/{weddingId}/host-invites"
+      policy: "unknown"
+      summary: "[host(신랑/신부)] 부모님 초대 생성"
+    }
+    getHostInvite: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/host-invites/{token}"
+      policy: "public"
+      summary: "초대 정보 조회"
+    }
+    acceptHostInvite: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/host-invites/{token}/accept"
+      policy: "authenticated"
+      summary: "초대 수락"
+    }
+    cancelHostInvite: {
+      shape: sql_table
+      method: "DELETE"
+      path: "/weddings/{weddingId}/host-invites/{inviteId}"
+      policy: "unknown"
+      summary: "[host(신랑/신부)] 초대 취소 (pending만)"
+    }
+  }
+
+  Iums: {
+    label: "Iums"
+
+    createIum: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/iums"
+      policy: "unknown"
+      summary: "[미구현·추후] [authenticated] 이음 생성"
+    }
+    deleteIum: {
+      shape: sql_table
+      method: "DELETE"
+      path: "/iums/{iumId}"
+      policy: "unknown"
+      summary: "[미구현·추후] [owner] 이음 삭제"
+    }
+  }
+
+  Uploads: {
+    label: "Uploads"
+
+    uploadFile: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/uploads"
+      policy: "unknown"
+      summary: "[authenticated·deprecated] (구) multipart 이미지 업로드. Photo Sharing에서 createPresignedUpload로 대체. memory FEED 리팩토링까지 한시 공존 후 제거 예정"
+    }
+    createPresignedUpload: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/uploads/presigned"
+      policy: "authenticated"
+      summary: "presigned upload URL 발급. category별 권한 검증 후 Supabase Storage SignedUploadUrl 반환. share는 object_key의 guestUserId를 ctx user로 서버 강제 주입"
+    }
+  }
+
+  memories: {
+    label: "memories"
+
+    createMemory: {
+      shape: sql_table
+      style.fill: "#ef4444"
+      method: "POST"
+      path: "/memories"
+      policy: "unknown"
+      summary: "Memory 작성 (라운지 V2 게시물)"
+    }
+    listMemories: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/lounges/{loungeId}/memories"
+      policy: "unknown"
+      summary: "라운지의 Memory 목록 (최근순)"
+    }
+    deleteMemory: {
+      shape: sql_table
+      method: "DELETE"
+      path: "/memories/{memoryId}"
+      policy: "unknown"
+      summary: "Memory 삭제 (본인만 soft delete)"
+    }
+  }
+
+  MemoryBook: {
+    label: "MemoryBook"
+
+    getWeddingMemoryBook: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/weddings/{weddingId}/memory-book"
+      policy: "host"
+      summary: "웨딩메모리북 조회 (큐레이션 사진 + 모청 사진 + 자동선별 메시지 + 통계)"
+    }
+    replaceWeddingMemoryBookPhotos: {
+      shape: sql_table
+      method: "PUT"
+      path: "/weddings/{weddingId}/memory-book/photos"
+      policy: "host"
+      summary: "큐레이션 사진 일괄 교체 (최대 30장, 원자적 DELETE+INSERT)"
+    }
+  }
+
+  SharedPhotos: {
+    label: "SharedPhotos"
+
+    getWeddingSharedPhotoGroups: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/weddings/{weddingId}/shared-photo-groups"
+      policy: "host"
+      summary: "wedding의 모든 라운지의 공유 사진을 게스트별 그룹으로 묶어 반환 (메모리북 큐레이션용)"
+    }
+  }
+
+  Admin: {
+    label: "Admin"
+
+    listAdminUsers: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/admin/users"
+      policy: "admin"
+      summary: "유저 목록"
+    }
+    getAdminUser: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/admin/users/{userId}"
+      policy: "admin"
+      summary: "유저 상세"
+    }
+    listAdminUserActivities: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/admin/users/{userId}/activities"
+      policy: "admin"
+      summary: "유저 게스트 활동 목록"
+    }
+    getAdminDashboardStats: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/admin/dashboard/stats"
+      policy: "admin"
+      summary: "대시보드 통계 (KST 기준)"
+    }
+    getAdminDashboardRecent: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/admin/dashboard/recent"
+      policy: "admin"
+      summary: "최근 가입·생성 5건"
+    }
+    getAdminDashboardHealth: {
+      shape: sql_table
+      style.fill: "#16a34a"
+      method: "GET"
+      path: "/admin/dashboard/health"
+      policy: "admin"
+      summary: "데이터 헬스체크"
+    }
+  }
+
+}
+
+schemas: {
+  label: "Schemas"
+
+  getMe_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    email: "string (email)" {constraint: required}
+    phone: "string"
+    profile_image_url: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  getMe_resp.label: "User"
+
+  updateMe_req: {
+    shape: sql_table
+    name: "string"
+    phone: "string"
+    profile_image_url: "string"
+  }
+  updateMe_req.label: "UpdateUserRequest"
+
+  updateMe_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    email: "string (email)" {constraint: required}
+    phone: "string"
+    profile_image_url: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  updateMe_resp.label: "User"
+
+  getUser_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    profile_image_url: "string"
+  }
+  getUser_resp.label: "UserPublic"
+
+  getMyWeddings_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    status: "WeddingStatus" {constraint: required}
+    groom_name: "string" {constraint: required}
+    bride_name: "string" {constraint: required}
+    groom_father_name: "string"
+    groom_mother_name: "string"
+    bride_father_name: "string"
+    bride_mother_name: "string"
+    date: "string (date)" {constraint: required}
+    time: "string"
+    venue_name: "string"
+    venue_hall: "string"
+    invitations: "array<InvitationSummary>" {constraint: required}
+    my_role: "string"
+  }
+  getMyWeddings_resp.label: "WeddingSummary[]"
+
+  getMyParticipatedWeddings_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    groom_name: "string" {constraint: required}
+    bride_name: "string" {constraint: required}
+    date: "string (date)" {constraint: required}
+    time: "string"
+    venue_name: "string"
+    venue_hall: "string"
+    cover_image: "string"
+    lounge_id: "string (uuid)" {constraint: required}
+  }
+  getMyParticipatedWeddings_resp.label: "ParticipatedWedding[]"
+
+  listMyIums_resp: {
+    shape: sql_table
+    data: "array<Ium>" {constraint: required}
+    next_cursor: "string"
+    has_more: "boolean" {constraint: required}
+  }
+  listMyIums_resp.label: "IumListResponse"
+
+  createWedding_req: {
+    shape: sql_table
+    info: "WeddingInfo" {constraint: required}
+    hosts: "HostSlots" {constraint: required}
+    slug: "string" {constraint: required}
+  }
+  createWedding_req.label: "CreateWeddingRequest"
+
+  createWedding_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    status: "WeddingStatus" {constraint: required}
+    info: "WeddingInfo" {constraint: required}
+    hosts: "HostSlots" {constraint: required}
+    lounge: "LoungeSummary" {constraint: required}
+    invitations: "array<InvitationSummary>" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createWedding_resp.label: "Wedding"
+
+  getWedding_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    status: "WeddingStatus" {constraint: required}
+    info: "WeddingInfo" {constraint: required}
+    hosts: "HostSlots" {constraint: required}
+    lounge: "LoungeSummary" {constraint: required}
+    invitations: "array<InvitationSummary>" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  getWedding_resp.label: "Wedding"
+
+  updateWedding_req: {
+    shape: sql_table
+    info: "WeddingInfo"
+    hosts: "HostSlots"
+  }
+  updateWedding_req.label: "UpdateWeddingRequest"
+
+  updateWedding_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    status: "WeddingStatus" {constraint: required}
+    info: "WeddingInfo" {constraint: required}
+    hosts: "HostSlots" {constraint: required}
+    lounge: "LoungeSummary" {constraint: required}
+    invitations: "array<InvitationSummary>" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  updateWedding_resp.label: "Wedding"
+
+  createInvitation_req: {
+    shape: sql_table
+    slug: "string" {constraint: required}
+    design_template_id: "string"
+    custom_message: "string"
+    gallery_photos: "array"
+    cover_image: "string"
+    cover_text_config: "CoverTextConfig"
+  }
+  createInvitation_req.label: "CreateInvitationRequest"
+
+  createInvitation_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    design_template_id: "string" {constraint: required}
+    custom_message: "string"
+    visited_count: "integer" {constraint: required}
+    heart_count: "integer" {constraint: required}
+    gallery_photos: "array"
+    cover_image: "string"
+    cover_text_config: "CoverTextConfig"
+    slug: "string" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createInvitation_resp.label: "Invitation"
+
+  getInvitation_resp: {
+    shape: sql_table
+    design_template_id: "string" {constraint: required}
+    custom_message: "string"
+    info: "WeddingInfo" {constraint: required}
+    gallery_photos: "array"
+    cover_image: "string"
+    cover_text_config: "CoverTextConfig"
+    visited_count: "integer" {constraint: required}
+    heart_count: "integer" {constraint: required}
+    lounge_preview: "LoungePreview" {constraint: required}
+  }
+  getInvitation_resp.label: "InvitationPublic"
+
+  heartInvitation_resp: {
+    shape: sql_table
+    heart_count: "integer" {constraint: required}
+  }
+  heartInvitation_resp.label: "HeartResponse"
+
+  updateInvitation_req: {
+    shape: sql_table
+    design_template_id: "string"
+    custom_message: "string"
+    gallery_photos: "array"
+    cover_image: "string"
+    cover_text_config: "CoverTextConfig"
+  }
+  updateInvitation_req.label: "UpdateInvitationRequest"
+
+  updateInvitation_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    design_template_id: "string" {constraint: required}
+    custom_message: "string"
+    visited_count: "integer" {constraint: required}
+    heart_count: "integer" {constraint: required}
+    gallery_photos: "array"
+    cover_image: "string"
+    cover_text_config: "CoverTextConfig"
+    slug: "string" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  updateInvitation_resp.label: "Invitation"
+
+  shareInvitation_resp: {
+    shape: sql_table
+    slug: "string" {constraint: required}
+    url: "string" {constraint: required}
+  }
+  shareInvitation_resp.label: "ShareLinkResponse"
+
+  listMobileInvitationPhotos_resp: {
+    shape: sql_table
+    data: "array<MobileInvitationPhoto>" {constraint: required}
+  }
+  listMobileInvitationPhotos_resp.label: "MobileInvitationPhotoListResponse"
+
+  createMobileInvitationPhoto_req: {
+    shape: sql_table
+    sub_kind: "string" {constraint: required}
+    storage_path: "string" {constraint: required}
+    file_name: "string"
+    file_size: "integer"
+    mime_type: "string"
+    sort_order: "integer"
+  }
+  createMobileInvitationPhoto_req.label: "CreateMobileInvitationPhotoRequest"
+
+  createMobileInvitationPhoto_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    invitation_id: "string (uuid)" {constraint: required}
+    sub_kind: "string" {constraint: required}
+    storage_path: "string" {constraint: required}
+    file_name: "string"
+    file_size: "integer"
+    mime_type: "string"
+    sort_order: "integer" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createMobileInvitationPhoto_resp.label: "MobileInvitationPhoto"
+
+  getLounge_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    gather_place: "GatherPlaceSummary" {constraint: required}
+  }
+  getLounge_resp.label: "Lounge"
+
+  getMyLoungeCheckIn_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    user_id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    visitor_name: "string" {constraint: required}
+    recipient_slot: "string"
+    relation_category: "string"
+    relation_detail: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  getMyLoungeCheckIn_resp.label: "LoungeCheckIn"
+
+  createLoungeCheckIn_req: {
+    shape: sql_table
+    recipient_slot: "string"
+    relation_category: "string"
+    relation_detail: "string"
+  }
+  createLoungeCheckIn_req.label: "CreateLoungeCheckInRequest"
+
+  createLoungeCheckIn_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    user_id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    visitor_name: "string" {constraint: required}
+    recipient_slot: "string"
+    relation_category: "string"
+    relation_detail: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createLoungeCheckIn_resp.label: "LoungeCheckIn"
+
+  listSharedPhotos_resp: {
+    shape: sql_table
+    data: "array<SharedPhoto>" {constraint: required}
+  }
+  listSharedPhotos_resp.label: "SharedPhotoListResponse"
+
+  createSharedPhoto_req: {
+    shape: sql_table
+    storage_path: "string" {constraint: required}
+    file_name: "string"
+    file_size: "integer"
+    mime_type: "string"
+  }
+  createSharedPhoto_req.label: "CreateSharedPhotoRequest"
+
+  createSharedPhoto_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    guest_user_id: "string (uuid)" {constraint: required}
+    storage_path: "string" {constraint: required}
+    file_name: "string"
+    file_size: "integer"
+    mime_type: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createSharedPhoto_resp.label: "SharedPhoto"
+
+  listGuestbookEntries_resp: {
+    shape: sql_table
+    data: "array<GuestbookEntry>" {constraint: required}
+    next_cursor: "string"
+    has_more: "boolean" {constraint: required}
+  }
+  listGuestbookEntries_resp.label: "GuestbookEntryListResponse"
+
+  createGuestbookEntry_req: {
+    shape: sql_table
+    guest_name: "string" {constraint: required}
+    recipient_slot: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    message: "string"
+  }
+  createGuestbookEntry_req.label: "CreateGuestbookEntryRequest"
+
+  createGuestbookEntry_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    guest_name: "string" {constraint: required}
+    guest_id: "string (uuid)"
+    recipient_slot: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createGuestbookEntry_resp.label: "GuestbookEntry"
+
+  getMyGuestbookEntry_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    guest_name: "string" {constraint: required}
+    guest_id: "string (uuid)"
+    recipient_slot: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  getMyGuestbookEntry_resp.label: "GuestbookEntry"
+
+  createGuestbookMessage_req: {
+    shape: sql_table
+    message: "string" {constraint: required}
+  }
+  createGuestbookMessage_req.label: "CreateGuestbookMessageRequest"
+
+  createGuestbookMessage_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    guestbook_entry_id: "string (uuid)" {constraint: required}
+    message: "string" {constraint: required}
+    view_count: "integer"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createGuestbookMessage_resp.label: "GuestbookMessage"
+
+  listAnnouncements_resp: {
+    shape: sql_table
+    data: "array<Announcement>" {constraint: required}
+    next_cursor: "string"
+    has_more: "boolean" {constraint: required}
+  }
+  listAnnouncements_resp.label: "AnnouncementListResponse"
+
+  createAnnouncement_req: {
+    shape: sql_table
+    message: "string" {constraint: required}
+    is_pinned: "boolean"
+  }
+  createAnnouncement_req.label: "CreateAnnouncementRequest"
+
+  createAnnouncement_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    host_id: "string (uuid)" {constraint: required}
+    message: "string" {constraint: required}
+    is_pinned: "boolean" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+    updated_at: "string (date-time)"
+  }
+  createAnnouncement_resp.label: "Announcement"
+
+  updateAnnouncement_req: {
+    shape: sql_table
+    message: "string"
+    is_pinned: "boolean"
+  }
+  updateAnnouncement_req.label: "UpdateAnnouncementRequest"
+
+  updateAnnouncement_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    host_id: "string (uuid)" {constraint: required}
+    message: "string" {constraint: required}
+    is_pinned: "boolean" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+    updated_at: "string (date-time)"
+  }
+  updateAnnouncement_resp.label: "Announcement"
+
+  listFeed_resp: {
+    shape: sql_table
+    data: "array<FeedItem>" {constraint: required}
+    next_cursor: "string"
+    has_more: "boolean" {constraint: required}
+  }
+  listFeed_resp.label: "FeedListResponse"
+
+  toggleFeedHeart_req: {
+    shape: sql_table
+    target_type: "string" {constraint: required}
+    target_id: "string (uuid)" {constraint: required}
+  }
+  toggleFeedHeart_req.label: "ToggleFeedHeartRequest"
+
+  toggleFeedHeart_resp: {
+    shape: sql_table
+    hearted: "boolean" {constraint: required}
+    heart_count: "integer" {constraint: required}
+  }
+  toggleFeedHeart_resp.label: "FeedHeartResponse"
+
+  createFeedComment_req: {
+    shape: sql_table
+    target_type: "string" {constraint: required}
+    target_id: "string (uuid)" {constraint: required}
+    message: "string" {constraint: required}
+  }
+  createFeedComment_req.label: "CreateFeedCommentRequest"
+
+  createFeedComment_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    user_id: "string (uuid)" {constraint: required}
+    user_name: "string" {constraint: required}
+    target_type: "string" {constraint: required}
+    target_id: "string (uuid)" {constraint: required}
+    message: "string" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createFeedComment_resp.label: "FeedComment"
+
+  listFeedComments_resp: {
+    shape: sql_table
+    data: "array<FeedComment>" {constraint: required}
+    next_cursor: "string"
+    has_more: "boolean" {constraint: required}
+  }
+  listFeedComments_resp.label: "FeedCommentListResponse"
+
+  getGatherPlace_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    type: "string" {constraint: required}
+  }
+  getGatherPlace_resp.label: "GatherPlace"
+
+  listLoungeCheckIns_resp: {
+    shape: sql_table
+    data: "array<LoungeCheckIn>" {constraint: required}
+    next_cursor: "string"
+    has_more: "boolean" {constraint: required}
+  }
+  listLoungeCheckIns_resp.label: "LoungeCheckInListResponse"
+
+  listInteriorItems_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    moi_gather_place_id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    type: "string" {constraint: required}
+    size: "string"
+    image: "string"
+    status: "InteriorItemStatus" {constraint: required}
+    position: "Position"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  listInteriorItems_resp.label: "InteriorItem[]"
+
+  createInteriorItem_req: {
+    shape: sql_table
+    name: "string" {constraint: required}
+    type: "string" {constraint: required}
+    size: "string"
+    image: "string"
+  }
+  createInteriorItem_req.label: "CreateInteriorItemRequest"
+
+  createInteriorItem_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    moi_gather_place_id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    type: "string" {constraint: required}
+    size: "string"
+    image: "string"
+    status: "InteriorItemStatus" {constraint: required}
+    position: "Position"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createInteriorItem_resp.label: "InteriorItem"
+
+  placeInteriorItem_req: {
+    shape: sql_table
+    x: "number" {constraint: required}
+    y: "number" {constraint: required}
+  }
+  placeInteriorItem_req.label: "Position"
+
+  placeInteriorItem_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    moi_gather_place_id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    type: "string" {constraint: required}
+    size: "string"
+    image: "string"
+    status: "InteriorItemStatus" {constraint: required}
+    position: "Position"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  placeInteriorItem_resp.label: "InteriorItem"
+
+  unplaceInteriorItem_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    moi_gather_place_id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    type: "string" {constraint: required}
+    size: "string"
+    image: "string"
+    status: "InteriorItemStatus" {constraint: required}
+    position: "Position"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  unplaceInteriorItem_resp.label: "InteriorItem"
+
+  getMyMoi_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    user_id: "string (uuid)" {constraint: required}
+    owner_name: "string" {constraint: required}
+    equipped_items: "object" {constraint: required}
+  }
+  getMyMoi_resp.label: "Moi"
+
+  getMoi_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    user_id: "string (uuid)" {constraint: required}
+    owner_name: "string" {constraint: required}
+    equipped_items: "object" {constraint: required}
+  }
+  getMoi_resp.label: "Moi"
+
+  listMyMoiItems_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    moi_id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    type: "string" {constraint: required}
+    slot: "string" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  listMyMoiItems_resp.label: "MoiItem[]"
+
+  equipMoiItem_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    user_id: "string (uuid)" {constraint: required}
+    owner_name: "string" {constraint: required}
+    equipped_items: "object" {constraint: required}
+  }
+  equipMoiItem_resp.label: "Moi"
+
+  unequipMoiItem_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    user_id: "string (uuid)" {constraint: required}
+    owner_name: "string" {constraint: required}
+    equipped_items: "object" {constraint: required}
+  }
+  unequipMoiItem_resp.label: "Moi"
+
+  sendMoiItem_req: {
+    shape: sql_table
+    to_moi_id: "string (uuid)" {constraint: required}
+  }
+  sendMoiItem_req.label: "SendMoiItemRequest"
+
+  sendMoiItem_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    moi_id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    type: "string" {constraint: required}
+    slot: "string" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  sendMoiItem_resp.label: "MoiItem"
+
+  createCashGift_req: {
+    shape: sql_table
+    wedding_id: "string (uuid)" {constraint: required}
+    guest_name: "string" {constraint: required}
+    recipient_slot: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    amount: "integer" {constraint: required}
+    pay_method: "string" {constraint: required}
+    guestbook_entry_id: "string (uuid)"
+  }
+  createCashGift_req.label: "CreateCashGiftRequest"
+
+  createCashGift_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    guest_name: "string" {constraint: required}
+    guest_id: "string (uuid)"
+    recipient_slot: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    amount: "integer" {constraint: required}
+    pay_method: "string" {constraint: required}
+    attended: "boolean" {constraint: required}
+    guestbook_entry_id: "string (uuid)"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createCashGift_resp.label: "CashGift"
+
+  listCashGifts_resp: {
+    shape: sql_table
+    data: "array<CashGift>" {constraint: required}
+    next_cursor: "string"
+    has_more: "boolean" {constraint: required}
+  }
+  listCashGifts_resp.label: "CashGiftListResponse"
+
+  hostCreateCashGift_req: {
+    shape: sql_table
+    guest_name: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    amount: "integer" {constraint: required}
+    pay_method: "string" {constraint: required}
+  }
+  hostCreateCashGift_req.label: "HostCreateCashGiftRequest"
+
+  hostCreateCashGift_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    guest_name: "string" {constraint: required}
+    guest_id: "string (uuid)"
+    recipient_slot: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    amount: "integer" {constraint: required}
+    pay_method: "string" {constraint: required}
+    attended: "boolean" {constraint: required}
+    guestbook_entry_id: "string (uuid)"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  hostCreateCashGift_resp.label: "CashGift"
+
+  getCashGiftsSummary_resp: {
+    shape: sql_table
+    total_amount: "integer (int64)" {constraint: required}
+    total_count: "integer (int64)" {constraint: required}
+    attended_count: "integer (int64)" {constraint: required}
+  }
+  getCashGiftsSummary_resp.label: "CashGiftSummary"
+
+  updateCashGift_req: {
+    shape: sql_table
+    guest_name: "string"
+    relation_category: "string"
+    relation_detail: "string"
+    amount: "integer"
+    pay_method: "string"
+  }
+  updateCashGift_req.label: "UpdateCashGiftRequest"
+
+  updateCashGift_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    guest_name: "string" {constraint: required}
+    guest_id: "string (uuid)"
+    recipient_slot: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    amount: "integer" {constraint: required}
+    pay_method: "string" {constraint: required}
+    attended: "boolean" {constraint: required}
+    guestbook_entry_id: "string (uuid)"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  updateCashGift_resp.label: "CashGift"
+
+  listHostInvites_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    slot: "string" {constraint: required}
+    token: "string" {constraint: required}
+    status: "string" {constraint: required}
+    invited_user_id: "string (uuid)"
+    created_at: "string (date-time)" {constraint: required}
+    accepted_at: "string (date-time)"
+  }
+  listHostInvites_resp.label: "HostInvite[]"
+
+  createHostInvite_req: {
+    shape: sql_table
+    slot: "string" {constraint: required}
+  }
+  createHostInvite_req.label: "CreateHostInviteRequest"
+
+  createHostInvite_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    slot: "string" {constraint: required}
+    token: "string" {constraint: required}
+    status: "string" {constraint: required}
+    invited_user_id: "string (uuid)"
+    created_at: "string (date-time)" {constraint: required}
+    accepted_at: "string (date-time)"
+  }
+  createHostInvite_resp.label: "HostInvite"
+
+  getHostInvite_resp: {
+    shape: sql_table
+    slot: "string" {constraint: required}
+    status: "string" {constraint: required}
+    wedding_summary: "object" {constraint: required}
+  }
+  getHostInvite_resp.label: "HostInvitePublic"
+
+  acceptHostInvite_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    slot: "string" {constraint: required}
+    token: "string" {constraint: required}
+    status: "string" {constraint: required}
+    invited_user_id: "string (uuid)"
+    created_at: "string (date-time)" {constraint: required}
+    accepted_at: "string (date-time)"
+  }
+  acceptHostInvite_resp.label: "HostInvite"
+
+  createIum_req: {
+    shape: sql_table
+    to_user_id: "string (uuid)" {constraint: required}
+    relation_type: "string" {constraint: required}
+    relation_label: "string" {constraint: required}
+  }
+  createIum_req.label: "CreateIumRequest"
+
+  createIum_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    relation_type: "string" {constraint: required}
+    relation_label: "string" {constraint: required}
+    from_user_id: "string (uuid)" {constraint: required}
+    to_user_id: "string (uuid)" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createIum_resp.label: "Ium"
+
+  createPresignedUpload_req: {
+    shape: sql_table
+    category: "string" {constraint: required}
+    wedding_id: "string (uuid)"
+    invitation_id: "string (uuid)"
+    sub_kind: "string"
+    lounge_id: "string (uuid)"
+    file_name: "string" {constraint: required}
+    mime_type: "string" {constraint: required}
+  }
+  createPresignedUpload_req.label: "CreatePresignedUploadRequest"
+
+  createPresignedUpload_resp: {
+    shape: sql_table
+    upload_url: "string (uri)" {constraint: required}
+    object_key: "string" {constraint: required}
+    public_url: "string (uri)"
+  }
+  createPresignedUpload_resp.label: "PresignedUploadResponse"
+
+  createMemory_req: {
+    shape: sql_table
+    lounge_id: "string (uuid)" {constraint: required}
+    text: "string" {constraint: required}
+    photo_url: "string"
+  }
+  createMemory_req.label: "CreateMemoryRequest"
+
+  createMemory_resp: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    author_user_id: "string (uuid)" {constraint: required}
+    text: "string" {constraint: required}
+    photo_url: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+  createMemory_resp.label: "Memory"
+
+  listMemories_resp: {
+    shape: sql_table
+    data: "array<Memory>" {constraint: required}
+  }
+  listMemories_resp.label: "MemoryListResponse"
+
+  getWeddingMemoryBook_resp: {
+    shape: sql_table
+    status: "MemoryBookStatus" {constraint: required}
+    data: "MemoryBookData"
+  }
+  getWeddingMemoryBook_resp.label: "MemoryBookResponse"
+
+  replaceWeddingMemoryBookPhotos_req: {
+    shape: sql_table
+    photo_ids: "array" {constraint: required}
+  }
+  replaceWeddingMemoryBookPhotos_req.label: "ReplaceMemoryBookPhotosRequest"
+
+  replaceWeddingMemoryBookPhotos_resp: {
+    shape: sql_table
+    ok: "boolean" {constraint: required}
+    count: "integer" {constraint: required}
+  }
+  replaceWeddingMemoryBookPhotos_resp.label: "ReplaceMemoryBookPhotosResponse"
+
+  getWeddingSharedPhotoGroups_resp: {
+    shape: sql_table
+    groups: "array<SharedPhotoGroup>" {constraint: required}
+  }
+  getWeddingSharedPhotoGroups_resp.label: "SharedPhotoGroupsResponse"
+
+  listAdminUsers_resp: {
+    shape: sql_table
+    data: "array<AdminUser>" {constraint: required}
+    meta: "AdminPagination" {constraint: required}
+  }
+  listAdminUsers_resp.label: "AdminUserList"
+
+  getAdminUser_resp: {
+    shape: sql_table
+  }
+  getAdminUser_resp.label: "AdminUserDetail"
+
+  listAdminUserActivities_resp: {
+    shape: sql_table
+    data: "array<AdminActivity>" {constraint: required}
+    meta: "AdminPagination" {constraint: required}
+  }
+  listAdminUserActivities_resp.label: "AdminActivityList"
+
+  getAdminDashboardStats_resp: {
+    shape: sql_table
+    today_weddings: "integer" {constraint: required}
+    today_users: "integer" {constraint: required}
+    today_cash_gifts_count: "integer" {constraint: required}
+    today_cash_gifts_amount: "integer" {constraint: required}
+    total_users: "integer" {constraint: required}
+    total_weddings: "integer" {constraint: required}
+  }
+  getAdminDashboardStats_resp.label: "AdminDashboardStats"
+
+  getAdminDashboardRecent_resp: {
+    shape: sql_table
+    recent_users: "array<AdminUser>" {constraint: required}
+    recent_weddings: "array<AdminWeddingSummary>" {constraint: required}
+  }
+  getAdminDashboardRecent_resp.label: "AdminDashboardRecent"
+
+  getAdminDashboardHealth_resp: {
+    shape: sql_table
+    checks: "array<AdminHealthCheck>" {constraint: required}
+  }
+  getAdminDashboardHealth_resp.label: "AdminDashboardHealth"
+
+  Account: {
+    shape: sql_table
+    bank: "string"
+    address: "string"
+  }
+
+  AdminActivity: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    type: "string" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    wedding_label: "string" {constraint: required}
+    role: "string" {constraint: required}
+    summary: "string" {constraint: required}
+    amount: "integer"
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  AdminActivityCounts: {
+    shape: sql_table
+    guestbook: "integer" {constraint: required}
+    cash_gifts: "integer" {constraint: required}
+    messages: "integer" {constraint: required}
+    shared_photos: "integer" {constraint: required}
+    memories: "integer" {constraint: required}
+    memory_book: "integer" {constraint: required}
+    lounge: "integer" {constraint: required}
+  }
+
+  AdminHealthCheck: {
+    shape: sql_table
+    key: "string" {constraint: required}
+    value: "number" {constraint: required}
+    severity: "string"
+    description: "string" {constraint: required}
+  }
+
+  AdminHostParticipation: {
+    shape: sql_table
+    wedding_id: "string (uuid)" {constraint: required}
+    wedding_label: "string" {constraint: required}
+    slot: "string" {constraint: required}
+    wedding_date: "string (date)"
+    wedding_status: "string" {constraint: required}
+  }
+
+  AdminPagination: {
+    shape: sql_table
+    page: "integer" {constraint: required}
+    limit: "integer" {constraint: required}
+    total: "integer" {constraint: required}
+  }
+
+  AdminUser: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    email: "string" {constraint: required}
+    phone: "string"
+    profile_image_url: "string"
+    created_at: "string (date-time)" {constraint: required}
+    provider: "string"
+    last_sign_in_at: "string (date-time)"
+    own_weddings_count: "integer" {constraint: required}
+    guest_weddings_count: "integer" {constraint: required}
+  }
+
+  AdminWeddingSummary: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    groom_name: "string" {constraint: required}
+    bride_name: "string" {constraint: required}
+    date: "string (date)"
+    status: "string" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  Announcement: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    host_id: "string (uuid)" {constraint: required}
+    message: "string" {constraint: required}
+    is_pinned: "boolean" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+    updated_at: "string (date-time)"
+  }
+
+  CashGift: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    wedding_id: "string (uuid)" {constraint: required}
+    guest_name: "string" {constraint: required}
+    guest_id: "string (uuid)"
+    recipient_slot: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    amount: "integer" {constraint: required}
+    pay_method: "string" {constraint: required}
+    attended: "boolean" {constraint: required}
+    guestbook_entry_id: "string (uuid)"
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  CoverTextConfig: {
+    shape: sql_table
+    text: "string"
+    font_size: "integer"
+    x: "integer"
+    y: "integer"
+    rotation: "integer"
+  }
+
+  FeedComment: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    user_id: "string (uuid)" {constraint: required}
+    user_name: "string" {constraint: required}
+    target_type: "string" {constraint: required}
+    target_id: "string (uuid)" {constraint: required}
+    message: "string" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  FeedItem: {
+    shape: sql_table
+    type: "FeedItemType" {constraint: required}
+    id: "string (uuid)" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+    data: "object"
+    heart_count: "integer"
+    comment_count: "integer"
+    my_heart: "boolean"
+  }
+
+  FeedItemType: {
+    shape: sql_table
+  }
+
+  GatherPlaceSummary: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    type: "string" {constraint: required}
+  }
+
+  GuestbookEntry: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    guest_name: "string" {constraint: required}
+    guest_id: "string (uuid)"
+    recipient_slot: "string" {constraint: required}
+    relation_category: "string" {constraint: required}
+    relation_detail: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  HostSlots: {
+    shape: sql_table
+    host_groom_id: "string (uuid)"
+    host_bride_id: "string (uuid)"
+    host_groom_father_id: "string (uuid)"
+    host_groom_mother_id: "string (uuid)"
+    host_bride_father_id: "string (uuid)"
+    host_bride_mother_id: "string (uuid)"
+  }
+
+  InteriorItemStatus: {
+    shape: sql_table
+  }
+
+  InvitationSummary: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    slug: "string" {constraint: required}
+    cover_image: "string"
+  }
+
+  Ium: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    relation_type: "string" {constraint: required}
+    relation_label: "string" {constraint: required}
+    from_user_id: "string (uuid)" {constraint: required}
+    to_user_id: "string (uuid)" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  LoungeCheckIn: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    user_id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    visitor_name: "string" {constraint: required}
+    recipient_slot: "string"
+    relation_category: "string"
+    relation_detail: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  LoungePreview: {
+    shape: sql_table
+    lounge_id: "string (uuid)" {constraint: required}
+    lounge_name: "string" {constraint: required}
+    visitor_count: "integer" {constraint: required}
+  }
+
+  LoungeSummary: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    name: "string" {constraint: required}
+    gather_place_id: "string (uuid)"
+  }
+
+  Memory: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    author_user_id: "string (uuid)" {constraint: required}
+    text: "string" {constraint: required}
+    photo_url: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  MemoryBookCouple: {
+    shape: sql_table
+    groom_name: "string" {constraint: required}
+    bride_name: "string" {constraint: required}
+    wedding_date: "string (date)" {constraint: required}
+    time: "string"
+    venue_name: "string" {constraint: required}
+    venue_address: "string"
+    venue_hall: "string"
+    cover_photo_url: "string"
+  }
+
+  MemoryBookData: {
+    shape: sql_table
+    couple: "MemoryBookCouple" {constraint: required}
+    curated_photos: "array<MemoryBookPhoto>" {constraint: required}
+    display_photos: "array" {constraint: required}
+    mec_messages: "array<MemoryBookMessage>" {constraint: required}
+    stats: "MemoryBookStats" {constraint: required}
+  }
+
+  MemoryBookMessage: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    guest_name: "string"
+    relation_label: "string"
+    side: "string"
+    message: "string" {constraint: required}
+    is_heart: "boolean" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  MemoryBookPhoto: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    storage_path: "string" {constraint: required}
+    guest_user_id: "string (uuid)"
+  }
+
+  MemoryBookStats: {
+    shape: sql_table
+    total_guests: "integer" {constraint: required}
+    total_messages: "integer" {constraint: required}
+    photos_uploaded: "integer" {constraint: required}
+  }
+
+  MemoryBookStatus: {
+    shape: sql_table
+  }
+
+  MobileInvitationPhoto: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    invitation_id: "string (uuid)" {constraint: required}
+    sub_kind: "string" {constraint: required}
+    storage_path: "string" {constraint: required}
+    file_name: "string"
+    file_size: "integer"
+    mime_type: "string"
+    sort_order: "integer" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  Position: {
+    shape: sql_table
+    x: "number" {constraint: required}
+    y: "number" {constraint: required}
+  }
+
+  SharedPhoto: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    lounge_id: "string (uuid)" {constraint: required}
+    guest_user_id: "string (uuid)" {constraint: required}
+    storage_path: "string" {constraint: required}
+    file_name: "string"
+    file_size: "integer"
+    mime_type: "string"
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  SharedPhotoGroup: {
+    shape: sql_table
+    user_id: "string (uuid)" {constraint: required}
+    guest_name: "string" {constraint: required}
+    side: "SharedPhotoGroupSide"
+    recipient_slot: "string"
+    relation_category: "string"
+    relation_detail: "string"
+    photos: "array<SharedPhotoInGroup>" {constraint: required}
+    photo_count: "integer" {constraint: required}
+  }
+
+  SharedPhotoGroupSide: {
+    shape: sql_table
+  }
+
+  SharedPhotoInGroup: {
+    shape: sql_table
+    id: "string (uuid)" {constraint: required}
+    storage_path: "string" {constraint: required}
+    created_at: "string (date-time)" {constraint: required}
+  }
+
+  Venue: {
+    shape: sql_table
+    venue_name: "string" {constraint: required}
+    venue_address: "string" {constraint: required}
+    venue_hall: "string"
+  }
+
+  WeddingInfo: {
+    shape: sql_table
+    groom_name: "string" {constraint: required}
+    bride_name: "string" {constraint: required}
+    groom_father_name: "string"
+    groom_mother_name: "string"
+    bride_father_name: "string"
+    bride_mother_name: "string"
+    groom_father_deceased: "boolean"
+    groom_mother_deceased: "boolean"
+    bride_father_deceased: "boolean"
+    bride_mother_deceased: "boolean"
+    date: "string (date)" {constraint: required}
+    time: "string" {constraint: required}
+    venue: "Venue" {constraint: required}
+    groom_account: "Account"
+    bride_account: "Account"
+    groom_father_account: "Account"
+    groom_mother_account: "Account"
+    bride_father_account: "Account"
+    bride_mother_account: "Account"
+  }
+
+  WeddingStatus: {
+    shape: sql_table
+  }
+
+}
+
+endpoints.Users.getMe -> schemas.getMe_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Users.updateMe -> schemas.updateMe_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Users.updateMe -> schemas.updateMe_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Users.getUser -> schemas.getUser_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Users.getMyWeddings -> schemas.getMyWeddings_resp: "RESPONSE[]" {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Users.getMyParticipatedWeddings -> schemas.getMyParticipatedWeddings_resp: "RESPONSE[]" {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Users.listMyIums -> schemas.listMyIums_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Weddings.createWedding -> schemas.createWedding_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Weddings.createWedding -> schemas.createWedding_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Weddings.getWedding -> schemas.getWedding_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Weddings.updateWedding -> schemas.updateWedding_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Weddings.updateWedding -> schemas.updateWedding_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Invitations.createInvitation -> schemas.createInvitation_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Invitations.createInvitation -> schemas.createInvitation_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Invitations.getInvitation -> schemas.getInvitation_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Invitations.heartInvitation -> schemas.heartInvitation_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Invitations.updateInvitation -> schemas.updateInvitation_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Invitations.updateInvitation -> schemas.updateInvitation_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Invitations.shareInvitation -> schemas.shareInvitation_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Invitations.listMobileInvitationPhotos -> schemas.listMobileInvitationPhotos_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Invitations.createMobileInvitationPhoto -> schemas.createMobileInvitationPhoto_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Invitations.createMobileInvitationPhoto -> schemas.createMobileInvitationPhoto_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Lounges.getLounge -> schemas.getLounge_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Lounges.getMyLoungeCheckIn -> schemas.getMyLoungeCheckIn_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Lounges.createLoungeCheckIn -> schemas.createLoungeCheckIn_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Lounges.createLoungeCheckIn -> schemas.createLoungeCheckIn_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Lounges.listSharedPhotos -> schemas.listSharedPhotos_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Lounges.createSharedPhoto -> schemas.createSharedPhoto_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Lounges.createSharedPhoto -> schemas.createSharedPhoto_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Guestbook.listGuestbookEntries -> schemas.listGuestbookEntries_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Guestbook.createGuestbookEntry -> schemas.createGuestbookEntry_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Guestbook.createGuestbookEntry -> schemas.createGuestbookEntry_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Guestbook.getMyGuestbookEntry -> schemas.getMyGuestbookEntry_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Guestbook.createGuestbookMessage -> schemas.createGuestbookMessage_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Guestbook.createGuestbookMessage -> schemas.createGuestbookMessage_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Announcements.listAnnouncements -> schemas.listAnnouncements_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Announcements.createAnnouncement -> schemas.createAnnouncement_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Announcements.createAnnouncement -> schemas.createAnnouncement_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Announcements.updateAnnouncement -> schemas.updateAnnouncement_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Announcements.updateAnnouncement -> schemas.updateAnnouncement_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Feed.listFeed -> schemas.listFeed_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.FeedHearts.toggleFeedHeart -> schemas.toggleFeedHeart_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.FeedHearts.toggleFeedHeart -> schemas.toggleFeedHeart_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.FeedComments.createFeedComment -> schemas.createFeedComment_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.FeedComments.createFeedComment -> schemas.createFeedComment_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.FeedComments.listFeedComments -> schemas.listFeedComments_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.GatherPlaces.getGatherPlace -> schemas.getGatherPlace_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.GatherPlaces.listLoungeCheckIns -> schemas.listLoungeCheckIns_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.InteriorItems.listInteriorItems -> schemas.listInteriorItems_resp: "RESPONSE[]" {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.InteriorItems.createInteriorItem -> schemas.createInteriorItem_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.InteriorItems.createInteriorItem -> schemas.createInteriorItem_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.InteriorItems.placeInteriorItem -> schemas.placeInteriorItem_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.InteriorItems.placeInteriorItem -> schemas.placeInteriorItem_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.InteriorItems.unplaceInteriorItem -> schemas.unplaceInteriorItem_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Mois.getMyMoi -> schemas.getMyMoi_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Mois.getMoi -> schemas.getMoi_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.MoiItems.listMyMoiItems -> schemas.listMyMoiItems_resp: "RESPONSE[]" {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.MoiItems.equipMoiItem -> schemas.equipMoiItem_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.MoiItems.unequipMoiItem -> schemas.unequipMoiItem_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.MoiItems.sendMoiItem -> schemas.sendMoiItem_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.MoiItems.sendMoiItem -> schemas.sendMoiItem_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.CashGifts.createCashGift -> schemas.createCashGift_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.CashGifts.createCashGift -> schemas.createCashGift_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.CashGifts.listCashGifts -> schemas.listCashGifts_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.CashGifts.hostCreateCashGift -> schemas.hostCreateCashGift_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.CashGifts.hostCreateCashGift -> schemas.hostCreateCashGift_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.CashGifts.getCashGiftsSummary -> schemas.getCashGiftsSummary_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.CashGifts.updateCashGift -> schemas.updateCashGift_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.CashGifts.updateCashGift -> schemas.updateCashGift_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.HostInvites.listHostInvites -> schemas.listHostInvites_resp: "RESPONSE[]" {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.HostInvites.createHostInvite -> schemas.createHostInvite_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.HostInvites.createHostInvite -> schemas.createHostInvite_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.HostInvites.getHostInvite -> schemas.getHostInvite_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.HostInvites.acceptHostInvite -> schemas.acceptHostInvite_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Iums.createIum -> schemas.createIum_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Iums.createIum -> schemas.createIum_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Uploads.createPresignedUpload -> schemas.createPresignedUpload_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.Uploads.createPresignedUpload -> schemas.createPresignedUpload_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.memories.createMemory -> schemas.createMemory_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.memories.createMemory -> schemas.createMemory_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.memories.listMemories -> schemas.listMemories_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.MemoryBook.getWeddingMemoryBook -> schemas.getWeddingMemoryBook_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.MemoryBook.replaceWeddingMemoryBookPhotos -> schemas.replaceWeddingMemoryBookPhotos_req: REQUEST {style.stroke: "#ef4444"; style.font-color: "#ef4444"}
+endpoints.MemoryBook.replaceWeddingMemoryBookPhotos -> schemas.replaceWeddingMemoryBookPhotos_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.SharedPhotos.getWeddingSharedPhotoGroups -> schemas.getWeddingSharedPhotoGroups_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Admin.listAdminUsers -> schemas.listAdminUsers_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Admin.getAdminUser -> schemas.getAdminUser_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Admin.listAdminUserActivities -> schemas.listAdminUserActivities_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Admin.getAdminDashboardStats -> schemas.getAdminDashboardStats_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Admin.getAdminDashboardRecent -> schemas.getAdminDashboardRecent_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+endpoints.Admin.getAdminDashboardHealth -> schemas.getAdminDashboardHealth_resp: RESPONSE {style.stroke: "#3b82f6"; style.font-color: "#3b82f6"}
+schemas.getMyWeddings_resp -> schemas.InvitationSummary
+schemas.getMyWeddings_resp -> schemas.WeddingStatus
+schemas.listMyIums_resp -> schemas.Ium
+schemas.createWedding_req -> schemas.HostSlots
+schemas.createWedding_req -> schemas.WeddingInfo
+schemas.createWedding_resp -> schemas.WeddingInfo
+schemas.createWedding_resp -> schemas.InvitationSummary
+schemas.createWedding_resp -> schemas.LoungeSummary
+schemas.createWedding_resp -> schemas.WeddingStatus
+schemas.createWedding_resp -> schemas.HostSlots
+schemas.getWedding_resp -> schemas.WeddingInfo
+schemas.getWedding_resp -> schemas.InvitationSummary
+schemas.getWedding_resp -> schemas.LoungeSummary
+schemas.getWedding_resp -> schemas.WeddingStatus
+schemas.getWedding_resp -> schemas.HostSlots
+schemas.updateWedding_req -> schemas.HostSlots
+schemas.updateWedding_req -> schemas.WeddingInfo
+schemas.updateWedding_resp -> schemas.WeddingInfo
+schemas.updateWedding_resp -> schemas.InvitationSummary
+schemas.updateWedding_resp -> schemas.LoungeSummary
+schemas.updateWedding_resp -> schemas.WeddingStatus
+schemas.updateWedding_resp -> schemas.HostSlots
+schemas.createInvitation_req -> schemas.CoverTextConfig
+schemas.createInvitation_resp -> schemas.CoverTextConfig
+schemas.getInvitation_resp -> schemas.LoungePreview
+schemas.getInvitation_resp -> schemas.CoverTextConfig
+schemas.getInvitation_resp -> schemas.WeddingInfo
+schemas.updateInvitation_req -> schemas.CoverTextConfig
+schemas.updateInvitation_resp -> schemas.CoverTextConfig
+schemas.listMobileInvitationPhotos_resp -> schemas.MobileInvitationPhoto
+schemas.getLounge_resp -> schemas.GatherPlaceSummary
+schemas.listSharedPhotos_resp -> schemas.SharedPhoto
+schemas.listGuestbookEntries_resp -> schemas.GuestbookEntry
+schemas.listAnnouncements_resp -> schemas.Announcement
+schemas.listFeed_resp -> schemas.FeedItem
+schemas.listFeedComments_resp -> schemas.FeedComment
+schemas.listLoungeCheckIns_resp -> schemas.LoungeCheckIn
+schemas.listInteriorItems_resp -> schemas.InteriorItemStatus
+schemas.listInteriorItems_resp -> schemas.Position
+schemas.createInteriorItem_resp -> schemas.InteriorItemStatus
+schemas.createInteriorItem_resp -> schemas.Position
+schemas.placeInteriorItem_resp -> schemas.InteriorItemStatus
+schemas.placeInteriorItem_resp -> schemas.Position
+schemas.unplaceInteriorItem_resp -> schemas.InteriorItemStatus
+schemas.unplaceInteriorItem_resp -> schemas.Position
+schemas.listCashGifts_resp -> schemas.CashGift
+schemas.listMemories_resp -> schemas.Memory
+schemas.getWeddingMemoryBook_resp -> schemas.MemoryBookStatus
+schemas.getWeddingMemoryBook_resp -> schemas.MemoryBookData
+schemas.getWeddingSharedPhotoGroups_resp -> schemas.SharedPhotoGroup
+schemas.listAdminUsers_resp -> schemas.AdminPagination
+schemas.listAdminUsers_resp -> schemas.AdminUser
+schemas.getAdminUser_resp -> schemas.AdminActivityCounts
+schemas.getAdminUser_resp -> schemas.AdminUser
+schemas.getAdminUser_resp -> schemas.AdminHostParticipation
+schemas.listAdminUserActivities_resp -> schemas.AdminPagination
+schemas.listAdminUserActivities_resp -> schemas.AdminActivity
+schemas.getAdminDashboardRecent_resp -> schemas.AdminWeddingSummary
+schemas.getAdminDashboardRecent_resp -> schemas.AdminUser
+schemas.getAdminDashboardHealth_resp -> schemas.AdminHealthCheck
+schemas.FeedItem -> schemas.FeedItemType
+schemas.MemoryBookData -> schemas.MemoryBookCouple
+schemas.MemoryBookData -> schemas.MemoryBookMessage
+schemas.MemoryBookData -> schemas.MemoryBookPhoto
+schemas.MemoryBookData -> schemas.MemoryBookStats
+schemas.SharedPhotoGroup -> schemas.SharedPhotoGroupSide
+schemas.SharedPhotoGroup -> schemas.SharedPhotoInGroup
+schemas.WeddingInfo -> schemas.Account
+schemas.WeddingInfo -> schemas.Venue

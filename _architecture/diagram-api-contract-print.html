@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>API Contract Diagram — Print (A4 landscape × 11)</title>
+<style>
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+  /*
+    각 .page = A4 가로 1장 (29.7cm × 21cm)
+    SVG 폭을 페이지 폭 29.7cm에 1배 fit (확대 없음).
+    현재 SVG 비율 (4027:30389 ≈ 1:7.546) — 세로로 매우 김.
+    SVG 높이 = 29.7 × 30389/4027 ≈ 224.10cm
+    21cm 단위 세로 분할 = ceil(224.10/21) = 11장. 마지막 11번째 약 14.10cm 채워짐.
+    각 페이지 top offset: 0, -21, -42, ..., -210 cm
+    상세 규약: _architecture/PRINT_CONVENTIONS.md
+   */
+  .page {
+    width: 29.7cm;
+    height: 21cm;
+    overflow: hidden;
+    position: relative;
+    page-break-after: always;
+    page-break-inside: avoid;
+    break-after: page;
+    break-inside: avoid;
+  }
+  .page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+  .page img {
+    position: absolute;
+    width: 29.7cm;
+    height: auto;
+    display: block;
+    left: 0;
+  }
+
+  .page-1  img { top: 0; }
+  .page-2  img { top: -21cm; }
+  .page-3  img { top: -42cm; }
+  .page-4  img { top: -63cm; }
+  .page-5  img { top: -84cm; }
+  .page-6  img { top: -105cm; }
+  .page-7  img { top: -126cm; }
+  .page-8  img { top: -147cm; }
+  .page-9  img { top: -168cm; }
+  .page-10 img { top: -189cm; }
+  .page-11 img { top: -210cm; }
+</style>
+</head>
+<body>
+  <div class="page page-1"><img  src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-2"><img  src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-3"><img  src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-4"><img  src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-5"><img  src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-6"><img  src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-7"><img  src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-8"><img  src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-9"><img  src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-10"><img src="diagram-api-contract.svg" alt=""></div>
+  <div class="page page-11"><img src="diagram-api-contract.svg" alt=""></div>
+</body>
+</html>

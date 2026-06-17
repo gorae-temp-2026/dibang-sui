@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고래 유니버스 — 기술 스택 맵</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+  h1 { font-size: 26px; font-weight: 600; color: #fff; margin-bottom: 4px; letter-spacing: -0.5px; }
+  .subtitle { font-size: 13px; color: #666; margin-bottom: 48px; }
+
+  .canvas {
+    position: relative;
+    width: 1100px;
+    min-height: 1450px;
+  }
+
+  /* ========== SECTION 1: Architecture (Top) ========== */
+  .section-label {
+    position: absolute;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #333;
+  }
+
+  /* Zones */
+  .zone {
+    position: absolute;
+    border-radius: 18px;
+    opacity: 0.25;
+  }
+  .zone-label {
+    position: absolute;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* Architecture nodes */
+  .node {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: default;
+    transition: all 0.3s ease;
+    z-index: 2;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .node .label { font-size: 15px; font-weight: 700; }
+  .node .sub { font-size: 11px; font-weight: 400; opacity: 0.6; margin-top: 2px; }
+
+  /* Badge */
+  .badge {
+    position: absolute;
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    z-index: 3;
+  }
+
+  /* Annotation */
+  .annotation {
+    position: absolute;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    z-index: 3;
+  }
+
+  /* ========== SECTION 2: Tech Stack (Bottom) ========== */
+  .stack-column {
+    position: absolute;
+    width: 180px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1.5px solid;
+    background: rgba(255,255,255,0.015);
+  }
+  .stack-header {
+    padding: 12px 14px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .stack-header .sh-sub {
+    font-size: 10px;
+    font-weight: 400;
+    opacity: 0.4;
+    display: block;
+    margin-top: 2px;
+  }
+  .stack-body {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cat {
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .cat-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    opacity: 0.35;
+    margin-bottom: 5px;
+  }
+  .lib {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 3px;
+    font-size: 11.5px;
+  }
+  .lib:last-child { margin-bottom: 0; }
+  .lib-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .lib-name { font-weight: 600; }
+  .lib-ver { opacity: 0.35; font-size: 9.5px; }
+  .lib-note { opacity: 0.4; font-size: 10px; padding-left: 10px; }
+
+  /* Connector line from arch node to stack column */
+  .connector {
+    position: absolute;
+    border-left: 1.5px dashed;
+    opacity: 0.2;
+    z-index: 0;
+  }
+
+  /* Auth strip */
+  .auth-strip {
+    position: absolute;
+    border: 1.5px dashed #ef4444;
+    border-radius: 14px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: rgba(239, 68, 68, 0.03);
+  }
+  .auth-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ef4444;
+    white-space: nowrap;
+    padding-top: 5px;
+  }
+  .auth-items { display: flex; gap: 12px; flex-wrap: wrap; }
+  .auth-item {
+    display: flex; flex-direction: column; gap: 2px;
+    background: rgba(239, 68, 68, 0.06);
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.12);
+  }
+  .auth-where { font-size: 9px; color: #ef4444; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .auth-what { font-size: 11px; color: #ccc; }
+
+  /* Infra strip */
+  .infra-strip {
+    position: absolute;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255,255,255,0.015);
+  }
+  .infra-title { font-size: 12px; font-weight: 700; color: #666; white-space: nowrap; }
+  .infra-items { display: flex; gap: 10px; flex-wrap: wrap; }
+  .infra-tag {
+    font-size: 11px; padding: 4px 10px; border-radius: 7px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* SVG */
+  svg.arrows {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1100px;
+    height: 400px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .arrow { stroke-width: 1.5; fill: none; }
+  .arrow-solid { stroke: #444; }
+  .arrow-dashed { stroke: #444; stroke-dasharray: 6 4; }
+  .arrow-auth { stroke: #ef4444; stroke-dasharray: 4 3; stroke-width: 1.2; }
+
+  /* Legend */
+  .legend {
+    position: absolute;
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #555; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Colors */
+  .c-ui { color: #3b82f6; border-color: #3b82f6; }
+  .c-hook { color: #06b6d4; border-color: #06b6d4; }
+  .c-contract { color: #a78bfa; border-color: #a78bfa; }
+  .c-api { color: #f59e0b; border-color: #f59e0b; }
+  .c-db { color: #22c55e; border-color: #22c55e; }
+
+  .bg-ui { background: linear-gradient(135deg, #1e3a5f, #1e4a7f); border: 1.5px solid #3b82f6; }
+  .bg-hook { background: linear-gradient(135deg, #0e3a4a, #0e4a5a); border: 1.5px solid #06b6d4; }
+  .bg-contract { background: linear-gradient(135deg, #2d1f4e, #3d2f5e); border: 2px solid #a78bfa; }
+  .bg-api { background: linear-gradient(135deg, #3d2f0f, #5a4520); border: 1.5px solid #f59e0b; }
+  .bg-auth { background: linear-gradient(135deg, #4a1a1a, #6a2a2a); border: 1.5px solid #ef4444; }
+  .bg-db { background: linear-gradient(135deg, #1a3a1a, #2a4a2a); border: 1.5px solid #22c55e; }
+  .bg-mock { background: linear-gradient(135deg, #2a2a35, #35354a); border: 1.5px dashed #888; }
+  .bg-layer { background: linear-gradient(135deg, #1a1a2a, #2a2a3a); }
+</style>
+</head>
+<body>
+  <h1>고래 유니버스 — 시스템 아키텍처 + 기술 스택 맵</h1>
+  <p class="subtitle">도메인 모델 중심 아키텍처 + 기술 스택 매핑 — API: Go 기반</p>
+
+  <div class="canvas">
+
+    <!-- ==================== SECTION LABEL ==================== -->
+    <div class="section-label" style="left: 0; top: 0;">ARCHITECTURE</div>
+
+    <!-- ==================== ZONES ==================== -->
+    <div class="zone" style="left: 30px; top: 30px; width: 320px; height: 170px; border: 1.5px dashed #3b82f6;"></div>
+    <div class="zone-label" style="left: 38px; top: 38px; color: #3b82f6;">UI LAYER</div>
+
+    <div class="zone" style="right: 30px; top: 30px; width: 370px; height: 220px; border: 1.5px dashed #f59e0b;"></div>
+    <div class="zone-label" style="right: 38px; top: 38px; color: #f59e0b;">API LAYER</div>
+
+    <!-- ==================== ARCHITECTURE NODES ==================== -->
+    <!-- Auth Hook -->
+    <div class="node bg-auth" style="left: 110px; top: 45px; width: 140px; height: 46px; font-size: 12px;">
+      <span class="label" style="font-size: 13px;">Auth Hook</span>
+      <span class="sub">토큰 관리, 리프레시</span>
+    </div>
+
+    <!-- UI (Presentational) -->
+    <div class="node bg-ui" style="left: 50px; top: 120px; width: 120px; height: 65px;">
+      <span class="label">UI</span>
+      <span class="sub">Presentational</span>
+    </div>
+
+
+    <!-- Hook -->
+    <div class="node bg-hook" style="left: 200px; top: 120px; width: 120px; height: 65px;">
+      <span class="label">Hook</span>
+      <span class="sub">fetch, 캐싱, 상태</span>
+    </div>
+
+    <!-- Contract -->
+    <div class="node bg-contract" style="left: 420px; top: 110px; width: 170px; height: 70px;">
+      <span class="label">Contract</span>
+      <span class="sub">OpenAPI, 타입, 검증</span>
+    </div>
+
+    <!-- Mock -->
+    <div class="node bg-mock" style="left: 445px; top: 35px; width: 120px; height: 46px; font-size: 12px;">
+      <span class="label" style="font-size: 13px;">Mock</span>
+      <span class="sub">MSW</span>
+    </div>
+
+    <!-- Auth MW -->
+    <div class="node bg-auth" style="left: 700px; top: 80px; width: 140px; height: 52px; font-size: 12px;">
+      <span class="label" style="font-size: 13px;">Auth MW (Go)</span>
+      <span class="sub">JWT 검증 미들웨어</span>
+    </div>
+
+    <!-- API -->
+    <div class="node bg-api" style="left: 700px; top: 155px; width: 140px; height: 55px;">
+      <span class="label">API (Go)</span>
+      <span class="sub">라우트, 서비스</span>
+    </div>
+
+    <!-- DB -->
+    <div class="node bg-db" style="left: 900px; top: 120px; width: 110px; height: 55px;">
+      <span class="label">DB</span>
+      <span class="sub">PostgreSQL</span>
+    </div>
+
+    <!-- Badges -->
+    <div class="badge" style="left: 55px; top: 192px; background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3);">props만 받음</div>
+    <div class="badge" style="left: 448px; top: 186px; background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3);">출입 규칙 문서</div>
+    <div class="badge" style="left: 720px; top: 138px; background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);">문지기</div>
+
+    <!-- Annotation -->
+    <div class="annotation" style="left: 620px; top: 55px; color: #ef4444; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);">인증/인가</div>
+
+    <!-- Domain Model (중심) -->
+    <div class="node" style="left: 420px; top: 240px; width: 220px; height: 50px; background: linear-gradient(135deg, #1a3a1a, #2a4a2a); border: 2px solid #22c55e; z-index: 3;">
+      <span class="label">Domain Model</span>
+      <span class="sub">엔티티, 불변 규칙, 관계</span>
+    </div>
+
+    <!-- ==================== SVG ARROWS ==================== -->
+    <svg class="arrows" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#444"/></marker>
+        <marker id="ah-r" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ef4444"/></marker>
+      </defs>
+      <!-- UI ←props← Hook -->
+      <line x1="198" y1="152" x2="170" y2="152" class="arrow arrow-solid" marker-end="url(#ah)"/>
+      <!-- props label -->
+      <text x="184" y="145" font-size="9" fill="#666" text-anchor="middle" font-weight="600">props</text>
+      <!-- Hook → Contract (fetch) -->
+      <line x1="320" y1="152" x2="418" y2="145" class="arrow arrow-solid" marker-end="url(#ah)"/>
+      <!-- Contract → Mock -->
+      <line x1="505" y1="110" x2="505" y2="83" class="arrow arrow-dashed" marker-end="url(#ah)"/>
+      <!-- Contract → Auth MW -->
+      <line x1="590" y1="130" x2="698" y2="106" class="arrow arrow-solid" marker-end="url(#ah)"/>
+      <!-- Auth MW → API -->
+      <line x1="770" y1="132" x2="770" y2="153" class="arrow arrow-auth" marker-end="url(#ah-r)"/>
+      <!-- API → DB -->
+      <line x1="840" y1="182" x2="898" y2="158" class="arrow arrow-solid" marker-end="url(#ah)"/>
+      <!-- Auth Hook → Hook -->
+      <line x1="180" y1="91" x2="240" y2="118" class="arrow arrow-auth" marker-end="url(#ah-r)"/>
+      <!-- Auth Hook → UI -->
+      <line x1="130" y1="91" x2="110" y2="118" class="arrow arrow-auth" marker-end="url(#ah-r)"/>
+      <!-- Domain Model → 각 레이어 (규칙 공급) -->
+      <defs>
+        <marker id="ah-g" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#22c55e"/></marker>
+      </defs>
+      <text x="530" y="234" font-size="9" fill="#22c55e" font-weight="600" text-anchor="middle">규칙 공급</text>
+      <!-- Domain → Hook: 수평← → 수직↑ -->
+      <path d="M 530 240 L 260 240 L 260 185" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#ah-g)"/>
+      <!-- Domain → Contract: 수평→ → 수직↑ -->
+      <path d="M 530 240 L 480 240 L 480 180" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#ah-g)"/>
+      <!-- Domain → API: 수평→ → 수직↑ -->
+      <path d="M 530 240 L 770 240 L 770 210" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#ah-g)"/>
+      <!-- Domain → DB: 수평→ → 수직↑ -->
+      <path d="M 530 240 L 955 240 L 955 175" stroke="#22c55e" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#ah-g)"/>
+    </svg>
+
+    <!-- ==================== SECTION DIVIDER ==================== -->
+    <div style="position: absolute; left: 0; top: 310px; width: 1100px; border-top: 1px solid rgba(255,255,255,0.04);"></div>
+    <div class="section-label" style="left: 0; top: 325px;">TECH STACK</div>
+
+    <!-- ==================== CONNECTORS (arch → stack) ==================== -->
+    <div class="connector" style="left: 110px; top: 265px; height: 115px; border-color: #3b82f6;"></div>
+    <div class="connector" style="left: 260px; top: 205px; height: 175px; border-color: #06b6d4;"></div>
+    <div class="connector" style="left: 505px; top: 200px; height: 180px; border-color: #a78bfa;"></div>
+    <div class="connector" style="left: 770px; top: 230px; height: 150px; border-color: #f59e0b;"></div>
+    <div class="connector" style="left: 955px; top: 195px; height: 185px; border-color: #22c55e;"></div>
+
+    <!-- ==================== TECH STACK COLUMNS ==================== -->
+
+    <!-- UI Stack -->
+    <div class="stack-column c-ui" style="left: 20px; top: 375px;">
+      <div class="stack-header c-ui">UI<span class="sh-sub">Presentational</span></div>
+      <div class="stack-body">
+        <div class="cat">
+          <div class="cat-label">UI 프레임워크</div>
+          <div class="lib"><div class="lib-dot" style="background:#3b82f6;"></div><span class="lib-name">React</span><span class="lib-ver">19.0</span></div>
+          <div class="lib"><div class="lib-dot" style="background:#3b82f6;"></div><span class="lib-name">React Router</span><span class="lib-ver">7.0</span></div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">스타일링</div>
+          <div class="lib"><div class="lib-dot" style="background:#3b82f6;"></div><span class="lib-name">Tailwind CSS</span><span class="lib-ver">4.0</span></div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">애니메이션</div>
+          <div class="lib"><div class="lib-dot" style="background:#3b82f6;"></div><span class="lib-name">Framer Motion</span><span class="lib-ver">12.0</span></div>
+        </div>
+        <div class="cat" style="border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.04);">
+          <div class="cat-label" style="color: #10b981;">Quality Gates</div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">typescript-eslint</span></div>
+          <div class="lib-note">strict-type-checked 프리셋</div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">React Compiler</span><span class="lib-ver">1.0</span></div>
+          <div class="lib-note">Rules of React 컴파일 타임 감지</div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">Vitest + RTL</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hook Stack -->
+    <div class="stack-column c-hook" style="left: 220px; top: 375px;">
+      <div class="stack-header c-hook">Hook<span class="sh-sub">Container — fetch, 상태, 로직</span></div>
+      <div class="stack-body">
+        <div class="cat">
+          <div class="cat-label">서버 상태 관리</div>
+          <div class="lib"><div class="lib-dot" style="background:#06b6d4;"></div><span class="lib-name">TanStack React Query</span><span class="lib-ver">5.x</span></div>
+          <div class="lib-note">useQuery, useMutation, 캐시 무효화</div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">클라이언트 상태 관리</div>
+          <div class="lib"><div class="lib-dot" style="background:#06b6d4;"></div><span class="lib-name">Zustand</span><span class="lib-ver">5.0</span></div>
+          <div class="lib-note">모달, 폼, UI 토글 등</div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">상태 머신</div>
+          <div class="lib"><div class="lib-dot" style="background:#06b6d4;"></div><span class="lib-name">XState</span><span class="lib-ver">5.x</span></div>
+          <div class="lib-note">복잡한 플로우, 상태 전이 관리</div>
+        </div>
+        <div class="cat" style="border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.04);">
+          <div class="cat-label" style="color: #ef4444;">인증 (UX: UI 분기)</div>
+          <div class="lib"><div class="lib-dot" style="background:#ef4444;"></div><span class="lib-name">Supabase Auth</span></div>
+          <div class="lib-note">토큰, 리프레시, UI 분기</div>
+          <div class="lib"><div class="lib-dot" style="background:#ef4444;"></div><span class="lib-name">@supabase/ssr</span><span class="lib-ver">0.9</span></div>
+          <div class="lib-note">서버사이드 세션 관리</div>
+        </div>
+        <div class="cat" style="border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.04);">
+          <div class="cat-label" style="color: #10b981;">Quality Gates</div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">typescript-eslint</span></div>
+          <div class="lib-note">strict-type-checked 프리셋</div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">Zod</span><span class="lib-ver">3.23</span></div>
+          <div class="lib-note">API 응답 런타임 검증</div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">Effect-TS</span></div>
+          <div class="lib-note">Result&lt;T,E&gt; 에러 모델링</div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">Vitest</span></div>
+          <div class="lib-note">Hook 로직 단위 테스트</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contract Stack -->
+    <div class="stack-column c-contract" style="left: 420px; top: 375px;">
+      <div class="stack-header c-contract">Contract<span class="sh-sub">OpenAPI 중심, 양방향 codegen</span></div>
+      <div class="stack-body">
+        <div class="cat">
+          <div class="cat-label">스펙 (Single Source of Truth)</div>
+          <div class="lib"><div class="lib-dot" style="background:#a78bfa;"></div><span class="lib-name">OpenAPI</span><span class="lib-ver">3.1</span></div>
+          <div class="lib-note">api-contract.yaml</div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">→ TS codegen</div>
+          <div class="lib"><div class="lib-dot" style="background:#3b82f6;"></div><span class="lib-name">openapi-ts</span></div>
+          <div class="lib-note">타입 + SDK + Zod + React Query hooks</div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">→ Go 타입 생성</div>
+          <div class="lib"><div class="lib-dot" style="background:#f59e0b;"></div><span class="lib-name">oapi-codegen</span></div>
+          <div class="lib-note">API용 struct + handler 인터페이스</div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">런타임 검증 (UI)</div>
+          <div class="lib"><div class="lib-dot" style="background:#a78bfa;"></div><span class="lib-name">Zod</span><span class="lib-ver">3.23</span></div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">Mock 서버</div>
+          <div class="lib"><div class="lib-dot" style="background:#a78bfa;"></div><span class="lib-name">MSW</span><span class="lib-ver">2.7</span></div>
+        </div>
+        <div class="cat" style="border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.04);">
+          <div class="cat-label" style="color: #ef4444;">인증 (스펙: 타입 정의)</div>
+          <div class="lib"><div class="lib-dot" style="background:#ef4444;"></div><span class="lib-name">Role 타입</span></div>
+          <div class="lib-note">TS enum + Go const</div>
+          <div class="lib"><div class="lib-dot" style="background:#ef4444;"></div><span class="lib-name">JWT 페이로드 타입</span></div>
+          <div class="lib-note">권한 enum, 클레임 정의</div>
+        </div>
+        <div class="cat" style="border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.04);">
+          <div class="cat-label" style="color: #10b981;">Quality Gates</div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">oapi-codegen</span></div>
+          <div class="lib-note">미구현 시 컴파일 에러</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- API Stack -->
+    <div class="stack-column c-api" style="left: 680px; top: 375px;">
+      <div class="stack-header c-api">API (Go)<span class="sh-sub">라우트, 서비스, MW</span></div>
+      <div class="stack-body">
+        <div class="cat">
+          <div class="cat-label">API 프레임워크</div>
+          <div class="lib"><div class="lib-dot" style="background:#f59e0b;"></div><span class="lib-name">Chi</span><span class="lib-ver">v5</span></div>
+          <div class="lib-note">경량 라우터, 미들웨어 체인</div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">DB 드라이버</div>
+          <div class="lib"><div class="lib-dot" style="background:#f59e0b;"></div><span class="lib-name">pgx</span><span class="lib-ver">v5</span></div>
+          <div class="lib"><div class="lib-dot" style="background:#f59e0b;"></div><span class="lib-name">sqlc</span></div>
+          <div class="lib-note">SQL → 타입 안전 Go 코드</div>
+        </div>
+        <div class="cat" style="border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.04);">
+          <div class="cat-label" style="color: #ef4444;">인증 (강제: 서버 검증)</div>
+          <div class="lib"><div class="lib-dot" style="background:#ef4444;"></div><span class="lib-name">golang-jwt</span><span class="lib-ver">v5</span></div>
+          <div class="lib"><div class="lib-dot" style="background:#ef4444;"></div><span class="lib-name">Chi MW</span></div>
+          <div class="lib-note">JWT 검증 + Supabase RLS</div>
+        </div>
+        <div class="cat" style="border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.04);">
+          <div class="cat-label" style="color: #10b981;">Quality Gates</div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">golangci-lint</span></div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">go vet</span></div>
+          <div class="lib"><div class="lib-dot" style="background:#10b981;"></div><span class="lib-name">go test + testify</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DB Stack -->
+    <div class="stack-column c-db" style="left: 900px; top: 375px;">
+      <div class="stack-header c-db">DB<span class="sh-sub">스키마, 스토리지</span></div>
+      <div class="stack-body">
+        <div class="cat">
+          <div class="cat-label">플랫폼</div>
+          <div class="lib"><div class="lib-dot" style="background:#22c55e;"></div><span class="lib-name">Supabase</span><span class="lib-ver">2.99</span></div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">DB 엔진</div>
+          <div class="lib"><div class="lib-dot" style="background:#22c55e;"></div><span class="lib-name">PostgreSQL</span></div>
+        </div>
+        <div class="cat">
+          <div class="cat-label">마이그레이션</div>
+          <div class="lib"><div class="lib-dot" style="background:#22c55e;"></div><span class="lib-name">Supabase CLI (db push)</span><span class="lib-ver">dev/prod</span></div>
+          <div class="lib"><div class="lib-dot" style="background:#22c55e;"></div><span class="lib-name">Supabase CLI (db reset)</span><span class="lib-ver">local</span></div>
+          <div class="lib"><div class="lib-dot" style="background:#22c55e;"></div><span class="lib-name">OrbStack</span><span class="lib-ver">local stack 호스팅</span></div>
+          <div class="lib-note">상세 규칙: _code_convention/DB_MIGRATIONS.md</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== BOTTOM STRIPS (flow layout) ==================== -->
+    <div style="position: absolute; left: 0; top: 1030px; width: 1100px; display: flex; flex-direction: column; gap: 16px; padding: 0 20px;">
+
+      <!-- 1. AUTH STRIP (인증/인가) -->
+      <div class="auth-strip" style="position: relative; left: auto; top: auto; width: 100%;">
+        <div class="auth-title">인증/인가</div>
+        <div class="auth-items">
+          <div class="auth-item">
+            <span class="auth-where">Hook (안내데스크)</span>
+            <span class="auth-what">Supabase Auth — 토큰 관리, 리프레시, 권한별 UI 분기</span>
+          </div>
+          <div class="auth-item">
+            <span class="auth-where">Contract (규칙 문서)</span>
+            <span class="auth-what">TypeScript — Role 타입, 권한 enum, JWT 페이로드 타입</span>
+          </div>
+          <div class="auth-item">
+            <span class="auth-where">API (문지기)</span>
+            <span class="auth-what">golang-jwt + Chi MW — JWT 검증, Supabase RLS 정책 강제</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. DEFENSE LAYERS STRIP (방어선) -->
+      <div style="width: 100%; border: 1.5px solid rgba(16,185,129,0.3); border-radius: 14px; padding: 14px 20px; background: rgba(16,185,129,0.03);">
+        <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px;">
+          <span style="font-size: 12px; font-weight: 700; color: #10b981;">방어선 · Quality Gates</span>
+          <span style="font-size: 10px; color: #555;">빠름 · 저렴 ─────────────────────────────── 느림 · 비쌈</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; flex-direction: column; gap: 2px; background: rgba(16,185,129,0.06); padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.12);">
+            <span style="font-size: 9px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">1겹 린터</span>
+            <span style="font-size: 11px; color: #ccc;">typescript-eslint strict-type-checked · golangci-lint · gofmt</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px; background: rgba(16,185,129,0.06); padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.12);">
+            <span style="font-size: 9px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">2겹 컴파일러</span>
+            <span style="font-size: 11px; color: #ccc;">tsc (strict + noUncheckedIndexedAccess) · React Compiler · go build · go vet</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px; background: rgba(16,185,129,0.06); padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.12);">
+            <span style="font-size: 9px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">3겹 에러 모델링</span>
+            <span style="font-size: 11px; color: #ccc;">Effect-TS · Zod (런타임 경계 검증)</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px; background: rgba(16,185,129,0.06); padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.12);">
+            <span style="font-size: 9px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">4겹 단위 테스트</span>
+            <span style="font-size: 11px; color: #ccc;">Vitest · RTL · go test · testify</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px; background: rgba(16,185,129,0.06); padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.12);">
+            <span style="font-size: 9px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">5겹 통합/Contract</span>
+            <span style="font-size: 11px; color: #ccc;">MSW · oapi-codegen</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px; background: rgba(16,185,129,0.06); padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.12);">
+            <span style="font-size: 9px; color: #10b981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">6겹 E2E</span>
+            <span style="font-size: 11px; color: #ccc;">Playwright</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. INFRA STRIP (빌드/인프라) -->
+      <div class="infra-strip" style="position: relative; left: auto; top: auto; width: 100%;">
+        <div class="infra-title">빌드/인프라</div>
+        <div class="infra-items">
+          <div class="infra-tag" style="border-color: rgba(59,130,246,0.3);"><span class="lib-name">Vite</span> <span class="lib-ver">6.0</span></div>
+          <div class="infra-tag" style="border-color: rgba(59,130,246,0.3);"><span class="lib-name">pnpm</span> <span class="lib-ver">9.15</span></div>
+          <div class="infra-tag" style="border-color: rgba(59,130,246,0.3);"><span class="lib-name">TypeScript</span> <span class="lib-ver">5.8</span></div>
+          <div class="infra-tag" style="border-color: rgba(245,158,11,0.3);"><span class="lib-name">Go</span> <span class="lib-ver">1.24</span></div>
+          <div class="infra-tag" style="border-color: rgba(245,158,11,0.3);"><span class="lib-name">Air</span></div>
+          <div class="infra-tag" style="border-color: rgba(167,139,250,0.3);"><span class="lib-name">oapi-codegen</span></div>
+          <div class="infra-tag"><span class="lib-name">Playwright</span> <span class="lib-ver">1.52</span></div>
+        </div>
+      </div>
+
+      <!-- LEGEND -->
+      <div class="legend" style="position: relative; left: auto; top: auto;">
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div>UI (Presentational)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#06b6d4;"></div>Hook (Container)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a78bfa;"></div>Contract</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div>API (Go)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div>Domain Model / DB</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div>인증/인가</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>방어선 · Quality Gates</div>
+        <div class="legend-item" style="color: #444; font-style: italic;">버전 미표기 = latest</div>
+      </div>
+
+    </div><!-- end bottom strips -->
+
+  </div>
+</body>
+</html>

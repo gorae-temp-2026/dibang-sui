@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모임 분류 체계 — 축·클러스터·매핑</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#181b24; --panel2:#1f2330; --border:#2a2f3e;
+    --text:#e8eaf0; --muted:#9aa3b5; --accent:#6c9ef8; --accent2:#f8b86c;
+    --k1:#e06c8a; --k2:#6cc99e; --k3:#f8b86c; --k4:#6c9ef8; --k5:#8a8fa3; --k6:#b98af0; --k7:#5fd0d8;
+    --warn:#f0c75e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Apple SD Gothic Neo','Pretendard','Noto Sans KR',sans-serif;line-height:1.55}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 80px}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:28px}
+  h2{font-size:19px;margin:48px 0 6px;padding-top:18px;border-top:1px solid var(--border)}
+  h2 .no{color:var(--accent);margin-right:8px}
+  .desc{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+  /* 층위 다이어그램 */
+  .layers{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .lbox{flex:1;min-width:200px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin:6px}
+  .lbox h3{margin:0 0 6px;font-size:15px}
+  .lbox .tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;margin-bottom:8px}
+  .lbox p{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+  .lbox .ex{font-size:12px;color:var(--text)}
+  .arrowline{display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:12px;padding:0 2px;min-width:74px;text-align:center;flex-direction:column}
+  .arrowline span{font-size:20px}
+  /* 축 정제 flow */
+  .axflow{display:grid;grid-template-columns:1fr 60px 1fr;gap:4px 0;align-items:center;font-size:13px}
+  .axflow .src,.axflow .dst{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:7px 12px;margin:3px 0}
+  .axflow .dst{background:var(--panel2)}
+  .axflow .op{text-align:center;font-size:11px;font-weight:700}
+  .op.merge{color:var(--k2)} .op.split{color:var(--accent2)} .op.drop{color:var(--k5)} .op.keep{color:var(--accent)} .op.demote{color:var(--k6)}
+  .layerchip{font-size:10.5px;padding:1px 7px;border-radius:9px;margin-left:6px;vertical-align:1px}
+  .chipA{background:#27406e;color:#bcd3ff} .chipB{background:#5a3050;color:#f3bcd9} .chipC{background:#444a59;color:#c9cfdd}
+  /* 규칙 카드 */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-size:13px}
+  .card b.rid{color:var(--accent);font-size:12px}
+  .card .cx{color:var(--muted);font-size:12px;margin-top:6px}
+  /* 클러스터 */
+  .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .kcard{border-radius:14px;padding:16px;background:var(--panel);border:1px solid var(--border);border-top:4px solid}
+  .kcard h3{margin:0 0 6px;font-size:15px}
+  .kcard .sig{font-family:ui-monospace,monospace;font-size:11.5px;color:var(--muted);background:var(--bg);border-radius:6px;padding:6px 8px;margin:8px 0;display:block}
+  .kcard .mem{font-size:12.5px}
+  .kcard .mean{font-size:12px;color:var(--muted);margin-top:8px}
+  .pill{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:11px;margin:2px 3px 2px 0;background:var(--panel2);border:1px solid var(--border)}
+  /* 테이블 */
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;align-items:center}
+  .controls select,.controls input{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px}
+  .controls input{width:180px}
+  .controls .count{color:var(--muted);font-size:12.5px;margin-left:auto}
+  .tbl-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:980px}
+  th,td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  th{background:var(--panel2);position:sticky;top:0;cursor:pointer;user-select:none;font-size:12px}
+  th:hover{color:var(--accent)}
+  tr:hover td{background:rgba(108,158,248,.06)}
+  td.name{font-weight:600}
+  .subj{color:var(--warn)}
+  .kdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+  .hl{background:rgba(224,108,138,.14)!important}
+  .legend{font-size:12px;color:var(--muted);margin-top:8px}
+  .toggle{display:flex;gap:8px;margin:16px 0 4px}
+  .toggle button{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:9px;font-size:13.5px;cursor:pointer}
+  .toggle button.on{background:var(--accent);color:#0b0d12;font-weight:700;border-color:var(--accent)}
+  .note{background:var(--panel);border-left:3px solid var(--accent2);border-radius:0 10px 10px 0;padding:12px 16px;font-size:13px;margin:18px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>모임 분류 체계</h1>
+  <div class="sub">신뢰 네트워크 정량화를 위한 "2인 이상 모임" 택소노미 · 2026-06-10 · 원자료: 브레인스토밍 → 4단계 정제 (01~05 문서)</div>
+
+  <!-- ───────── 1. 층위 ───────── -->
+  <h2><span class="no">1</span>층위 분해 — "모임"이라는 단어가 가리키는 네 가지</h2>
+  <p class="desc">원본 목록이 한 축 체계에 안 들어가던 근본 원인. 집단은 이벤트를 반복 생성하고, 이벤트는 장소에서 발생하며, 이벤트의 누적이 관계를 만든다.</p>
+  <div class="layers">
+    <div class="lbox" style="border-top:4px solid var(--k4)">
+      <h3>집단 <span class="tag" style="background:#27406e;color:#bcd3ff">group</span></h3>
+      <p>반복적으로 이벤트를 소집하는 지속적 구성원 집합. 축: 경계·귀속성·동질성·운영논리·기한·반복성</p>
+      <div class="ex">가족 · 회사 · 동호회 · 군대 · 계모임</div>
+    </div>
+    <div class="arrowline"><span>→</span>생성한다</div>
+    <div class="lbox" style="border-top:4px solid var(--k1)">
+      <h3>이벤트 <span class="tag" style="background:#5a2638;color:#f3bccb">event</span></h3>
+      <p>특정 시간·채널에 실제로 모인 1회 사건. 축: 규모·초점성·방향성·매체·의례성·활동모드·정서가</p>
+      <div class="ex">결혼식 · 회의 · 소개팅 · 정모</div>
+    </div>
+    <div class="arrowline"><span>→</span>누적되어<br>만든다</div>
+    <div class="lbox" style="border-top:4px solid var(--k2)">
+      <h3>관계 <span class="tag" style="background:#1f4a37;color:#bdebd4">edge</span></h3>
+      <p>두 사람 사이의 지속 연결. 분류 대상이 아니라 <b>결과물</b> = 신뢰 네트워크의 엣지</p>
+      <div class="ex">친구 · 연인 · 임대인-임차인</div>
+    </div>
+  </div>
+  <div class="layers" style="margin-top:4px">
+    <div class="lbox" style="border-top:4px solid var(--k5);max-width:420px">
+      <h3>장소 <span class="tag" style="background:#3a3f4e;color:#cdd3e0">setting</span></h3>
+      <p>이벤트가 발생하는 그릇. 그 자체는 모임이 아님 → 대표 이벤트로 변환해 흡수 (버스→"대중교통 동승")</p>
+      <div class="ex">집 · 공원 · 버스 · 독서실 · 비행기</div>
+    </div>
+  </div>
+
+  <!-- ───────── 2. 축 정제 ───────── -->
+  <h2><span class="no">2</span>축 정제 — 원본 15축 → 코어 17축</h2>
+  <p class="desc">층위: <span class="layerchip chipA">A 모임 속성</span> <span class="layerchip chipB">B 참가자별 함수</span> <span class="layerchip chipC">C 관찰 시점</span> — B·C는 모임 자체의 속성이 아니므로 분리 처리.</p>
+  <div class="axflow">
+    <div class="src">무료/유료 + (발견: 임금·부조·회비)<span class="layerchip chipA">A</span></div><div class="op merge">합침 ▶</div><div class="dst"><b>S3 금전 흐름</b> — 없음/회비/일방/부조/쌍방/역방향</div>
+    <div class="src">혼성/동성<span class="layerchip chipA">A</span></div><div class="op merge">흡수 ▶</div><div class="dst"><b>G3 동질성</b> — 혈연/지연/학연/직연/취향/신념/상황</div>
+    <div class="src">의도한/의도하지 않은<span class="layerchip chipA">A</span></div><div class="op merge">대체 ▶</div><div class="dst"><b>E2 초점성</b> — focused/unfocused (Goffman)</div>
+    <div class="src">가고 싶은/가기 싫은<span class="layerchip chipB">B</span></div><div class="op demote">분리 ▶</div><div class="dst"><b>S1 강제성</b>(객관) + 참여욕구(B층위 보존)</div>
+    <div class="src">기쁜/슬픈<span class="layerchip chipB">B</span></div><div class="op demote">분리 ▶</div><div class="dst"><b>E7 정서가 기본값</b>(규범) + 개인 정서(B층위)</div>
+    <div class="src">짧은/긴<span class="layerchip chipA">A</span></div><div class="op split">쪼갬 ▶</div><div class="dst">이벤트 세션 길이(수치) + <b>G5 집단 기한</b></div>
+    <div class="src">목적 유/무<span class="layerchip chipA">A</span></div><div class="op split">쪼갬 ▶</div><div class="dst"><b>E6 활동 모드</b>(생성/선택/협상/실행/친교, McGrath)</div>
+    <div class="src">모임장 유/무<span class="layerchip chipA">A</span></div><div class="op split">쪼갬 ▶</div><div class="dst"><b>S2 호스트 구조</b> — 대칭/호스트-게스트/공급자-소비자</div>
+    <div class="src">과거/다가올 모임<span class="layerchip chipC">C</span></div><div class="op drop">버림 ▶</div><div class="dst">모임 속성 아님 → 데이터 모델의 timestamp</div>
+    <div class="src">규모·반복성·기한·방향성·온오프<span class="layerchip chipA">A</span></div><div class="op keep">유지 ▶</div><div class="dst">E1 규모(Dunbar 구간) · G6 반복 · G5 기한 · E3 방향 · E4 매체</div>
+    <div class="src">(신규 — 이론 보강)</div><div class="op keep">추가 ▶</div><div class="dst">N3 경계(Collins) · N5 귀속성(Parsons) · <b>N8 운영논리(Fiske)</b> · N11 의례성 · <b>N12 기록성</b> 외</div>
+  </div>
+
+  <!-- ───────── 3. 함의/상관 ───────── -->
+  <h2><span class="no">3</span>축 간 관계 — 함의 규칙 7 · 상관 5</h2>
+  <p class="desc">함의(⇒)는 매핑 일관성 검사기로 사용. 상관은 반례가 존재해 축으로서 독립.</p>
+  <div class="cards">
+    <div class="card"><b class="rid">F1</b> 이벤트 ⇒ 기한 있음 <div class="cx">기한 축은 집단 전용</div></div>
+    <div class="card"><b class="rid">F2</b> 통과의례 ⇒ focused <div class="cx">공동 초점 필수 (Collins) · 정기 의례는 예외(축제·선거)</div></div>
+    <div class="card"><b class="rid">F3</b> 부조 ⇒ 호스트-게스트 구조 <div class="cx">부조의 방향이 정의에 포함</div></div>
+    <div class="card"><b class="rid">F4</b> 방송형(1:N) ⇒ 비대칭 구조 <div class="cx">송신/수신 역할 분화 전제</div></div>
+    <div class="card"><b class="rid">F5</b> unfocused ⇒ 리더 없음 <div class="cx">버스 기사는 리더가 아니라 공급자</div></div>
+    <div class="card"><b class="rid">F6</b> 귀속 멤버십 ⇒ 폐쇄 경계 <div class="cx">태어나야 들어가는 집단은 가입 불가</div></div>
+    <div class="card"><b class="rid">F7</b> unfocused ⇒ 공동 상호작용 과업 없음 <div class="cx">예외: 집계형 행동 (선거·크라우드펀딩 — 상호작용 없이 합산으로 집합 결과)</div></div>
+    <div class="card" style="border-color:#3a4258"><b class="rid" style="color:var(--accent2)">C1</b> 규모↑ ↔ 일방향화 <div class="cx">반례: 축제·시위 (대규모 N:N)</div></div>
+    <div class="card" style="border-color:#3a4258"><b class="rid" style="color:var(--accent2)">C2</b> 귀속 ↔ CS 운영 <div class="cx">반례: 군대 (귀속+AR)</div></div>
+    <div class="card" style="border-color:#3a4258"><b class="rid" style="color:var(--accent2)">C3</b> 무기한 ↔ 관계지향 <div class="cx">반례: 회사 (무기한+과업)</div></div>
+    <div class="card" style="border-color:#3a4258"><b class="rid" style="color:var(--accent2)">C4</b> 의례성 ↔ 기록성 <div class="cx">반례: 제사(의례·무기록), 계약(비의례·법적)</div></div>
+    <div class="card" style="border-color:#3a4258"><b class="rid" style="color:var(--accent2)">C5</b> 반복성 ↔ 유대 기여 <div class="cx">반례: 매일 같은 버스(0), 결혼식 1회(최대) → <b>유대 = 빈도×강도</b></div></div>
+  </div>
+
+  <!-- ───────── 4. 클러스터 ───────── -->
+  <h2><span class="no">4</span>클러스터 맵 — 매트릭스에서 드러난 7개 패턴</h2>
+  <p class="desc">비슷한 축 값 조합(시그니처)이 반복되는 영역. 새 모임은 좌표만 찍으면 소속이 결정된다.</p>
+  <div class="kgrid">
+    <div class="kcard" style="border-top-color:var(--k1)"><h3><span class="kdot" style="background:var(--k1)"></span>K1 의례-부조</h3>
+      <span class="sig">통과의례 × 호스트-게스트 × 부조 × 의무참석</span>
+      <div class="mem"><span class="pill">결혼식</span><span class="pill">장례식</span><span class="pill">돌잔치</span><span class="pill">칠순</span><span class="pill">집들이</span><span class="pill">병문안</span></div>
+      <div class="mean"><b>네트워크 스냅샷 생성기.</b> 잠재 엣지들이 호스트 한 점으로 동시에 현재화·정량화(부조액)됨</div></div>
+    <div class="kcard" style="border-top-color:var(--k2)"><h3><span class="kdot" style="background:var(--k2)"></span>K2 호혜 원장</h3>
+      <span class="sig">EM 운영 × 폐쇄/조건부 × 사적 기록</span>
+      <div class="mem"><span class="pill">계모임</span><span class="pill">품앗이</span><span class="pill">더치 회식</span><span class="pill">카풀</span><span class="pill">동창회 회비</span></div>
+      <div class="mean">신뢰가 직접 금융으로 작동하는 층. 𝒲 모델의 본진</div></div>
+    <div class="kcard" style="border-top-color:var(--k3)"><h3><span class="kdot" style="background:var(--k3)"></span>K3 시장 접촉</h3>
+      <span class="sig">MP × 쌍방 교환 × 공식/법적 기록 × 유대≈0</span>
+      <div class="mem"><span class="pill">중고거래</span><span class="pill">소매</span><span class="pill">경매</span><span class="pill">PT</span><span class="pill">방문서비스</span><span class="pill">계약</span></div>
+      <div class="mean">신뢰를 제도(계약·평판 시스템)가 대체. 매너온도 = K2 신뢰의 MP권 이식</div></div>
+    <div class="kcard" style="border-top-color:var(--k4)"><h3><span class="kdot" style="background:var(--k4)"></span>K4 과업 조직</h3>
+      <span class="sig">실행/선택 모드 × AR 경향 × 역방향/무 금전</span>
+      <div class="mem"><span class="pill">회의</span><span class="pill">훈련</span><span class="pill">원정</span><span class="pill">레이드</span><span class="pill">연습</span><span class="pill">학생회</span></div>
+      <div class="mean">유대는 부산물. 단 고립·고강도(원정·레이드)일수록 부산물 유대가 강함</div></div>
+    <div class="kcard" style="border-top-color:var(--k5)"><h3><span class="kdot" style="background:var(--k5)"></span>K5 unfocused 공존</h3>
+      <span class="sig">U × 무방향 × 무기록 × 유대 0</span>
+      <div class="mem"><span class="pill">대중교통</span><span class="pill">독서실</span><span class="pill">공원</span><span class="pill">투표</span></div>
+      <div class="mean"><b>모임의 영점.</b> 신뢰 데이터 0 — 측도의 기준점</div></div>
+    <div class="kcard" style="border-top-color:var(--k6)"><h3><span class="kdot" style="background:var(--k6)"></span>K6 약유대 생성기</h3>
+      <span class="sig">대규모 × 개방 × 취향/직연</span>
+      <div class="mem"><span class="pill">학회</span><span class="pill">축제</span><span class="pill">컨퍼런스</span><span class="pill">팬미팅</span><span class="pill">온라인 커뮤니티</span></div>
+      <div class="mean">weak tie 대량 생산 (Granovetter) — 신용 모델의 "탐색 범위" 확장 층</div></div>
+    <div class="kcard" style="border-top-color:var(--k7)"><h3><span class="kdot" style="background:var(--k7)"></span>K7 쌍 생성기</h3>
+      <span class="sig">2인 × 평가/친교 × 무기록</span>
+      <div class="mem"><span class="pill">소개팅</span><span class="pill">데이트</span><span class="pill">면접</span><span class="pill">멘토링</span></div>
+      <div class="mean">네트워크에 <b>새 엣지를 추가하는 연산.</b> 제3자(주선자·추천인)의 신뢰 위임 = 신용 보증의 사회적 원형</div></div>
+  </div>
+  <div class="note">
+    <b>결혼식 = 특이점 (축 조합 유일성)</b><br>
+    <code>통과의례 ∧ 초대규모(전체 네트워크 소집) ∧ 부조 ∧ 공식 기록 ∧ 일생 1회</code> — 매트릭스 전체에서 이 5조건이 동시에 참인 행은 결혼식뿐. "결혼식 = 신뢰 네트워크의 스냅샷" 전제가 분류 수준에서 형식화됨.
+  </div>
+
+  <!-- ───────── 5. 매핑 테이블 ───────── -->
+  <h2><span class="no">5</span>인터랙티브 매핑 매트릭스</h2>
+  <p class="desc">열 머리글 클릭 = 정렬. △ = 주관/논쟁 가능 판정(<a href="./04-mapping-matrix.md" style="color:var(--accent)">04 문서 §3</a>에 근거 명시). 클러스터 칸의 — 는 7대 클러스터 비소속.</p>
+  <div class="toggle">
+    <button id="btnEv" class="on" onclick="switchTab('ev')">이벤트 (44)</button>
+    <button id="btnGr" onclick="switchTab('gr')">집단 (14)</button>
+  </div>
+  <div class="controls" id="ctrl"></div>
+  <div class="tbl-scroll"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+  <div class="legend">규모: 2 / 소(3~15) / 중(~50) / 대(~150) / 초대(150+) — Dunbar 구간 · 금전 "역방향" = 참가자가 돈을 받음(임금·대접받음)</div>
+
+<script>
+const EV_COLS=["이벤트","규모","초점","방향","매체","의례","활동","정서","강제성","구조","금전","기록","클러스터"];
+const EV=[
+["결혼식","초대","F","방송△","대면","통과","친교","+","의무△","호스트","부조","공식","K1"],
+["장례식","대","F","망△","대면","통과","친교","−","의무","호스트","부조","공식","K1"],
+["돌잔치","중","F","방송△","대면","통과","친교","+","의무△","호스트","부조","사적","K1"],
+["칠순/환갑","소~중","F","망","대면","통과","친교","+","의무","호스트","부조","사적","K1"],
+["집들이","소","F","망","대면","통과△","친교","+","의무△","호스트","부조(선물)","무","K1"],
+["병문안","2~소","F","쌍","대면","비△","친교","−/0","의무","호스트(환자)","부조(선물)","무","K1"],
+["청첩 모임","소","F","망","대면","통과(전조)","친교","+","의무△","호스트","역방향(대접)","무","K1"],
+["명절 모임","소","F","망","대면","정기","친교","+△","의무","호스트△","없음△","무","—"],
+["제사/차례","소","F","망","대면","정기","실행(의례)","0/−","의무","호스트△","없음","무","—"],
+["종교 예배","중~대","F","방송","대면/혼합","정기","실행(의례)","+","자발△","호스트△","일방(헌금)△","공식","—"],
+["축제","초대","U△","망","대면","정기","친교","+","자발","공급자△","일방/없음","무","K6"],
+["공연 관람","대~초대","F","방송","대면","비","친교","+","자발","공급자","일방","공식","—"],
+["공연 연습","소","F","망","대면","비","실행","0","의무△","대칭△","없음","사적","K4"],
+["정모(동호회)","소~중","F","망","대면","정기","친교","+","자발","대칭","회비","사적","—"],
+["러닝크루/등산","소~중","F","망","대면","정기","실행+친교","+","자발","대칭","회비/없음","사적","—"],
+["회사 회의","소","F","망","대면/동온","비","선택·협상","0","강제△","대칭△","역방향","공식","K4"],
+["화상회의","소","F","망","동온","비","선택","0","의무","대칭△","역방향","공식","K4"],
+["비즈니스 미팅","2~소","F","쌍/망","대면","비","협상","0","의무","대칭","없음△","사적","—"],
+["강의","중~대","F","방송","대면/동온","비","실행(전달)","0","의무△","공급자","일방","공식","—"],
+["학회/컨퍼런스","대","F","방송+망","대면","정기","생성","+","자발","공급자△","일방","공식","K6"],
+["면접","2~소","F","쌍(비대칭)","대면/동온","비","선택(평가)","0△","자발△","공급자△","없음","공식","K7"],
+["소개팅/미팅","2~소","F","쌍","대면","비","친교(평가)","+△","자발","대칭","쌍방△","무","K7"],
+["데이트","2","F","쌍","대면","비","친교","+","자발","대칭","없음/EM","무","K7"],
+["멘토링","2","F","쌍","대면/동온","비","실행(전수)","+","자발","비대칭△","없음/일방","사적","K7"],
+["맛집 탐방/친목 여행","소","F","망","대면","비","친교","+","자발","대칭","회비(더치)","무","K2"],
+["수학여행","중","F","망","대면","정기","친교","+","강제","공급자(인솔)","일방","공식","—"],
+["소매 거래/팝업","2","F","쌍","대면","비","실행(교환)","0","자발","공급자","쌍방","공식","K3"],
+["중고 거래","2","F","쌍","혼합","비","실행(교환)","0","자발","대칭△","쌍방","사적(평판)","K3"],
+["경매","중","F","망(경쟁)","대면","비","선택(경쟁)","0","자발","공급자","쌍방","공식","K3"],
+["계약 체결","2~소","F","쌍","대면","비△","협상→실행","0","자발","대칭△","쌍방","법적","K3"],
+["재판","소~중","F","망(규제)","대면","비△","협상(갈등)","−","강제","공급자(법원)","없음△","법적","—"],
+["대결/시합","2~소","F","쌍(대립)","대면","비","실행(경쟁)","±","자발","대칭(+심판)","없음/쌍방","공식","—"],
+["시위/집회","초대","F","망","대면","비","협상+실행","−/+△","자발","대칭△","없음","무△","—"],
+["선거 투표","초대","U","무","대면","정기","선택(집합)","0","의무△","공급자","없음","법적","K5"],
+["군사 훈련","중","F","방송△","대면","비","실행","−","강제","공급자","역방향","공식","K4"],
+["원정(우주/남극/항해)","소","F","망","대면(고립)","비","실행","0","자발(선발)","대칭△","역방향","공식","K4"],
+["카풀/2인 자전거","2~소","F△","쌍","대면","비","실행(이동)","0","자발","대칭","회비(분담)","사적","K2"],
+["PT/방문서비스/진료/민원","2","F","쌍","대면","비","실행","0","자발△","공급자","일방","공식","K3"],
+["정상 회담","소","F","쌍(위임)","대면","정기△","협상","0","의무","호스트(주최국)","없음","공식","—"],
+["라이브 방송/합방","초대","F","방송+채팅","동온","비/정기","친교","+","자발","호스트","일방(후원)△","사적","—"],
+["게임 레이드","소","F","망","동온","비","실행","+","자발","대칭△","없음","사적","K4"],
+["크라우드펀딩","대","U△","방송","비온","비","실행(지원)","+","자발","호스트△","부조△/일방","공식","—"],
+["대중교통 동승","중","U","무","대면","비","무","0","자발","공급자","일방","무","K5"],
+["시설 공존(독서실 등)","중","U","무","대면","비","무","0","자발","공급자","일방/회비","무","K5"]
+];
+const GR_COLS=["집단","경계","귀속성","동질성","운영논리","기한","반복","강제성","구조","금전","기록"];
+const GR=[
+["가족","폐쇄","귀속","혈연","CS(+AR△)","무기한","상시","귀속△","대칭△","없음(공유)","법적"],
+["회사","조건부","성취","직연","AR+MP","무기한","상시","자발△","비대칭(고용)","역방향(임금)","법적"],
+["친구 집단","폐쇄△","성취△","지연/학연","CS/EM","무기한","비정기","자발","대칭","EM(더치)","무"],
+["동창회","조건부(졸업)","귀속△","학연","EM","무기한","정기","자발△","대칭(회장)","회비","사적"],
+["동아리/동호회","조건부","성취","취향","EM","무기한","정기","자발","대칭","회비","사적"],
+["학생회","조건부(선출)","성취","학연","AR(직책)","기한(임기)","정기","자발","비대칭","회비△","공식"],
+["연구실","조건부","성취","직연(도제)","AR","기한(졸업)","상시","자발△","비대칭(교수)","역방향","공식"],
+["군대 부대","폐쇄","귀속(징집)","상황","AR","기한(복무)","상시","강제","비대칭","역방향","법적"],
+["학급/학교","폐쇄","귀속(배정)","학연","EM△","기한(학년)","상시","강제","비대칭(담임)","없음","공식"],
+["온라인 커뮤니티","개방","성취","취향","EM△","무기한","상시","자발","대칭△","없음","사적(익명)"],
+["계모임(契)","폐쇄(초대)","성취","지연/학연","EM(원형)","갱신형(곗바퀴)","정기","자발","대칭(계주△)","순환수령(ROSCA)","사적(계부)"],
+["종교 공동체","조건부△","성취/귀속","신앙","CS+AR","무기한","정기","자발","비대칭(성직)","일방(헌금)","공식(교적)"],
+["노동조합","조건부","성취","직연","EM+AR","무기한","정기","자발","비대칭","회비","공식"],
+["DAO","개방(토큰)","성취","이해관계","MP+EM","무기한","상시","자발","대칭(지분)","회비(토큰)","온체인"]
+];
+const KCOLOR={K1:"var(--k1)",K2:"var(--k2)",K3:"var(--k3)",K4:"var(--k4)",K5:"var(--k5)",K6:"var(--k6)",K7:"var(--k7)"};
+let tab='ev';
+function uniq(data,ci){const s=new Set();data.forEach(r=>s.add(r[ci]));return [...s].sort();}
+function buildControls(){
+  const ctrl=document.getElementById('ctrl');ctrl.innerHTML='';
+  const cols=tab==='ev'?EV_COLS:GR_COLS;const data=tab==='ev'?EV:GR;
+  const fcols=tab==='ev'?[2,5,8,9,10,11,12]:[1,2,4,6,9,10];
+  const inp=document.createElement('input');inp.placeholder='이름 검색…';inp.oninput=render;inp.id='q';ctrl.appendChild(inp);
+  fcols.forEach(ci=>{
+    const sel=document.createElement('select');sel.dataset.ci=ci;sel.onchange=render;
+    sel.innerHTML=`<option value="">${cols[ci]}: 전체</option>`+uniq(data,ci).map(v=>`<option>${v}</option>`).join('');
+    ctrl.appendChild(sel);
+  });
+  const cnt=document.createElement('span');cnt.className='count';cnt.id='cnt';ctrl.appendChild(cnt);
+}
+let sortCi=-1,sortAsc=true;
+function render(){
+  const cols=tab==='ev'?EV_COLS:GR_COLS;let data=(tab==='ev'?EV:GR).slice();
+  const q=document.getElementById('q').value.trim();
+  if(q)data=data.filter(r=>r[0].includes(q));
+  document.querySelectorAll('#ctrl select').forEach(sel=>{
+    if(sel.value)data=data.filter(r=>r[+sel.dataset.ci]===sel.value);
+  });
+  if(sortCi>=0)data.sort((a,b)=>(a[sortCi]>b[sortCi]?1:-1)*(sortAsc?1:-1));
+  document.querySelector('#tbl thead').innerHTML='<tr>'+cols.map((c,i)=>`<th onclick="doSort(${i})">${c}${i===sortCi?(sortAsc?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
+  document.querySelector('#tbl tbody').innerHTML=data.map(r=>{
+    const isWedding=r[0]==='결혼식';
+    return `<tr${isWedding?' class="hl"':''}>`+r.map((v,i)=>{
+      let cell=String(v).replaceAll('△','<span class="subj">△</span>');
+      if(tab==='ev'&&i===12&&KCOLOR[v])cell=`<span class="kdot" style="background:${KCOLOR[v]}"></span>`+v;
+      return `<td${i===0?' class="name"':''}>${cell}</td>`;
+    }).join('')+'</tr>';
+  }).join('');
+  document.getElementById('cnt').textContent=`${data.length}건 표시`;
+}
+function doSort(ci){if(sortCi===ci)sortAsc=!sortAsc;else{sortCi=ci;sortAsc=true;}render();}
+function switchTab(t){tab=t;sortCi=-1;
+  document.getElementById('btnEv').classList.toggle('on',t==='ev');
+  document.getElementById('btnGr').classList.toggle('on',t==='gr');
+  buildControls();render();}
+buildControls();render();
+</script>
+</div>
+</body>
+</html>
