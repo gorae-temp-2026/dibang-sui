@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>디방인연 — 틴더식 데이팅앱 목업 v2 (260617)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!--
+  디방인연 (Inyeon) — 틴더식 단일 페이지 목업 v2 · 2026-06-17
+  핸드오프: 유상 → 박태원
+  ─────────────────────────────────────────────────────────────
+  v2 변경(비주얼 전면 개선):
+   - 프로필 사진 = 실제 이미지 갤러리(./profile-photos/a1~a4.png). 상단 세그먼트 점 + 좌우 탭으로 사진 넘김(틴더식).
+   - 액션/네비 아이콘 = 이모지 → Lucide SVG(MIT). 버튼 톤·그림자·여백 정리.
+   - 타이포 위계 정리, 사진 위 그라데이션 대비 강화.
+   ※ 데모 사진은 같은 인물 4장(유저 제공). 실제 서비스는 모이별 사진.
+  구조/세계관(v1 유지):
+   - 디방인연 = 데이팅앱(틴더식). 월드맵은 Event list 탭으로 분리(이 파일 밖).
+   - 필터 유료화 3단계: ①같은 이벤트=무료 ②2~3다리=싼 유료(요네) ③모르는 사람=비싼 유료(요네)
+   - 이음=매칭. 하트(이음) → 내 관계+이름 먼저 공개 → 상대 수락 → 대화(DM)
+   - 신뢰잔액/신뢰네트워크는 이음 전엔 익명. 이름·하객·네트워크명은 이음 후 공개.
+   - DM=인연/유니버스 영역. 이음·대화는 Moi Credit 산출 action 로그의 원천.
+  디자인토큰: sky/navy/ivory/gold · Pretendard. 동작은 데모용(드래그+버튼). 실제는 React+shadcn+검증 라이브러리.
+-->
+<style>
+:root{--sky:#87CEEB;--soft-sky:#B0D4E3;--pale-sky:#E8F4FA;--navy:#1E3A5F;--ivory:#FDFBF7;--ink:#16202e;--muted:#6B7280;--line:#E7ECF0;--gold:#F8C57A;--gold-deep:#E8A865;--pink:#F4A6B8;--rose:#E0607A;--green:#3FAE6E;--font:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;--shadow:0 8px 24px rgba(30,58,95,.10);--shadow-lg:0 20px 48px rgba(30,58,95,.20)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font);color:var(--ink);background:#d7e0e8;display:flex;justify-content:center;min-height:100vh;letter-spacing:-.01em}
+.app{width:100%;max-width:420px;background:var(--ivory);position:relative;min-height:100vh;box-shadow:0 0 0 1px rgba(30,58,95,.05),0 30px 80px rgba(30,58,95,.14);padding-bottom:72px;overflow:hidden;display:flex;flex-direction:column}
+.svgic{width:1em;height:1em;display:inline-block;vertical-align:-.125em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* 상단바 */
+.topbar{position:sticky;top:0;z-index:30;background:rgba(253,251,247,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.tb-row{display:flex;align-items:center;gap:10px;padding:13px 16px 9px}
+.tb-icon{width:36px;height:36px;border-radius:12px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:var(--navy);position:relative;flex-shrink:0}
+.tb-icon .dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--rose);border:2px solid var(--ivory)}
+.tb-brand{flex:1;font-size:19px;font-weight:800;color:var(--navy);letter-spacing:-.02em}
+.tb-brand small{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:6px}
+.yone{display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#5a3a12;font-weight:800;font-size:12px;padding:7px 11px;border-radius:999px;flex-shrink:0;box-shadow:0 4px 12px rgba(232,168,101,.35)}
+.filter-strip{display:flex;gap:7px;padding:2px 16px 11px;overflow-x:auto;scrollbar-width:none}
+.filter-strip::-webkit-scrollbar{display:none}
+.fchip{flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:6px;transition:.15s}
+.fchip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.fchip .px{font-size:9.5px;font-weight:800;border-radius:6px;padding:1px 6px}
+.fchip:not(.on) .px-free{background:#E4F3EA;color:var(--green)}
+.fchip:not(.on) .px-low{background:#FDF0DC;color:var(--gold-deep)}
+.fchip:not(.on) .px-high{background:#FBE3E9;color:var(--rose)}
+.fchip.on .px{background:rgba(255,255,255,.22);color:#fff}
+
+/* 본문 스위처 */
+.body{flex:1;position:relative;overflow:hidden;background:linear-gradient(180deg,var(--ivory),#f4f1ea)}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:auto}
+.screen.on{display:flex;animation:fade .22s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+/* ── 스와이프 덱 ── */
+.deck{position:relative;flex:1;margin:14px 16px;min-height:0}
+.swcard{position:absolute;inset:0;border-radius:24px;overflow:hidden;box-shadow:var(--shadow-lg);background:#222;transition:transform .18s cubic-bezier(.2,.8,.2,1),opacity .18s ease;will-change:transform;user-select:none}
+.swcard.behind{transform:scale(.94) translateY(16px)}
+.swcard.behind2{transform:scale(.88) translateY(32px);opacity:.55}
+.sw-photo{position:absolute;inset:0;background-size:cover;background-position:center 18%;background-color:#2a2a2a}
+.sw-grad{position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(transparent,rgba(13,22,33,.05) 22%,rgba(13,22,33,.55) 64%,rgba(13,22,33,.9))}
+/* 사진 갤러리 세그먼트 점 */
+.sw-dots{position:absolute;top:10px;left:12px;right:12px;display:flex;gap:5px;z-index:4}
+.sw-dots i{flex:1;height:3.5px;border-radius:9px;background:rgba(255,255,255,.32)}
+.sw-dots i.on{background:#fff}
+/* 사진 좌우 탭존 */
+.sw-tapL,.sw-tapR{position:absolute;top:0;bottom:34%;width:42%;z-index:3;cursor:pointer}
+.sw-tapL{left:0}.sw-tapR{right:0}
+.sw-online{position:absolute;top:22px;left:14px;display:flex;align-items:center;gap:6px;background:rgba(13,22,33,.42);backdrop-filter:blur(6px);border-radius:999px;padding:5px 11px 5px 9px;font-size:11px;font-weight:700;color:#fff;z-index:4}
+.sw-online .od{width:8px;height:8px;border-radius:50%;background:#46d77f;box-shadow:0 0 0 3px rgba(70,215,127,.25)}
+.sw-tier{position:absolute;top:22px;right:14px;font-size:10px;font-weight:800;border-radius:999px;padding:5px 11px;z-index:4;backdrop-filter:blur(6px)}
+.tier-free{background:rgba(63,174,110,.92);color:#fff}.tier-low{background:rgba(232,168,101,.95);color:#3a2606}.tier-high{background:rgba(224,96,122,.95);color:#fff}
+.sw-info{position:absolute;left:0;right:0;bottom:0;padding:20px 20px 112px;color:#fff;z-index:4}
+/* 카드 안 플로팅 액션 버튼 */
+.sw-actions{position:absolute;left:0;right:0;bottom:42px;z-index:6;display:flex;align-items:center;justify-content:center;gap:20px;pointer-events:none}
+.swact{pointer-events:auto;width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.4);transition:transform .12s;backdrop-filter:blur(6px)}
+.swact:active{transform:scale(.84)}
+.swact .svgic{width:19px;height:19px}
+.swact.pass{background:rgba(20,30,45,.5);border:1px solid rgba(255,255,255,.35);color:#fff}
+.swact.ieum{width:48px;height:48px;background:linear-gradient(135deg,#2E5E8A,#5AA3D6);color:#fff}
+.swact.ieum .svgic{width:22px;height:22px;fill:none;stroke-width:2.1}
+.sw-name{display:flex;align-items:baseline;gap:9px}
+.sw-name b{font-size:28px;font-weight:800;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.sw-name .age{font-size:21px;font-weight:500;opacity:.96;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.sw-anon{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;background:rgba(255,255,255,.2);backdrop-filter:blur(6px);border-radius:7px;padding:3px 8px;margin-bottom:9px}
+.sw-prov{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.provchip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);color:var(--navy);font-size:11.5px;font-weight:700;border-radius:999px;padding:5px 11px}
+.sw-trust{display:flex;align-items:center;gap:9px;margin-top:11px;background:rgba(13,22,33,.4);border:1px solid rgba(255,255,255,.16);border-radius:13px;padding:9px 12px;backdrop-filter:blur(8px)}
+.sw-trust .tlabel{font-size:11px;font-weight:600;opacity:.9}
+.sw-trust .bars{display:flex;gap:3px;align-items:center}
+.sw-trust .bars i{width:7px;height:14px;border-radius:2px;background:rgba(255,255,255,.28)}
+.sw-trust .bars i.f{background:var(--gold)}
+.sw-trust .tval{font-size:11px;font-weight:800;color:var(--gold);margin-left:auto}
+.sw-intro{font-size:13px;line-height:1.55;margin-top:11px;opacity:.96;text-shadow:0 1px 6px rgba(0,0,0,.5);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sw-detailbtn{position:absolute;right:16px;bottom:118px;width:38px;height:38px;border-radius:50%;background:rgba(253,251,247,.94);border:none;color:var(--navy);cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:var(--shadow)}
+.swcard .stamp{position:absolute;top:64px;font-size:32px;font-weight:900;letter-spacing:.04em;border:4px solid;border-radius:14px;padding:5px 16px;opacity:0;transition:opacity .1s;z-index:6}
+.stamp.yes{left:20px;color:var(--green);border-color:var(--green);transform:rotate(-15deg)}
+.stamp.no{right:20px;color:var(--rose);border-color:var(--rose);transform:rotate(15deg)}
+.stamp.up{left:50%;top:54px;transform:translateX(-50%);color:#fff;border-color:rgba(255,255,255,.92);font-size:22px;letter-spacing:.06em}
+/* 세로피드 카드 하단 정보 줄 */
+.sw-morerow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}
+.sw-profilebtn{flex-shrink:0;font-size:11.5px;font-weight:800;color:#fff;background:rgba(255,255,255,.18);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:5px 11px}
+.sw-grip{position:absolute;left:50%;transform:translateX(-50%);bottom:0;z-index:6;font-size:11px;font-weight:800;color:#fff;background:rgba(13,22,33,.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.22);border-bottom:none;border-radius:16px 16px 0 0;padding:7px 22px 8px;cursor:pointer;box-shadow:0 -2px 10px rgba(0,0,0,.25)}
+.deck-empty{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--muted);gap:12px;padding:30px;background:#fff;border-radius:24px;border:1px solid var(--line)}
+.deck-empty .em{font-size:46px}
+.deck-empty .t{font-size:16px;font-weight:800;color:var(--navy)}
+.deck-empty .s{font-size:12.5px;line-height:1.6}
+
+/* 액션 버튼 줄 */
+.actbar{display:flex;align-items:flex-start;justify-content:center;gap:46px;padding:16px 16px 20px}
+.actitem{display:flex;flex-direction:column;align-items:center;gap:9px}
+.actlbl{font-size:12px;font-weight:800;color:var(--navy);text-align:center;line-height:1.3}
+.actlbl em{display:block;font-style:normal;font-size:9.5px;font-weight:700;color:var(--green);margin-top:1px}
+.actbtn{border:none;border-radius:50%;background:#fff;box-shadow:var(--shadow);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s,box-shadow .12s}
+.actbtn:active{transform:scale(.88)}
+.actbtn.lg{width:66px;height:66px}.actbtn.lg .svgic{width:31px;height:31px}
+.actbtn.like{color:var(--rose)}
+.actbtn.like .svgic{fill:rgba(224,96,122,.16)}
+.actbtn.ieum{background:linear-gradient(135deg,var(--navy),#2d6a9e);color:#fff;box-shadow:0 10px 26px rgba(30,58,95,.38)}
+.actbtn.ieum .svgic{fill:none;stroke-width:2.1}
+
+/* 둘러보기 그리드 */
+.grid-head{padding:16px 18px 4px;font-size:15px;font-weight:800;color:var(--navy)}
+.grid-sub{padding:0 18px 14px;font-size:12px;color:var(--muted);line-height:1.55}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 22px}
+.pcell{border-radius:18px;overflow:hidden;position:relative;aspect-ratio:3/4;cursor:pointer;box-shadow:var(--shadow);background:#222}
+.pcell .pc-photo{position:absolute;inset:0;background-size:cover;background-position:center 18%}
+.pcell .pc-grad{position:absolute;left:0;right:0;bottom:0;height:60%;background:linear-gradient(transparent,rgba(13,22,33,.82))}
+.pcell .pc-cap{position:absolute;left:0;right:0;bottom:0;padding:11px;color:#fff;z-index:2}
+.pcell .pc-name{font-size:14.5px;font-weight:800}
+.pcell .pc-prov{font-size:10.5px;opacity:.95;margin-top:3px;display:flex;align-items:center;gap:4px}
+.pcell .pc-tier{position:absolute;top:9px;right:9px;font-size:9px;font-weight:800;border-radius:999px;padding:4px 8px;z-index:2}
+
+/* 관심·이음 — 세그먼트 + 섹션 카드 */
+.seg{display:flex;gap:8px;padding:8px 16px 6px}
+.seg-btn{flex:1;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#9fb2c6;border-radius:13px;padding:11px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:7px;transition:.15s}
+.seg-btn.on{background:var(--navy);border-color:var(--sky);color:#fff}
+.seg-n{font-size:11px;font-weight:800;background:rgba(255,255,255,.2);border-radius:999px;padding:1px 7px;min-width:18px;text-align:center}
+.seg-btn.on .seg-n{background:var(--sky);color:#0A1626}
+.seg-pane{display:none;padding:6px 0 4px}
+.seg-pane.on{display:block;animation:fade .2s ease}
+.sec-card{margin:10px 14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:13px 13px 6px}
+.sec-h{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:#EAF2F9;margin-bottom:11px;flex-wrap:wrap}
+.sec-ic{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ic-in{background:rgba(135,206,235,.18)}.ic-out{background:rgba(248,197,122,.2)}.ic-seen{background:rgba(224,96,122,.18)}.ic-mine{background:rgba(63,174,110,.2)}
+.seg-btn .svgic{width:17px;height:17px}
+.sec-ic .svgic{width:16px;height:16px}
+.ic-in .svgic{color:var(--sky)}.ic-out .svgic{color:var(--gold)}.ic-seen .svgic{color:var(--rose)}.ic-mine .svgic{color:var(--green)}
+.sec-sub{font-size:10.5px;font-weight:600;color:#8AA0B6;flex-basis:100%}
+.sec-card .like-grid{padding:0;grid-template-columns:1fr 1fr}
+/* LIKE(받은 이음) */
+.like-banner{margin:16px 16px 4px;background:linear-gradient(135deg,var(--gold),var(--gold-deep));border-radius:18px;padding:16px 18px;color:#4a3008;box-shadow:0 8px 22px rgba(232,168,101,.32)}
+.like-banner b{font-size:14.5px;font-weight:800}
+.like-banner p{font-size:11.5px;margin-top:4px;line-height:1.55;opacity:.92}
+.like-banner button{margin-top:11px;border:none;background:rgba(255,255,255,.92);color:#7a4a12;font-weight:800;font-size:12px;border-radius:11px;padding:9px 15px;cursor:pointer;font-family:var(--font)}
+.like-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.like-cell{border-radius:18px;overflow:hidden;position:relative;aspect-ratio:3/4;box-shadow:var(--shadow);cursor:pointer;background:#222}
+.like-cell .lc-photo{position:absolute;inset:0;background-size:cover;background-position:center 18%;filter:blur(13px)}
+.like-cell .lc-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:#fff;z-index:2;background:rgba(13,22,33,.34)}
+.like-cell .lc-lock .lt{font-size:11px;font-weight:800}
+.like-cell .lc-cap{position:absolute;left:0;right:0;bottom:0;padding:10px;color:#fff;z-index:2;background:linear-gradient(transparent,rgba(13,22,33,.78));font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
+
+/* 채팅 · 메모리 */
+.mem-head{font-size:13px;font-weight:800;color:var(--navy);padding:14px 16px 0;display:flex;align-items:baseline;gap:8px}
+.mem-head span{font-size:10.5px;font-weight:600;color:var(--muted)}
+.mem-empty{font-size:11.5px;color:var(--muted);padding:14px 16px;line-height:1.5}
+.ms-play{position:absolute;right:-1px;bottom:-1px;width:20px;height:20px;border-radius:50%;background:var(--rose);color:#fff;font-size:8px;display:flex;align-items:center;justify-content:center;border:2px solid var(--ivory)}
+.matched-strip .ms .ring{position:relative}
+/* 메모리 뷰어 (카드형 — 실제 앱 메모리 느낌) */
+.memov{position:fixed;inset:0;z-index:80;background:rgba(8,14,24,.7);display:none;align-items:center;justify-content:center;padding:24px;animation:fade .2s ease;backdrop-filter:blur(3px)}
+.memov.on{display:flex}
+.memcard{width:100%;max-width:328px;background:#FDFBF7;border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.5);padding:14px;animation:up .26s cubic-bezier(.2,.8,.3,1)}
+.memcard-h{display:flex;align-items:center;gap:10px;padding:2px 2px 12px}
+.memcard-av{width:40px;height:40px;border-radius:50%;background-size:cover;background-position:center;flex-shrink:0;background-color:#e7ecf0}
+.memcard-who{flex:1;min-width:0}.memcard-who b{font-size:15px;font-weight:800;color:#16202e}.memcard-who span{display:block;font-size:11.5px;color:#6B7280}
+.memcard-time{font-size:11px;color:#9aa3ad}
+.memcard-photo{position:relative;border-radius:14px;aspect-ratio:4/5;background-size:cover;background-position:center;overflow:hidden;background-color:#222}
+.memcard-photo::after{content:"🎞️ 2초";position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);color:#fff;font-size:10px;font-weight:700;border-radius:999px;padding:3px 8px}
+.memcard-cap{position:absolute;left:0;right:0;bottom:0;padding:32px 14px 14px;background:linear-gradient(transparent,rgba(0,0,0,.62));color:#fff;font-size:16px;font-weight:800;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.memcard-foot{display:flex;align-items:center;gap:8px;padding:11px 4px 2px}
+.memcard-views{font-size:12px;color:#6B7280;font-weight:600}
+.matched-strip{display:flex;gap:15px;overflow-x:auto;padding:10px 16px 8px;scrollbar-width:none}
+.matched-strip::-webkit-scrollbar{display:none}
+.matched-strip .ms{flex-shrink:0;text-align:center;cursor:pointer}
+.matched-strip .ms .ring{width:64px;height:64px;border-radius:50%;padding:2.5px;background:conic-gradient(from 0deg,var(--gold),var(--rose),var(--sky),var(--gold))}
+.matched-strip .ms .ring .in{width:100%;height:100%;border-radius:50%;background-size:cover;background-position:center 18%;border:2px solid var(--ivory)}
+.matched-strip .ms .nm{font-size:11px;font-weight:700;margin-top:5px;color:var(--navy)}
+.dm-list-h{font-size:12px;font-weight:800;color:var(--muted);padding:8px 18px 4px}
+.dm-row{display:flex;align-items:center;gap:13px;padding:13px 16px;cursor:pointer}
+.dm-row:active{background:#f1f4f7}
+.dm-av{width:54px;height:54px;border-radius:50%;background-size:cover;background-position:center 18%;flex-shrink:0;position:relative}
+.dm-av .on{position:absolute;right:1px;bottom:1px;width:13px;height:13px;border-radius:50%;background:#46d77f;border:2.5px solid var(--ivory)}
+.dm-tx{flex:1;min-width:0}.dm-tx .n{font-size:14.5px;font-weight:800;color:var(--ink)}.dm-tx .m{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-tx .badge-new{display:inline-block;font-size:9px;font-weight:800;background:#FDE8D2;color:var(--gold-deep);border-radius:6px;padding:1px 6px;margin-left:6px}
+.dm-time{font-size:10.5px;color:var(--muted);flex-shrink:0;align-self:flex-start;margin-top:4px}
+.chat-blank{text-align:center;color:var(--muted);font-size:12.5px;padding:48px 24px;line-height:1.7}
+
+/* 프로필(나) */
+.me-wrap{padding:24px 18px 4px;text-align:center}
+.me-av{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#FCE6EC,#E8F4FA);display:flex;align-items:center;justify-content:center;font-size:50px;margin:0 auto;box-shadow:var(--shadow);position:relative}
+.me-av .cam{position:absolute;right:-2px;bottom:-2px;width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;border:3px solid var(--ivory);cursor:pointer}
+.me-name{font-size:20px;font-weight:800;margin-top:13px}
+.me-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.me-card{margin:16px 18px 0;background:#fff;border:1px solid var(--line);border-radius:18px;padding:17px;box-shadow:var(--shadow);text-align:left}
+.me-card .mh{font-size:13px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:7px}
+.me-card .mbal{display:flex;align-items:baseline;gap:7px;margin-top:11px}
+.me-card .mbal b{font-size:32px;font-weight:900;color:var(--navy);letter-spacing:-.02em}
+.me-card .mbal span{font-size:12px;color:var(--muted)}
+.me-card .mnote{font-size:10.5px;color:var(--muted);margin-top:10px;line-height:1.6}
+.me-stats{display:flex;gap:10px;margin-top:14px}
+.me-stats .st{flex:1;text-align:center;background:var(--pale-sky);border-radius:13px;padding:11px}
+.me-stats .st b{display:block;font-size:18px;color:var(--navy);font-weight:800}.me-stats .st span{font-size:10px;color:var(--muted)}
+
+/* 인연 내부 탭 (상단, 흐름 배치) */
+.subnav{position:relative;z-index:20;background:rgba(253,251,247,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);height:52px;flex-shrink:0}
+.subnav button{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#aab2bb;font-size:10px;font-weight:700;font-family:var(--font)}
+.subnav button .svgic{width:22px;height:22px}
+.subnav button.on{color:var(--navy)}
+.subnav button.on .svgic{fill:rgba(30,58,95,.12)}
+
+/* 메인 앱 네비 (맨 아래 · 기존과 동일) */
+.appnav{position:absolute;bottom:0;left:0;right:0;z-index:41;background:rgba(253,251,247,.98);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);align-items:end;height:72px;padding:8px 4px 12px}
+.appnav button{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#aab2bb;font-size:10px;font-weight:700;font-family:var(--font);padding-top:6px}
+.appnav button .ic{font-size:20px;line-height:1}
+.appnav button.active{color:var(--navy)}
+.appnav button.qr{position:relative}
+.appnav button.qr .ic{position:absolute;top:-18px;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--navy));color:#fff;display:flex;align-items:center;justify-content:center;font-size:21px;box-shadow:0 8px 20px rgba(30,58,95,.35);border:3px solid var(--ivory)}
+.appnav button.qr span.lbl{margin-top:20px}
+
+/* 오버레이 공통 */
+.ov{position:fixed;inset:0;z-index:60;background:rgba(13,22,33,.5);display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
+.ov.on{display:flex}
+.sheet{width:100%;max-width:420px;background:var(--ivory);border-radius:26px 26px 0 0;padding:16px 20px 30px;animation:up .28s cubic-bezier(.2,.8,.3,1);max-height:90vh;overflow:auto}
+@keyframes up{from{transform:translateY(50px);opacity:.5}to{transform:none;opacity:1}}
+.grip{width:42px;height:4px;border-radius:9px;background:#d7dee5;margin:0 auto 16px}
+.sh-title{font-size:18px;font-weight:800;color:var(--navy);margin-bottom:5px}
+.sh-sub{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:16px}
+
+/* 필터 시트 */
+.tier-opt{display:flex;align-items:center;gap:13px;border:1.5px solid var(--line);border-radius:17px;padding:14px;margin-bottom:11px;cursor:pointer;background:#fff;transition:.15s}
+.tier-opt.sel{border-color:var(--navy);background:var(--pale-sky)}
+.tier-opt .ti-em{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:25px;flex-shrink:0}
+.te-free{background:#E4F3EA}.te-low{background:#FDF0DC}.te-high{background:#FBE3E9}
+.tier-opt .ti-tx{flex:1}.tier-opt .ti-tx b{font-size:14.5px;font-weight:800;color:var(--ink)}
+.tier-opt .ti-tx p{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
+.tier-opt .ti-price{font-size:12.5px;font-weight:800;text-align:right;flex-shrink:0}
+.tier-opt .ti-price .free{color:var(--green)}.tier-opt .ti-price .pay{color:var(--gold-deep)}
+.tier-opt .ti-price small{display:block;font-size:9px;color:var(--muted);font-weight:600;margin-top:2px}
+/* 관계 거리 가로 슬라이더 (양쪽 손잡이) */
+.rng-val{text-align:center;font-size:15px;font-weight:800;color:#EAF2F9;margin:8px 0 10px}
+.rng{position:relative;height:36px;margin:0 6px}
+.rng-track{position:absolute;top:15px;left:0;right:0;height:6px;border-radius:9px;background:rgba(255,255,255,.14)}
+.rng-fill{position:absolute;top:0;bottom:0;border-radius:9px;background:linear-gradient(90deg,var(--sky),var(--gold))}
+.rng input[type=range]{position:absolute;top:0;left:0;width:100%;height:36px;margin:0;background:none;-webkit-appearance:none;appearance:none;pointer-events:none}
+.rng input[type=range]:focus{outline:none}
+.rng input[type=range]::-webkit-slider-runnable-track{height:36px;background:none;border:none}
+.rng input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--sky);box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer;margin-top:5px}
+.rng input[type=range]::-moz-range-track{height:36px;background:none}
+.rng input[type=range]::-moz-range-thumb{pointer-events:auto;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--sky);box-shadow:0 2px 8px rgba(0,0,0,.45);cursor:pointer}
+.rng-ends{display:flex;justify-content:space-between;font-size:11px;color:#9fb2c6;font-weight:700;margin:6px 4px 16px;text-align:center}
+.rng-ends small{display:block;font-size:9.5px;color:#6f8499;font-weight:600;margin-top:1px}
+.applybtn{width:100%;border:none;background:var(--navy);color:#fff;border-radius:15px;padding:15px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:6px}
+
+/* 프로필 상세(전체화면) */
+.detail{position:fixed;top:0;left:50%;width:100%;max-width:420px;height:100%;background:var(--ivory);z-index:62;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;transform:translate(-50%,100%)}
+.detail::-webkit-scrollbar{display:none}
+.detail.on{display:block;transform:translate(-50%,0);animation:detailUp .3s cubic-bezier(.2,.8,.25,1)}
+.detail.closing{display:block;transform:translate(-50%,100%);animation:detailDown .26s ease-in}
+@keyframes detailUp{from{transform:translate(-50%,100%)}to{transform:translate(-50%,0)}}
+@keyframes detailDown{from{transform:translate(-50%,0)}to{transform:translate(-50%,100%)}}
+.dt-photo{position:relative;height:62vh;background-size:cover;background-position:center 18%;background-color:#222;cursor:pointer}
+.dt-closehint{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:4;font-size:11px;font-weight:700;color:rgba(255,255,255,.82);background:rgba(13,22,33,.45);backdrop-filter:blur(6px);border-radius:999px;padding:5px 12px}
+.dt-dots{position:absolute;top:12px;left:14px;right:14px;display:flex;gap:5px;z-index:4}
+.dt-dots i{flex:1;height:3.5px;border-radius:9px;background:rgba(255,255,255,.32)}.dt-dots i.on{background:#fff}
+.dt-tapL,.dt-tapR{position:absolute;top:0;bottom:0;width:42%;z-index:3;cursor:pointer}.dt-tapL{left:0}.dt-tapR{right:0}
+.dt-back{position:absolute;top:20px;left:14px;z-index:5;width:40px;height:40px;border-radius:50%;background:rgba(253,251,247,.94);border:none;color:var(--navy);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:23px;box-shadow:var(--shadow)}
+.dt-grad{position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(transparent,rgba(13,22,33,.62));z-index:2}
+.dt-namebar{position:absolute;left:0;right:0;bottom:0;padding:18px 20px;color:#fff;z-index:3}
+.dt-namebar .anon{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;background:rgba(255,255,255,.2);border-radius:7px;padding:3px 8px;margin-bottom:7px}
+.dt-namebar .nm{display:flex;align-items:baseline;gap:8px}
+.dt-namebar .nm b{font-size:26px;font-weight:800;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+.dt-namebar .nm .age{font-size:19px;font-weight:500;opacity:.96}
+.dt-body{padding:18px 16px 8px}
+.dt-block{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}
+.dt-block .bh{font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:11px;display:flex;align-items:center;gap:6px}
+.dt-block .bh .tag{font-weight:600;color:var(--muted);font-size:10px;margin-left:auto}
+.dt-prov-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.dt-prov-row:last-child{border-bottom:none}
+.dt-prov-row .pe{width:32px;height:32px;border-radius:10px;background:var(--pale-sky);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.dt-prov-row b{font-weight:700}.dt-prov-row .ps{color:var(--muted);font-size:11px;display:block;margin-top:1px}
+.dt-prov-row .pv-tier{margin-left:auto;font-size:9.5px;font-weight:800;border-radius:999px;padding:3px 9px;flex-shrink:0}
+.netviz{height:200px;border-radius:15px;background:radial-gradient(circle at 50% 50%,#fff,#eef4f9);border:1px solid var(--line);position:relative;overflow:hidden}
+.netviz svg{position:absolute;inset:0;width:100%;height:100%}
+.netviz .nlabel{position:absolute;bottom:9px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+.dt-trustbal{display:flex;align-items:flex-end;gap:13px}
+.dt-trustbal .bars{display:flex;gap:4px;align-items:flex-end;flex:1;height:48px}
+.dt-trustbal .bars i{flex:1;border-radius:3px 3px 0 0;background:var(--pale-sky)}
+.dt-trustbal .bars i.f{background:linear-gradient(var(--gold),var(--gold-deep))}
+.dt-trustbal .tv{text-align:right;flex-shrink:0}
+.dt-trustbal .tv b{font-size:14px;font-weight:800;color:var(--gold-deep)}
+.dt-trustbal .tv span{display:block;font-size:10px;color:var(--muted)}
+.dt-locked{display:flex;align-items:center;gap:10px;background:#f4f6f8;border:1px dashed #cfd6dd;border-radius:14px;padding:12px 14px;font-size:11.5px;color:var(--muted);line-height:1.5}
+.dt-locked .svgic{width:20px;height:20px;flex-shrink:0;color:var(--muted)}
+.dt-cta{position:sticky;bottom:0;padding:14px 16px 24px;background:linear-gradient(transparent,var(--ivory) 30%);display:flex;gap:11px;z-index:5}
+.dt-cta .pass{width:60px;height:60px;border-radius:50%;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);color:var(--rose);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.dt-cta .pass .svgic{width:27px;height:27px}
+.dt-cta .ieumbtn{flex:1;border:none;border-radius:17px;background:linear-gradient(135deg,var(--navy),#2d6a9e);color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px}
+.dt-cta .ieumbtn .svgic{width:21px;height:21px;fill:#fff}
+
+/* 이음 신청 모달 */
+.fhint{background:var(--pale-sky);border-radius:13px;padding:12px 14px;font-size:11.5px;color:var(--navy);line-height:1.55;margin-bottom:6px}
+.flabel{font-size:12.5px;font-weight:800;color:var(--ink);margin:16px 2px 9px}
+.flabel small{font-weight:600;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chipbtn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 15px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;font-family:var(--font);transition:.12s}
+.chipbtn.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+.finput{width:100%;border:1px solid var(--line);border-radius:13px;padding:12px 14px;font-size:13.5px;font-family:var(--font);background:#fff}
+.finput:focus{outline:none;border-color:var(--sky)}
+.reveal-box{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px;margin-top:17px}
+.reveal-box .rv-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#FCE6EC,#E8F4FA);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.reveal-box .rv-tx{flex:1;font-size:11.5px;color:var(--muted);line-height:1.5}.reveal-box .rv-tx b{color:var(--navy);font-size:13.5px;display:block}
+.submitbtn{width:100%;border:none;border-radius:15px;background:linear-gradient(135deg,var(--navy),#2d6a9e);color:#fff;padding:16px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:19px;display:flex;align-items:center;justify-content:center;gap:8px}
+.submitbtn .svgic{width:20px;height:20px;fill:#fff}
+.submitbtn:disabled{opacity:.42}
+
+/* 매칭 성사 */
+.matchov{position:fixed;inset:0;z-index:70;background:radial-gradient(circle at 50% 36%,rgba(30,58,95,.94),rgba(11,23,34,.97));display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;animation:fade .3s ease}
+.matchov.on{display:flex}
+.matchov .mtitle{font-size:12px;letter-spacing:.24em;font-weight:800;color:var(--gold)}
+.matchov .mbig{font-size:33px;font-weight:900;color:#fff;margin:7px 0 4px;letter-spacing:-.02em}
+.matchov .msub{font-size:12.5px;color:rgba(255,255,255,.8);line-height:1.65;max-width:290px}
+.matchov .mfaces{display:flex;align-items:center;margin:28px 0}
+.matchov .mface{width:98px;height:98px;border-radius:50%;background-size:cover;background-position:center 18%;border:3px solid var(--ivory);box-shadow:0 12px 32px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:46px}
+.matchov .mface.a{background:linear-gradient(135deg,#FCE6EC,#E8F4FA);margin-right:-20px;z-index:2}
+.matchov .mface.b{margin-left:-20px}
+.matchov .mlink{width:50px;height:50px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;color:#5a3a12;z-index:3;box-shadow:0 8px 22px rgba(248,197,122,.55)}
+.matchov .mlink .svgic{width:25px;height:25px;fill:#5a3a12}
+.matchov .credit-tease{background:rgba(255,255,255,.07);border:1px solid rgba(248,197,122,.4);border-radius:15px;padding:13px 17px;margin-top:24px;max-width:310px}
+.matchov .credit-tease .ct{font-size:11.5px;color:var(--gold);font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px}
+.matchov .credit-tease .cs{font-size:11px;color:rgba(255,255,255,.74);margin-top:6px;line-height:1.55}
+.matchov .mbtns{display:flex;flex-direction:column;gap:11px;margin-top:28px;width:100%;max-width:300px}
+.matchov .mbtns .chat{border:none;border-radius:15px;background:var(--gold);color:#5a3a12;font-weight:800;font-size:14.5px;padding:15px;cursor:pointer;font-family:var(--font)}
+.matchov .mbtns .keep{border:none;background:transparent;color:rgba(255,255,255,.82);font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);padding:6px}
+
+/* 대화방 */
+.dmroom{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;height:100%;background:#eef3f7;z-index:64;display:none;flex-direction:column;animation:fade .26s ease}
+.dmroom.on{display:flex}
+.dmr-head{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(253,251,247,.97)}
+.dmr-head .bk{border:none;background:transparent;color:var(--navy);cursor:pointer;display:flex;font-size:24px}
+.dmr-head .av{width:40px;height:40px;border-radius:50%;background-size:cover;background-position:center 18%}
+.dmr-head .nm{font-weight:800;font-size:14.5px;color:var(--navy)}.dmr-head .nm small{display:block;font-size:10px;color:var(--green);font-weight:700}
+.dmr-body{flex:1;overflow:auto;padding:16px 14px;display:flex;flex-direction:column;gap:10px}
+.dmr-sys{align-self:center;background:rgba(30,58,95,.07);border-radius:999px;padding:7px 15px;font-size:10.5px;color:var(--muted);max-width:90%;text-align:center;line-height:1.5}
+.bubble{max-width:74%;padding:10px 14px;border-radius:17px;font-size:13.5px;line-height:1.45}
+.bubble.them{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px}
+.bubble.me{align-self:flex-end;background:var(--navy);color:#fff;border-bottom-right-radius:5px}
+.dmr-input{display:flex;gap:9px;padding:11px 13px;border-top:1px solid var(--line);background:var(--ivory)}
+.dmr-input input{flex:1;border:1px solid var(--line);border-radius:999px;padding:12px 16px;font-size:13.5px;font-family:var(--font)}
+.dmr-input input:focus{outline:none;border-color:var(--sky)}
+.dmr-input button{border:none;background:var(--navy);color:#fff;border-radius:50%;width:44px;height:44px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.dmr-input button .svgic{width:20px;height:20px;fill:#fff}
+
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:rgba(13,22,33,.93);color:#fff;font-size:12.5px;font-weight:600;padding:12px 20px;border-radius:999px;z-index:90;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
+.toast.on{opacity:1}
+
+/* ════════ 다크 "유니버스" 테마 오버라이드 ════════ */
+body{background:#05090f}
+.app{color:#E8EFF6;background:#0A1626;
+ background-image:radial-gradient(circle at 50% -6%,rgba(135,206,235,.16),transparent 42%),radial-gradient(circle at 84% 10%,rgba(248,197,122,.08),transparent 38%),radial-gradient(1.5px 1.5px at 18% 14%,rgba(255,255,255,.5),transparent),radial-gradient(1.5px 1.5px at 72% 22%,rgba(255,255,255,.35),transparent),radial-gradient(1.5px 1.5px at 40% 8%,rgba(255,255,255,.4),transparent),linear-gradient(180deg,#0A1626,#0C1A2E);
+ box-shadow:0 0 0 1px rgba(255,255,255,.05),0 30px 80px rgba(0,0,0,.55)}
+.body{background:transparent}
+/* 상단바 */
+.topbar{background:rgba(10,22,38,.86);border-bottom-color:rgba(255,255,255,.08)}
+.tb-icon{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:#cfe0ee}
+.tb-brand{color:#EAF2F9}.tb-brand small{color:#8AA0B6}
+.fchip{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12);color:#9fb2c6}
+.fchip.on{background:var(--sky);color:#0A1626;border-color:var(--sky)}
+.fchip.on .px{background:rgba(10,22,38,.22);color:#0A1626}
+.fchip:not(.on) .px-free{background:rgba(63,174,110,.18);color:#5fd18c}
+.fchip:not(.on) .px-low{background:rgba(248,197,122,.16);color:var(--gold)}
+.fchip:not(.on) .px-high{background:rgba(224,96,122,.18);color:#f0869c}
+/* 덱 빈 상태 */
+.deck-empty{background:#14233A;border-color:rgba(255,255,255,.08);color:#9fb2c6}
+.deck-empty .t{color:#EAF2F9}
+/* 액션바 */
+.actbtn{background:#1B2D47;box-shadow:0 6px 18px rgba(0,0,0,.42)}
+.actbtn.like{color:#f0869c}.actbtn.like .svgic{fill:rgba(224,96,122,.22)}
+.actbtn.ieum{background:linear-gradient(135deg,#2E5E8A,#5AA3D6);box-shadow:0 10px 26px rgba(90,163,214,.4)}
+.actlbl{color:#EAF2F9}.actlbl em{color:#5fd18c}
+/* 둘러보기 */
+.grid-head{color:#EAF2F9}.grid-sub{color:#8AA0B6}
+/* 채팅 */
+.dm-list-h{color:#8AA0B6}.dm-row:active{background:rgba(255,255,255,.05)}
+.dm-tx .n{color:#EAF2F9}.dm-tx .m{color:#8AA0B6}
+.matched-strip .ms .nm{color:#cfe0ee}.matched-strip .ms .ring .in{border-color:#0C1A2E}
+.chat-blank{color:#8AA0B6}
+/* 프로필(나) */
+.me-name{color:#EAF2F9}.me-sub{color:#8AA0B6}
+.me-av{background:linear-gradient(135deg,#24405f,#16273F)}
+.me-card{background:#14233A;border-color:rgba(255,255,255,.08)}
+.me-card .mh{color:#cfe0ee}
+.me-card .mbal b{color:#EAF2F9}.me-card .mbal span{color:#8AA0B6}.me-card .mnote{color:#8AA0B6}
+.me-stats .st{background:rgba(255,255,255,.05)}
+.me-stats .st b{color:#9ed0ee}.me-stats .st span{color:#8AA0B6}
+/* 네비 */
+.subnav{background:rgba(10,22,38,.92);border-top-color:rgba(255,255,255,.08);border-bottom-color:rgba(255,255,255,.08)}
+.subnav button{color:#6f8499}.subnav button.on{color:#9ed0ee}
+.subnav button.on .svgic{fill:rgba(158,208,238,.16)}
+.appnav{background:rgba(7,14,24,.96);border-top-color:rgba(255,255,255,.08)}
+.appnav button{color:#6f8499}.appnav button.active{color:#9ed0ee}
+.appnav button.qr .ic{border-color:#0A1626}
+/* 시트 */
+.sheet{background:#0E1D33;color:#E8EFF6}
+.grip{background:rgba(255,255,255,.18)}
+.sh-title{color:#EAF2F9}.sh-sub{color:#8AA0B6}
+.tier-opt{background:#16273F;border-color:rgba(255,255,255,.1)}
+.tier-opt.sel{background:rgba(135,206,235,.12);border-color:var(--sky)}
+.tier-opt .ti-tx b{color:#EAF2F9}.tier-opt .ti-tx p{color:#8AA0B6}
+.te-free{background:rgba(63,174,110,.2)}.te-low{background:rgba(248,197,122,.2)}.te-high{background:rgba(224,96,122,.2)}
+.tier-opt .ti-price .free{color:#5fd18c}.tier-opt .ti-price .pay{color:var(--gold)}.tier-opt .ti-price small{color:#8AA0B6}
+.applybtn{background:linear-gradient(135deg,#2E5E8A,#5AA3D6)}
+/* 이음 신청 모달 */
+.fhint{background:rgba(135,206,235,.1);color:#cfe0ee}
+.flabel{color:#EAF2F9}.flabel small{color:#8AA0B6}
+.chipbtn{background:#16273F;border-color:rgba(255,255,255,.12);color:#dbe6f0}
+.chipbtn.sel{background:var(--sky);color:#0A1626;border-color:var(--sky)}
+.finput{background:#16273F;border-color:rgba(255,255,255,.12);color:#EAF2F9}
+.finput::placeholder{color:#6f8499}
+.reveal-box{background:#16273F;border-color:rgba(255,255,255,.1)}
+.reveal-box .rv-av{background:linear-gradient(135deg,#24405f,#16273F)}
+.reveal-box .rv-tx{color:#8AA0B6}.reveal-box .rv-tx b{color:#9ed0ee}
+.submitbtn{background:linear-gradient(135deg,#2E5E8A,#5AA3D6)}
+/* 프로필 상세 */
+.detail{background:#0A1626;background-image:linear-gradient(180deg,#0A1626,#0C1A2E)}
+.dt-back{background:rgba(10,22,38,.8);color:#cfe0ee}
+.dt-block{background:#14233A;border-color:rgba(255,255,255,.08)}
+.dt-block .bh{color:#cfe0ee}.dt-block .bh .tag{color:#8AA0B6}
+.dt-prov-row .pe{background:rgba(135,206,235,.12)}
+.dt-prov-row b{color:#EAF2F9}.dt-prov-row .ps{color:#8AA0B6}
+.netviz{background:radial-gradient(circle at 50% 50%,#16273F,#0E1D33);border-color:rgba(255,255,255,.08)}
+.netviz .nlabel{color:#8AA0B6}
+.dt-trustbal .bars i{background:rgba(255,255,255,.08)}
+.dt-trustbal .tv span{color:#8AA0B6}
+.dt-locked{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12);color:#8AA0B6}
+.dt-locked .svgic{color:#8AA0B6}
+.dt-cta{background:linear-gradient(transparent,#0A1626 30%)}
+.dt-cta .pass{background:#1B2D47;border-color:rgba(255,255,255,.12)}
+.dt-cta .ieumbtn{background:linear-gradient(135deg,#2E5E8A,#5AA3D6)}
+/* 대화방 */
+.dmroom{background:#0B1626}
+.dmr-head{background:rgba(10,22,38,.92);border-bottom-color:rgba(255,255,255,.08)}
+.dmr-head .nm{color:#EAF2F9}
+.dmr-sys{background:rgba(255,255,255,.06);color:#8AA0B6}
+.bubble.them{background:#16273F;border-color:rgba(255,255,255,.1);color:#E8EFF6}
+.bubble.me{background:linear-gradient(135deg,#2E5E8A,#4E91C6);color:#fff}
+.dmr-input{background:#0A1626;border-top-color:rgba(255,255,255,.08)}
+.dmr-input input{background:#16273F;border-color:rgba(255,255,255,.12);color:#EAF2F9}
+.dmr-input input::placeholder{color:#6f8499}
+.dmr-input button{background:linear-gradient(135deg,#2E5E8A,#5AA3D6)}
+/* 매칭 성사 */
+.matchov .mface.a{background:linear-gradient(135deg,#24405f,#16273F)}
+/* 상세 소개 */
+.dt-intro{font-size:13px;line-height:1.6;color:#cfd9e4}
+/* 인연 내부 세로 네비 (우측 · 웨딩 라운지 vrail 통일) */
+.irail{position:absolute;right:12px;bottom:84px;z-index:25;display:flex;flex-direction:column;gap:9px;transition:opacity .22s ease,transform .22s ease}
+.irail.hide{opacity:0;transform:translateX(74px);pointer-events:none}
+.irail button{width:50px;height:50px;border-radius:15px;border:1px solid rgba(255,255,255,.16);background:rgba(13,22,33,.5);backdrop-filter:blur(8px);box-shadow:0 6px 16px rgba(0,0,0,.4);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font);color:#cfe0ee;gap:2px}
+.irail button .svgic{width:19px;height:19px}
+.irail button .rl{font-size:8px;font-weight:700;line-height:1}
+.irail button.on{background:var(--navy);border-color:var(--sky);color:#fff}
+.irail button.on .svgic{fill:rgba(255,255,255,.16)}
+/* 리스트형 화면 — 전체 폭 사용(레일은 플로팅, 스크롤 시 숨김) · 스크롤바 숨김 */
+.screen{scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.dt-body{scrollbar-width:none}
+.dt-body::-webkit-scrollbar{display:none}
+
+/* ── 스크롤 카드(사진 → 아래로 정보) ── */
+.sw-scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.sw-scroll::-webkit-scrollbar{display:none}
+.sw-hero{position:relative;height:100%;min-height:100%}
+.sw-photo.blurred{filter:blur(20px) brightness(.82);transform:scale(1.15)}
+.sw-hook{font-size:18px;font-weight:800;line-height:1.32;text-shadow:0 2px 10px rgba(0,0,0,.55)}
+.sw-hook .hook-em{margin-right:5px}
+.sw-mutual{display:inline-flex;align-items:center;gap:5px;margin-top:9px;background:rgba(248,197,122,.94);color:#4a3008;font-size:11.5px;font-weight:800;border-radius:999px;padding:4px 11px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.sw-anonline{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;opacity:.92;margin-top:8px;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.sw-anonline .svgic{width:13px;height:13px}
+.sw-morehint{position:absolute;left:0;right:0;bottom:70px;text-align:center;font-size:22px;line-height:1;color:rgba(255,255,255,.7);text-shadow:0 1px 6px rgba(0,0,0,.6);z-index:4;animation:bob 1.8s ease-in-out infinite;pointer-events:none}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+.sw-lockover{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);z-index:5;display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(13,22,33,.5);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.32);border-radius:18px;padding:18px 26px;color:#fff;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.lk-ic{font-size:26px}.lk-t{font-size:14px;font-weight:800}.lk-c{font-size:13px;font-weight:800;color:var(--gold)}
+.sw-detailpane{background:linear-gradient(180deg,#0C1A2E,#0A1626);padding:16px 16px 96px}
+.dp-block{background:#14233A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;margin-bottom:11px}
+.dp-h{font-size:12.5px;font-weight:800;color:#cfe0ee;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.dp-h .dp-tag{font-weight:600;color:#8AA0B6;font-size:10px;margin-left:auto}
+.dp-intro{font-size:13px;line-height:1.6;color:#cfd9e4}
+.dp-prov{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:12.5px;color:#E8EFF6}
+.dp-prov:last-child{border-bottom:none}
+.dp-prov .pe{width:30px;height:30px;border-radius:9px;background:rgba(135,206,235,.12);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.dp-prov b{font-weight:700}.dp-prov span{color:#8AA0B6;font-size:11px;display:block;margin-top:1px}
+.dp-prov .pv-tier{margin-left:auto;font-size:9.5px;font-weight:800;border-radius:999px;padding:3px 8px;flex-shrink:0}
+.dp-locked{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:11px 13px;font-size:11.5px;color:#8AA0B6;line-height:1.4}
+.dp-locked .svgic{width:18px;height:18px;flex-shrink:0;color:#8AA0B6}
+.dp-report{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:transparent;border:none;color:#7d8ea0;font-size:11.5px;font-weight:700;cursor:pointer;font-family:var(--font);padding:12px 0 2px;margin-top:2px}
+/* 인연 소개글 입력 */
+.me-bio{width:100%;min-height:64px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:#16273F;color:#EAF2F9;font-family:var(--font);font-size:13px;line-height:1.5;padding:11px 13px;resize:none;margin-top:4px}
+.me-bio:focus{outline:none;border-color:var(--sky)}
+.me-bio::placeholder{color:#6f8499}
+/* 내 프로필 사진 그리드 */
+.mphoto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 2px}
+.mphoto{aspect-ratio:3/4;border-radius:13px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:30px}
+.mphoto.rep{background:linear-gradient(135deg,#24405f,#16273F);border:1.5px solid var(--sky);cursor:pointer}
+.mphoto.rep .tag{position:absolute;left:0;right:0;bottom:0;background:rgba(135,206,235,.92);color:#0A1626;font-size:8px;font-weight:800;text-align:center;padding:2.5px 0}
+.mphoto.add{background:rgba(255,255,255,.05);border:1.5px dashed rgba(255,255,255,.22);color:#8AA0B6;font-size:24px;cursor:pointer;flex-direction:column;gap:2px}
+.mphoto.add small{font-size:8.5px;font-weight:700}
+
+/* ── 추가 신규 컴포넌트 (요네 이코노미·받은이음·안전) ── */
+.actbtn.pass{color:#9fb2c6}
+/* 카드 추가사진 잠금 칩 */
+.sw-photolock{display:inline-flex;align-items:center;gap:6px;background:rgba(13,22,33,.55);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:11px;font-weight:800;border-radius:999px;padding:7px 12px;margin:11px 0 1px;cursor:pointer;font-family:var(--font)}
+.sw-photolock .gold{color:var(--gold)}
+.dt-photolock{position:absolute;right:14px;bottom:88px;z-index:4;display:inline-flex;align-items:center;gap:6px;background:rgba(13,22,33,.62);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:11.5px;font-weight:800;border-radius:999px;padding:8px 13px;cursor:pointer;font-family:var(--font)}
+.dt-photolock .gold{color:var(--gold)}
+/* 신고·차단 */
+.dt-report{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:transparent;border:none;color:#7d8ea0;font-size:11.5px;font-weight:700;cursor:pointer;font-family:var(--font);padding:10px;margin-top:2px}
+/* 받은 이음 신청 카드 */
+.req-card{display:flex;gap:13px;background:#14233A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:13px;margin-bottom:11px}
+.req-av{width:66px;height:84px;border-radius:13px;background-size:cover;background-position:center 18%;flex-shrink:0;background-color:#222}
+.req-tx{flex:1;min-width:0}
+.req-tx .rn{font-size:15.5px;font-weight:800;color:#EAF2F9}.req-tx .rn span{font-size:13px;font-weight:500;color:#8AA0B6;margin-left:4px}
+.req-tx .rr{font-size:11.5px;color:#9ed0ee;margin-top:3px;font-weight:700}
+.req-tx .rp{font-size:11px;color:#8AA0B6;margin-top:3px;display:flex;align-items:center;gap:4px}
+.req-tx .rm{font-size:12px;color:#cfd9e4;margin-top:7px;line-height:1.45}
+.req-acts{display:flex;gap:8px;margin-top:11px}
+.req-acts button{flex:1;border:none;border-radius:11px;padding:10px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:var(--font)}
+.req-acts .rj{background:rgba(255,255,255,.08);color:#9fb2c6}
+.req-acts .ac{background:linear-gradient(135deg,#2E5E8A,#5AA3D6);color:#fff}
+/* 채팅 잠금(요네 부족) */
+.dm-row.locked{cursor:default}
+.dm-row.locked .dm-av{filter:blur(7px)}
+.dm-openbtn{flex-shrink:0;border:none;border-radius:11px;background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#4a3008;font-size:11.5px;font-weight:800;padding:9px 12px;cursor:pointer;font-family:var(--font);align-self:center}
+.dm-lockwarn{margin:10px 16px 0;background:rgba(248,197,122,.12);border:1px solid rgba(248,197,122,.32);border-radius:13px;padding:11px 13px;font-size:11.5px;color:var(--gold);line-height:1.5}
+</style>
+</head>
+<body>
+<!-- Lucide SVG 심볼 정의(MIT) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-sliders" viewBox="0 0 24 24"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></symbol>
+<symbol id="i-rotate" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+<symbol id="i-zap" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+<symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+<symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></symbol>
+<symbol id="i-msg" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-handshake" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></symbol>
+<symbol id="i-inbox" viewBox="0 0 24 24"><line x1="7.8" y1="7.6" x2="10.8" y2="12"/><line x1="16.2" y1="7.6" x2="13.2" y2="12"/><circle cx="12" cy="15" r="3.2" fill="currentColor" stroke="none"/><circle cx="6" cy="6" r="2.3" fill="currentColor" stroke="none"/><circle cx="18" cy="6" r="2.3" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></symbol>
+<symbol id="i-nodes" viewBox="0 0 24 24"><line x1="8.3" y1="8.3" x2="15.7" y2="15.7" stroke-dasharray="2.4 2.4"/><circle cx="6" cy="6" r="3" fill="currentColor" stroke="none"/><circle cx="18" cy="18" r="3" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-sent" viewBox="0 0 24 24"><circle cx="12" cy="17.5" r="3" fill="currentColor" stroke="none"/><path d="M12 13.5V5"/><path d="m8.5 8.5 3.5-3.5 3.5 3.5"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.8" fill="currentColor" stroke="none"/><path d="m21 15-4.5-4.5L6 21"/></symbol>
+<symbol id="i-cam" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></symbol>
+</defs></svg>
+
+<div class="app">
+
+  <!-- 상단바 -->
+  <div class="topbar">
+    <div class="tb-row">
+      <button class="tb-icon" onclick="openGuide()" title="매칭 범위"><svg class="svgic"><use href="#i-sliders"/></svg></button>
+      <div class="tb-brand">디방인연</div>
+      <div class="yone" id="yoneChip">🪙 1,250</div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- [1] 스와이프 -->
+    <section class="screen on" data-screen="swipe">
+      <div class="deck" id="deck">
+        <div class="deck-empty" id="deckEmpty">
+          <div class="em">💫</div>
+          <div class="t">오늘의 인연을 다 봤어요</div>
+          <div class="s">잠시 후 새로운 모이들이 다시 모여요.<br>지금까지 본 모이들을 다시 볼 수도 있어요.</div>
+          <button class="actbtn" style="width:auto;height:auto;border-radius:14px;padding:11px 20px;font-size:13px;font-weight:800;color:var(--navy);background:var(--pale-sky);box-shadow:none" onclick="buildQueue();renderDeck()">처음부터 다시 보기</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- [2] 관심·이음 인박스 (이음 신청 / 나를 본 / 내가 본) -->
+    <section class="screen" data-screen="likes">
+      <div class="grid-head">관심 · 이음</div>
+      <div class="seg">
+        <button class="seg-btn on" data-seg="ieum" onclick="segLike('ieum',this)"><svg class="svgic"><use href="#i-nodes"/></svg> 이음 <span class="seg-n" id="segIeumN">0</span></button>
+        <button class="seg-btn" data-seg="gwansim" onclick="segLike('gwansim',this)"><svg class="svgic"><use href="#i-eye"/></svg> 관심 <span class="seg-n" id="segGwansimN">0</span></button>
+      </div>
+      <div class="seg-pane on" data-seg="ieum">
+        <div class="sec-card">
+          <div class="sec-h"><span class="sec-ic ic-in"><svg class="svgic"><use href="#i-inbox"/></svg></span> 나에게 온 이음 신청 <span class="sec-sub">상대가 이름·관계 먼저 공개</span></div>
+          <div id="reqList"></div>
+        </div>
+        <div class="sec-card">
+          <div class="sec-h"><span class="sec-ic ic-out"><svg class="svgic"><use href="#i-sent"/></svg></span> 내가 보낸 이음 <span class="sec-sub">상대 수락 대기중</span></div>
+          <div id="sentList"></div>
+        </div>
+      </div>
+      <div class="seg-pane" data-seg="gwansim">
+        <div class="sec-card">
+          <div class="sec-h"><span class="sec-ic ic-seen"><svg class="svgic"><use href="#i-eye"/></svg></span> 나를 본 모이 <span class="sec-sub">내 사진을 본 관심 · 이름은 이음 후</span></div>
+          <div class="like-grid" id="likeGrid"></div>
+        </div>
+        <div class="sec-card">
+          <div class="sec-h"><span class="sec-ic ic-mine"><svg class="svgic"><use href="#i-image"/></svg></span> 내가 본 모이 <span class="sec-sub">내가 요네로 사진을 연 모이</span></div>
+          <div class="like-grid" id="seenGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- [4] 채팅 -->
+    <section class="screen" data-screen="chat">
+      <div class="mem-head">🎞️ 메모리 <span>이음된 모이가 올린 짧은 영상</span></div>
+      <div class="matched-strip" id="matchedStrip"></div>
+      <div class="dm-list-h">대화</div>
+      <div id="dmList"></div>
+    </section>
+
+    <!-- [5] 프로필(나) -->
+    <section class="screen" data-screen="me">
+      <div class="me-wrap">
+        <div class="me-av" style="background-image:url('profile-photos/myprofile.png');background-size:cover;background-position:center"></div>
+        <div class="me-name">유상 · 29</div>
+        <div class="me-sub">모이 #1024 · 서울</div>
+      </div>
+      <div class="me-card">
+        <div class="mh">📷 내 프로필 사진 <span style="font-weight:700;color:var(--sky);font-size:10px;margin-left:auto">인연 전용 추가</span></div>
+        <div class="mphoto-grid">
+          <div class="mphoto rep" onclick="toast('대표 사진은 디방 전체 공통 — Setting에서 변경')" style="background-image:url('profile-photos/myprofile.png');background-size:cover;background-position:center"><div class="tag">대표 · 공통</div></div>
+          <div class="mphoto add" onclick="toast('인연 추가 사진 업로드 (데모 생략)')">＋<small>추가</small></div>
+          <div class="mphoto add" onclick="toast('인연 추가 사진 업로드 (데모 생략)')">＋<small>추가</small></div>
+          <div class="mphoto add" onclick="toast('인연 추가 사진 업로드 (데모 생략)')">＋<small>추가</small></div>
+        </div>
+        <div class="mnote">대표 사진은 <b>디방 전체 공통</b>이에요 — Setting에서 설정/변경. 아래 추가 사진은 <b>디방인연에만</b> 보여요. 다른 모이는 무료로 보이는 사진(대표 포함 3장) 외 추가 사진을 보려면 <b>요네</b>를 써야 해요(= 관심 신호).</div>
+      </div>
+      <div class="me-card">
+        <div class="mh">✍️ 인연 소개글 <span style="font-weight:700;color:var(--sky);font-size:10px;margin-left:auto">인연 전용</span></div>
+        <textarea class="me-bio" maxlength="80" placeholder="나를 한두 줄로 소개해보세요 — 다른 모이가 내 프로필을 볼 때 보여요">새로운 사람과 천천히 대화 나누는 걸 좋아해요. 좋은 인연이면 오래 가고 싶어요.</textarea>
+        <div class="mnote">디방인연에서만 보이는 소개예요. (디방 전체 프로필과 별개)</div>
+      </div>
+      <div class="me-card">
+        <div class="mh">🪙 내 신뢰잔액 <span style="font-weight:600;color:var(--muted);font-size:10.5px;margin-left:auto">Moi Credit 재료</span></div>
+        <div class="mbal"><b>724</b><span>/ 신뢰 점수</span></div>
+        <div class="me-stats">
+          <div class="st"><b>38</b><span>이음</span></div>
+          <div class="st"><b>12</b><span>함께한 이벤트</span></div>
+          <div class="st"><b>상위 9%</b><span>네트워크 중심성</span></div>
+        </div>
+        <div class="mnote">이음·이벤트 참여·기여가 신뢰 attestation으로 쌓여 신뢰잔액이 돼요. 이 잔액이 Moi Credit(온체인 신용)의 재료입니다. ※ 타인에겐 익명(범위)으로만 보여요.</div>
+      </div>
+      <div class="me-card">
+        <div class="mh">🔧 내 노출 설정</div>
+        <div class="mnote" style="margin-top:6px">필터 노출 범위 · 접속 상태 · 차단 — 데모에선 생략.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 인연 내부 세로 네비 (우측 · 웨딩 라운지 vrail과 통일) -->
+  <nav class="irail">
+    <button class="on" data-nav="swipe" onclick="nav('swipe',this)"><svg class="svgic"><use href="#i-globe"/></svg><span class="rl">유니버스</span></button>
+    <button data-nav="likes" onclick="nav('likes',this)"><svg class="svgic"><use href="#i-inbox"/></svg><span class="rl">받은이음</span></button>
+    <button data-nav="chat" onclick="nav('chat',this)"><svg class="svgic"><use href="#i-msg"/></svg><span class="rl">채팅</span></button>
+    <button data-nav="me" onclick="nav('me',this)"><svg class="svgic"><use href="#i-user"/></svg><span class="rl">프로필</span></button>
+  </nav>
+
+  <!-- 메인 앱 네비 (맨 아래 · 기존과 동일) -->
+  <nav class="appnav">
+    <button class="active" onclick="toast('지금 보고 있는 탭: 디방인연')"><span class="ic">🌌</span><span>Inyeon</span></button>
+    <button onclick="toast('Event · 메인 앱 탭 (이 파일은 디방인연 단독 목업)')"><span class="ic">🗓️</span><span>Event</span></button>
+    <button class="qr" onclick="toast('QR · 메인 앱 탭')"><span class="ic">⛶</span><span class="lbl">QR</span></button>
+    <button onclick="toast('My event · 메인 앱 탭')"><span class="ic">👑</span><span>My event</span></button>
+    <button onclick="toast('Setting · 메인 앱 탭')"><span class="ic">⚙️</span><span>Setting</span></button>
+  </nav>
+</div>
+
+<!-- 필터 시트 -->
+<div class="ov" id="filterOv" onclick="if(event.target===this)closeOv('filterOv')">
+  <div class="sheet">
+    <div class="grip"></div>
+    <div class="sh-title">매칭 범위 · 관계 거리</div>
+    <div class="sh-sub">기본은 <b>랜덤</b>이에요. 슬라이더를 움직여 <b>몇 다리부터 몇 다리까지</b> 볼지 정해요. 가까울수록 대화가 무료, 멀수록 요네가 들어요.</div>
+    <div class="rng-val" id="rngLabel">1다리 ~ 6다리 이상 · 전체</div>
+    <div class="rng">
+      <div class="rng-track"><div class="rng-fill" id="rngFill"></div></div>
+      <input type="range" id="rngMin" min="1" max="6" step="1" value="1" oninput="rngUpdate()">
+      <input type="range" id="rngMax" min="1" max="6" step="1" value="6" oninput="rngUpdate()">
+    </div>
+    <div class="rng-ends"><span>1다리<small>직접 아는·만난</small></span><span>6다리 이상<small>낯선 사람</small></span></div>
+    <button class="applybtn" onclick="applyRange()">이 범위로 보기</button>
+  </div>
+</div>
+
+<!-- 프로필 상세 (한 페이지 · 스크롤 다운 · 사진 탭하면 닫힘) -->
+<div class="detail" id="detail">
+  <div class="dt-photo" id="dtPhoto" onclick="closeDetail()">
+    <div class="dt-dots" id="dtDots"></div>
+    <div class="dt-grad"></div>
+    <div class="dt-namebar">
+      <span class="anon" id="dtAnon"><svg class="svgic" style="width:11px;height:11px"><use href="#i-lock"/></svg> 이음 전 · 익명</span>
+      <div class="nm" id="dtName"></div>
+    </div>
+  </div>
+  <div class="dt-body">
+    <div class="dt-block">
+      <div class="bh">💬 소개</div>
+      <div class="dt-intro" id="dtIntro"></div>
+    </div>
+    <div class="dt-block">
+      <div class="bh">📍 어디서 마주쳤나 <span class="tag">출처</span></div>
+      <div id="dtProv"></div>
+    </div>
+    <div class="dt-block">
+      <div class="bh">🕸️ 신뢰네트워크 <span class="tag">익명</span></div>
+      <div class="netviz"><svg viewBox="0 0 300 200" id="dtNet"></svg><div class="nlabel" id="dtNetLabel"></div></div>
+    </div>
+    <div class="dt-block">
+      <div class="bh">🪙 신뢰잔액 <span class="tag">익명 · 범위</span></div>
+      <div class="dt-trustbal">
+        <div class="bars" id="dtBars"></div>
+        <div class="tv"><b id="dtBalRange">높음</b><span>상위 추정</span></div>
+      </div>
+    </div>
+    <div class="dt-locked" id="dtLocked"><svg class="svgic"><use href="#i-lock"/></svg><div>이름은 이음하면, 소속 · 전체 네트워크는 <b>오프라인에서 만나면</b> 공개돼요.</div></div>
+    <button class="dt-report" onclick="reportBlock()"><svg class="svgic" style="width:15px;height:15px"><use href="#i-flag"/></svg> 신고 · 차단</button>
+  </div>
+  <div class="dt-cta" id="dtCta">
+    <button class="ieumbtn" onclick="openIeum()"><svg class="svgic"><use href="#i-handshake"/></svg> 이음 신청</button>
+  </div>
+</div>
+
+<!-- 이음 신청 모달 -->
+<div class="ov" id="ieumOv" onclick="if(event.target===this)closeOv('ieumOv')">
+  <div class="sheet">
+    <div class="grip"></div>
+    <div class="sh-title">이음 신청</div>
+    <div class="fhint">내 <b>이름과 한마디</b>를 먼저 건네요. 상대가 수락하면 대화가 시작돼요. <span style="opacity:.85">소속·네트워크는 오프라인에서 만나면 공개.</span></div>
+    <div class="flabel">한마디</div>
+    <textarea class="finput" id="relFree" rows="2" maxlength="60" placeholder="예: 같은 결혼식에 있었던 것 같아요 :) 반가워서 신청해요!" oninput="checkIeum()" style="resize:none"></textarea>
+    <div class="flabel">상대에게 이렇게 보여요 <small>· 미리보기</small></div>
+    <div class="reveal-box">
+      <div class="rv-av" style="background-image:url('profile-photos/myprofile.png');background-size:cover;background-position:center"></div>
+      <div class="rv-tx"><b id="revealName">유상</b><span id="revealRel">한마디를 적어보세요</span></div>
+    </div>
+    <button class="submitbtn" id="ieumSubmit" onclick="sendIeum()"><svg class="svgic"><use href="#i-nodes"/></svg> 이음 신청 보내기</button>
+  </div>
+</div>
+
+<!-- 매칭 성사 -->
+<div class="matchov" id="matchOv">
+  <div class="mtitle">이음 완료</div>
+  <div class="mbig">서로 이음됐어요!</div>
+  <div class="msub" id="matchSub"></div>
+  <div class="mfaces">
+    <div class="mface a" style="background-image:url('profile-photos/myprofile.png')"></div>
+    <div class="mlink"><svg class="svgic"><use href="#i-nodes"/></svg></div>
+    <div class="mface b" id="matchFace"></div>
+  </div>
+  <div class="credit-tease">
+    <div class="ct">⛓️ 신뢰 attestation +1</div>
+    <div class="cs">이 이음이 온체인 신뢰 기록으로 쌓여 두 사람의 신뢰잔액이 올라갑니다. → Moi Credit의 재료.</div>
+  </div>
+  <div class="mbtns">
+    <button class="chat" onclick="goChatFromMatch()">대화 시작하기 💬</button>
+    <button class="keep" onclick="closeMatch()">계속 둘러보기</button>
+  </div>
+</div>
+
+<!-- 대화방 -->
+<div class="dmroom" id="dmRoom">
+  <div class="dmr-head">
+    <button class="bk" onclick="closeDm()"><svg class="svgic"><use href="#i-back"/></svg></button>
+    <div class="av" id="dmrAv"></div>
+    <div class="nm" id="dmrName"></div>
+  </div>
+  <div class="dmr-body" id="dmrBody"></div>
+  <div class="dmr-input">
+    <input id="dmrInput" placeholder="메시지 — 모든 대화(DM)는 인연에서" onkeydown="if(event.key==='Enter')sendMsg()">
+    <button onclick="sendMsg()"><svg class="svgic"><use href="#i-send"/></svg></button>
+  </div>
+</div>
+
+<!-- 메모리 뷰어 (이음된 모이의 2초 영상 · 카드형) -->
+<div class="memov" id="memOv" onclick="if(event.target===this)closeMemory()">
+  <div class="memcard">
+    <div class="memcard-h">
+      <div class="memcard-av" id="memAv"></div>
+      <div class="memcard-who"><b id="memName"></b><span id="memRole"></span></div>
+      <div class="memcard-time">방금</div>
+    </div>
+    <div class="memcard-photo" id="memPhoto"><div class="memcard-cap" id="memCap"></div></div>
+    <div class="memcard-foot"><span class="memcard-views" id="memViews"></span></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ─── 이미지 경로(같은 폴더의 'profile-photos') ─── */
+const IMG="profile-photos/";
+const A=n=>IMG+"a"+n+".png";
+const B=n=>IMG+"b"+n+".png";
+const C=n=>IMG+"c"+n+".png";
+const D=n=>IMG+"d"+n+".png";
+const E=n=>IMG+"e"+n+".png";
+const F=n=>IMG+"f"+n+".png";
+const MY="profile-photos/myprofile.png";
+
+/* ─── 데이터(익명 모이 풀) ───
+   tier: 0=같은 이벤트 1=2~3다리 2=모르는사람
+   ※ 데모 사진 세트: A=몬데(결혼식,1) / B=서아(2다리) / C=도윤(낯선,6) / D=리아(파티,1) / E=준(생파,1) / F=리타(낯선,6). MY=myprofile(내 대표사진).
+     deg=관계 거리(슬라이더 필터용). 데이팅 스타일이지만 남녀 매칭만은 아님. 실서비스는 모이별 사진. */
+const POOL=[
+ {id:1, nick:'몬데', photos:[A(1),A(2),A(3),A(4)], online:true, tier:0, deg:1,
+  hook:'함께 참여한 결혼식이 있어요', eventName:'강병주 ❤ 송민정 결혼식',
+  prov:[{e:'💒',t:'함께 참여한 결혼식',s:'같은 자리에 있었던 모이',tier:0}],
+  intro:'새로운 세계를 그려내는 상상력이 풍부한 편. 서로의 든든한 응원군이 되고 싶어요.',
+  bal:'높음', barsF:4, net:24, realName:'민정', realRel:'신부측 친구 · 대학 동아리', mutual:['지현'], mem:'주말 전시에서', memCap:'오랜만에 전시 나들이 🖼️', memViews:18},
+ {id:3, nick:'서아', photos:[B(1),B(2),B(3),B(4)], online:true, tier:1, deg:2,
+  hook:'두 다리 건너 아는 사이예요',
+  prov:[{e:'🤝',t:'두 다리 건너 아는 사이',s:'공통 이음 3명으로 연결',tier:1}],
+  intro:'마케터예요. 주중엔 일, 주말엔 전시·러닝. 대화 잘 통하는 사람이 좋아요.',
+  bal:'매우 높음', barsF:5, net:41, realName:'서아', realRel:'2다리 건너 · 친구의 친구', mutual:['태원','지현','수아'], mem:'성수 팝업에서', memCap:'성수 팝업 구경 중 🛍️', memViews:41},
+ {id:5, nick:'도윤', photos:[C(1),C(2),C(3),C(4)], online:false, tier:2, deg:6,
+  hook:'아직 마주친 적 없는 새 인연이에요',
+  prov:[{e:'🌍',t:'겹친 인연 없음',s:'완전 새로운 만남',tier:2}],
+  intro:'일하고, 운동하고, 가끔 여행. 대화 잘 통하는 사람과 천천히 알아가고 싶어요.',
+  bal:'높음', barsF:4, net:33, realName:'도윤', realRel:'모르는 사이', mutual:[], mem:'러닝 크루에서', memCap:'주말 러닝 완료 🏃', memViews:12},
+ {id:7, nick:'리아', photos:[D(1),D(2),D(3),D(4)], online:true, tier:0, deg:1,
+  hook:'함께 참여한 파티가 있어요', eventName:'한강 루프탑 파티',
+  prov:[{e:'🎉',t:'함께 참여한 파티',s:'같은 자리에 있었던 모이',tier:0}],
+  intro:'주말엔 홍대·성수에서 놀아요. 신나게 노는 거 좋아하는 사람 환영 🎶',
+  bal:'보통', barsF:3, net:19, realName:'지수', realRel:'파티 참석자 · 호스트 친구', mutual:['수아'], mem:'홍대 파티에서', memCap:'오늘 밤도 신나 🎶', memViews:30},
+ {id:9, nick:'준', photos:[E(1),E(2),E(3),E(4)], online:true, tier:0, deg:1,
+  hook:'함께 참여한 생일파티가 있어요', eventName:'민지 생일파티',
+  prov:[{e:'🎂',t:'함께 참여한 생일파티',s:'같은 자리에 있었던 모이',tier:0}],
+  intro:'운동하고 커피 마시는 거 좋아해요. 편하게 천천히 대화 나눠요.',
+  bal:'높음', barsF:4, net:27, realName:'현우', realRel:'생일파티 참석자 · 호스트 친구', mutual:['수아'], mem:'한강 러닝에서', memCap:'아침 러닝 완료 🏃', memViews:22},
+ {id:11, nick:'리타', photos:[F(1),F(2),F(3),F(4)], online:true, tier:2, deg:6,
+  hook:'아직 마주친 적 없는 새 인연이에요',
+  prov:[{e:'🌍',t:'겹친 인연 없음',s:'완전 새로운 만남',tier:2}],
+  intro:'밤의 도시를 좋아해요. 새로운 사람과의 만남도 즐겨요 🌃',
+  bal:'보통', barsF:3, net:21, realName:'리타', realRel:'모르는 사이', mutual:[], mem:'시부야 밤거리에서', memCap:'오늘 밤 시부야 🌃', memViews:55},
+];
+const TIER=[
+ {label:'만난 적 있는 사람',px:'대화 무료',k:'free',name:'함께한 이벤트',chat:0},
+ {label:'두 다리 건너',px:'대화 50',k:'low',name:'2~3다리 건너',chat:50},
+ {label:'낯선 사람',px:'대화 200',k:'high',name:'전혀 모르는 사람',chat:200},
+];
+const PHOTO_COST=20;                 // 추가 사진 열람(=관심 신호) 비용
+const FREE_PHOTOS=3;                 // 대표 포함 무료로 보이는 사진 수 (그 다음부터 요네)
+let yone=1250;                       // 요네 잔액
+let curFilter=0, pendingTier=0, queue=[], lastSwiped=null, activeProfile=null, selRel=null;
+const matched=[];                    // 이음 성사된 모이
+let sentPending=[];                   // 내가 보낸 이음 (상대 수락 대기중)
+const photoIdx={}, unlocked={}, chatOpen={}; // 사진인덱스 / 추가사진 열람여부 / 대화 열림여부
+let degMin=1, degMax=6;                       // 매칭 범위(관계 거리) — 1다리 ~ 6다리이상, 기본 전체
+let dtPhotoIdx=0;
+/* 나에게 온 이음 신청 (상대가 이름·관계를 먼저 공개한 상태)
+   ※ 사진 세트가 A·B 둘뿐이라 같은 인물(서아=B)이 덱에도 등장 — 실서비스는 별개 인물. */
+let INREQ=[
+ {id:103, nick:'서아', name:'서아', age:27, photos:[B(1)], online:true, tier:1,
+  rel:'2다리 건너 · 친구의 친구', msg:'수아 통해 알게 됐어요 :) 취향이 비슷한 것 같아 이음 신청해요!',
+  prov:[{e:'🤝',t:'공통 이음 2명',s:'수아·지현을 통해 연결',tier:1}],
+  bal:'매우 높음',barsF:5,net:41, realName:'서아', realRel:'2다리 건너 · 친구의 친구'},
+];
+function findP(id){return POOL.find(x=>x.id===id)||matched.find(x=>x.id===id)||INREQ.find(x=>x.id===id);}
+function updateYone(){document.getElementById('yoneChip').textContent='🪙 '+yone.toLocaleString();}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1900);}
+
+/* 네비 */
+function nav(s,btn){
+ document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('on',el.dataset.screen===s));
+ document.querySelectorAll('.irail button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+ const _r=document.querySelector('.irail');if(_r)_r.classList.remove('hide'); // 탭 전환 = 상단 = 레일 노출
+ if(s==='likes')renderLikes();if(s==='chat')renderChat();
+}
+
+/* 매칭 범위(관계 거리) — 가로 게이지(양쪽 손잡이) */
+function degLabel(n){return n>=6?'6다리 이상':n+'다리';}
+function rngUpdate(){
+ const aEl=document.getElementById('rngMin'), bEl=document.getElementById('rngMax');
+ let lo=+aEl.value, hi=+bEl.value;
+ if(lo>hi){const t=lo;lo=hi;hi=t;}
+ aEl.value=lo; bEl.value=hi; degMin=lo; degMax=hi;
+ const fill=document.getElementById('rngFill');
+ fill.style.left=((lo-1)/5*100)+'%';
+ fill.style.width=((hi-lo)/5*100)+'%';
+ document.getElementById('rngLabel').textContent=degLabel(lo)+' ~ '+degLabel(hi)+((lo===1&&hi===6)?' · 전체':'');
+}
+function openGuide(){
+ document.getElementById('rngMin').value=degMin;
+ document.getElementById('rngMax').value=degMax;
+ rngUpdate();
+ document.getElementById('filterOv').classList.add('on');
+}
+function applyRange(){closeOv('filterOv');buildQueue();renderDeck();toast('관계 거리 '+degLabel(degMin)+' ~ '+degLabel(degMax)+' 범위로 봅니다');}
+function closeOv(id){document.getElementById(id).classList.remove('on');}
+
+/* 덱 — 필터 없이 모든 거리 랜덤 매칭, 카드마다 관계 태그 */
+function buildQueue(){queue=POOL.filter(p=>p.deg>=degMin&&p.deg<=degMax).map(p=>p.id).sort(()=>Math.random()-0.5);queue.forEach(id=>photoIdx[id]=0);}
+function renderDeck(){
+ const deck=document.getElementById('deck');
+ const _r=document.querySelector('.irail');if(_r)_r.classList.remove('hide'); // 새 카드 = 상단 = 레일 노출
+ deck.querySelectorAll('.swcard').forEach(c=>c.remove());
+ const empty=document.getElementById('deckEmpty');
+ if(queue.length===0){empty.style.display='flex';return;}
+ empty.style.display='none';
+ const top3=queue.slice(0,3);
+ top3.slice().reverse().forEach((id)=>{
+  const idx=top3.indexOf(id);
+  const p=POOL.find(x=>x.id===id);
+  if(photoIdx[id]==null)photoIdx[id]=0;
+  const pi=photoIdx[id];
+  const locked=!unlocked[id]&&pi>=FREE_PHOTOS;
+  const card=document.createElement('div');
+  card.className='swcard'+(idx===1?' behind':idx===2?' behind2':'');
+  card.dataset.id=id;
+  card.innerHTML=`
+   <div class="sw-photo${locked?' blurred':''}" style="background-image:url('${p.photos[pi]}')"></div>
+   <div class="sw-grad"></div>
+   <div class="sw-dots">${p.photos.map((_,i)=>`<i class="${i===pi?'on':''}"></i>`).join('')}</div>
+   ${idx===0?'<div class="sw-tapL"></div><div class="sw-tapR"></div>':''}
+   ${p.online?'<div class="sw-online"><span class="od"></span>접속 중</div>':''}
+   <div class="sw-tier tier-${TIER[p.tier].k}">${TIER[p.tier].label}</div>
+   <div class="stamp up">다음 ▲</div>
+   ${locked?`<button class="sw-lockover" onclick="event.stopPropagation();unlockPhotos(${id})"><span class="lk-ic">🔒</span><span class="lk-t">사진 더보기</span><span class="lk-c">🪙 ${PHOTO_COST}</span></button>`:''}
+   <div class="sw-info">
+     <div class="sw-hook"><span class="hook-em">${p.prov[0].e}</span>${p.hook}</div>
+     ${p.mutual&&p.mutual.length?`<div class="sw-mutual">🤝 공통 친구 ${p.mutual.length}명</div>`:''}
+     <div class="sw-anonline"><svg class="svgic"><use href="#i-lock"/></svg> 이음하면 이름이 공개돼요</div>
+   </div>
+   ${idx===0?`<div class="sw-actions">
+     <button class="swact pass" title="넘기기"><svg class="svgic"><use href="#i-x"/></svg></button>
+     <button class="swact ieum" title="이음 신청"><svg class="svgic"><use href="#i-nodes"/></svg></button>
+   </div>`:''}
+   ${idx===0?'<div class="sw-grip">프로필 보기 ▾</div>':''}`;
+  if(idx===0){
+   card.querySelector('.sw-tapL').onclick=e=>{e.stopPropagation();if(!card._dragged)cardPhotoNav(id,-1);};
+   card.querySelector('.sw-tapR').onclick=e=>{e.stopPropagation();if(!card._dragged)cardPhotoNav(id,1);};
+   card.querySelector('.sw-info').onclick=e=>{if(!card._dragged)openDetail(id);};
+   const g=card.querySelector('.sw-grip');['mousedown','touchstart'].forEach(ev=>g.addEventListener(ev,x=>x.stopPropagation()));g.onclick=()=>openDetail(id);
+   const acts=card.querySelector('.sw-actions');
+   acts.querySelectorAll('button').forEach(b=>['mousedown','touchstart'].forEach(ev=>b.addEventListener(ev,e=>e.stopPropagation())));
+   acts.querySelector('.pass').onclick=e=>{e.stopPropagation();swipe('no');};
+   acts.querySelector('.ieum').onclick=e=>{e.stopPropagation();cardIeum(id);};
+   enableDrag(card);
+  }
+  deck.appendChild(card);
+ });
+}
+function cardPhotoNav(id,dir){const p=findP(id);
+ let n=photoIdx[id]+dir;
+ if(n>p.photos.length-1)n=0; if(n<0)n=p.photos.length-1;
+ photoIdx[id]=n;renderDeck();}  // 전체 범위 — 잠긴 사진은 흐릿+오버레이로 표시
+/* 추가 사진(무료분 다음) 열람 = 요네 소비 + 상대에게 '관심' 신호 */
+function unlockPhotos(id){
+ if(unlocked[id])return;
+ if(yone<PHOTO_COST){toast('🪙 요네가 부족해요 — 셋팅에서 충전하면 추가 사진을 볼 수 있어요');return;}
+ yone-=PHOTO_COST;updateYone();unlocked[id]=true;
+ toast('📷 추가 사진을 열었어요 · 상대 모이에게 "누군가 관심" 알림이 갔어요');
+ renderDeck();
+ if(document.getElementById('detail').classList.contains('on'))renderDetailPhoto();
+}
+function topCard(){return document.querySelector('.swcard:not(.behind):not(.behind2)');}
+function swipe(dir){
+ const card=topCard();if(!card)return;
+ const id=parseInt(card.dataset.id);
+ if(dir==='yes'){cardIeum(id);return;}  // 이음 = 폼 먼저, 카드는 보낼 때만 소비
+ lastSwiped=id;
+ card.style.transition='transform .25s ease,opacity .25s ease';
+ card.style.transform='translateY(-120%)';
+ card.style.opacity='0';
+ setTimeout(()=>{queue.shift();if(queue[0]!=null)photoIdx[queue[0]]=0;renderDeck();},160);
+}
+function cardIeum(id){activeProfile=findP(id);openIeum();}
+function superIeum(){const card=topCard();if(!card)return;activeProfile=POOL.find(x=>x.id===parseInt(card.dataset.id));toast('★ 슈퍼 이음 — 상대 LIKE 상단에 떠요');openIeum();}
+/* 좋아요 = 가벼운 호감 신호(이음 신청과 별개) */
+function likeCard(){
+ const card=topCard();if(!card)return;lastSwiped=parseInt(card.dataset.id);
+ card.style.transition='transform .4s ease,opacity .4s ease';card.style.transform='translateY(-130%) rotate(-4deg)';card.style.opacity='0';
+ toast('💗 좋아요를 보냈어요');
+ setTimeout(()=>{queue.shift();renderDeck();},300);
+}
+function rewind(){if(lastSwiped==null){toast('되돌릴 카드가 없어요');return;}if(!queue.includes(lastSwiped))queue.unshift(lastSwiped);lastSwiped=null;renderDeck();toast('되돌렸어요');}
+function enableDrag(card){
+ let sx=0,sy=0,dx=0,dy=0,drag=false,axis=null;
+ const upStamp=()=>card.querySelector('.stamp.up');
+ const start=(x,y)=>{drag=true;sx=x;sy=y;dx=0;dy=0;axis=null;card._dragged=false;card.style.transition='none';};
+ const move=(x,y)=>{if(!drag)return;dx=x-sx;dy=y-sy;
+  if(axis===null&&(Math.abs(dx)>8||Math.abs(dy)>8))axis=Math.abs(dx)>Math.abs(dy)?'x':'y';
+  if(Math.abs(dx)>6||Math.abs(dy)>6)card._dragged=true;
+  if(axis==='y'){card.style.transform='translateY('+(dy<0?dy:dy*0.25)+'px)';const st=upStamp();if(st)st.style.opacity=dy<-40?Math.min(-dy/110,1):0;}
+  else if(axis==='x'){card.style.transform='translateX('+(dx*0.3)+'px)';}};
+ const end=()=>{if(!drag)return;drag=false;card.style.transition='transform .18s ease,opacity .2s ease';
+  const id=parseInt(card.dataset.id);
+  if(axis==='y'){ if(dy<-90)swipe('no'); else{card.style.transform='';const st=upStamp();if(st)st.style.opacity=0;} }
+  else if(axis==='x'){ card.style.transform=''; if(dx<-50)cardPhotoNav(id,1); else if(dx>50)cardPhotoNav(id,-1); }
+  else{card.style.transform='';}
+  dx=dy=0;};
+ card.addEventListener('mousedown',e=>start(e.clientX,e.clientY));
+ window.addEventListener('mousemove',e=>move(e.clientX,e.clientY));
+ window.addEventListener('mouseup',end);
+ card.addEventListener('touchstart',e=>start(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+ card.addEventListener('touchmove',e=>move(e.touches[0].clientX,e.touches[0].clientY),{passive:true});
+ card.addEventListener('touchend',end);
+}
+
+/* 둘러보기 */
+function renderBrowse(){
+ document.getElementById('browseGrid').innerHTML=POOL.filter(p=>p.tier<=curFilter).map(p=>`
+  <div class="pcell" onclick="openDetail(${p.id})">
+    <div class="pc-photo" style="background-image:url('${p.photos[0]}')"></div>
+    <span class="pc-tier tier-${TIER[p.tier].k}">${TIER[p.tier].label}</span>
+    <div class="pc-grad"></div>
+    <div class="pc-cap"><div class="pc-name">${p.nick} ${p.age}</div><div class="pc-prov">${p.prov[0].e} ${p.prov[0].t}</div></div>
+  </div>`).join('');
+}
+/* 받은 이음 (이음 신청 수락/거절 + 관심) */
+function segLike(seg,btn){
+ document.querySelectorAll('.seg-pane').forEach(el=>el.classList.toggle('on',el.dataset.seg===seg));
+ document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+}
+function renderLikes(){
+ renderSent();
+ document.getElementById('reqList').innerHTML = INREQ.length ? INREQ.map(r=>`
+  <div class="req-card">
+    <div class="req-av" style="background-image:url('${r.photos[0]}')"></div>
+    <div class="req-tx">
+      <div class="rn">${r.name}</div>
+      <div class="rr">${r.rel}</div>
+      <div class="rp">${r.prov[0].e} ${r.prov[0].t}</div>
+      <div class="rm">"${r.msg}"</div>
+      <div class="req-acts"><button class="rj" onclick="declineReq(${r.id})">거절</button><button class="ac" onclick="acceptReq(${r.id})">이음 수락</button></div>
+    </div>
+  </div>`).join('') : '<div class="chat-blank" style="padding:22px">받은 이음 신청이 없어요.</div>';
+ document.getElementById('likeGrid').innerHTML=[POOL[0]].map(p=>`
+  <div class="like-cell">
+    <div class="lc-photo" style="background-image:url('${p.photos[0]}')"></div>
+    <div class="lc-lock"><svg class="svgic" style="width:22px;height:22px"><use href="#i-lock"/></svg><span class="lt">이름은 이음 후</span></div>
+    <div class="lc-cap">📷 내 사진을 봤어요</div>
+  </div>`).join('');
+ // ③ 내가 본 모이 (요네로 추가사진 연 모이)
+ const seen=POOL.filter(p=>unlocked[p.id]);
+ document.getElementById('seenGrid').innerHTML = seen.length ? seen.map(p=>`
+  <div class="like-cell" onclick="openDetail(${p.id})">
+    <div class="lc-photo" style="background-image:url('${p.photos[0]}')"></div>
+    <div class="lc-cap">📷 추가 사진 본 모이</div>
+  </div>`).join('') : '<div class="chat-blank" style="grid-column:1/-1;padding:18px">아직 추가 사진을 연 모이가 없어요.<br>카드에서 🪙로 추가 사진을 열면 여기 모여요.</div>';
+ document.getElementById('segIeumN').textContent=INREQ.length+sentPending.length;
+ document.getElementById('segGwansimN').textContent=1+seen.length;
+}
+function acceptReq(id){
+ const r=INREQ.find(x=>x.id===id);if(!r)return;
+ if(!matched.find(m=>m.id===id))matched.push(r);
+ chatOpen[id]=true; // 상대가 먼저 다가왔으므로 대화 비용은 상대 부담 → 나는 바로 열림
+ INREQ=INREQ.filter(x=>x.id!==id);
+ toast('💞 '+r.name+'님과 이음! 대화가 열렸어요');
+ renderLikes();
+}
+function declineReq(id){INREQ=INREQ.filter(x=>x.id!==id);toast('이음 신청을 거절했어요');renderLikes();}
+function renderSent(){
+ const el=document.getElementById('sentList');if(!el)return;
+ el.innerHTML = sentPending.length ? sentPending.map(id=>{const p=findP(id);return `
+  <div class="req-card">
+    <div class="req-av" style="background-image:url('${p.photos[0]}')"></div>
+    <div class="req-tx"><div class="rn">익명의 모이</div><div class="rr">${p.prov[0].e} ${p.prov[0].t}</div><div class="rm" style="color:#8AA0B6">수락을 기다리는 중…</div></div>
+  </div>`;}).join('') : '<div class="chat-blank" style="padding:14px">보낸 이음이 없어요.</div>';
+}
+function reportBlock(id){const pid=id||(activeProfile&&activeProfile.id);closeDetail();if(pid){queue=queue.filter(x=>x!==pid);renderDeck();}toast('🚩 신고·차단했어요 — 서로 추천에 다시 뜨지 않아요');}
+/* 채팅 */
+function renderChat(){
+ const strip=document.getElementById('matchedStrip'),list=document.getElementById('dmList');
+ if(matched.length===0){
+  strip.innerHTML='<div class="mem-empty">아직 이음된 모이가 없어요 — 이음하면 그 모이의 메모리가 여기 떠요</div>';
+  list.innerHTML='<div class="chat-blank">아직 대화가 없어요.<br>이음을 신청하고 수락되면<br>여기서 대화가 시작돼요.</div>';return;
+ }
+ strip.innerHTML=matched.map(p=>`<div class="ms" onclick="playMemory(${p.id})"><div class="ring"><div class="in" style="background-image:url('${p.photos[0]}')"></div><span class="ms-play">▶</span></div><div class="nm">${p.realName}</div></div>`).join('');
+ let html='';
+ if(matched.some(p=>!chatOpen[p.id])) html+='<div class="dm-lockwarn">상대가 이음을 수락했지만 요네가 부족해 아직 대화를 못 여는 모이가 있어요. 셋팅에서 충전하면 바로 열려요.</div>';
+ html+=matched.map(p=>{
+  const cost=TIER[p.tier].chat;
+  if(chatOpen[p.id]) return `
+   <div class="dm-row" onclick="openDm(${p.id})">
+     <div class="dm-av" style="background-image:url('${p.photos[0]}')">${p.online?'<span class="on"></span>':''}</div>
+     <div class="dm-tx"><div class="n">${p.realName} <span class="badge-new">이음</span></div><div class="m">대화를 시작해보세요</div></div>
+     <div class="dm-time">방금</div>
+   </div>`;
+  return `
+   <div class="dm-row locked">
+     <div class="dm-av" style="background-image:url('${p.photos[0]}')"></div>
+     <div class="dm-tx"><div class="n">${p.realName}</div><div class="m">이음 수락됨 · 대화 열기 🪙${cost} (요네 부족)</div></div>
+     <button class="dm-openbtn" onclick="openDm(${p.id})">대화 열기 🪙${cost}</button>
+   </div>`;
+ }).join('');
+ list.innerHTML=html;
+}
+
+/* 상세 */
+function openDetail(id){
+ const p=findP(id);activeProfile=p;dtPhotoIdx=0;
+ const M=matched.some(m=>m.id===id);  // 이미 이음된 사이?
+ renderDetailPhoto();
+ document.getElementById('dtAnon').innerHTML = M ? '✓ 이음 완료' : '<svg class="svgic" style="width:11px;height:11px"><use href="#i-lock"/></svg> 이음 전 · 익명';
+ document.getElementById('dtName').innerHTML = M ? '<b>'+p.realName+'</b>' : '<b>'+p.prov[0].e+' '+p.hook+'</b>';
+ document.getElementById('dtIntro').textContent=p.intro||'';
+ document.getElementById('dtProv').innerHTML=p.prov.map(pr=>`
+  <div class="dt-prov-row"><div class="pe">${pr.e}</div><div><b>${pr.t}</b><span class="ps">${pr.s}</span></div><span class="pv-tier tier-${TIER[pr.tier].k}">${TIER[pr.tier].label}</span></div>`).join('');
+ drawNet(document.getElementById('dtNet'),p.net);
+ document.getElementById('dtNetLabel').textContent='이음된 '+p.net+'명 · 전체는 오프라인에서 만나면 공개';
+ document.getElementById('dtBars').innerHTML=[7,5,9,6,8,5,7].map((h,i)=>`<i class="${i<p.barsF+2?'f':''}" style="height:${h*5}px"></i>`).join('');
+ document.getElementById('dtBalRange').textContent=p.bal;
+ const mu=(p.mutual&&p.mutual.length)?' 함께 아는 사람: <b>'+p.mutual.join(' · ')+'</b>.':'';
+ document.getElementById('dtLocked').innerHTML = M
+  ? '<svg class="svgic"><use href="#i-lock"/></svg><div>온라인 이음 완료 — 소속 · 전체 네트워크는 <b>오프라인에서 만나면</b> 공개돼요.'+mu+'</div>'
+  : '<svg class="svgic"><use href="#i-lock"/></svg><div>이름은 이음하면, 소속 · 전체 네트워크는 <b>오프라인에서 만나면</b> 공개돼요.</div>';
+ document.getElementById('dtCta').innerHTML = M
+  ? '<button class="ieumbtn" onclick="closeDetail();openDm('+id+')"><svg class="svgic"><use href="#i-msg"/></svg> 대화하기</button>'
+  : '<button class="ieumbtn" onclick="openIeum()"><svg class="svgic"><use href="#i-nodes"/></svg> 이음 신청</button>';
+ document.getElementById('detail').scrollTop=0;
+ document.getElementById('detail').classList.add('on');
+}
+function renderDetailPhoto(){
+ const p=activeProfile;
+ document.getElementById('dtPhoto').style.backgroundImage="url('"+p.photos[0]+"')";
+ document.getElementById('dtDots').innerHTML=p.photos.map((_,i)=>`<i class="${i===0?'on':''}"></i>`).join('');
+}
+function closeDetail(){const d=document.getElementById('detail');if(!d.classList.contains('on'))return;d.classList.remove('on');d.classList.add('closing');setTimeout(()=>d.classList.remove('closing'),260);}
+function drawNet(svg,n){
+ const cx=150,cy=100,N=Math.min(n,14);let e='',nd='';const pts=[];
+ for(let i=0;i<N;i++){const a=(i/N)*Math.PI*2,r=42+((i*37)%34);pts.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r]);}
+ pts.forEach(p=>{e+=`<line x1="${cx}" y1="${cy}" x2="${p[0]}" y2="${p[1]}" stroke="#C6DEEA" stroke-width="1.3"/>`;});
+ for(let i=0;i<N;i+=3){const a=pts[i],b=pts[(i+1)%N];e+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#E0EAF1" stroke-width="1"/>`;}
+ pts.forEach((p,i)=>{nd+=`<circle cx="${p[0]}" cy="${p[1]}" r="${4+(i%3)}" fill="#87CEEB" opacity="${.55+(i%3)*.15}"/>`;});
+ nd+=`<circle cx="${cx}" cy="${cy}" r="13" fill="#1E3A5F"/><circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="#F8C57A" stroke-width="2.5"/>`;
+ svg.innerHTML=e+nd;
+}
+
+/* 이음 신청 */
+function openIeum(){
+ if(!activeProfile)return;
+ document.getElementById('relFree').value='';
+ updateReveal();closeDetail();
+ document.getElementById('ieumOv').classList.add('on');
+}
+function updateReveal(){
+ const f=document.getElementById('relFree').value.trim();
+ document.getElementById('revealRel').textContent = f || '한마디를 적어보세요';
+}
+function checkIeum(){updateReveal();}  // 이름은 구글 로그인 자동 → 항상 전송 가능
+function sendIeum(){
+ closeOv('ieumOv');const p=activeProfile;
+ queue=queue.filter(x=>x!==p.id);if(queue[0]!=null)photoIdx[queue[0]]=0;renderDeck(); // 보낼 때 카드 소비
+ if(!sentPending.includes(p.id))sentPending.push(p.id);
+ toast('이음 신청을 보냈어요 — 상대 수락을 기다려요');
+ const onLikes=()=>document.querySelector('.screen[data-screen="likes"]').classList.contains('on');
+ if(onLikes())renderLikes();
+ setTimeout(()=>{ // 데모: 상대가 수락 → 매칭
+  sentPending=sentPending.filter(x=>x!==p.id);
+  showMatch(p);
+  if(onLikes())renderLikes();
+ },1800);
+}
+
+/* 매칭 */
+function showMatch(p){
+ document.getElementById('matchFace').style.backgroundImage="url('"+p.photos[0]+"')";
+ const cost=TIER[p.tier].chat;
+ let sub='이름이 공개됐어요 — <b style="color:#fff">'+p.realName+'</b>';
+ if(p.mutual&&p.mutual.length) sub += '<br>🔗 함께 아는 사람: <b style="color:#fff">'+p.mutual.join(' · ')+'</b>';
+ sub += '<br><span style="opacity:.82">그 외 소속 · 전체 네트워크는 오프라인에서 만나면 열려요.</span>';
+ sub += cost===0 ? '<br>가까운 사이라 <b style="color:#fff">대화는 무료</b>예요.' : '<br>대화 열기에 <b style="color:#fff">🪙'+cost+' 요네</b>가 들어요.';
+ document.getElementById('matchSub').innerHTML=sub;
+ const btn=document.querySelector('.matchov .chat');
+ btn.textContent = cost===0 ? '대화 시작하기 💬' : '대화 열기 · 🪙'+cost;
+ if(!matched.find(m=>m.id===p.id))matched.push(p);
+ document.getElementById('matchOv').classList.add('on');
+}
+function closeMatch(){document.getElementById('matchOv').classList.remove('on');}
+function goChatFromMatch(){closeMatch();openDm(activeProfile.id);}
+
+/* 메모리 뷰어 (이음된 모이의 2초 영상) — 디방 유니버스 메모리 개념 */
+function playMemory(id){
+ const p=findP(id);if(!p)return;
+ document.getElementById('memAv').style.backgroundImage="url('"+p.photos[0]+"')";
+ document.getElementById('memName').textContent=p.realName;
+ document.getElementById('memRole').textContent=p.mem||'최근';
+ document.getElementById('memPhoto').style.backgroundImage="url('"+(p.photos[1]||p.photos[0])+"')";
+ document.getElementById('memCap').textContent=p.memCap||'';
+ document.getElementById('memViews').textContent=(p.memViews||0)+'명이 봤어요';
+ document.getElementById('memOv').classList.add('on');
+}
+function closeMemory(){document.getElementById('memOv').classList.remove('on');}
+/* 대화 열기 = 거리별 요네 차감 (먼저 다가간 쪽이 부담). 부족하면 못 엶. */
+function tryOpenChat(id){
+ const p=findP(id);const cost=TIER[p.tier].chat;
+ if(chatOpen[id])return true;
+ if(cost===0){chatOpen[id]=true;return true;}
+ if(yone>=cost){yone-=cost;updateYone();chatOpen[id]=true;toast('🪙 '+cost+'요네로 '+p.realName+'님과 대화를 열었어요');return true;}
+ toast('🪙 요네가 부족해 대화를 못 열어요 — 셋팅에서 충전하면 바로 열려요');return false;
+}
+/* 대화방 */
+const dmStore={};
+function openDm(id){
+ if(!tryOpenChat(id)){document.querySelector('.irail button[data-nav="chat"]').click();return;}
+ const p=findP(id);activeProfile=p;
+ document.getElementById('dmrAv').style.backgroundImage="url('"+p.photos[0]+"')";
+ document.getElementById('dmrName').innerHTML=p.realName+'<small>'+(p.online?'접속 중':'오프라인')+'</small>';
+ if(!dmStore[id])dmStore[id]=[
+  {sys:'온라인 이음 완료 · 소속·중심 네트워크는 오프라인에서 만나면 공개돼요'},
+  {sys:'모든 대화(DM)는 디방 인연에서 이뤄져요. 이 대화는 신뢰 attestation 기록으로 쌓여요.'},
+  {them:'반가워요 :) 온라인에서 먼저 이야기 나눠요'},
+ ];
+ renderDm(id);document.getElementById('dmRoom').classList.add('on');
+}
+function renderDm(id){
+ document.getElementById('dmrBody').innerHTML=dmStore[id].map(m=>m.sys?`<div class="dmr-sys">${m.sys}</div>`:m.me?`<div class="bubble me">${m.me}</div>`:`<div class="bubble them">${m.them}</div>`).join('');
+ const b=document.getElementById('dmrBody');b.scrollTop=b.scrollHeight;
+}
+function sendMsg(){
+ const inp=document.getElementById('dmrInput'),v=inp.value.trim();if(!v)return;const id=activeProfile.id;
+ dmStore[id].push({me:v});inp.value='';renderDm(id);
+ setTimeout(()=>{dmStore[id].push({them:'반가워요! 곧 또 같은 이벤트에서 만나면 네트워크도 이어지겠네요 :)'});renderDm(id);},900);
+}
+function closeDm(){document.getElementById('dmRoom').classList.remove('on');document.querySelector('.irail button[data-nav="chat"]').click();}
+
+buildQueue();renderDeck();
+/* 리스트 화면도 스크롤하면 레일 숨김(스와이프 카드와 동일 동작) */
+['likes','chat','me'].forEach(s=>{const el=document.querySelector('.screen[data-screen="'+s+'"]');if(el)el.addEventListener('scroll',()=>{const r=document.querySelector('.irail');if(r)r.classList.toggle('hide',el.scrollTop>36);});});
+</script>
+</body>
+</html>
