@@ -2,8 +2,8 @@
 // xState 사용 근거(CLAUDE.md): 이음 신청 = 전송→수락대기→성사 비동기 분기. 데모는 mock 수락,
 // 백엔드 연결 시 sendIeum actor를 실제 attestation/수락 폴링으로 교체(나머지 구조 유지).
 import { setup, assign, fromPromise } from 'xstate'
-import type { Moi } from '../components/inyeon/types'
-import { POOL, PHOTO_COST, START_YONE } from '../components/inyeon/data'
+import type { Moi, IncomingReq } from '../components/inyeon/types'
+import { POOL, PHOTO_COST, START_YONE, DM_COST, INCOMING } from '../components/inyeon/data'
 
 export type InyeonScreen = 'universe' | 'received' | 'chat' | 'me'
 
@@ -19,6 +19,10 @@ export interface InyeonContext {
   message: string
   sentIds: number[]
   matchedIds: number[]
+  /** 나에게 온 이음 신청(받은이음). */
+  incoming: IncomingReq[]
+  /** 대화(DM)가 열린 모이 — 요네 게이트 통과 여부. */
+  chatOpen: Record<number, boolean>
   error: string | null
 }
 
@@ -40,6 +44,9 @@ export const inyeonMachine = setup({
       | { type: 'DISMISS_MATCH' }
       | { type: 'SET_FILTER'; degMin: number; degMax: number }
       | { type: 'RESET_DECK' }
+      | { type: 'ACCEPT_REQ'; moiId: number }
+      | { type: 'DECLINE_REQ'; moiId: number }
+      | { type: 'OPEN_DM'; id: number }
   },
   guards: {
     canUnlock: ({ context, event }) =>
@@ -65,6 +72,8 @@ export const inyeonMachine = setup({
     message: '',
     sentIds: [],
     matchedIds: [],
+    incoming: INCOMING,
+    chatOpen: {},
     error: null,
   },
   on: {
@@ -101,6 +110,36 @@ export const inyeonMachine = setup({
         yone: ({ context }) => context.yone - PHOTO_COST,
         unlocked: ({ context, event }) =>
           event.type === 'UNLOCK_PHOTOS' ? { ...context.unlocked, [event.id]: true } : context.unlocked,
+      }),
+    },
+    // 받은이음 수락 = 상대가 먼저 다가왔으니 대화는 상대 부담(무료로 열림).
+    ACCEPT_REQ: {
+      actions: assign({
+        matchedIds: ({ context, event }) =>
+          event.type === 'ACCEPT_REQ' && !context.matchedIds.includes(event.moiId)
+            ? [...context.matchedIds, event.moiId]
+            : context.matchedIds,
+        chatOpen: ({ context, event }) =>
+          event.type === 'ACCEPT_REQ' ? { ...context.chatOpen, [event.moiId]: true } : context.chatOpen,
+        incoming: ({ context, event }) =>
+          event.type === 'ACCEPT_REQ' ? context.incoming.filter((r) => r.moiId !== event.moiId) : context.incoming,
+      }),
+    },
+    DECLINE_REQ: {
+      actions: assign({
+        incoming: ({ context, event }) =>
+          event.type === 'DECLINE_REQ' ? context.incoming.filter((r) => r.moiId !== event.moiId) : context.incoming,
+      }),
+    },
+    // 대화 열기 = 관계 거리별 요네 차감(먼저 다가간 쪽 부담). 부족하면 못 엶.
+    OPEN_DM: {
+      actions: assign(({ context, event }) => {
+        if (event.type !== 'OPEN_DM') return {}
+        const m = moiById(event.id)
+        if (!m || context.chatOpen[event.id]) return {}
+        const cost = DM_COST[m.tier]
+        if (cost > 0 && context.yone < cost) return { error: '요네가 부족해 대화를 못 열어요. 충전하면 바로 열려요.' }
+        return { yone: context.yone - cost, chatOpen: { ...context.chatOpen, [event.id]: true }, error: null }
       }),
     },
   },

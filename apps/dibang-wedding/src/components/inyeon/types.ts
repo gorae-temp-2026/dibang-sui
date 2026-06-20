@@ -38,3 +38,13 @@ export interface Moi {
   /** 이음(연결) 노드 수 — 익명. */
   net: number
 }
+
+/** 나에게 온 이음 신청(받은이음) — 상대가 이름·관계·한마디를 먼저 공개한 상태(기능정의 §5).
+ *  moiId = POOL 모이 참조(수락 시 그 모이가 matched로). */
+export interface IncomingReq {
+  moiId: number
+  /** 상대가 밝힌 관계(이미 공개). */
+  rel: string
+  /** 먼저 건넨 한마디. */
+  msg: string
+}

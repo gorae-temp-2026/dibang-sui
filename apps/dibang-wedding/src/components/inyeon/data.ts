@@ -1,7 +1,7 @@
 // 디방인연 데모 데이터 + 요네 상수 — 목업 SSOT(`디방인연_틴더식_목업_260617.html`) 기준.
 // ⚠️ 사진 무료 장수: 목업 코드 `FREE_PHOTOS=2`(대표 포함 2장 무료, 3장째 요네) + 킥오프 프롬프트 일치.
 //    (기능정의 산문은 3장이라 적었으나 코드/프롬프트=2가 SSOT. 합동 확정 시 1줄 변경.)
-import type { Moi, Tier } from './types'
+import type { Moi, Tier, IncomingReq } from './types'
 
 export const PHOTO_COST = 20 // 추가 사진 열람(=관심 신호) 요네
 export const FREE_PHOTOS = 2 // 대표 포함 무료 노출 장수 — 3장째부터 요네
@@ -61,4 +61,21 @@ export const POOL: Moi[] = [
     hook: TIER_HOOK[0], mutualCount: 4, balLabel: '매우 높음', barsF: 5, net: 47,
     prov: [{ emoji: '💍', text: '같은 결혼식 참석', sub: '신랑측 하객', tier: 0 }],
   },
+]
+
+/** 채팅 메모리 스트립 캡션 — 이음된 모이의 짧은 영상 느낌(데모). */
+export const MOI_MEM: Record<number, string> = {
+  201: '성수 팝업 구경 중 🛍️',
+  202: '오랜만에 동네 산책 🌿',
+  203: '주말 전시 나들이 🖼️',
+  204: '주말 러닝 완료 🏃',
+  205: '한강 러닝 완료 🏃',
+  206: '오늘 밤 시부야 🌃',
+  207: '오늘 밤도 신나 🎶',
+}
+
+/** 나에게 온 이음 신청(받은이음). 상대가 먼저 이름·관계·한마디 공개 → 수락 시 대화는 상대 부담(무료 열림). */
+export const INCOMING: IncomingReq[] = [
+  { moiId: 205, rel: '2다리 건너 · 친구의 친구', msg: '수아 통해 알게 됐어요 :) 취향이 비슷한 것 같아 이음 신청해요!' },
+  { moiId: 207, rel: '같은 결혼식 · 신랑측 하객', msg: '저번 결혼식에서 잠깐 마주쳤었죠! 반가워서 이음 보내요 :)' },
 ]

@@ -16,6 +16,8 @@ import { MatchOverlay } from '../components/inyeon/MatchOverlay'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { chulsooProfile } from '../components/profile/fixture'
+import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
+import { ChatScreen } from '../components/inyeon/ChatScreen'
 
 const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.id === id) ?? null)
 
@@ -24,8 +26,13 @@ export function InyeonPage() {
   const [filterOpen, setFilterOpen] = useState(false)
   const [detailId, setDetailId] = useState<number | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [profileMoiId, setProfileMoiId] = useState<number | null>(null)
 
-  const { queue, photoIdx, unlocked, yone, screen, degMin, degMax, activeId, message, error } = state.context
+  const { queue, photoIdx, unlocked, yone, screen, degMin, degMax, activeId, message, error, incoming, chatOpen, sentIds, matchedIds } =
+    state.context
+  const unlockedIds = Object.entries(unlocked)
+    .filter(([, v]) => v)
+    .map(([k]) => Number(k))
   const ieumOpen = state.matches('composing') || state.matches('sending')
   const detailMoi = moiById(detailId)
   const activeMoi = moiById(activeId)
@@ -67,21 +74,23 @@ export function InyeonPage() {
         )}
 
         {screen === 'received' && (
-          <ScreenStub
-            title="받은 이음 · 관심"
-            lines={[
-              '나에게 온 이음 신청(수락/거절) · 내가 보낸 이음(대기).',
-              '관심 = 내 사진을 연 모이 · 내가 연 모이.',
-            ]}
-            todo="TODO(②): reqList/sentList + 관심 그리드(blur 잠금) 포팅."
+          <ReceivedScreen
+            incoming={incoming}
+            sentIds={sentIds}
+            unlockedIds={unlockedIds}
+            onAccept={(moiId) => send({ type: 'ACCEPT_REQ', moiId })}
+            onDecline={(moiId) => send({ type: 'DECLINE_REQ', moiId })}
+            onOpenProfile={(id) => setProfileMoiId(id)}
           />
         )}
 
         {screen === 'chat' && (
-          <ScreenStub
-            title="메모리 · 대화"
-            lines={['이음된 모이의 짧은 영상(메모리) + 대화 목록.', '대화 열기 = 관계 거리별 요네(0 / 50 / 200).']}
-            todo="TODO(②): 메모리 스트립 + DM 목록/대화방 포팅(대화는 인연 영역)."
+          <ChatScreen
+            matchedIds={matchedIds}
+            chatOpen={chatOpen}
+            yone={yone}
+            onOpenDm={(id) => send({ type: 'OPEN_DM', id })}
+            onOpenProfile={(id) => setProfileMoiId(id)}
           />
         )}
 
@@ -125,22 +134,28 @@ export function InyeonPage() {
           setDetailId(null)
           send({ type: 'OPEN_IEUM', id })
         }}
+        onOpenFull={(id) => {
+          setDetailId(null)
+          setProfileMoiId(id)
+        }}
       />
       <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} data={chulsooProfile} context="inyeon" />
-    </div>
-  )
-}
-
-function ScreenStub({ title, lines, todo }: { title: string; lines: string[]; todo: string }) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
-      <div className="text-lg font-extrabold text-white">{title}</div>
-      <div className="space-y-1 text-[12.5px] leading-relaxed text-white/55">
-        {lines.map((l) => (
-          <p key={l}>{l}</p>
-        ))}
-      </div>
-      <span className="mt-2 rounded-full border border-white/12 px-3 py-1 text-[10px] font-bold text-white/40">{todo}</span>
+      {/* 다른 모이 프로필(카드 상세·받은이음·채팅에서 진입) — 이음 전 익명 + 이음 CTA. */}
+      <ProfileSheet
+        open={profileMoiId != null}
+        onOpenChange={(o) => !o && setProfileMoiId(null)}
+        data={chulsooProfile}
+        context="inyeon"
+        onIeum={
+          profileMoiId != null
+            ? () => {
+                const id = profileMoiId
+                setProfileMoiId(null)
+                send({ type: 'OPEN_IEUM', id })
+              }
+            : undefined
+        }
+      />
     </div>
   )
 }
@@ -202,7 +217,7 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
 }
 
 // 프로필 상세 (경량) — 이음 전 익명 단계. 전체 신뢰네트워크 그래프·signal sunburst는 ⑤ 공유 프로필에서.
-function DetailSheet({ moi, onClose, onIeum }: { moi: Moi | null; onClose: () => void; onIeum: (id: number) => void }) {
+function DetailSheet({ moi, onClose, onIeum, onOpenFull }: { moi: Moi | null; onClose: () => void; onIeum: (id: number) => void; onOpenFull: (id: number) => void }) {
   return (
     <Sheet open={!!moi} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom">
@@ -235,8 +250,15 @@ function DetailSheet({ moi, onClose, onIeum }: { moi: Moi | null; onClose: () =>
             </div>
             <button
               type="button"
+              onClick={() => onOpenFull(moi.id)}
+              className="mt-4 w-full rounded-2xl border border-[#F8C57A]/40 bg-white/[0.04] py-3 text-[13px] font-bold text-[#F8C57A]"
+            >
+              🔭 전체 프로필 · 신뢰 네트워크 보기
+            </button>
+            <button
+              type="button"
               onClick={() => onIeum(moi.id)}
-              className="mt-4 w-full rounded-2xl bg-gradient-to-br from-[#1E3A5F] to-[#2d6a9e] py-3.5 text-[14.5px] font-extrabold text-white"
+              className="mt-2.5 w-full rounded-2xl bg-gradient-to-br from-[#1E3A5F] to-[#2d6a9e] py-3.5 text-[14.5px] font-extrabold text-white"
             >
               이음 신청하기
             </button>
