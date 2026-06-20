@@ -1,21 +1,54 @@
-// 모이가 모인곳 — 풀스크린 2.5D 미니룸. 라운지에서 미리보기 카드로 진입(핸드오프 §3·§12-2).
-// ⚠️ 현재 스텁(④): 정적 장면 자리표시 + TODO. 본구현(배경+캐릭터 분리·히트테스트·팬/줌)은
-//    렌더 라이브러리(react-konva vs PixiJS) 박태원 합동확정 + tech-stack-map 등재 후.
-// 샵(모이 꾸미기)은 이 화면 안에서 진입(§5) — 현재 스텁.
+// 모이가 모인곳(④) — 풀스크린 2.5D 미니룸. 라운지 미리보기 카드로 진입(핸드오프 §3·§12-2).
+// PixiJS placeholder 시스템: 샵 구매→요네 차감→자동 배치/장착 · 아이템 드래그 · 모이 클릭→공유 프로필.
+// 모이 클릭 = 디방인연과 동일 ProfileSheet, 단 context='lounge'(③ 오프라인 = 이름·소속·전체 네트워크 공개).
+// 에셋(투명 PNG) 부재라 캐릭터·아이템은 컬러 도형 placeholder — 에셋 나오면 슬롯 교체(에셋스펙 §4).
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useMachine } from '@xstate/react'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
+import { moiRoomMachine } from '../machines/moiRoom.machine'
+import { MoiRoomCanvas } from '../components/moi-gather/MoiRoomCanvas'
+import { ShopSheet } from '../components/moi-gather/ShopSheet'
+import { MOI_POOL, MOI_BY_ID } from '../components/moi-gather/data'
+import { ProfileSheet } from '../components/profile/ProfileSheet'
+import { chulsooProfile } from '../components/profile/fixture'
 
 export function MoiGatherPage() {
   const navigate = useNavigate()
+  const [state, send] = useMachine(moiRoomMachine)
+  const [shopOpen, setShopOpen] = useState(false)
+  const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+
+  const { yone, owned, placed, equipped, pendingItemId, error } = state.context
+  const placedIds = placed.map((p) => p.itemId)
+
+  // 토스트 자동 소멸
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2600)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  const profileMoi = profileMoiId ? MOI_BY_ID[profileMoiId] : null
+  // 공유 프로필 fixture에 클릭한 모이 이름만 덮어 placeholder(데이터는 철수 fixture 공통).
+  const profileData = profileMoi ? { ...chulsooProfile, subject: profileMoi.name } : chulsooProfile
+
+  const handleIeum = () => {
+    const m = profileMoi
+    setProfileMoiId(null)
+    setToast(m ? `${m.name}님에게 이음 신청을 보냈어요 · 대화는 디방인연에서` : '이음 신청을 보냈어요')
+  }
 
   return (
-    <div className="relative mx-auto flex min-h-screen max-w-[480px] flex-col bg-[#0A1626] text-[#E8EFF6]">
-      <header className="flex items-center gap-2 px-3 py-3">
+    <div className="relative mx-auto flex h-[100dvh] max-w-[480px] flex-col overflow-hidden bg-[#0A1626] text-[#E8EFF6]">
+      {/* 상단바 — 뒤로 · 타이틀(host) · 요네 · 샵 */}
+      <header className="absolute inset-x-0 top-0 z-20 flex items-center gap-2 bg-gradient-to-b from-[#0A1626] to-transparent px-3 py-3">
         <button
           type="button"
           aria-label="뒤로"
           onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -23,32 +56,72 @@ export function MoiGatherPage() {
           <div className="truncate text-[15px] font-extrabold text-white">모이가 모인곳</div>
           <div className="truncate text-[11px] text-white/55">웨딩 라운지 · host 6명</div>
         </div>
+        <div className="rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
+          🪙 {yone.toLocaleString()}
+        </div>
         <button
           type="button"
-          className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-[12px] font-bold text-white"
-          onClick={() => {
-            /* TODO(④): 샵(모이 꾸미기) — v2.0 shop 탭 포팅 + 요네 충전. 미니룸 내부 진입. */
-          }}
+          onClick={() => setShopOpen(true)}
+          className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-[12px] font-bold text-white backdrop-blur"
         >
-          <ShoppingBag className="h-4 w-4" /> 샵·꾸미기
+          <ShoppingBag className="h-4 w-4" /> 샵
         </button>
       </header>
 
-      {/* 정적 장면 자리표시 — 실제는 분리 소스 + 렌더 라이브러리 합성 */}
+      {/* 2.5D 미니룸 캔버스 (PixiJS) */}
       <div className="relative flex-1 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(135,206,235,0.22),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(248,197,122,0.12),transparent_45%),linear-gradient(180deg,#0A1626,#0C1A2E)]" />
-        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-[linear-gradient(transparent,rgba(135,206,235,0.10))]" />
-        <div className="relative flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
-          <div className="text-5xl">🏛️✨</div>
-          <div className="text-lg font-extrabold text-white">2.5D 미니룸 (준비 중)</div>
-          <p className="max-w-xs text-[12.5px] leading-relaxed text-white/55">
-            결혼식·하객·신뢰 네트워크를 모이(캐릭터)로 시각화합니다. 캐릭터를 누르면 프로필(인연과 동일)이 열려요.
-          </p>
-          <span className="mt-1 rounded-full border border-white/12 px-3 py-1 text-[10px] font-bold text-white/40">
-            TODO(④): react-konva/PixiJS 합동확정 후 본구현 · 프로필=⑤ 공유 컴포넌트
+        <MoiRoomCanvas
+          placed={placed}
+          equipped={equipped}
+          mois={MOI_POOL}
+          onMoiClick={setProfileMoiId}
+          onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
+        />
+
+        {/* 조작 힌트 */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
+          <span className="rounded-full border border-white/12 bg-[#0c1a2e]/70 px-3.5 py-1.5 text-[11px] font-medium text-white/60 backdrop-blur">
+            모이를 누르면 프로필 · 드래그로 이동/줌 · 아이템은 끌어서 배치
           </span>
         </div>
       </div>
+
+      {/* 토스트 */}
+      {toast && (
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 z-30 flex justify-center px-6">
+          <div className="rounded-2xl bg-[#1E3A5F]/95 px-4 py-3 text-center text-[12.5px] font-bold text-white shadow-xl backdrop-blur">
+            {toast}
+          </div>
+        </div>
+      )}
+
+      {/* 샵 시트 */}
+      <ShopSheet
+        open={shopOpen}
+        onOpenChange={setShopOpen}
+        yone={yone}
+        owned={owned}
+        placedIds={placedIds}
+        equipped={equipped}
+        pendingItemId={pendingItemId}
+        error={error}
+        onPurchase={(id) => send({ type: 'PURCHASE', itemId: id })}
+        onPlace={(id) => send({ type: 'PLACE', itemId: id })}
+        onRemove={(id) => send({ type: 'REMOVE', itemId: id })}
+        onEquip={(id) => send({ type: 'EQUIP', itemId: id })}
+        onUnequip={(slot) => send({ type: 'UNEQUIP', slot })}
+        onCharge={() => send({ type: 'CHARGE' })}
+        onDismissError={() => send({ type: 'DISMISS_ERROR' })}
+      />
+
+      {/* 모이 클릭 → 공유 프로필(③ 라운지 오프라인 공개규칙). 'me'는 본인이라 이음 CTA 없음. */}
+      <ProfileSheet
+        open={!!profileMoiId}
+        onOpenChange={(o) => !o && setProfileMoiId(null)}
+        data={profileData}
+        context="lounge"
+        onIeum={profileMoiId && profileMoiId !== 'me' ? handleIeum : undefined}
+      />
     </div>
   )
 }

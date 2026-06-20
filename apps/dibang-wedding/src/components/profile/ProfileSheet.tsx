@@ -25,7 +25,7 @@ interface ProfileSheetProps {
   data: ProfileData
   /** 공개 범위: inyeon(①② 온라인·익명) / lounge(③ 오프라인·전체공개). */
   context?: ProfileContext
-  /** 이음 신청 CTA(인연 ①②). 미지정 시 버튼 숨김. */
+  /** 이음 신청 CTA(인연 ①② 온라인 · 라운지 ③ 오프라인, 핸드오프 §12-3). 미지정 시 버튼 숨김. */
   onIeum?: () => void
 }
 
@@ -72,13 +72,13 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', onI
           <MoiCreditPanel data={data} />
         </Section>
 
-        {onIeum && !offline && (
+        {onIeum && (
           <button
             type="button"
             onClick={onIeum}
             className="mt-1 w-full rounded-2xl bg-gradient-to-br from-[#1E3A5F] to-[#2d6a9e] py-3.5 text-[14.5px] font-extrabold text-white"
           >
-            이음 신청하기
+            {offline ? '이음 신청 · 대화는 디방인연에서' : '이음 신청하기'}
           </button>
         )}
       </SheetContent>
