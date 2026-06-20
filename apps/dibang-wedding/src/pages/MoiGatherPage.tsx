@@ -9,7 +9,7 @@ import { ArrowLeft, ShoppingBag } from 'lucide-react'
 import { moiPlazaMachine } from '../machines/moiPlaza.machine'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
-import { PLAZA_CROWD, CROWD_BY_ID, DECOR_SETS, PLAZA_THEME_LABEL, type PlazaTheme } from '../components/moi-gather/data'
+import { PLAZA_CROWD, CROWD_BY_ID } from '../components/moi-gather/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { chulsooProfile } from '../components/profile/fixture'
 
@@ -20,7 +20,7 @@ export function MoiGatherPage() {
   const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
-  const { yone, owned, placed, equipped, theme, pendingItemId, error } = state.context
+  const { yone, owned, placed, equipped, pendingItemId, error } = state.context
   const placedIds = placed.map((p) => p.itemId)
 
   // 토스트 자동 소멸
@@ -74,26 +74,9 @@ export function MoiGatherPage() {
           placed={placed}
           equipped={equipped}
           crowd={PLAZA_CROWD}
-          decor={DECOR_SETS[theme]}
           onMoiClick={setProfileMoiId}
           onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
         />
-
-        {/* 테마 데코 스왑 (결혼식 기본 · 파티/클럽 = 구조 데모) */}
-        <div className="pointer-events-none absolute inset-x-0 top-16 z-10 flex justify-center">
-          <div className="pointer-events-auto flex gap-1 rounded-full border border-white/12 bg-[#0c1a2e]/70 p-1 backdrop-blur">
-            {(['wedding', 'party', 'club'] as PlazaTheme[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => send({ type: 'SET_THEME', theme: t })}
-                className={`rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${theme === t ? 'bg-[#1E3A5F] text-white' : 'text-white/55'}`}
-              >
-                {PLAZA_THEME_LABEL[t]}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* 조작 힌트 */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
