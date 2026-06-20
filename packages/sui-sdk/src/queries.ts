@@ -62,6 +62,8 @@ export interface WeddingOnChain {
   venueHall: string | null;
   hosts: string[];
   vaultId: string | null;
+  /** 이 결혼식을 관통하는 신뢰 그래프 이벤트(gathering::Event) ID. */
+  eventId: string;
 }
 
 export interface WeddingLoungeOnChain {
@@ -119,6 +121,7 @@ export async function getWedding(
     venueHall: optString(f.venue_hall),
     hosts: Array.isArray(f.host_addresses) ? (f.host_addresses as unknown[]).map(asString) : [],
     vaultId: optString(f.vault_id),
+    eventId: asString(f.event_id),
   };
 }
 
@@ -346,4 +349,65 @@ export async function getCashGiftEvents(
     });
   }
   return out;
+}
+
+// === 신뢰 → 신용 이벤트 조회 (credit.ts 입력 경로) ===
+// 컨트랙트가 emit하는 raw 신호를 credit.ts가 소비하는 shape로 가져온다(온체인 raw → 오프체인 신용, 결정#12).
+// ⚠️ queryAllEvents 전역 스캔 한계 동일 — 프로덕션은 전용 인덱서. amount는 number(부조 범위 안전; >2^53 주의).
+
+/** ledger::ActionLogged — 보편 액션 원장(부조·방명록·초대·선물·이음수락). credit.ts ActionLoggedEvent와 동형. */
+export interface ActionLoggedQuery {
+  eventId: string;
+  actionType: number;
+  actor: string;
+  target: string | null;
+  roleId: number;
+  amount: number;
+  ts: number;
+}
+
+export async function getActionLoggedEvents(client: SuiJsonRpcClient): Promise<ActionLoggedQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('ledger', 'ActionLogged'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return {
+      eventId: asString(p.event_id),
+      actionType: asNumber(p.action_type),
+      actor: asString(p.actor),
+      target: optString(p.target),
+      roleId: asNumber(p.role_id),
+      amount: asNumber(p.amount),
+      ts: asNumber(p.created_at_ms),
+    };
+  });
+}
+
+/** event::EventCreated — 이벤트 인스턴스(event_type·creator). credit.ts EventCreatedEvent와 동형. */
+export interface EventCreatedQuery {
+  eventId: string;
+  eventType: number;
+  creator: string;
+}
+
+export async function getEventCreatedEvents(client: SuiJsonRpcClient): Promise<EventCreatedQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('event', 'EventCreated'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return { eventId: asString(p.event_id), eventType: asNumber(p.event_type), creator: asString(p.creator) };
+  });
+}
+
+/** event::Participated — 참가(역할). credit.ts ParticipatedEvent와 동형(참석 CS 입력). */
+export interface ParticipatedQuery {
+  eventId: string;
+  participant: string;
+  roleId: number;
+}
+
+export async function getParticipatedEvents(client: SuiJsonRpcClient): Promise<ParticipatedQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('event', 'Participated'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return { eventId: asString(p.event_id), participant: asString(p.participant), roleId: asNumber(p.role_id) };
+  });
 }
