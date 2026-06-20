@@ -51,7 +51,7 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
         {meeting && (
           <>
             {/* 큰 프로필 사진 + 이음전·익명 뱃지 + 후크 (익명이어도 사진은 노출) */}
-            <div className="relative mb-3 h-52 overflow-hidden rounded-2xl bg-cover bg-center" style={{ background: photoBg(meeting.photoHue) }}>
+            <div className="relative mb-3 h-52 overflow-hidden rounded-2xl bg-cover bg-[center_22%]" style={meeting.photoUrl ? { backgroundImage: `url(${meeting.photoUrl})` } : { background: photoBg(meeting.photoHue) }}>
               <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0d1621]/92 via-[#0d1621]/40 to-transparent" />
               <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#0d1621]/55 px-2.5 py-1 text-[10.5px] font-bold text-white backdrop-blur">
                 {offline ? '✓ 이음 완료 · 실명' : (<><Lock className="h-3 w-3" /> 이음 전 · 익명</>)}

@@ -42,6 +42,7 @@ export function InyeonPage() {
   const profileMeeting = profileMoiForSheet
     ? {
         photoHue: profileMoiForSheet.photos[0]?.hue ?? 210,
+        photoUrl: profileMoiForSheet.photos[0]?.url,
         hook: profileMoiForSheet.hook,
         prov: profileMoiForSheet.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: TIER_META[p.tier].label })),
         mutualCount: profileMoiForSheet.mutualCount,
@@ -180,7 +181,7 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
   return (
     <div className="h-full overflow-y-auto px-5 pb-6 pt-5">
       <div className="text-center">
-        <div className="mx-auto h-24 w-24 rounded-full bg-gradient-to-br from-[#FCE6EC] to-[#E8F4FA]" />
+        <div className="mx-auto h-24 w-24 rounded-full bg-cover bg-center" style={{ backgroundImage: 'url(/assets/inyeon-photos/my-profile.jpg)' }} />
         <div className="mt-3 text-xl font-extrabold text-white">유상</div>
         <div className="mt-0.5 text-xs text-white/50">모이 #1024 · 서울</div>
       </div>
@@ -242,7 +243,11 @@ function DetailSheet({ moi, onClose, onIeum, onOpenFull }: { moi: Moi | null; on
             </SheetHeader>
             <div
               className="mb-3 h-40 rounded-2xl bg-cover bg-[center_18%]"
-              style={{ background: `linear-gradient(150deg, hsl(${moi.photos[0]?.hue ?? 210} 52% 34%), hsl(${((moi.photos[0]?.hue ?? 210) + 36) % 360} 48% 16%))` }}
+              style={
+                moi.photos[0]?.url
+                  ? { backgroundImage: `url(${moi.photos[0].url})` }
+                  : { background: `linear-gradient(150deg, hsl(${moi.photos[0]?.hue ?? 210} 52% 34%), hsl(${((moi.photos[0]?.hue ?? 210) + 36) % 360} 48% 16%))` }
+              }
             />
             <div className="space-y-2">
               {moi.prov.map((p) => (
