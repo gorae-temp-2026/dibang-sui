@@ -11,6 +11,9 @@ use sui::event;
 use sui::sui::SUI;
 use dibang_wedding::wedding::{Self, Wedding, WeddingCap};
 use dibang_wedding::utils;
+use dibang_wedding::ledger;
+// 도메인 이벤트 모듈은 프레임워크 sui::event와 이름이 겹쳐 gathering으로 alias.
+use dibang_wedding::event as gathering;
 
 // === Errors ===
 
@@ -24,6 +27,8 @@ const EInsufficientBalance: u64 = 2;
 const EGuestNameTooLong: u64 = 3;
 /// 관계 분류 문자열이 최대 글자 수를 초과함.
 const ERelationTooLong: u64 = 4;
+/// 하객의 참가(Participation)가 이 결혼식의 이벤트가 아님.
+const EWrongEvent: u64 = 5;
 
 // === Constants ===
 
@@ -137,6 +142,31 @@ public fun send_gift(
     record
 }
 
+/// 부조 — 실제 SUI를 모금함에 입금하고, 그 행위를 보편 액션 원장에 GIVE_MONEY로 기록한다(soulbound).
+/// 하객(participation)은 이 결혼식 이벤트(wedding.event_id)에 참가했어야 하고, 대상은 혼주(primary host).
+/// 해석(부조/EM/CS)은 저장 안 함 — project가 (GIVE_MONEY × WEDDING × 하객→혼주)로 계산. 원장 레코드 ID 반환.
+/// 이름·관계 같은 PII는 받지 않는다(신원-불가지 지갑 그래프). 구식 send_gift(PII·key+store)는 추후 정리.
+public fun give(
+    vault: &mut CashGiftVault,
+    wedding: &Wedding,
+    participation: &gathering::Participation,
+    coin: Coin<SUI>,
+    clock: &Clock,
+    ctx: &mut TxContext,
+): ID {
+    assert!(vault.wedding_id == object::id(wedding), EWrongCap);
+    // 하객의 역할이 *이 결혼식의 이벤트*에서 온 것이어야 부조 방향(하객→혼주)이 올바르게 귀속된다.
+    assert!(gathering::participation_event_id(participation) == wedding::event_id(wedding), EWrongEvent);
+    let amount = coin.value();
+    assert!(amount > 0, EZeroAmount);
+
+    vault.balance.join(coin.into_balance());
+
+    let host = wedding::primary_host(wedding);
+    // role/event는 ledger가 participation에서 파생(방향 위조 차단). amount는 raw(결정#1 평문).
+    ledger::log(participation, ledger::action_give_money(), option::some(host), amount, option::none(), clock, ctx)
+}
+
 /// 호스트가 모금함에서 축의금을 인출한다. 인출한 `Coin<SUI>`를 반환해
 /// PTB가 호스트 주소로 전달하도록 한다.
 public fun withdraw(
@@ -246,6 +276,47 @@ fun send_gift_increases_balance() {
     let vault = scenario.take_shared<CashGiftVault>();
     assert_eq!(vault_balance(&vault), 1000);
     ts::return_shared(vault);
+    scenario.end();
+}
+
+#[test]
+fun give_deposits_and_logs_action() {
+    let mut scenario = ts::begin(HOST);
+    setup_wedding(&mut scenario);
+    scenario.next_tx(HOST);
+    setup_vault(&mut scenario);
+
+    // 하객이 결혼식 이벤트에 GUEST로 참가.
+    scenario.next_tx(GUEST);
+    let ev = scenario.take_shared<gathering::Event>();
+    let clk0 = clock::create_for_testing(scenario.ctx());
+    gathering::participate(&ev, gathering::role_guest(), &clk0, scenario.ctx());
+    clock::destroy_for_testing(clk0);
+    ts::return_shared(ev);
+
+    // 하객이 부조: 실제 SUI 입금 + GIVE_MONEY 원장 기록(한 트랜잭션).
+    scenario.next_tx(GUEST);
+    let mut vault = scenario.take_shared<CashGiftVault>();
+    let wedding = scenario.take_shared<Wedding>();
+    let part = scenario.take_from_sender<gathering::Participation>();
+    let clk = clock::create_for_testing(scenario.ctx());
+    let coin = coin::mint_for_testing<SUI>(100_000, scenario.ctx());
+    let rec_id = give(&mut vault, &wedding, &part, coin, &clk, scenario.ctx());
+    assert_eq!(vault_balance(&vault), 100_000); // 실제 SUI 입금됨
+    clock::destroy_for_testing(clk);
+    scenario.return_to_sender(part);
+    ts::return_shared(wedding);
+    ts::return_shared(vault);
+
+    // 원장에 부조 액션이 soulbound로 남고, 방향(하객→혼주)이 파생됐는지.
+    scenario.next_tx(GUEST);
+    let rec = scenario.take_from_sender_by_id<ledger::ActionRecord>(rec_id);
+    assert_eq!(rec.action_type(), ledger::action_give_money());
+    assert_eq!(rec.actor(), GUEST);
+    assert_eq!(rec.record_role_id(), gathering::role_guest());
+    assert_eq!(rec.target(), option::some(HOST));
+    assert_eq!(rec.amount(), 100_000);
+    scenario.return_to_sender(rec);
     scenario.end();
 }
 

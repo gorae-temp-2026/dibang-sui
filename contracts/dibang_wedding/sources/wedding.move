@@ -6,7 +6,10 @@
 module dibang_wedding::wedding;
 
 use std::string::String;
+use sui::clock::Clock;
 use sui::event;
+// 도메인 이벤트 모듈은 프레임워크 sui::event와 이름이 겹쳐 gathering으로 alias.
+use dibang_wedding::event as gathering;
 
 // === Errors ===
 
@@ -31,6 +34,8 @@ const MAX_HOSTS: u64 = 6;
 /// 결혼식 본체. 공유 오브젝트라 누구나 조회할 수 있고, 수정은 `WeddingCap` 보유자만 가능하다.
 public struct Wedding has key {
     id: UID,
+    // 이 결혼식을 관통하는 신뢰 그래프 이벤트(gathering::Event, EVENT_WEDDING). 부조 등 액션의 event_id.
+    event_id: ID,
     status: String,
     groom_name: String,
     bride_name: String,
@@ -65,6 +70,7 @@ public struct WeddingLounge has key {
 
 public struct WeddingCreated has copy, drop {
     wedding_id: ID,
+    event_id: ID,
     lounge_id: ID,
     groom_name: String,
     bride_name: String,
@@ -97,10 +103,14 @@ public fun create_wedding(
     venue_address: String,
     venue_hall: Option<String>,
     lounge_name: String,
+    clock: &Clock,
     ctx: &mut TxContext,
 ): WeddingCap {
+    // 이 결혼식을 관통하는 이벤트 생성(생성자=혼주, ROLE_HOST Participation도 발행). 부조의 event_id가 된다.
+    let event_id = gathering::new_event(gathering::event_wedding(), gathering::role_host(), clock, ctx);
     let wedding = Wedding {
         id: object::new(ctx),
+        event_id,
         status: b"active".to_string(),
         groom_name,
         bride_name,
@@ -130,6 +140,7 @@ public fun create_wedding(
     // String은 copy 능력이 있어 필드 읽기로 이동되지 않는다.
     event::emit(WeddingCreated {
         wedding_id,
+        event_id,
         lounge_id,
         groom_name: wedding.groom_name,
         bride_name: wedding.bride_name,
@@ -226,6 +237,12 @@ public fun status(wedding: &Wedding): String { wedding.status }
 /// 연결된 축의금 모금함 ID(없으면 none).
 public fun vault_id(wedding: &Wedding): Option<ID> { wedding.vault_id }
 
+/// 이 결혼식을 관통하는 신뢰 그래프 이벤트 ID(gathering::Event). 부조 등 액션의 event_id.
+public fun event_id(wedding: &Wedding): ID { wedding.event_id }
+
+/// 첫 호스트(생성자=혼주). 부조의 대상(target) 기본값. host_addresses는 생성 시 [sender]로 ≥1 보장.
+public fun primary_host(wedding: &Wedding): address { *wedding.host_addresses.borrow(0) }
+
 // === Tests ===
 
 #[test_only]
@@ -241,7 +258,9 @@ const HOST: address = @0xA;
 /// 라운지가 필요할 때 재사용한다. (byte string은 ASCII만 허용되므로 영문 더미값 사용.
 /// 실제 한글은 런타임에 SDK가 UTF8로 전달.)
 public fun create_default_for_testing(ctx: &mut TxContext): WeddingCap {
-    create_wedding(
+    // 시그니처 파급 0: 내부에서 test clock을 만들어 create_wedding에 넘기고 파기. 호출처(rsvp·cash_gift·guestbook) 무수정.
+    let clk = sui::clock::create_for_testing(ctx);
+    let cap = create_wedding(
         b"Groom".to_string(),
         b"Bride".to_string(),
         option::some(b"GroomFather".to_string()),
@@ -254,8 +273,11 @@ public fun create_default_for_testing(ctx: &mut TxContext): WeddingCap {
         b"123 Main St".to_string(),
         option::some(b"Hall A".to_string()),
         b"Our Lounge".to_string(),
+        &clk,
         ctx,
-    )
+    );
+    sui::clock::destroy_for_testing(clk);
+    cap
 }
 
 #[test_only]
@@ -316,6 +338,28 @@ fun create_shares_wedding_lounge_and_cap() {
     ts::return_shared(wedding);
     ts::return_shared(lounge);
     scenario.return_to_sender(cap);
+    scenario.end();
+}
+
+#[test]
+fun create_links_event() {
+    let mut scenario = ts::begin(HOST);
+    new_wedding_for_test(&mut scenario);
+
+    scenario.next_tx(HOST);
+    let wedding = scenario.take_shared<Wedding>();
+    // 결혼식이 만든 이벤트가 공유됐고 WEDDING 타입이며, wedding.event_id가 그것을 가리킨다(§4 resolve 불변식).
+    let ev = scenario.take_shared<gathering::Event>();
+    assert_eq!(wedding.event_id(), object::id(&ev));
+    assert_eq!(ev.event_type(), gathering::event_wedding());
+    // 혼주에게 ROLE_HOST Participation 발행됨(부조 방향의 target 근거).
+    let part = scenario.take_from_sender<gathering::Participation>();
+    assert_eq!(part.role_id(), gathering::role_host());
+    assert_eq!(part.participation_event_id(), wedding.event_id());
+
+    scenario.return_to_sender(part);
+    ts::return_shared(ev);
+    ts::return_shared(wedding);
     scenario.end();
 }
 
