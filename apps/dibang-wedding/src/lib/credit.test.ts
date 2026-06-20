@@ -107,4 +107,43 @@ describe('creditFromEvents (신뢰→신용)', () => {
   it('빈 입력 → 빈 신용', () => {
     expect(Object.keys(creditFromEvents([], []).credit).length).toBe(0)
   })
+
+  it('e2e: 현실 다신호 시나리오(웨딩 + 인연 매칭)를 일관되게 fold (cross-module 통합)', () => {
+    // 한 웨딩(WED): 혼주가 guest1·guest2 초대, 둘 다 참가, guest1 100k·guest2 50k 부조, guest1 방명록.
+    // 별도 인연 매칭(m): alice(initiator)↔bob(receiver).
+    const events: EventCreatedEvent[] = [
+      { eventId: WED, eventType: EVENT.WEDDING, creator: 'host' },
+      { eventId: 'm', eventType: EVENT.INYEON, creator: 'alice' },
+    ]
+    const actions: ActionLoggedEvent[] = [
+      cs(ACTION.INVITE, 'host', 'guest1', ROLE.HOST),
+      cs(ACTION.INVITE, 'host', 'guest2', ROLE.HOST),
+      busu('guest1', 'host', 100_000),
+      busu('guest2', 'host', 50_000),
+      cs(ACTION.WRITE_MESSAGE, 'guest1', 'host', ROLE.GUEST),
+    ]
+    const participated: ParticipatedEvent[] = [
+      { eventId: WED, participant: 'host', roleId: ROLE.HOST }, // 혼주 자신 — 출석 엣지 아님
+      { eventId: WED, participant: 'guest1', roleId: ROLE.GUEST },
+      { eventId: WED, participant: 'guest2', roleId: ROLE.GUEST },
+      { eventId: 'm', participant: 'alice', roleId: ROLE.INITIATOR }, // creator
+      { eventId: 'm', participant: 'bob', roleId: ROLE.RECEIVER },
+    ]
+    const { credit, components } = creditFromEvents(actions, events, participated)
+
+    for (const v of Object.values(credit)) {
+      expect(v).toBeGreaterThanOrEqual(0)
+      expect(v).toBeLessThanOrEqual(1)
+    }
+    // 부조: guest1이 더 큰 몫 → 더 높음. 혼주는 베푼 적 없어 부조 0.
+    expect(components['guest1']!.busu).toBeGreaterThan(components['guest2']!.busu)
+    expect(components['host']!.busu).toBe(0)
+    // 혼주: 방명록·참석을 받아 CS>0(받는 쪽 적립).
+    expect(components['host']!.cs).toBeGreaterThan(0)
+    // 하객: 초대를 받아 CS>0.
+    expect(components['guest1']!.cs).toBeGreaterThan(0)
+    // 인연 매칭이 신용에 실제 기여 — 양쪽 CS>0 (Critical1 회귀가드: 인연→신용 연결 확인).
+    expect(components['alice']!.cs).toBeGreaterThan(0)
+    expect(components['bob']!.cs).toBeGreaterThan(0)
+  })
 })
