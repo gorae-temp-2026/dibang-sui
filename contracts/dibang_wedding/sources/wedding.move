@@ -10,6 +10,7 @@ use sui::clock::Clock;
 use sui::event;
 // 도메인 이벤트 모듈은 프레임워크 sui::event와 이름이 겹쳐 gathering으로 alias.
 use dibang_wedding::event as gathering;
+use dibang_wedding::ledger;
 
 // === Errors ===
 
@@ -23,6 +24,10 @@ const EHostAlreadyExists: u64 = 2;
 const EInvalidRecipientSlot: u64 = 3;
 /// 이미 모금함이 연결된 결혼식에 또 연결하려 함.
 const EVaultAlreadySet: u64 = 4;
+/// 초대 시 제시한 Participation이 이 결혼식의 이벤트가 아님.
+const EWrongEvent: u64 = 5;
+/// 초대는 혼주(HOST 역할)만 가능.
+const ENotHost: u64 = 6;
 
 // === Constants ===
 
@@ -194,6 +199,21 @@ public fun add_host(wedding: &mut Wedding, cap: &WeddingCap, new_host: address) 
     event::emit(HostAdded { wedding_id: object::id(wedding), host: new_host });
 }
 
+/// 초대(청첩장) — 혼주가 하객을 초대했다는 *사전 관계 신호*(CS○★, "디방의 본질")를 원장에 기록한다.
+/// `host_participation`은 이 결혼식의 HOST 역할이어야 하고, `guest`는 초대한 하객 주소(이름·연락처는 오프체인).
+/// 방향(혼주→하객)·event는 participation에서 파생. 원장 레코드 ID 반환.
+public fun invite(
+    wedding: &Wedding,
+    host_participation: &gathering::Participation,
+    guest: address,
+    clock: &Clock,
+    ctx: &mut TxContext,
+): ID {
+    assert!(gathering::participation_event_id(host_participation) == wedding.event_id, EWrongEvent);
+    assert!(gathering::role_id(host_participation) == gathering::role_host(), ENotHost);
+    ledger::log(host_participation, ledger::action_invite(), option::some(guest), 0, option::none(), clock, ctx)
+}
+
 // === Recipient slot 검증 (cash_gift, rsvp 가 재사용) ===
 
 /// 혼주 슬롯이 정해진 6종(신랑/신부/양가 부모) 중 하나인지 검사한다.
@@ -360,6 +380,31 @@ fun create_links_event() {
     scenario.return_to_sender(part);
     ts::return_shared(ev);
     ts::return_shared(wedding);
+    scenario.end();
+}
+
+#[test]
+fun invite_logs_host_to_guest() {
+    let mut scenario = ts::begin(HOST);
+    new_wedding_for_test(&mut scenario);
+
+    scenario.next_tx(HOST);
+    let wedding = scenario.take_shared<Wedding>();
+    // 혼주는 create_wedding(new_event)에서 HOST Participation을 받았다.
+    let host_part = scenario.take_from_sender<gathering::Participation>();
+    let clk = sui::clock::create_for_testing(scenario.ctx());
+    let rec_id = invite(&wedding, &host_part, @0x6171, &clk, scenario.ctx());
+    sui::clock::destroy_for_testing(clk);
+    scenario.return_to_sender(host_part);
+    ts::return_shared(wedding);
+
+    scenario.next_tx(HOST);
+    let rec = scenario.take_from_sender_by_id<ledger::ActionRecord>(rec_id);
+    assert_eq!(rec.action_type(), ledger::action_invite());
+    assert_eq!(rec.actor(), HOST);
+    assert_eq!(rec.record_role_id(), gathering::role_host()); // 혼주→하객 방향
+    assert_eq!(rec.target(), option::some(@0x6171));
+    scenario.return_to_sender(rec);
     scenario.end();
 }
 

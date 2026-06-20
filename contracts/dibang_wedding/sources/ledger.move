@@ -36,8 +36,10 @@ const ACTION_GIFT: u8 = 3;
 const ACTION_WRITE_MESSAGE: u8 = 4;
 /// 참석(옴). 시간 부조(EM) + 함께함(CS) 이중 신호 — project가 fan-out.
 const ACTION_ATTEND: u8 = 5;
+/// 초대(청첩장). 혼주→하객 사전 관계 신호(CS○★, "디방의 본질") — 가장 직접적 prior-relationship.
+const ACTION_INVITE: u8 = 6;
 /// 정의된 action_type 최댓값(경계 검증용). 새 동사 추가 시 갱신.
-const ACTION_TYPE_MAX: u8 = 5;
+const ACTION_TYPE_MAX: u8 = 6;
 
 // === Structs ===
 
@@ -141,6 +143,7 @@ public fun action_accept_ium(): u8 { ACTION_ACCEPT_IUM }
 public fun action_gift(): u8 { ACTION_GIFT }
 public fun action_write_message(): u8 { ACTION_WRITE_MESSAGE }
 public fun action_attend(): u8 { ACTION_ATTEND }
+public fun action_invite(): u8 { ACTION_INVITE }
 
 // === Tests ===
 
