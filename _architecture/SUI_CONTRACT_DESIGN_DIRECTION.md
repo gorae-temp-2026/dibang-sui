@@ -215,7 +215,9 @@ utils.move     유지
 - `event.move`(module `dibang_wedding::event`, ledger에선 `gathering`으로 alias — sui::event 충돌 회피) + `ledger.move` 작성, `sui move test` 43/43.
 - **C1 해소:** `ledger::log(participation: &Participation, …)` — event_id·role_id를 actor 소유 soulbound Participation에서 **파생**(자유 입력 X) + `participant == ctx.sender()` assert → 방향 위조 차단.
 - **C3 해소:** `participate`는 self-claimable(하객·신청자·수신자)만 / 권위역할(혼주·주례)은 `new_event` 생성자 또는 `assign_role`(생성자 게이트)로만. event_type·role 경계 검증.
-- **C2 결정(다음 증분):** `wedding::create_wedding`이 `gathering::Event(EVENT_WEDDING)`를 함께 생성·링크하고 `Wedding`이 그 `event_id` 보유 → 부조(cash_gift→ledger)의 event_id가 그것을 가리킨다(§4 event_id→event_type resolve 불변식 충족). 미구현 — Step 부조 증분에서.
+- **C2 구현 완료:** `wedding::create_wedding`이 `gathering::Event(EVENT_WEDDING)` 생성·공유 + 혼주 HOST Participation 발행, `Wedding.event_id`+`primary_host` 뷰 보유. `create_default_for_testing`가 내부 test clock으로 호출처 4곳 무수정.
+- **부조 루프 완료:** `cash_gift::give(vault, wedding, participation, coin, clock, ctx)` — 실제 SUI vault 입금 + `ledger::log(GIVE_MONEY, …)` soulbound 기록 한 트랜잭션. 방향=하객 Participation에서 파생, target=primary_host, `participation.event_id == wedding.event_id` assert. `sui move test` 45/45. (구식 `send_gift`(PII·key+store)는 정리 대상.)
+- **남음(다음 증분):** participate 유니크(특히 inyeon)·settles 양끝 일치 assert·send_gift 정리·신호 확장(이음·선물·방명록·참석).
 
 ## 11. 사용자 결정 대기 (06 §F + 리뷰)
 1. ~~부조 amount 공개형태~~ **[결정완료 06-20]** 평문 노출 OK. 프라이버시 1순위 = 신원 비식별(온체인 PII 0 + 가명주소). amount는 나중 일.
