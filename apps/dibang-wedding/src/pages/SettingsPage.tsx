@@ -14,13 +14,12 @@ export function SettingsPage() {
   const { session } = useAuth();
   const signOut = useSignOut();
   const queryClient = useQueryClient();
+  // 마케팅 동의 — 서버값 derived + 사용자 토글 override 패턴 (set-state-in-effect 회피, React 19 룰).
+  const { data: me } = useQuery(getMeOptions());
 
   const meta = session?.user?.user_metadata;
-  const userName = meta?.display_name ?? meta?.name ?? session?.user?.email ?? '알 수 없음';
-
-  // 마케팅 동의 — 서버값 derived + 사용자 토글 override 패턴.
-  // set-state-in-effect 회피 (React 19 룰, WeddingMemoryBookCuratePage와 동형).
-  const { data: me } = useQuery(getMeOptions());
+  // 세션 우선, 없으면 getMe 폴백(dev 로그인우회 프리뷰 = 철수 fixture에서 이름 표시).
+  const userName = meta?.display_name ?? meta?.name ?? session?.user?.email ?? me?.name ?? '알 수 없음';
   const [userOverride, setUserOverride] = useState<boolean | null>(null);
   const marketing = userOverride ?? me?.marketing_agreed ?? false;
   const [toast, setToast] = useState<string | null>(null);
