@@ -2,7 +2,7 @@
 // PixiJS placeholder 시스템: 샵 구매→요네 차감→자동 배치/장착 · 아이템 드래그 · 모이 클릭→공유 프로필.
 // 모이 클릭 = 디방인연과 동일 ProfileSheet, 단 context='lounge'(③ 오프라인 = 이름·소속·전체 네트워크 공개).
 // 에셋(투명 PNG) 부재라 캐릭터·아이템은 컬러 도형 placeholder — 에셋 나오면 슬롯 교체(에셋스펙 §4).
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useMachine } from '@xstate/react'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
@@ -18,26 +18,19 @@ export function MoiGatherPage() {
   const [state, send] = useMachine(moiPlazaMachine)
   const [shopOpen, setShopOpen] = useState(false)
   const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
 
-  const { yone, owned, placed, equipped, theme, pendingItemId, error } = state.context
+  const { yone, owned, placed, equipped, theme, pendingItemId, error, toast } = state.context
   const placedIds = placed.map((p) => p.itemId)
-
-  // 토스트 자동 소멸
-  useEffect(() => {
-    if (!toast) return
-    const t = setTimeout(() => setToast(null), 2600)
-    return () => clearTimeout(t)
-  }, [toast])
 
   const profileMoi = profileMoiId ? CROWD_BY_ID[profileMoiId] : null
   // 공유 프로필 fixture에 클릭한 모이 이름만 덮어 placeholder(데이터는 철수 fixture 공통).
   const profileData = profileMoi ? { ...chulsooProfile, subject: profileMoi.name } : chulsooProfile
 
+  // 토스트 표시·자동소멸 타이머는 머신(SHOW_TOAST → TOAST_MS 뒤 CLEAR_TOAST)이 소유.
   const handleIeum = () => {
     const m = profileMoi
     setProfileMoiId(null)
-    setToast(m ? `${m.name}님에게 이음 신청을 보냈어요 · 대화는 디방인연에서` : '이음 신청을 보냈어요')
+    send({ type: 'SHOW_TOAST', message: m ? `${m.name}님에게 이음 신청을 보냈어요 · 대화는 디방인연에서` : '이음 신청을 보냈어요' })
   }
 
   return (

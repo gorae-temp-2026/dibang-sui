@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useMachine } from '@xstate/react';
 import { Maximize2 } from 'lucide-react';
 import type { FeedItem } from '@gorae/contracts';
 import { toLogRow, liveMessageText, timeAgo } from '../../lib/loungeV2Feed';
 import { maskGuestName } from '../../lib/guestLabel';
+import { liveCelebrationMachine } from '../../machines/liveCelebration.machine';
 
 // LIVE 축하메시지 — 프로토타입 .live-section/.live-empty-card/.lec-*/.live-msg-card/.lmc-* 정합.
 // 항상 노출. 메시지 없음=QR 안내 가로 카드(아이콘 좌+텍스트 우). 있음=8.5초 순차 순환 글래스 카드.
-
-const ROTATE_MS = 8500;
+// 순환 idx + 타이머는 liveCelebrationMachine이 소유(메시지 수는 SET_COUNT로 주입).
 
 interface LiveCelebrationProps {
   items: FeedItem[];
@@ -39,14 +40,15 @@ export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebra
     [items],
   );
 
-  const [idx, setIdx] = useState(0);
+  const [state, send] = useMachine(liveCelebrationMachine);
   useEffect(() => {
-    if (liveMsgs.length <= 1) return;
-    const t = setInterval(() => setIdx((v) => (v + 1) % liveMsgs.length), ROTATE_MS);
-    return () => clearInterval(t);
-  }, [liveMsgs.length]);
+    send({ type: 'SET_COUNT', count: liveMsgs.length });
+  }, [liveMsgs.length, send]);
+  const idx = state.context.idx;
 
   const hasMsgs = liveMsgs.length > 0;
+  // 머신 idx가 새 count로 클램프되기 직전 순간의 out-of-range 렌더 보호.
+  const safeIdx = idx < liveMsgs.length ? idx : 0;
 
   return (
     <section className="mx-4 mb-[6px] mt-4">
@@ -85,22 +87,22 @@ export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebra
       ) : (
         <div className="relative min-h-[160px] overflow-hidden rounded-2xl border border-[rgba(135,166,200,0.18)] bg-[rgba(255,255,255,0.40)] px-6 pb-14 pt-6 backdrop-blur-[12px]">
           <p
-            key={liveMsgs[idx].id}
+            key={liveMsgs[safeIdx].id}
             className="m-0 animate-lng-live-slide pr-2 font-serif text-[17px] font-normal leading-[1.55] text-[#1F2A38]"
           >
-            {liveMsgs[idx].text}
+            {liveMsgs[safeIdx].text}
           </p>
           <p className="absolute bottom-[18px] left-6 m-0 text-[14px] font-medium tracking-[0.01em] text-[#647A93]">
-            {liveMsgs[idx].relation && (
+            {liveMsgs[safeIdx].relation && (
               <>
-                <span className="text-[#4F6379]">{liveMsgs[idx].relation}</span>
+                <span className="text-[#4F6379]">{liveMsgs[safeIdx].relation}</span>
                 <span className="mx-[6px] text-[#8DA5BE]">·</span>
               </>
             )}
-            <span className="font-semibold text-[#28384C]">{maskGuestName(liveMsgs[idx].name, hostNames)}</span>
+            <span className="font-semibold text-[#28384C]">{maskGuestName(liveMsgs[safeIdx].name, hostNames)}</span>
           </p>
           <p className="absolute bottom-[18px] right-6 m-0 text-[14px] tracking-[0.01em] text-[#8DA5BE]">
-            {timeAgo(liveMsgs[idx].createdAt)}
+            {timeAgo(liveMsgs[safeIdx].createdAt)}
           </p>
         </div>
       )}

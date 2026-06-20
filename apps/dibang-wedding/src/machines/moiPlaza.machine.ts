@@ -2,8 +2,11 @@
 // xState 근거(CLAUDE.md): 구매 = 요네 차감→(백엔드 시 결제/attestation)→소유 비동기 분기.
 //   데모는 mock 차감, 백엔드 연결 시 buyItem actor 교체(구조 유지). 토글(배치·장착)은 무료(에셋스펙 §2).
 // theme = 광장 데코 세트 스왑(결혼식 기본 / 파티·클럽 구조). placed = 샵에서 산 추가 데코.
-import { setup, assign, fromPromise } from 'xstate'
+import { setup, assign, fromPromise, raise, cancel } from 'xstate'
 import { ITEM_BY_ID, START_YONE_PLAZA, CHARGE_AMOUNT, type EquipSlot, type PlazaTheme } from '../components/moi-gather/data'
+
+/** 토스트 자동 소멸(ms) — 새 토스트가 오면 타이머 재시작(id로 이전 예약 취소). */
+const TOAST_MS = 2600
 
 export interface PlacedItem {
   itemId: string
@@ -25,6 +28,8 @@ export interface MoiPlazaContext {
   /** 구매 진행 중 아이템. */
   pendingItemId: string | null
   error: string | null
+  /** 전역 토스트(예: 이음 신청 완료) — null이면 미표시. 표시 후 TOAST_MS 뒤 자동 소멸. */
+  toast: string | null
 }
 
 // 추가 데코 자동 배치 위치 — 시드/랜덤 없이 배치 수로 결정(재현 가능).
@@ -45,6 +50,8 @@ export const moiPlazaMachine = setup({
       | { type: 'SET_THEME'; theme: PlazaTheme }
       | { type: 'CHARGE' }
       | { type: 'DISMISS_ERROR' }
+      | { type: 'SHOW_TOAST'; message: string }
+      | { type: 'CLEAR_TOAST' }
   },
   guards: {
     canPurchase: ({ context, event }) => {
@@ -70,6 +77,7 @@ export const moiPlazaMachine = setup({
     theme: 'wedding',
     pendingItemId: null,
     error: null,
+    toast: null,
   },
   on: {
     // 데코 배치/옷 장착 = 무료 토글 (소유한 아이템만). 어느 상태에서나 가능.
@@ -122,6 +130,16 @@ export const moiPlazaMachine = setup({
     SET_THEME: { actions: assign({ theme: ({ context, event }) => (event.type === 'SET_THEME' ? event.theme : context.theme) }) },
     CHARGE: { actions: assign({ yone: ({ context }) => context.yone + CHARGE_AMOUNT }) },
     DISMISS_ERROR: { actions: assign({ error: () => null }) },
+    // 토스트 표시 + TOAST_MS 뒤 자동 소멸. 새 토스트가 오면 이전 예약을 cancel하고 다시 걸어
+    // 타이머를 재시작한다(원본 useEffect의 clearTimeout 재현).
+    SHOW_TOAST: {
+      actions: [
+        cancel('plazaToastClear'),
+        assign({ toast: ({ event }) => (event.type === 'SHOW_TOAST' ? event.message : null) }),
+        raise({ type: 'CLEAR_TOAST' }, { delay: TOAST_MS, id: 'plazaToastClear' }),
+      ],
+    },
+    CLEAR_TOAST: { actions: assign({ toast: () => null }) },
   },
   initial: 'idle',
   states: {

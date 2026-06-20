@@ -1,7 +1,7 @@
 // 디방인연 데모 데이터 + 요네 상수 — 목업 SSOT(`디방인연_틴더식_목업_260617.html`) 기준.
 // ⚠️ 사진 무료 장수: 목업 코드 `FREE_PHOTOS=2`(대표 포함 2장 무료, 3장째 요네) + 킥오프 프롬프트 일치.
 //    (기능정의 산문은 3장이라 적었으나 코드/프롬프트=2가 SSOT. 합동 확정 시 1줄 변경.)
-import type { Moi, Tier, IncomingReq } from './types'
+import type { Moi, Tier, IncomingReq, DmMsg } from './types'
 
 export const PHOTO_COST = 20 // 추가 사진 열람(=관심 신호) 요네
 export const FREE_PHOTOS = 2 // 대표 포함 무료 노출 장수 — 3장째부터 요네
@@ -79,3 +79,13 @@ export const INCOMING: IncomingReq[] = [
   { moiId: 205, rel: '2다리 건너 · 친구의 친구', msg: '수아 통해 알게 됐어요 :) 취향이 비슷한 것 같아 이음 신청해요!' },
   { moiId: 207, rel: '같은 결혼식 · 신랑측 하객', msg: '저번 결혼식에서 잠깐 마주쳤었죠! 반가워서 이음 보내요 :)' },
 ]
+
+/** 대화방 진입 시 시드 메시지(시스템 안내 2 + 상대 첫 인사). 방마다 새 배열로 초기화한다. */
+export const seedDm = (): DmMsg[] => [
+  { sys: '온라인 이음 완료 · 소속·중심 네트워크는 오프라인에서 만나면 공개돼요' },
+  { sys: '모든 대화(DM)는 디방 인연에서 이뤄져요. 이 대화는 신뢰 attestation 기록으로 쌓여요.' },
+  { them: '반가워요 :) 온라인에서 먼저 이야기 나눠요' },
+]
+
+/** 내 메시지 전송 후 상대 자동응답(데모). 백엔드 연결 시 실제 메시지 수신으로 교체. */
+export const DM_AUTO_REPLY = '반가워요! 곧 또 같은 이벤트에서 만나면 네트워크도 이어지겠네요 :)'

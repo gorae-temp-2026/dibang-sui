@@ -48,3 +48,10 @@ export interface IncomingReq {
   /** 먼저 건넨 한마디. */
   msg: string
 }
+
+/** 채팅(DM) 메시지 한 줄 — sys(시스템 안내) / me(내 메시지) / them(상대 메시지) 중 하나. */
+export interface DmMsg {
+  sys?: string
+  me?: string
+  them?: string
+}

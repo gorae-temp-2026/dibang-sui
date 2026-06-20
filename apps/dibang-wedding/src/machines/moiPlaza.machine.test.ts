@@ -100,4 +100,25 @@ describe('moiPlaza 머신 (샵 경제)', () => {
     a.send({ type: 'CHARGE' })
     expect(a.getSnapshot().context.yone).toBe(START_YONE_PLAZA + CHARGE_AMOUNT)
   })
+
+  it('SHOW_TOAST → 표시 후 2600ms 뒤 자동 소멸', async () => {
+    const a = createActor(moiPlazaMachine).start()
+    a.send({ type: 'SHOW_TOAST', message: '이음 신청을 보냈어요' })
+    expect(a.getSnapshot().context.toast).toBe('이음 신청을 보냈어요')
+    await vi.advanceTimersByTimeAsync(2599)
+    expect(a.getSnapshot().context.toast).toBe('이음 신청을 보냈어요') // 아직 유지
+    await vi.advanceTimersByTimeAsync(2)
+    expect(a.getSnapshot().context.toast).toBeNull() // 소멸
+  })
+
+  it('새 SHOW_TOAST → 타이머 재시작(이전 예약 취소)', async () => {
+    const a = createActor(moiPlazaMachine).start()
+    a.send({ type: 'SHOW_TOAST', message: '첫 토스트' })
+    await vi.advanceTimersByTimeAsync(2000)
+    a.send({ type: 'SHOW_TOAST', message: '둘째 토스트' }) // 타이머 재시작
+    await vi.advanceTimersByTimeAsync(2000) // 첫 예약(총 2600)이 살아있으면 사라졌을 시점
+    expect(a.getSnapshot().context.toast).toBe('둘째 토스트') // 재시작돼 유지
+    await vi.advanceTimersByTimeAsync(700)
+    expect(a.getSnapshot().context.toast).toBeNull()
+  })
 })

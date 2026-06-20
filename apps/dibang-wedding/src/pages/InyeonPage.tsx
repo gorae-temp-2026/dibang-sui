@@ -2,7 +2,6 @@
 // 구조: 다크 셸 + 상단(매칭범위·지갑) + 본문 스크린(유니버스 덱/받은이음/채팅/프로필) + 우측 irail + 시트.
 // 흐름: 카드 탐색 → 사진 게이트(2장무료/3장째 요네) → 이음 신청(한마디) → 매칭 → (Moi Credit 재료).
 // 받은이음·채팅 화면은 스텁(TODO), 프로필 상세는 ⑤ 공유 프로필 컴포넌트에서 본구현 예정.
-import { useState } from 'react'
 import { useMachine } from '@xstate/react'
 import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
@@ -23,13 +22,12 @@ const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.i
 
 export function InyeonPage() {
   const [state, send] = useMachine(inyeonMachine)
-  const [filterOpen, setFilterOpen] = useState(false)
-  const [detailId, setDetailId] = useState<number | null>(null)
-  const [profileOpen, setProfileOpen] = useState(false)
-  const [profileMoiId, setProfileMoiId] = useState<number | null>(null)
 
-  const { queue, photoIdx, unlocked, yone, screen, degMin, degMax, activeId, message, error, incoming, chatOpen, sentIds, matchedIds } =
-    state.context
+  const {
+    queue, photoIdx, unlocked, yone, screen, degMin, degMax, activeId, message, error,
+    incoming, chatOpen, sentIds, matchedIds,
+    detailId, profileMoiId, myProfileOpen, filterOpen, dmRoomId, memoryId, dms,
+  } = state.context
   const unlockedIds = Object.entries(unlocked)
     .filter(([, v]) => v)
     .map(([k]) => Number(k))
@@ -44,7 +42,7 @@ export function InyeonPage() {
         <button
           type="button"
           aria-label="매칭 범위"
-          onClick={() => setFilterOpen(true)}
+          onClick={() => send({ type: 'OPEN_FILTER' })}
           className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/12 bg-white/[0.06] text-[#cfe0ee]"
         >
           <SlidersHorizontal className="h-[18px] w-[18px]" />
@@ -67,7 +65,7 @@ export function InyeonPage() {
               onUnlock={(id) => send({ type: 'UNLOCK_PHOTOS', id })}
               onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
               onSwipeNext={() => send({ type: 'SWIPE_NEXT' })}
-              onOpenDetail={(id) => setDetailId(id)}
+              onOpenDetail={(id) => send({ type: 'OPEN_DETAIL', id })}
               onReset={() => send({ type: 'RESET_DECK' })}
             />
           </div>
@@ -80,7 +78,7 @@ export function InyeonPage() {
             unlockedIds={unlockedIds}
             onAccept={(moiId) => send({ type: 'ACCEPT_REQ', moiId })}
             onDecline={(moiId) => send({ type: 'DECLINE_REQ', moiId })}
-            onOpenProfile={(id) => setProfileMoiId(id)}
+            onOpenProfile={(id) => send({ type: 'OPEN_PROFILE', id })}
           />
         )}
 
@@ -88,13 +86,19 @@ export function InyeonPage() {
           <ChatScreen
             matchedIds={matchedIds}
             chatOpen={chatOpen}
-            yone={yone}
-            onOpenDm={(id) => send({ type: 'OPEN_DM', id })}
-            onOpenProfile={(id) => setProfileMoiId(id)}
+            dms={dms}
+            dmRoomId={dmRoomId}
+            memoryId={memoryId}
+            onOpenDmRoom={(id) => send({ type: 'OPEN_DM_ROOM', id })}
+            onCloseDmRoom={() => send({ type: 'CLOSE_DM_ROOM' })}
+            onOpenMemory={(id) => send({ type: 'OPEN_MEMORY', id })}
+            onCloseMemory={() => send({ type: 'CLOSE_MEMORY' })}
+            onSendDm={(id, text) => send({ type: 'SEND_DM', id, text })}
+            onOpenProfile={(id) => send({ type: 'OPEN_PROFILE', id })}
           />
         )}
 
-        {screen === 'me' && <MeScreen onOpenProfile={() => setProfileOpen(true)} />}
+        {screen === 'me' && <MeScreen onOpenProfile={() => send({ type: 'OPEN_MY_PROFILE' })} />}
       </div>
 
       {/* 우측 세로 레일 (인연 내부 네비) */}
@@ -103,7 +107,7 @@ export function InyeonPage() {
       {/* 시트 / 오버레이 */}
       <FilterSheet
         open={filterOpen}
-        onOpenChange={setFilterOpen}
+        onOpenChange={(o) => send({ type: o ? 'OPEN_FILTER' : 'CLOSE_FILTER' })}
         degMin={degMin}
         degMax={degMax}
         onApply={(min, max) => send({ type: 'SET_FILTER', degMin: min, degMax: max })}
@@ -129,32 +133,23 @@ export function InyeonPage() {
       />
       <DetailSheet
         moi={detailMoi}
-        onClose={() => setDetailId(null)}
-        onIeum={(id) => {
-          setDetailId(null)
-          send({ type: 'OPEN_IEUM', id })
-        }}
-        onOpenFull={(id) => {
-          setDetailId(null)
-          setProfileMoiId(id)
-        }}
+        onClose={() => send({ type: 'CLOSE_DETAIL' })}
+        onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
+        onOpenFull={(id) => send({ type: 'OPEN_PROFILE', id })}
       />
-      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} data={chulsooProfile} context="inyeon" />
+      <ProfileSheet
+        open={myProfileOpen}
+        onOpenChange={(o) => send({ type: o ? 'OPEN_MY_PROFILE' : 'CLOSE_MY_PROFILE' })}
+        data={chulsooProfile}
+        context="inyeon"
+      />
       {/* 다른 모이 프로필(카드 상세·받은이음·채팅에서 진입) — 이음 전 익명 + 이음 CTA. */}
       <ProfileSheet
         open={profileMoiId != null}
-        onOpenChange={(o) => !o && setProfileMoiId(null)}
+        onOpenChange={(o) => !o && send({ type: 'CLOSE_PROFILE' })}
         data={chulsooProfile}
         context="inyeon"
-        onIeum={
-          profileMoiId != null
-            ? () => {
-                const id = profileMoiId
-                setProfileMoiId(null)
-                send({ type: 'OPEN_IEUM', id })
-              }
-            : undefined
-        }
+        onIeum={profileMoiId != null ? () => send({ type: 'OPEN_IEUM', id: profileMoiId }) : undefined}
       />
     </div>
   )

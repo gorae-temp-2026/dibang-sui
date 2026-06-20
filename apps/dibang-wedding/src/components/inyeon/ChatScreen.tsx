@@ -1,57 +1,43 @@
 // 디방인연 채팅 화면 — 목업 chat 스크린 포팅. 메모리 스트립(이음된 모이 짧은 영상) + 대화(DM) 목록.
-// 대화 열기 = 관계 거리별 요네 게이트(0/50/200, 머신 OPEN_DM). 대화방 상단 이름·사진 → 프로필(§13-5).
+// 대화 열기 = 관계 거리별 요네 게이트 + 방/메모리 네비 + 메시지/자동응답 → 전부 inyeonMachine이 소유.
+// 이 컴포넌트는 머신 context(dms·dmRoomId·memoryId)와 send 콜백만 받아 그리는 표현 계층이다.
 // ★ 모든 대화(DM)는 인연(유니버스)에서 — 라운지에서 이음해도 대화는 여기(핸드오프 §12-3).
 import { useState } from 'react'
 import { ArrowLeft, Lock, Play, Send, X } from 'lucide-react'
-import { POOL, DM_COST, MOI_MEM } from './data'
+import { POOL, DM_COST, MOI_MEM, seedDm } from './data'
+import type { DmMsg } from './types'
 import { cn } from '../../lib/utils'
 
 const moiById = (id: number) => POOL.find((m) => m.id === id)
 const photoBg = (hue: number) => `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
 
-interface DmMsg {
-  sys?: string
-  me?: string
-  them?: string
-}
-const seedDm = (): DmMsg[] => [
-  { sys: '온라인 이음 완료 · 소속·중심 네트워크는 오프라인에서 만나면 공개돼요' },
-  { sys: '모든 대화(DM)는 디방 인연에서 이뤄져요. 이 대화는 신뢰 attestation 기록으로 쌓여요.' },
-  { them: '반가워요 :) 온라인에서 먼저 이야기 나눠요' },
-]
-
 interface ChatScreenProps {
   matchedIds: number[]
   chatOpen: Record<number, boolean>
-  yone: number
-  onOpenDm: (id: number) => void
+  dms: Record<number, DmMsg[]>
+  dmRoomId: number | null
+  memoryId: number | null
+  onOpenDmRoom: (id: number) => void
+  onCloseDmRoom: () => void
+  onOpenMemory: (id: number) => void
+  onCloseMemory: () => void
+  onSendDm: (id: number, text: string) => void
   onOpenProfile: (id: number) => void
 }
 
-export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile }: ChatScreenProps) {
-  const [dmRoomId, setDmRoomId] = useState<number | null>(null)
-  const [memoryId, setMemoryId] = useState<number | null>(null)
-  const [dms, setDms] = useState<Record<number, DmMsg[]>>({})
-
-  // 대화 열기 = 관계 거리별 요네 게이트(머신 OPEN_DM 차감). 통과하면 대화방 입장.
-  const enter = (id: number) => {
-    if (chatOpen[id]) {
-      setDmRoomId(id)
-      return
-    }
-    const m = moiById(id)
-    if (!m) return
-    onOpenDm(id) // 머신: 차감 또는 요네 부족 에러
-    if (yone >= DM_COST[m.tier]) setDmRoomId(id)
-  }
-
-  const send = (id: number, text: string) => {
-    setDms((prev) => ({ ...prev, [id]: [...(prev[id] ?? seedDm()), { me: text }] }))
-    setTimeout(() => {
-      setDms((prev) => ({ ...prev, [id]: [...(prev[id] ?? seedDm()), { them: '반가워요! 곧 또 같은 이벤트에서 만나면 네트워크도 이어지겠네요 :)' }] }))
-    }, 900)
-  }
-
+export function ChatScreen({
+  matchedIds,
+  chatOpen,
+  dms,
+  dmRoomId,
+  memoryId,
+  onOpenDmRoom,
+  onCloseDmRoom,
+  onOpenMemory,
+  onCloseMemory,
+  onSendDm,
+  onOpenProfile,
+}: ChatScreenProps) {
   const matched = matchedIds.map(moiById).filter((m): m is NonNullable<typeof m> => !!m)
 
   if (matched.length === 0) {
@@ -74,7 +60,7 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
       </div>
       <div className="mb-4 flex gap-3 overflow-x-auto pb-1">
         {matched.map((m) => (
-          <button key={m.id} type="button" onClick={() => setMemoryId(m.id)} className="flex flex-shrink-0 flex-col items-center gap-1">
+          <button key={m.id} type="button" onClick={() => onOpenMemory(m.id)} className="flex flex-shrink-0 flex-col items-center gap-1">
             <span className="relative grid h-[58px] w-[58px] place-items-center rounded-full bg-gradient-to-br from-[#F8C57A] to-[#5AA3D6] p-[2.5px]">
               <span className="h-full w-full rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
               <Play className="absolute h-4 w-4 fill-white text-white drop-shadow" />
@@ -103,9 +89,9 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
                 <div className="text-[11.5px] text-white/45">{open ? '대화를 시작해보세요' : `이음 수락됨 · 대화 열기 🪙${cost}`}</div>
               </div>
               {open ? (
-                <button type="button" onClick={() => enter(m.id)} className="rounded-lg bg-white/[0.08] px-3 py-2 text-[11.5px] font-bold text-white">열기</button>
+                <button type="button" onClick={() => onOpenDmRoom(m.id)} className="rounded-lg bg-white/[0.08] px-3 py-2 text-[11.5px] font-bold text-white">열기</button>
               ) : (
-                <button type="button" onClick={() => enter(m.id)} className="flex items-center gap-1 rounded-lg bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] px-3 py-2 text-[11.5px] font-extrabold text-white">
+                <button type="button" onClick={() => onOpenDmRoom(m.id)} className="flex items-center gap-1 rounded-lg bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] px-3 py-2 text-[11.5px] font-extrabold text-white">
                   <Lock className="h-3 w-3" /> 🪙{cost}
                 </button>
               )}
@@ -118,12 +104,12 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
         <DmRoom
           moiId={dmRoomId}
           msgs={dms[dmRoomId] ?? seedDm()}
-          onSend={(t) => send(dmRoomId, t)}
-          onClose={() => setDmRoomId(null)}
+          onSend={(t) => onSendDm(dmRoomId, t)}
+          onClose={onCloseDmRoom}
           onOpenProfile={() => onOpenProfile(dmRoomId)}
         />
       )}
-      {memoryId != null && <MemoryViewer moiId={memoryId} onClose={() => setMemoryId(null)} />}
+      {memoryId != null && <MemoryViewer moiId={memoryId} onClose={onCloseMemory} />}
     </div>
   )
 }
