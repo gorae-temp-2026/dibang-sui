@@ -75,8 +75,9 @@ public fun accept_ium(ev: &gathering::Event, req: IumRequest, clock: &Clock, ctx
     let IumRequest { id, event_id, initiator, created_at: _ } = req;
     assert!(object::id(ev) == event_id, EWrongEvent);
 
-    // 수신자가 매칭 이벤트에 RECEIVER로 참가(soulbound Participation). 소유한 IumRequest가 수락 게이트.
-    gathering::participate(ev, gathering::role_receiver(), clock, ctx);
+    // 수신자가 매칭 이벤트에 RECEIVER로 참가(soulbound Participation). IumRequest 소유가 게이트이므로
+    // self-claimable participate가 아니라 패키지-내부 mint로 발행한다(C-IUM1: 제3자 RECEIVER 자임 차단).
+    gathering::mint_participation_for(ev, receiver, gathering::role_receiver(), clock, ctx);
 
     event::emit(IumAccepted { event_id, initiator, receiver });
     id.delete();

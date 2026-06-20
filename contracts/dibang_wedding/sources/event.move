@@ -93,8 +93,8 @@ public fun new_event(event_type: u8, creator_role_id: u8, clock: &Clock, ctx: &m
     event_id
 }
 
-/// 타인이 self-claimable 역할(하객·신청자·수신자)로 참가 → 본인에게 soulbound Participation.
-/// 권위 역할(혼주·주례)은 여기서 못 만든다(ENotSelfClaimable) — assign_role로만.
+/// 타인이 self-claimable 역할(하객 GUEST)로 참가 → 본인에게 soulbound Participation.
+/// 권위 역할(혼주·주례)은 assign_role로만, 매칭 역할(신청자·수신자)은 ium 게이트 후 mint_participation_for로만(ENotSelfClaimable).
 public fun participate(ev: &Event, role_id: u8, clock: &Clock, ctx: &mut TxContext): ID {
     assert!(role_id <= ROLE_MAX, EInvalidRole);
     assert!(is_self_claimable(role_id), ENotSelfClaimable);
@@ -109,11 +109,27 @@ public fun assign_role(ev: &Event, to: address, role_id: u8, clock: &Clock, ctx:
     mint_participation(object::id(ev), to, role_id, clock, ctx)
 }
 
+// === Package-internal ===
+
+/// 도메인 모듈(ium 등)이 자기 게이트(예: IumRequest 소유)를 통과시킨 뒤 비-self 역할(INITIATOR/RECEIVER)을
+/// 대상에게 발행한다. self-claimable 우회의 정당성은 *호출 모듈의 게이트*가 책임진다(C-IUM1: stray RECEIVER 차단).
+public(package) fun mint_participation_for(
+    ev: &Event,
+    to: address,
+    role_id: u8,
+    clock: &Clock,
+    ctx: &mut TxContext,
+): ID {
+    assert!(role_id <= ROLE_MAX, EInvalidRole);
+    mint_participation(object::id(ev), to, role_id, clock, ctx)
+}
+
 // === Private ===
 
-/// self-claimable = 행위자가 자기 의사로 자임해도 방향을 왜곡하지 않는 역할.
+/// self-claimable = 자임해도 방향을 왜곡하지 않는 역할 = 하객(GUEST)만.
+/// INITIATOR/RECEIVER는 매칭 게이트(IumRequest)가 있어야 정당 → self 금지(ium이 mint_participation_for로 발행).
 fun is_self_claimable(role_id: u8): bool {
-    role_id == ROLE_GUEST || role_id == ROLE_INITIATOR || role_id == ROLE_RECEIVER
+    role_id == ROLE_GUEST
 }
 
 fun mint_participation(event_id: ID, participant: address, role_id: u8, clock: &Clock, ctx: &mut TxContext): ID {
@@ -223,6 +239,19 @@ fun guest_cannot_self_claim_host() {
     scenario.next_tx(GUEST);
     let ev = scenario.take_shared<Event>();
     participate(&ev, ROLE_HOST, &clk, scenario.ctx()); // 권위 역할 self 선언 → abort
+    abort
+}
+
+#[test, expected_failure(abort_code = ENotSelfClaimable)]
+fun cannot_self_claim_receiver() {
+    let mut scenario = ts::begin(HOST);
+    let clk = clock::create_for_testing(scenario.ctx());
+    new_event(EVENT_INYEON, ROLE_INITIATOR, &clk, scenario.ctx());
+
+    // 제3자가 IumRequest 없이 매칭 이벤트에 RECEIVER로 자임 → 차단(C-IUM1).
+    scenario.next_tx(STRANGER);
+    let ev = scenario.take_shared<Event>();
+    participate(&ev, ROLE_RECEIVER, &clk, scenario.ctx());
     abort
 }
 
