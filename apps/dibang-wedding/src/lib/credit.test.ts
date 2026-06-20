@@ -29,6 +29,21 @@ describe('creditFromEvents (신뢰→신용)', () => {
     }
   })
 
+  it('wash 부조(A↔B 순환, 같은 양)는 부조 신용 0 — net 전파로 상쇄 (시빌 방어)', () => {
+    const inyeonless: EventCreatedEvent[] = [{ eventId: WED, eventType: EVENT.WEDDING, creator: 'A' }]
+    const { components } = creditFromEvents([busu('A', 'B', 100_000), busu('B', 'A', 100_000)], inyeonless)
+    expect(components['A']!.busu).toBe(0) // 자기들끼리 돌린 돈 → net 0 → 신용 0
+    expect(components['B']!.busu).toBe(0)
+  })
+
+  it('비대칭 부조는 차액(net)만 신용 — 정직한 더-베풂 보존', () => {
+    const evs: EventCreatedEvent[] = [{ eventId: WED, eventType: EVENT.WEDDING, creator: 'A' }]
+    // A→B 100k, B→A 30k → A의 순부조 70k만 남음.
+    const { components } = creditFromEvents([busu('A', 'B', 100_000), busu('B', 'A', 30_000)], evs)
+    expect(components['A']!.busu).toBeGreaterThan(0)
+    expect(components['B']!.busu).toBe(0)
+  })
+
   it('CS: 방명록·초대의 대상이 유대(in-tie) 적립', () => {
     const { components } = creditFromEvents(
       [cs(ACTION.WRITE_MESSAGE, 'guest1', 'host', ROLE.GUEST), cs(ACTION.INVITE, 'host', 'guest1', ROLE.HOST)],

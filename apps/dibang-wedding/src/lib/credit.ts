@@ -140,9 +140,28 @@ function fold(
 }
 
 /**
+ * 부조 그래프를 *net*으로 변환 — 상호 엣지 상쇄(net[A][B] = max(0, give[A][B] − give[B][A])).
+ * 07 fold의 EM 정의(net = give − recv, 아벨군 청산)와 정합시키고, **A↔B wash(순환 부조)를 자동 0**으로 만든다
+ * (서로 같은 양이면 net 0; 정직한 비대칭 부조는 차액만 남아 보존). reversed-giving은 PageRank 계열이라 상호참조
+ * 클러스터를 못 거르므로(09 §5 correlation discounting 미적용), net 전파가 그 1차 방어다(§8 b — 시빌 wash 차단).
+ */
+function netGiveGraph(give: Graph): Graph {
+  const net: Graph = new Map()
+  for (const [a, m] of give) {
+    for (const [b, amt] of m) {
+      const reverse = give.get(b)?.get(a) ?? 0
+      const n = amt - reverse
+      if (n > 0) addEdge(net, a, b, n)
+    }
+  }
+  return net
+}
+
+/**
  * 부조 신용 = reversed-giving PageRank (PHI-5).
  * recv[h] = Σ_g give[g][h]; π_g = (1−d)/N + d·Σ_h (give[g][h]/recv[h])·π_h.
  * "베푼 쪽이 적립, 상대(받은 쪽)의 신용으로 가중되는 재귀 전파" — 받는 행위는 신용을 안 올린다.
+ * 입력은 *net* give 그래프(netGiveGraph) — gross를 전파하면 wash를 신용으로 오인.
  */
 function reversedGivingPageRank(give: Graph, nodes: string[]): Record<string, number> {
   const N = nodes.length
@@ -214,7 +233,8 @@ export function creditFromEvents(
   const { busu, cs, nodes } = fold(actions, events, participated)
   const nodeList = [...nodes]
 
-  const busuRaw = reversedGivingPageRank(busu, nodeList)
+  // net 전파(wash 상쇄 + 07 EM 아벨군 정합): 상호 부조의 같은 양은 청산, 차액만 신용에 전파.
+  const busuRaw = reversedGivingPageRank(netGiveGraph(busu), nodeList)
   // 부조 standing = teleport 기준선((1−d)/N) 위로 전파된 *초과분*(베푼 활동이 만든 기여). 비-기여자(안 베푼
   // 사람)는 기준선에 머물러 초과분 0 → 부조 신용 0. (기준선까지 정규화하면 '아무도 안 베푼 그래프'에서
   // 전원이 만점이 되는 퇴화를 막는다. PageRank는 그대로, 표현만 초과분 기준.)
