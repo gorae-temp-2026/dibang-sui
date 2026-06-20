@@ -1,16 +1,19 @@
 import { setup, assign } from 'xstate';
 
 /**
- * invitationCreate.machine — /invitation/create 페이지 flow 제어.
+ * invitationCreate.machine — /invitation/create 페이지 flow 제어 (프로덕션 연결본).
  *
- * 실제 페이지(InvitationCreatePage.tsx)를 단일 원천으로 재작성(2026-06-20).
+ * 실제 페이지(InvitationCreatePage.tsx)를 단일 원천으로 작성.
  * 흐름: slugGate(공유링크 모달) → editing → saving → success / left.
  *
- * 역할 분리(STATE_MANAGEMENT.md):
- * - slug 가용성 조회·표시: SlugModal + useSlugCheck(서버상태) 담당 — 머신은 '확인 여부'만.
- * - 업로드 진행: useInvitationImageUpload(자체 머신) 담당 — 저장 시 uploadingNow 플래그로 전달.
- * - 폼 값/검증(validate): zustand store 담당 — 머신은 검증 '결과(missing 라벨)'만 받아 분기.
- * - §4: 머신은 직접 fetch하지 않는다. 컴포넌트가 send → 전이 → Query 호출 → 결과를 send.
+ * 역할 분리(STATE_MANAGEMENT.md §4 — 머신은 직접 fetch하지 않음):
+ * - slug 가용성 조회·표시: SlugModal + useSlugCheck(서버상태) — 머신은 '확인 여부(CONFIRM)'만.
+ * - 업로드 진행: useInvitationImageUpload(자체 머신) — 저장 시 uploadingNow 플래그로 전달.
+ * - 폼 값/검증(validate): zustand store — 머신은 검증 '결과(missing 라벨)'만 받아 분기.
+ * - 컴포넌트가 send → 전이 → React Query 호출 → 결과를 SAVE_SUCCESS/SAVE_ERROR로 send.
+ *
+ * ※ "한 머신에 업로드·저장 전 API·온체인까지 펼친" 리치/시뮬 버전은
+ *    invitationCreate.design.machine.ts (Stately 설계용, 프로덕션 미연결).
  */
 
 export interface InvitationCreateContext {

@@ -81,8 +81,8 @@ describe('invitationCreate.machine — editing SAVE 가드', () => {
 
   it('생성 모드 + 검증 통과 → saving (토스트 클리어)', () => {
     const actor = editing()
-    actor.send({ type: 'SAVE', uploadingNow: false, isAddMode: false, slug: 'abcd', missing: '신랑 이름' }) // 토스트 설정
-    actor.send(VALID_CREATE) // 통과
+    actor.send({ type: 'SAVE', uploadingNow: false, isAddMode: false, slug: 'abcd', missing: '신랑 이름' })
+    actor.send(VALID_CREATE)
     const s = actor.getSnapshot()
     expect(s.value).toBe('saving')
     expect(s.context.toast).toBeNull()
