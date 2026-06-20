@@ -49,27 +49,16 @@ function optString(v: unknown): string | null {
 export interface WeddingOnChain {
   id: string;
   status: string;
-  groomName: string;
-  brideName: string;
-  groomFatherName: string | null;
-  groomMotherName: string | null;
-  brideFatherName: string | null;
-  brideMotherName: string | null;
-  date: string;
-  time: string;
-  venueName: string;
-  venueAddress: string;
-  venueHall: string | null;
   hosts: string[];
   vaultId: string | null;
   /** 이 결혼식을 관통하는 신뢰 그래프 이벤트(gathering::Event) ID. */
   eventId: string;
 }
+// 표시 콘텐츠(신랑·신부·부모 이름, 날짜·시간·예식장)는 *온체인에 없다*(결정#2) — 앱 API/Supabase(weddings)에서 조회.
 
 export interface WeddingLoungeOnChain {
   id: string;
   weddingId: string;
-  name: string;
 }
 
 export interface CashGiftVaultOnChain {
@@ -99,17 +88,6 @@ export async function getWedding(
   return {
     id: weddingId,
     status: asString(f.status),
-    groomName: asString(f.groom_name),
-    brideName: asString(f.bride_name),
-    groomFatherName: optString(f.groom_father_name),
-    groomMotherName: optString(f.groom_mother_name),
-    brideFatherName: optString(f.bride_father_name),
-    brideMotherName: optString(f.bride_mother_name),
-    date: asString(f.date),
-    time: asString(f.time),
-    venueName: asString(f.venue_name),
-    venueAddress: asString(f.venue_address),
-    venueHall: optString(f.venue_hall),
     hosts: Array.isArray(f.host_addresses) ? (f.host_addresses as unknown[]).map(asString) : [],
     vaultId: optString(f.vault_id),
     eventId: asString(f.event_id),
@@ -124,7 +102,7 @@ export async function getWeddingLounge(
   const res = await client.getObject({ id: loungeId, options: { showContent: true } });
   const f = objectFields(res);
   if (!f) return null;
-  return { id: loungeId, weddingId: asString(f.wedding_id), name: asString(f.name) };
+  return { id: loungeId, weddingId: asString(f.wedding_id) };
 }
 
 /** 축의금 모금함 조회(잔액 포함). Balance<SUI>는 fields.balance에 u64 문자열로 온다. */

@@ -1,8 +1,12 @@
-/// Wedding 도메인 — 결혼식 정보를 담는 공유 오브젝트(`Wedding`), 호스트(혼주)의
-/// 수정 권한을 증명하는 `WeddingCap`, 그리고 하객이 모이는 `WeddingLounge`를 정의한다.
+/// Wedding 도메인 — 결혼식의 *익명 앵커*(`Wedding`), 혼주 수정 권한(`WeddingCap`),
+/// 하객 라운지(`WeddingLounge`)를 정의한다.
 ///
-/// 다른 모듈(guestbook, cash_gift, rsvp)이 이 모듈의 타입과 혼주 슬롯 검증을
-/// 재사용하므로, 패키지의 기반 모듈 역할을 한다.
+/// **결정#2(신원-불가지): 온체인 Wedding은 이름·예식장 등 표시 콘텐츠를 담지 않는다.**
+/// 신랑·신부·부모 이름, 날짜·시간·예식장, 라운지 이름 등 *사람/표시 정보는 전부 오프체인*(Supabase)에
+/// `wedding_id`/`event_id`로 키잉해 보관한다. 온체인엔 신뢰 그래프 앵커만 남긴다:
+/// event_id(이 결혼식을 관통하는 gathering::Event), 혼주 지갑 주소들, status, 모금함 ID.
+///
+/// 다른 모듈(guestbook, cash_gift, rsvp)이 이 모듈의 타입과 혼주 슬롯 검증을 재사용한다.
 module dibang_wedding::wedding;
 
 use std::string::String;
@@ -36,23 +40,13 @@ const MAX_HOSTS: u64 = 6;
 
 // === Structs ===
 
-/// 결혼식 본체. 공유 오브젝트라 누구나 조회할 수 있고, 수정은 `WeddingCap` 보유자만 가능하다.
+/// 결혼식의 *익명 앵커*. 공유 오브젝트라 누구나 조회 가능, 수정은 `WeddingCap` 보유자만.
+/// 이름·예식장 등 표시 콘텐츠는 *온체인에 없다*(결정#2) — 오프체인에서 wedding_id로 키잉.
 public struct Wedding has key {
     id: UID,
     // 이 결혼식을 관통하는 신뢰 그래프 이벤트(gathering::Event, EVENT_WEDDING). 부조 등 액션의 event_id.
     event_id: ID,
     status: String,
-    groom_name: String,
-    bride_name: String,
-    groom_father_name: Option<String>,
-    groom_mother_name: Option<String>,
-    bride_father_name: Option<String>,
-    bride_mother_name: Option<String>,
-    date: String,
-    time: String,
-    venue_name: String,
-    venue_address: String,
-    venue_hall: Option<String>,
     host_addresses: vector<address>,
     // 이 결혼식의 축의금 모금함(CashGiftVault) ID. cash_gift::create_vault 가 1회 채운다.
     vault_id: Option<ID>,
@@ -64,11 +58,10 @@ public struct WeddingCap has key, store {
     wedding_id: ID,
 }
 
-/// 하객이 모이는 라운지. `Wedding`과 1:1이며 공유 오브젝트다.
+/// 하객이 모이는 라운지. `Wedding`과 1:1이며 공유 오브젝트다. 표시 이름은 오프체인(결정#2).
 public struct WeddingLounge has key {
     id: UID,
     wedding_id: ID,
-    name: String,
 }
 
 // === Events ===
@@ -77,12 +70,6 @@ public struct WeddingCreated has copy, drop {
     wedding_id: ID,
     event_id: ID,
     lounge_id: ID,
-    groom_name: String,
-    bride_name: String,
-}
-
-public struct WeddingUpdated has copy, drop {
-    wedding_id: ID,
 }
 
 public struct HostAdded has copy, drop {
@@ -92,101 +79,31 @@ public struct HostAdded has copy, drop {
 
 // === Public functions ===
 
-/// 결혼식을 생성한다. 호출자가 첫 호스트가 되며, `Wedding`과 `WeddingLounge`는
-/// 공유 오브젝트로 등록된다. 생성된 `WeddingCap`은 반환되어 호출자(PTB)가
-/// 원하는 주소로 transfer 하도록 한다(합성 가능성 확보).
-public fun create_wedding(
-    groom_name: String,
-    bride_name: String,
-    groom_father_name: Option<String>,
-    groom_mother_name: Option<String>,
-    bride_father_name: Option<String>,
-    bride_mother_name: Option<String>,
-    date: String,
-    time: String,
-    venue_name: String,
-    venue_address: String,
-    venue_hall: Option<String>,
-    lounge_name: String,
-    clock: &Clock,
-    ctx: &mut TxContext,
-): WeddingCap {
+/// 결혼식을 생성한다(익명 앵커). 호출자가 첫 호스트가 되며, `Wedding`과 `WeddingLounge`는
+/// 공유 오브젝트로 등록된다. 표시 정보(이름·예식장 등)는 *온체인에 받지 않는다* — 오프체인에서
+/// 반환된 wedding_id/event_id로 키잉해 저장한다. 생성된 `WeddingCap`은 반환(PTB가 transfer).
+public fun create_wedding(clock: &Clock, ctx: &mut TxContext): WeddingCap {
     // 이 결혼식을 관통하는 이벤트 생성(생성자=혼주, ROLE_HOST Participation도 발행). 부조의 event_id가 된다.
     let event_id = gathering::new_event(gathering::event_wedding(), gathering::role_host(), clock, ctx);
     let wedding = Wedding {
         id: object::new(ctx),
         event_id,
         status: b"active".to_string(),
-        groom_name,
-        bride_name,
-        groom_father_name,
-        groom_mother_name,
-        bride_father_name,
-        bride_mother_name,
-        date,
-        time,
-        venue_name,
-        venue_address,
-        venue_hall,
         host_addresses: vector[ctx.sender()],
         vault_id: option::none(),
     };
     let wedding_id = object::id(&wedding);
 
-    let lounge = WeddingLounge {
-        id: object::new(ctx),
-        wedding_id,
-        name: lounge_name,
-    };
+    let lounge = WeddingLounge { id: object::new(ctx), wedding_id };
     let lounge_id = object::id(&lounge);
 
     let cap = WeddingCap { id: object::new(ctx), wedding_id };
 
-    // String은 copy 능력이 있어 필드 읽기로 이동되지 않는다.
-    event::emit(WeddingCreated {
-        wedding_id,
-        event_id,
-        lounge_id,
-        groom_name: wedding.groom_name,
-        bride_name: wedding.bride_name,
-    });
+    event::emit(WeddingCreated { wedding_id, event_id, lounge_id });
 
     transfer::share_object(wedding);
     transfer::share_object(lounge);
     cap
-}
-
-/// 결혼식 정보를 수정한다. `WeddingCap`이 해당 결혼식을 가리켜야 한다.
-public fun update_wedding(
-    wedding: &mut Wedding,
-    cap: &WeddingCap,
-    groom_name: String,
-    bride_name: String,
-    groom_father_name: Option<String>,
-    groom_mother_name: Option<String>,
-    bride_father_name: Option<String>,
-    bride_mother_name: Option<String>,
-    date: String,
-    time: String,
-    venue_name: String,
-    venue_address: String,
-    venue_hall: Option<String>,
-) {
-    assert!(cap.wedding_id == object::id(wedding), EWrongCap);
-
-    wedding.groom_name = groom_name;
-    wedding.bride_name = bride_name;
-    wedding.groom_father_name = groom_father_name;
-    wedding.groom_mother_name = groom_mother_name;
-    wedding.bride_father_name = bride_father_name;
-    wedding.bride_mother_name = bride_mother_name;
-    wedding.date = date;
-    wedding.time = time;
-    wedding.venue_name = venue_name;
-    wedding.venue_address = venue_address;
-    wedding.venue_hall = venue_hall;
-
-    event::emit(WeddingUpdated { wedding_id: object::id(wedding) });
 }
 
 /// 호스트(혼주)를 추가한다. 최대 6명, 중복 불가.
@@ -216,7 +133,7 @@ public fun invite(
 
 // === Recipient slot 검증 (cash_gift, rsvp 가 재사용) ===
 
-/// 혼주 슬롯이 정해진 6종(신랑/신부/양가 부모) 중 하나인지 검사한다.
+/// 혼주 슬롯이 정해진 6종(신랑/신부/양가 부모) 중 하나인지 검사한다. (슬롯=어느 측 카테고리, PII 아님.)
 public fun is_valid_recipient_slot(slot: &String): bool {
     let b = *slot.as_bytes();
     b == b"groom" || b == b"bride"
@@ -245,9 +162,6 @@ public fun wedding_id(cap: &WeddingCap): ID { cap.wedding_id }
 /// 라운지가 속한 결혼식 ID.
 public fun lounge_wedding_id(lounge: &WeddingLounge): ID { lounge.wedding_id }
 
-/// 라운지 이름.
-public fun lounge_name(lounge: &WeddingLounge): String { lounge.name }
-
 /// 현재 호스트 주소 목록(복사본).
 public fun hosts(wedding: &Wedding): vector<address> { wedding.host_addresses }
 
@@ -274,35 +188,17 @@ use std::unit_test::assert_eq;
 const HOST: address = @0xA;
 
 #[test_only]
-/// 기본값으로 결혼식을 생성하고 `WeddingCap`을 반환한다. 다른 모듈의 테스트에서도
-/// 라운지가 필요할 때 재사용한다. (byte string은 ASCII만 허용되므로 영문 더미값 사용.
-/// 실제 한글은 런타임에 SDK가 UTF8로 전달.)
+/// 결혼식을 생성하고 `WeddingCap`을 반환한다(앵커만 — 표시 정보 인자 없음). 다른 모듈 테스트에서도 재사용.
 public fun create_default_for_testing(ctx: &mut TxContext): WeddingCap {
-    // 시그니처 파급 0: 내부에서 test clock을 만들어 create_wedding에 넘기고 파기. 호출처(rsvp·cash_gift·guestbook) 무수정.
+    // 시그니처 파급 0: 내부에서 test clock을 만들어 create_wedding에 넘기고 파기. 호출처(rsvp·cash_gift·guestbook·gift·integration) 무수정.
     let clk = sui::clock::create_for_testing(ctx);
-    let cap = create_wedding(
-        b"Groom".to_string(),
-        b"Bride".to_string(),
-        option::some(b"GroomFather".to_string()),
-        option::none(),
-        option::some(b"BrideFather".to_string()),
-        option::none(),
-        b"2026-06-16".to_string(),
-        b"14:00".to_string(),
-        b"Grand Hall".to_string(),
-        b"123 Main St".to_string(),
-        option::some(b"Hall A".to_string()),
-        b"Our Lounge".to_string(),
-        &clk,
-        ctx,
-    );
+    let cap = create_wedding(&clk, ctx);
     sui::clock::destroy_for_testing(clk);
     cap
 }
 
 #[test_only]
-/// 임의의 wedding_id를 가리키는 `WeddingCap`을 만든다. 다른 모듈에서 잘못된 Cap에
-/// 대한 권한 거부(EWrongCap)를 테스트할 때 사용한다.
+/// 임의의 wedding_id를 가리키는 `WeddingCap`을 만든다. 잘못된 Cap 권한 거부(EWrongCap) 테스트용.
 public fun new_cap_for_testing(wedding_id: ID, ctx: &mut TxContext): WeddingCap {
     WeddingCap { id: object::new(ctx), wedding_id }
 }
@@ -315,25 +211,6 @@ fun new_wedding_for_test(scenario: &mut ts::Scenario) {
     transfer::public_transfer(cap, sender);
 }
 
-#[test_only]
-fun update_default(wedding: &mut Wedding, cap: &WeddingCap) {
-    update_wedding(
-        wedding,
-        cap,
-        b"Groom2".to_string(),
-        b"Bride2".to_string(),
-        option::none(),
-        option::none(),
-        option::none(),
-        option::none(),
-        b"2027-01-01".to_string(),
-        b"15:00".to_string(),
-        b"New Venue".to_string(),
-        b"456 Road".to_string(),
-        option::none(),
-    );
-}
-
 #[test]
 fun create_shares_wedding_lounge_and_cap() {
     let mut scenario = ts::begin(HOST);
@@ -344,8 +221,7 @@ fun create_shares_wedding_lounge_and_cap() {
     let lounge = scenario.take_shared<WeddingLounge>();
     let cap = scenario.take_from_sender<WeddingCap>();
 
-    assert_eq!(wedding.groom_name, b"Groom".to_string());
-    assert_eq!(wedding.bride_name, b"Bride".to_string());
+    // 앵커: status·혼주 주소만(표시 콘텐츠는 온체인에 없음).
     assert_eq!(wedding.status, b"active".to_string());
     assert_eq!(wedding.host_addresses.length(), 1);
     let host = HOST;
@@ -353,7 +229,6 @@ fun create_shares_wedding_lounge_and_cap() {
     // Cap·Lounge 모두 같은 결혼식을 가리켜야 한다.
     assert_eq!(cap.wedding_id, object::id(&wedding));
     assert_eq!(lounge.wedding_id, object::id(&wedding));
-    assert_eq!(lounge.name, b"Our Lounge".to_string());
 
     ts::return_shared(wedding);
     ts::return_shared(lounge);
@@ -409,25 +284,6 @@ fun invite_logs_host_to_guest() {
 }
 
 #[test]
-fun update_changes_fields() {
-    let mut scenario = ts::begin(HOST);
-    new_wedding_for_test(&mut scenario);
-
-    scenario.next_tx(HOST);
-    let mut wedding = scenario.take_shared<Wedding>();
-    let cap = scenario.take_from_sender<WeddingCap>();
-
-    update_default(&mut wedding, &cap);
-    assert_eq!(wedding.groom_name, b"Groom2".to_string());
-    assert_eq!(wedding.venue_name, b"New Venue".to_string());
-    assert!(wedding.groom_father_name.is_none());
-
-    ts::return_shared(wedding);
-    scenario.return_to_sender(cap);
-    scenario.end();
-}
-
-#[test]
 fun add_host_appends() {
     let mut scenario = ts::begin(HOST);
     new_wedding_for_test(&mut scenario);
@@ -458,7 +314,7 @@ fun invalid_recipient_slot_aborts() {
 }
 
 #[test, expected_failure(abort_code = EWrongCap)]
-fun update_with_wrong_cap_fails() {
+fun add_host_with_wrong_cap_fails() {
     let mut scenario = ts::begin(HOST);
     new_wedding_for_test(&mut scenario);
 
@@ -470,7 +326,7 @@ fun update_with_wrong_cap_fails() {
         wedding_id: object::id_from_address(@0xBEEF),
     };
 
-    update_default(&mut wedding, &fake_cap); // EWrongCap 으로 abort
+    add_host(&mut wedding, &fake_cap, @0xB); // EWrongCap 으로 abort
 
     // 아래는 컴파일 위한 소비 — 런타임엔 위에서 abort되어 도달하지 않음.
     let WeddingCap { id, wedding_id: _ } = fake_cap;
