@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Maximize2 } from 'lucide-react';
 import type { FeedItem } from '@gorae/contracts';
 import { toLogRow, liveMessageText, timeAgo } from '../../lib/loungeV2Feed';
 import { maskGuestName } from '../../lib/guestLabel';
@@ -11,6 +12,8 @@ const ROTATE_MS = 8500;
 interface LiveCelebrationProps {
   items: FeedItem[];
   hostNames: Set<string>;
+  /** ⛶ 전체보기 → MEC Display(guest-web /display) 새 탭. 디스플레이 FAB 대체(핸드오프 §12-4). */
+  onOpenDisplay?: () => void;
 }
 
 function QrIcon() {
@@ -24,7 +27,7 @@ function QrIcon() {
   );
 }
 
-export function LiveCelebration({ items, hostNames }: LiveCelebrationProps) {
+export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebrationProps) {
   const liveMsgs = useMemo(
     () =>
       items
@@ -57,6 +60,16 @@ export function LiveCelebration({ items, hostNames }: LiveCelebrationProps) {
           LIVE
         </span>
         <span className="text-[14px] font-medium tracking-[0.02em] text-lng-muted">축하메세지</span>
+        {onOpenDisplay && (
+          <button
+            type="button"
+            onClick={onOpenDisplay}
+            aria-label="현장 디스플레이 전체보기"
+            className="ml-auto flex items-center gap-1 rounded-full border border-[rgba(135,166,200,0.3)] bg-[rgba(255,255,255,0.6)] px-2.5 py-1 text-[12px] font-semibold text-[#3A5673] backdrop-blur"
+          >
+            <Maximize2 className="h-3.5 w-3.5" /> 전체보기
+          </button>
+        )}
       </div>
 
       {!hasMsgs ? (

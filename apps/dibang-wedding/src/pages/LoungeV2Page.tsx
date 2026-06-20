@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
+import { Megaphone, PenLine, LayoutGrid, Gift } from 'lucide-react';
 import { useMachine } from '@xstate/react';
 import type { FeedItem } from '@gorae/contracts';
 import { loungeV2Machine } from '../machines/loungeV2.machine';
@@ -24,7 +25,9 @@ import { StoryStrip } from '../components/lounge-v2/StoryStrip';
 import { FeedCardModal } from '../components/lounge-v2/FeedCardModal';
 import { LiveCelebration } from '../components/lounge-v2/LiveCelebration';
 import { GatheringLog } from '../components/lounge-v2/GatheringLog';
-import { LoungeFab } from '../components/lounge-v2/LoungeFab';
+import { LoungeRail } from '../components/lounge-v2/LoungeRail';
+import { MoiGatherPreviewCard } from '../components/lounge-v2/MoiGatherPreviewCard';
+import { GiftSheet } from '../components/lounge-v2/GiftSheet';
 import { ComposeModal } from '../components/lounge-v2/ComposeModal';
 import { AnnouncementForm } from '../components/lounge-feed/AnnouncementForm';
 
@@ -42,6 +45,7 @@ export function LoungeV2Page() {
   const [openStoryKey, setOpenStoryKey] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [announceOpen, setAnnounceOpen] = useState(false);
+  const [giftOpen, setGiftOpen] = useState(false);
 
   // 입장 시 LoungeCheckIn 자동 생성 (V1 패턴, 1회만)
   useEnsureLoungeCheckIn(loungeId);
@@ -204,11 +208,19 @@ export function LoungeV2Page() {
             onSharePhoto={() => navigate(buildSharePhotoUploadPath(loungeId))}
           />
 
+          <MoiGatherPreviewCard onEnter={() => navigate(`/lounge/${loungeId}/moi-gather`)} />
+
           <AnnounceMarquee announcements={announcements} hostSideMap={hostSideMap} />
 
           <StoryStrip groups={storyGroups} onOpenStory={setOpenStoryKey} hostNames={hostNames} />
 
-          <LiveCelebration items={allItems} hostNames={hostNames} />
+          <LiveCelebration
+            items={allItems}
+            hostNames={hostNames}
+            onOpenDisplay={
+              weddingId ? () => window.open(buildDisplayUrl(weddingId), '_blank', 'noopener,noreferrer') : undefined
+            }
+          />
 
           {state.matches('refreshing') && (
             <p className="py-3 text-center text-sm text-lng-muted">새로고침 중...</p>
@@ -241,43 +253,26 @@ export function LoungeV2Page() {
         </>
       )}
 
-      {/* FAB 스택 — LoungeFab(라운드 사각형 + 레이블) 세로 쌓기, 한 단 85px.
-          위에서부터 공지(260, 호스트 전용) → 디스플레이(175) → 메모리(90).
-          사진 공유는 FAB에서 LoungeHeroCard 우측하단 버튼으로 이동(2026-06-12 피드백). */}
-
-      {/* Announcement FAB — issue #31. 공지 작성은 호스트 전용 — 하객에게는 노출하지 않는다. */}
-      {isHost && (
-        <LoungeFab label="공지" ariaLabel="공지 작성" bottom={260} onClick={() => setAnnounceOpen(true)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden="true">
-            <path d="M3 11v2l12 4.5V6.5L3 11z" />
-            <path d="M15 8.5a3.2 3.2 0 0 1 0 7" />
-            <path d="M6 13.2V17l3.2 1.1v-3.7" />
-          </svg>
-        </LoungeFab>
-      )}
-
-      {/* 디스플레이 FAB — guest-web /display 새 탭. */}
-      <LoungeFab
-        label="디스플레이"
-        ariaLabel="디스플레이 띄우기"
-        bottom={175}
-        disabled={!weddingId}
-        onClick={() => weddingId && window.open(buildDisplayUrl(weddingId), '_blank', 'noopener,noreferrer')}
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden="true">
-          <rect x="2" y="4" width="20" height="13" rx="2" />
-          <path d="M8 21h8M12 17v4" />
-          <path d="M7 9.5h7M7 12.5h4" />
-        </svg>
-      </LoungeFab>
-
-      {/* 메모리(온기 작성) FAB — ComposeModal 오픈. */}
-      <LoungeFab label="메모리" bottom={90} onClick={() => setComposeOpen(true)}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </LoungeFab>
+      {/* 우측 액션 레일 — 접이식(공지 host·메모리·피드·들러리선물). 디스플레이는 제거 → LIVE 카드 ⛶.
+          모이가모인곳·샵은 레일에서 제외(미리보기 카드 / 미니룸 내부). 핸드오프 §12-1·§12-4. */}
+      <LoungeRail
+        actions={[
+          ...(isHost
+            ? [
+                {
+                  key: 'announce',
+                  label: '공지',
+                  icon: <Megaphone className="h-[19px] w-[19px]" />,
+                  onClick: () => setAnnounceOpen(true),
+                },
+              ]
+            : []),
+          { key: 'memory', label: '메모리', icon: <PenLine className="h-[19px] w-[19px]" />, onClick: () => setComposeOpen(true) },
+          // TODO: 메모리 vs 피드 compose 모드 분리 (현재 동일 ComposeModal — 핸드오프 §2-3은 둘 다 "기존 compose").
+          { key: 'feed', label: '피드', icon: <LayoutGrid className="h-[19px] w-[19px]" />, onClick: () => setComposeOpen(true) },
+          { key: 'gift', label: '들러리·선물', icon: <Gift className="h-[19px] w-[19px]" />, onClick: () => setGiftOpen(true) },
+        ]}
+      />
 
       {/* Announcement Modal — issue #31 */}
       {announceOpen && loungeId && (
@@ -315,6 +310,7 @@ export function LoungeV2Page() {
         uploadError={compose.uploadError}
         postError={compose.postError}
       />
+      <GiftSheet open={giftOpen} onOpenChange={setGiftOpen} />
     </div>
   );
 }

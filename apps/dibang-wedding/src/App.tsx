@@ -5,6 +5,7 @@ import { MainLayout } from './layouts/MainLayout'
 import { LoginPage } from './pages/LoginPage'
 import { MyWeddingPage } from './pages/MyWeddingPage'
 import { WeddingListPage } from './pages/WeddingListPage'
+import { InyeonPage } from './pages/InyeonPage'
 import { QrPage } from './pages/QrPage'
 import { DmPage } from './pages/DmPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -12,6 +13,7 @@ import { InvitationCreatePage } from './pages/InvitationCreatePage'
 import { InvitationEditPage } from './pages/InvitationEditPage'
 import { LoungeFeedPage } from './pages/LoungeFeedPage'
 import { LoungeV2Page } from './pages/LoungeV2Page'
+import { MoiGatherPage } from './pages/MoiGatherPage'
 import { LoungeCheckInGatePage } from './pages/LoungeCheckInGatePage'
 import { HostInviteAcceptPage } from './pages/HostInviteAcceptPage'
 import { LedgerPage } from './pages/LedgerPage'
@@ -45,6 +47,7 @@ function App() {
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/onboarding/consent" element={<AuthGuard><OnboardingConsentPage /></AuthGuard>} />
       <Route element={<AuthGuard><OnboardingGate><MainLayout /></OnboardingGate></AuthGuard>}>
+        <Route path="/inyeon" element={<InyeonPage />} />
         <Route path="/my-wedding" element={<MyWeddingPage />} />
         <Route path="/wedding-list" element={<WeddingListPage />} />
         <Route path="/qr" element={<QrPage />} />
@@ -56,6 +59,7 @@ function App() {
       <Route path="/invitation/edit/:weddingId" element={<AuthGuard><OnboardingGate><InvitationEditPage /></OnboardingGate></AuthGuard>} />
       <Route path="/lounge/:loungeId/enter" element={<AuthGuard><OnboardingGate><LoungeCheckInGatePage /></OnboardingGate></AuthGuard>} />
       <Route path="/lounge/:loungeId/v2" element={<AuthGuard><OnboardingGate><LoungeV2Page /></OnboardingGate></AuthGuard>} />
+      <Route path="/lounge/:loungeId/moi-gather" element={<AuthGuard><OnboardingGate><MoiGatherPage /></OnboardingGate></AuthGuard>} />
       <Route path="/lounge/:loungeId/share-photos/upload" element={<AuthGuard><OnboardingGate><SharePhotoUploadPage /></OnboardingGate></AuthGuard>} />
       <Route path="/lounge/:loungeId" element={<AuthGuard><OnboardingGate><LoungeFeedPage /></OnboardingGate></AuthGuard>} />
       <Route path="/wedding/:weddingId/report" element={<AuthGuard><OnboardingGate><LedgerPage /></OnboardingGate></AuthGuard>} />
