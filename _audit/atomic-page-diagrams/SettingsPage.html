@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SettingsPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>SettingsPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/settings` (바텀탭)<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** 머신 없음. 마케팅 동의는 서버값 파생+토글 override → mutate(성공 시 invalidate+토스트). 로그아웃 → /login.</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  START([&quot;진입 /settings (바텀탭)&quot;]):::term --&gt; screen[&quot;설정 화면: 로그인 정보(session.user) · 마케팅 토글 · 로그아웃&quot;]:::st
+  screen -. &quot;marketing = userOverride ?? me.marketing_agreed ?? false (getMe 파생)&quot; .-&gt; screen
+  screen -- &quot;마케팅 토글 [!isPending] → setUserOverride + updateMarketingConsent.mutate({agreed})&quot; --&gt; mk[&quot;updateMarketingConsent.mutate&quot;]:::async
+  mk -- &quot;성공 → invalidate(getMe) + toast(&#x27;변경되었습니다&#x27;, 2s)&quot; --&gt; screen
+  mk -. &quot;(에러 콜백 없음 → 머무름)&quot; .-&gt; screen
+  screen -- &quot;로그아웃 → signOut.mutate&quot; --&gt; so[&quot;useSignOut.mutate&quot;]:::async
+  so -- &quot;성공 → navigate(/login)&quot; --&gt; EXITLOGIN([&quot;→ /login&quot;]):::term</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoungeV2Page — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>LoungeV2Page — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/lounge/:loungeId/v2`<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** xstate `loungeV2.machine`는 `loungeFeed`와 **동형**(피드 영역만·재사용). V2 추가: 실제 isHost(공지 FAB), compose(파일 업로드→메모리 생성, 각 실패), 실시간 구독(→feed invalidate), 스토리 모달(FeedCardModal=storyCarousel 자식), FAB 3종(공지·디스플레이=새 탭 window.open·메모리), 사진공유=라우트 이탈.</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  classDef mstate fill:#eef2ff,stroke:#4f46e5,color:#312e81;
+  START([&quot;진입 /lounge/:loungeId/v2&quot;]):::term --&gt; gLounge{&quot;loungeId 있음?&quot;}
+  EXITSHARE([&quot;→ /lounge/:loungeId/share-photos/upload (navigate)&quot;]):::term
+  gLounge -- 아니오 --&gt; deadLounge[&quot;&#x27;loungeId 없음&#x27;(정지)&quot;]:::warn
+  gLounge -- 예 --&gt; mount[&quot;마운트: 병렬 쿼리/효과&quot;]:::st
+  mount -. &quot;ensureCheckIn(1회·실패 무시)&quot; .-&gt; bgCheck[&quot;createLoungeCheckIn(백그라운드)&quot;]:::flat
+  mount -. &quot;useMemoriesRealtime 구독&quot; .-&gt; rt[&quot;realtime v3_memories(lounge) → 변경 시 feed/memories invalidate(백그라운드)&quot;]:::flat
+  mount --&gt; skelGate{&quot;(lounge∨wedding 로딩) ∧ info 없음?&quot;}
+  skelGate -- 예 --&gt; skel[&quot;스피너(헤더 대기)&quot;]:::st
+  skel -. &quot;해결 재평가&quot; .-&gt; skelGate
+  skelGate -- 아니오 --&gt; screen[[&quot;메인 화면 fork: Hero ∥ 피드머신 ∥ 스토리 ∥ FAB ∥ 공지&quot;]]:::async
+  screen --&gt; hero[&quot;Hero/TopBar/Marquee/LiveCelebration (info·warmth 파생·값변환)&quot;]:::flat
+  hero -. &quot;사진 공유(Hero 버튼) → navigate&quot; .-&gt; EXITSHARE
+  screen --&gt; floading
+  subgraph FEED[&quot;피드 머신 (loungeV2 — loungeFeed와 동형·재사용)&quot;]
+    floading[&quot;loading (별도 스피너 없음 · GatheringLog 표시)&quot;]:::mstate
+    fidle[&quot;idle (GatheringLog)&quot;]:::mstate
+    frefresh[&quot;refreshing (&#x27;새로고침 중...&#x27;)&quot;]:::mstate
+    ferror[&quot;error (에러 UI: GatheringLog 대체 + 재시도)&quot;]:::mstate
+    ferror -- &quot;재시도 RETRY/clearError (+refetch)&quot; --&gt; floading
+  end
+  floading --&gt; fbridge{&quot;feedQuery 결과 (loading 동안)&quot;}
+  fbridge -- &quot;로딩 중 → 대기&quot; --&gt; floading
+  fbridge -- &quot;isSuccess → LOAD_SUCCESS/clearError&quot; --&gt; fidle
+  fbridge -- &quot;isError → LOAD_ERROR/setError&quot; --&gt; ferror
+  fidle -. &quot;5초 폴링·realtime invalidate·무한스크롤 fetchNextPage (백그라운드·상태 무변)&quot; .-&gt; fidle
+  fidle -- &quot;풀다운(pullDistance&gt;80 ∧ idle) → REFRESH/inc + refetch()&quot; --&gt; frefresh
+  frefresh -- &quot;성공 → REFRESH_SUCCESS/clearError+reset&quot; --&gt; fidle
+  frefresh -- &quot;실패 → REFRESH_ERROR/setError (idle 복귀·미표시)&quot; --&gt; fidle
+  screen --&gt; storyStrip[&quot;StoryStrip (storyGroups 파생)&quot;]:::flat
+  storyStrip -. &quot;스토리 열기(openStoryKey)&quot; .-&gt; storyModal[&quot;FeedCardModal(feedGroups)·자식 storyCarousel 머신&quot;]:::st
+  storyModal -. &quot;아이템 뷰 → recordView.mutate(fire-and-forget)&quot; .-&gt; storyModal
+  storyModal -. &quot;닫기(openStoryKey=null)&quot; .-&gt; storyStrip
+  screen --&gt; fabMem[&quot;메모리 FAB → composeOpen&quot;]:::flat
+  fabMem -. &quot;열림&quot; .-&gt; composeModal[&quot;ComposeModal(자식)&quot;]:::st
+  composeModal --&gt; cSubmit[&quot;compose.submit(text, file?)&quot;]:::st
+  cSubmit --&gt; cFile{&quot;file 있음?&quot;}
+  cFile -- 예 --&gt; cUp[&quot;uploadMemoryPhoto.mutateAsync(presigned memory)&quot;]:::async
+  cUp -- &quot;실패(catch) → ok:false · uploadError&quot; --&gt; composeModal
+  cUp -- 성공(photoUrl) --&gt; cPost
+  cFile -- 아니오 --&gt; cPost[&quot;createMemory.mutateAsync({text, asAnnounce:false, photoUrl?})&quot;]:::async
+  cPost -- &quot;성공 → ok:true (모달 닫기)&quot; --&gt; screen
+  cPost -- &quot;실패(catch) → ok:false · postError&quot; --&gt; composeModal
+  screen --&gt; fabDisp{&quot;디스플레이 FAB [weddingId 있음?]&quot;}
+  fabDisp -- &quot;예 → window.open(/display·새 탭)&quot; --&gt; screen
+  fabDisp -- &quot;아니오(비활성)&quot; --&gt; screen
+  screen --&gt; fabAnn{&quot;공지 FAB [isHost?]&quot;}
+  fabAnn -- &quot;아니오(미노출)&quot; --&gt; screen
+  fabAnn -- &quot;예 → announceOpen&quot; --&gt; annForm[&quot;AnnouncementForm(현재 공지)&quot;]:::st
+  annForm -- &quot;제출 → createAnnouncement.mutate&quot; --&gt; annRes{&quot;결과&quot;}
+  annRes -- &quot;성공 → 닫기·resolve&quot; --&gt; annForm
+  annRes -- &quot;실패 → reject(폼 유지)&quot; --&gt; annForm
+  annForm -- &quot;삭제 → deleteAnnouncement.mutate&quot; --&gt; annForm</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

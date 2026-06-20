@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AuthCallbackPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>AuthCallbackPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/auth/callback` (`?code`, `?redirect`)<br>**검증:** ✅ Opus 4.8 (2라운드 — 10초 타임아웃 페이지 레벨로 정정)<br>**요약:** 머신 없음. isReady 대기 → session 있으면 복귀/이탈, 없으면 code(PKCE) 있으면 세션 대기, 없으면 /login. 마운트 시 10초 타임아웃이 페이지 레벨로 무조건 가동되어 어느 대기서든 /login으로 탈출.</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  START([&quot;진입 /auth/callback ?code ?redirect (&#x27;로그인 처리 중...&#x27;)&quot;]):::term --&gt; ready{&quot;isReady?&quot;}
+  ready -- &quot;아니오 → 대기&quot; --&gt; ready
+  ready -- 예 --&gt; sess{&quot;session 있음?&quot;}
+  sess -- &quot;예 → navigate(safe redirect ?? /my-wedding, replace)&quot; --&gt; EXITOK([&quot;복귀/이탈&quot;]):::done
+  sess -- 아니오 --&gt; code{&quot;?code 있음?(PKCE)&quot;}
+  code -- &quot;예 → onAuthStateChange 세션 대기&quot; --&gt; waitS[&quot;대기&quot;]:::st
+  waitS -. &quot;세션 도착 → effect 재평가&quot; .-&gt; sess
+  code -- &quot;아니오 → navigate(/login[?redirect 보존], replace)&quot; --&gt; EXITLOGIN([&quot;→ /login&quot;]):::warn
+  START -. &quot;마운트 시 10초 타이머 무조건 가동(언마운트 시 취소)&quot; .-&gt; t10[&quot;10초 경과&quot;]:::warn
+  t10 -. &quot;어느 대기(미준비·PKCE)서든 탈출 → navigate(/login, replace)&quot; .-&gt; EXITLOGIN</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

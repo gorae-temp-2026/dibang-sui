@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnboardingConsentPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>OnboardingConsentPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/onboarding/consent` (`?next`)<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** xstate `onboardingConsent.machine` **실제 구동**(editing→submitting→success). 토글(TOGGLE/TOGGLE_ALL)은 editing 자기전이. `동의하고 시작`은 canSubmit(필수 3개 age·service·privacy; marketing 선택)일 때만 SUBMIT→submitting. 제출은 createConsents.mutateAsync → 성공 SUBMIT_SUCCESS→success(final) / 실패 SUBMIT_ERROR→editing(에러 표시). success 진입 시 getMe 캐시 consents_required=[] 낙관적 갱신 + invalidate + navigate(nextUrl, replace). RETRY는 선언만 되고 미처리(dead).</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  classDef mstate fill:#eef2ff,stroke:#4f46e5,color:#312e81;
+  START([&quot;진입 /onboarding/consent ?next&quot;]):::term --&gt; nextDer[&quot;nextUrl = ?next || /my-wedding (값 변환)&quot;]:::flat
+  nextDer --&gt; editing
+  EXIT([&quot;이탈 → nextUrl (기본 /my-wedding, replace)&quot;]):::term
+  editing[&quot;editing (전체동의 + 필수3 + 선택1 체크박스 · &#x27;동의하고 시작&#x27;)&quot;]:::mstate
+  editing -. &quot;ConsentRow 토글 → TOGGLE(key)/toggleOne&quot; .-&gt; editing
+  editing -. &quot;전체 동의 → TOGGLE_ALL(!allChecked)/toggleAll&quot; .-&gt; editing
+  editing -. &quot;버튼 disabled: !canSubmit ∨ submitting&quot; .-&gt; editing
+  editing -- &quot;동의하고 시작 [canSubmit: 필수3 age·service·privacy] → SUBMIT/clearError&quot; --&gt; submitting
+  submitting[&quot;submitting (&#x27;처리 중...&#x27;)&quot;]:::mstate
+  submitting --&gt; mut[&quot;createConsents.mutateAsync({items: age·service·privacy·marketing})&quot;]:::async
+  mut -- &quot;성공 → SUBMIT_SUCCESS&quot; --&gt; success
+  mut -- &quot;실패(catch) → SUBMIT_ERROR/setError (editing서 에러 표시)&quot; --&gt; editing
+  success[&quot;success (final)&quot;]:::mstate
+  success --&gt; okEff[&quot;success effect: getMe.consents_required=[] (낙관적) + invalidate(getMe) + navigate(nextUrl, replace)&quot;]:::done
+  okEff --&gt; EXIT</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

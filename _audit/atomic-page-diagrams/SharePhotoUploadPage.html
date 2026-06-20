@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SharePhotoUploadPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>SharePhotoUploadPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/lounge/:loungeId/share-photos/upload`<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** xstate `sharePhotoUpload.machine` **실제 구동**(idle→selecting→uploading→done/error). uploading은 `presignedUploadActor` invoke → presignedUpload(category &#x27;share&#x27;, **압축 없음**, pLimit 4, autoRetry 1). 파일별 HEIC 변환→presign→PUT(재시도 1)→register(실패 흡수). **부분 실패여도 성공분만 모아 UPLOAD_DONE→done**, actor 예외 시에만 UPLOAD_ERROR→error. 외곽은 기존 사진 로드(list + signedUrls).</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  classDef mstate fill:#eef2ff,stroke:#4f46e5,color:#312e81;
+  START([&quot;진입 /lounge/:loungeId/share-photos/upload&quot;]):::term --&gt; gLounge{&quot;loungeId 있음?&quot;}
+  EXIT([&quot;이탈 → /lounge/:loungeId/v2&quot;]):::term
+  gLounge -- 아니오 --&gt; deadLounge[&quot;&#x27;loungeId가 없습니다&#x27;(정지)&quot;]:::warn
+  gLounge -- 예 --&gt; listReq[&quot;useListSharedPhotos(loungeId)&quot;]:::async
+  subgraph OUTER[&quot;① 기존 사진 로드&quot;]
+    listReq --&gt; exCalc{&quot;existing 계산&quot;}
+    exCalc -- &quot;데이터 없음·에러 아님&quot; --&gt; spin[&quot;로딩 스피너(existing=null)&quot;]:::st
+    exCalc -- &quot;조회 에러&quot; --&gt; exEmpty[&quot;existing=[](빈 목록)&quot;]:::warn
+    exCalc -- &quot;데이터 있음&quot; --&gt; exMap[&quot;existing=rows.map(+signedUrl)&quot;]:::flat
+    spin -. &quot;쿼리 해결 재평가&quot; .-&gt; exCalc
+    signed[&quot;useSignedUrls(paths)(병렬·썸네일)&quot;]:::async -. &quot;실패/지연 시 placeholder fallback(비차단)&quot; .-&gt; exMap
+  end
+  exEmpty --&gt; idle
+  exMap --&gt; idle
+  subgraph MACHINE[&quot;② 업로드 머신 (useMachine — 실제 구동)&quot;]
+    idle[&quot;idle(선택 화면·files 0)&quot;]:::mstate
+    idle -- &quot;PICK [existing+files≤100] / setFiles&quot; --&gt; selecting
+    idle -- &quot;PICK [초과] / setError(미표시·페이지 선슬라이스로 사실상 미발생)&quot; --&gt; idle
+    selecting[&quot;selecting(선택 화면·files≥1)&quot;]:::mstate
+    selecting -- &quot;PICK [≤100] / setFiles(추가·삭제)&quot; --&gt; selecting
+    selecting -- &quot;removeAt로 전부삭제 → CLEAR / clearFiles&quot; --&gt; idle
+    selecting -- &quot;공유 START [hasFiles]&quot; --&gt; uploading
+    uploading[&quot;uploading(업로드 중 화면)&quot;]:::mstate
+    uploading -- &quot;PROGRESS / updateProgress(파일별)&quot; --&gt; uploading
+    uploading -- &quot;UPLOAD_DONE(성공 paths) / appendUploaded&quot; --&gt; done
+    uploading -- &quot;UPLOAD_ERROR / setError&quot; --&gt; error
+    done[&quot;done(완료 화면)&quot;]:::mstate
+    error[&quot;error(에러 화면)&quot;]:::mstate
+    done -- &quot;계속 올리기 RESET / reset&quot; --&gt; idle
+    error -- &quot;처음으로 RESET / reset&quot; --&gt; idle
+    error -- &quot;다시 시도 START [hasFiles]&quot; --&gt; uploading
+  end
+  uploading -. &quot;invoke&quot; .-&gt; aStart
+  idle -. &quot;취소(헤더)&quot; .-&gt; EXIT
+  selecting -. &quot;취소(헤더)&quot; .-&gt; EXIT
+  done -. &quot;돌아가기&quot; .-&gt; EXIT
+  subgraph SPUP[&quot;presignedUploadActor (uploading 동안) — presignedUpload(category &#x27;share&#x27;, 압축 없음)&quot;]
+    aStart[&quot;actor: presignedUpload(files)&quot;]:::st --&gt; aFork[[&quot;pLimit(4) fork: 파일별 동시(최대 4)&quot;]]:::async
+    aFork --&gt; ufHeic{&quot;파일 HEIC?&quot;}
+    ufHeic -- 예 --&gt; ufConv[&quot;ensureJpegIfHeic(converting)&quot;]:::async
+    ufHeic -- 아니오 --&gt; ufReq
+    ufConv --&gt; ufReq[&quot;createPresignedUpload(requesting)&quot;]:::async
+    ufReq -- &quot;throw(!res.data·네트워크)&quot; --&gt; ufRetry
+    ufReq -- 성공 --&gt; ufPut[&quot;putBinary(uploading %)&quot;]:::async
+    ufPut -- throw --&gt; ufRetry
+    ufPut -- 성공 --&gt; ufReg[&quot;onUploaded: register(createSharedPhoto)·실패 흡수&quot;]:::st
+    ufReg --&gt; ufDone[&quot;파일 done(Result)&quot;]:::done
+    ufRetry{&quot;재시도 남음?(autoRetry=1)&quot;}
+    ufRetry -- 예 --&gt; ufReq
+    ufRetry -- 아니오 --&gt; ufErr[&quot;파일 Error(결과배열에 Error)&quot;]:::warn
+    ufHeic -. &quot;각 단계 onProgress&quot; .-&gt; prog[&quot;sendBack PROGRESS → updateProgress&quot;]:::flat
+  end
+  ufDone --&gt; aAgg
+  ufErr --&gt; aAgg
+  aAgg([&quot;모든 파일 settle&quot;]) --&gt; aDone[&quot;uploadedPaths=성공분 → sendBack UPLOAD_DONE(부분 실패여도 done)&quot;]:::done
+  aStart -. &quot;actor 예외(희귀)&quot; .-&gt; aErr[&quot;sendBack UPLOAD_ERROR&quot;]:::warn
+  prog -.-&gt; uploading
+  aDone -. &quot;UPLOAD_DONE&quot; .-&gt; uploading
+  aErr -. &quot;UPLOAD_ERROR&quot; .-&gt; uploading</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

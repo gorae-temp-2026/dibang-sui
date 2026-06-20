@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoungeFeedPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>LoungeFeedPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/lounge/:loungeId`<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** xstate `loungeFeed.machine` **실제 구동**이나 **피드 영역만** 관장(loading/idle/refreshing/error). 주위로 헤더·공지·참여자가 병렬. idle에서 5초 폴링(refetchInterval)+무한스크롤이 백그라운드(상태 무변), 풀다운만 refreshing 전이. ensureCheckIn 마운트 1회 fire-and-forget. 뒤로가기→/my-wedding.</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  classDef mstate fill:#eef2ff,stroke:#4f46e5,color:#312e81;
+  START([&quot;진입 /lounge/:loungeId&quot;]):::term --&gt; gLounge{&quot;loungeId 있음?&quot;}
+  EXITBACK([&quot;뒤로 → /my-wedding&quot;]):::term
+  gLounge -- 아니오 --&gt; deadLounge[&quot;&#x27;loungeId 없음&#x27;(정지)&quot;]:::warn
+  gLounge -- 예 --&gt; mount[&quot;마운트: 병렬 쿼리/효과 시작&quot;]:::st
+  mount -. &quot;ensureCheckIn(마운트 1회·ref가드·실패 무시)&quot; .-&gt; bgCheck[&quot;createLoungeCheckIn mutate(백그라운드)&quot;]:::flat
+  mount --&gt; skelGate{&quot;(lounge∨wedding 로딩) ∧ weddingInfo 없음?&quot;}
+  skelGate -- 예 --&gt; skel[&quot;LoungeSkeleton(헤더 대기)&quot;]:::st
+  skel -. &quot;쿼리 해결 재평가&quot; .-&gt; skelGate
+  skelGate -- 아니오 --&gt; screen[[&quot;메인 화면 fork: 헤더 ∥ 피드머신 ∥ 공지 ∥ 참여자&quot;]]:::async
+  screen --&gt; header[&quot;헤더: weddingInfo면 날짜·이름·장소·부모 / 없으면 &#x27;웨딩라운지&#x27;(값 변환)&quot;]:::flat
+  header -. &quot;뒤로가기&quot; .-&gt; EXITBACK
+  screen --&gt; floading
+  subgraph FEED[&quot;피드 머신 (useMachine — feed 로딩/새로고침/에러만)&quot;]
+    floading[&quot;loading (피드 스피너)&quot;]:::mstate
+    fidle[&quot;idle (피드 표시)&quot;]:::mstate
+    frefresh[&quot;refreshing (&#x27;새로고침 중...&#x27;)&quot;]:::mstate
+    ferror[&quot;error (errorMessage + 재시도)&quot;]:::mstate
+    ferror -- &quot;재시도 RETRY/clearError (+feedQuery.refetch)&quot; --&gt; floading
+  end
+  floading --&gt; fbridge{&quot;feedQuery 결과 (loading 동안 bridge)&quot;}
+  fbridge -- &quot;로딩 중 → 대기&quot; --&gt; floading
+  fbridge -- &quot;isSuccess → LOAD_SUCCESS/clearError&quot; --&gt; fidle
+  fbridge -- &quot;isError → LOAD_ERROR/setError&quot; --&gt; ferror
+  fidle -. &quot;5초 폴링(refetchInterval)·백그라운드 갱신(상태 무변)&quot; .-&gt; fidle
+  fidle -. &quot;무한스크롤: observer 교차 ∧ hasNextPage ∧ !isFetchingNextPage → fetchNextPage&quot; .-&gt; fidle
+  fidle -- &quot;풀다운(pullDistance&gt;80 ∧ idle) → REFRESH/inc + refetch()&quot; --&gt; frefresh
+  frefresh -- &quot;성공 → REFRESH_SUCCESS/clearError+resetAttempts&quot; --&gt; fidle
+  frefresh -- &quot;실패 → REFRESH_ERROR/setError (idle 복귀·메시지 미표시)&quot; --&gt; fidle
+  fidle --&gt; feedBody{&quot;allItems 0건?&quot;}
+  feedBody -- 예 --&gt; empty[&quot;&#x27;아직 활동이 없어요&#x27;&quot;]:::flat
+  feedBody -- 아니오 --&gt; items[&quot;regularItems 렌더 + 고정공지 배너(pinned)&quot;]:::flat
+  screen --&gt; annBtn[&quot;공지 버튼(Host) 토글&quot;]:::flat
+  annBtn -. &quot;열림&quot; .-&gt; annForm[&quot;AnnouncementForm(현재 공지)&quot;]:::st
+  annForm -- &quot;제출 → createAnnouncement.mutate&quot; --&gt; annRes{&quot;결과&quot;}
+  annRes -- &quot;성공 → 폼 닫기·resolve&quot; --&gt; annForm
+  annRes -- &quot;실패 → reject(폼 유지)&quot; --&gt; annForm
+  annForm -- &quot;삭제 → deleteAnnouncement.mutate&quot; --&gt; annForm
+  screen --&gt; partBtn[&quot;참여자 버튼&quot;]:::flat
+  partBtn -. &quot;열림&quot; .-&gt; partModal[&quot;ParticipantListModal(참여자=lounge_check_in)&quot;]:::st
+  partModal -. &quot;닫기&quot; .-&gt; partBtn</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

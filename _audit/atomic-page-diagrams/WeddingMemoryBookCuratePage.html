@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeddingMemoryBookCuratePage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>WeddingMemoryBookCuratePage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/wedding/:weddingId/memory-book/curate`<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** 머신 없음. groups+memoryBook 병렬 조회 + signedUrls. selectedIds = userSelected ?? 서버 curated ?? []. 토글(30장 cap). 저장: 0건이면 확인 다이얼로그, 아니면 바로 → replaceCurated → 성공 시 600ms 후 이동.</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  START([&quot;진입 /wedding/:weddingId/memory-book/curate&quot;]):::term --&gt; load[&quot;groups + memoryBook 쿼리(enabled) · signedUrls(paths 파생)&quot;]:::async
+  load --&gt; ld{&quot;isLoading?(groups ∨ memoryBook)&quot;}
+  ld -- &quot;예 → &#x27;로딩 중…&#x27;&quot; --&gt; ld
+  ld -- 아니오 --&gt; err{&quot;hasError?(groups ∨ memoryBook)&quot;}
+  err -- &quot;예 → &#x27;사진 불러오기 실패&#x27;(정지)&quot; --&gt; errS[&quot;정지&quot;]:::warn
+  err -- 아니오 --&gt; empty{&quot;groups 0건?&quot;}
+  empty -- &quot;예 → &#x27;아직 공유된 사진이 없어요&#x27;&quot; --&gt; emptyS[&quot;빈 상태&quot;]:::flat
+  empty -- 아니오 --&gt; grid[&quot;그룹 그리드 + 선택 미니그리드&lt;br/&gt;selectedIds = userSelected ?? serverInitialSelected(서버 curated 파생) ?? []&quot;]:::st
+  grid -. &quot;사진 토글 → handleToggle: 이미선택이면 해제 / 30장 미만이면 추가(31번째 무시) + 토스트 리셋&quot; .-&gt; grid
+  grid -. &quot;사진 클릭 → 라이트박스(PhotoLightbox)&quot; .-&gt; grid
+  grid -- &quot;저장하기 [!isPending]&quot; --&gt; saveChk{&quot;selectedIds 0건?&quot;}
+  saveChk -- &quot;예 → 빈 선택 확인 다이얼로그&quot; --&gt; emptyConf{&quot;나가기?&quot;}
+  emptyConf -- 취소 --&gt; grid
+  emptyConf -- 나가기 --&gt; perform
+  saveChk -- 아니오 --&gt; perform[&quot;performSave: replaceCurated.mutateAsync({photo_ids})&quot;]:::async
+  perform -- &quot;성공 → 600ms 후 navigate(0건이면 /my-wedding, 아니면 /memory-book, replace)&quot; --&gt; EXITDONE([&quot;→ /my-wedding 또는 /memory-book&quot;]):::done
+  perform -- &quot;실패(catch) → setSaveError(표시)&quot; --&gt; grid</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

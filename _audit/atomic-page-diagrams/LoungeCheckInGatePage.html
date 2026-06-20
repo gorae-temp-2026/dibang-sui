@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoungeCheckInGatePage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>LoungeCheckInGatePage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/lounge/:loungeId/enter` (`?name·recipient_slot·relation_category·relation_detail`)<br>**검증:** ✅ Opus 4.8 (2라운드)<br>**요약:** xstate `loungeCheckInGate.machine` **실제 구동**(checking→hasEntry/form/error · form→submitting→done/form). 페이지 고유: 인증 가드(미인증→로그인 리다이렉트), checking↔쿼리 브리지, guest-web 쿼리 prefill→자동입장(1회), handleSubmit(이름 변경 시 updateMe→createEntry, 각 실패 분기), hasEntry/done→v2 리다이렉트. 비동기는 actor 아닌 페이지 측.</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  classDef mstate fill:#eef2ff,stroke:#4f46e5,color:#312e81;
+  START([&quot;진입 /lounge/:loungeId/enter ?name·recipient·relation·detail&quot;]):::term --&gt; authGate{&quot;isReady ∧ !session?&quot;}
+  EXITLOGIN([&quot;→ /login?redirect=enter+쿼리 (미인증)&quot;]):::term
+  EXITV2([&quot;→ /lounge/:loungeId/v2&quot;]):::term
+  authGate -- &quot;예(미인증)&quot; --&gt; EXITLOGIN
+  authGate -- &quot;아니오(세션 있음/대기)&quot; --&gt; prefill[&quot;쿼리 prefill 파싱·검증(enum 밖→null)&lt;br/&gt;hasQueryPrefill=recipient∧relation 유효 · 폼 init&quot;]:::flat
+  prefill --&gt; checking
+  checking[&quot;checking (&#x27;확인 중...&#x27;)&quot;]:::mstate
+  checking --&gt; chkQ{&quot;useCheckMyCheckIn 결과 (enabled: checking∧session)&quot;}
+  chkQ -- &quot;로딩 중 → 대기&quot; --&gt; checking
+  chkQ -- &quot;성공·entry 있음 → CHECK_SUCCESS/setExistingEntry&quot; --&gt; hasEntry
+  chkQ -- &quot;성공·entry 없음 → CHECK_NOT_FOUND&quot; --&gt; form
+  chkQ -- &quot;에러 → CHECK_ERROR/setError&quot; --&gt; error
+  hasEntry[&quot;hasEntry&quot;]:::mstate -. &quot;navigate v2(replace)&quot; .-&gt; EXITV2
+  error[&quot;error (&#x27;오류&#x27; 화면)&quot;]:::mstate -- &quot;다시 시도 RETRY/clearError&quot; --&gt; checking
+  form[&quot;form (입장 게이트 상태)&quot;]:::mstate
+  form -. &quot;자동입장 [hasQueryPrefill ∧ isFormValid · autoSubmittedRef 1회] → send SUBMIT&quot; .-&gt; submitting
+  form --&gt; formUI[&quot;폼 표시·필드 입력(flat·수동) · isFormValid=이름∧수신인∧관계&quot;]:::flat
+  formUI -- &quot;라운지 입장하기 [isFormValid] → send SUBMIT&quot; --&gt; submitting
+  formUI -. &quot;미입력 시 버튼 비활성&quot; .-&gt; formUI
+  submitting[&quot;submitting (&#x27;입장 중...&#x27;)&quot;]:::mstate
+  submitting --&gt; nameChk{&quot;이름 변경?(trim ∧ ≠ me.name)&quot;}
+  nameChk -- 예 --&gt; updMe[&quot;updateMe.mutateAsync({name})&quot;]:::async
+  updMe -- &quot;실패 → SUBMIT_ERROR(&#x27;이름 저장 실패&#x27;)/setError&quot; --&gt; form
+  updMe -- 성공 --&gt; createE
+  nameChk -- 아니오 --&gt; createE[&quot;createEntry.mutateAsync({loungeId,body})&quot;]:::async
+  createE -- &quot;성공 → SUBMIT_SUCCESS(entryId)/setCreatedEntry&quot; --&gt; done
+  createE -- &quot;실패 → SUBMIT_ERROR(&#x27;입장 실패&#x27;)/setError&quot; --&gt; form
+  done[&quot;done&quot;]:::mstate -. &quot;navigate v2(replace)&quot; .-&gt; EXITV2</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

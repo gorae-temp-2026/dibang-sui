@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoginPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>LoginPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/login` (`?redirect`)<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** 머신 없음(React Query+useState). 이미 로그인이면 redirect로. 구글 OAuth(성공 시 url로 이동)·DEV 이메일 로그인. redirect 안전검사.</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  START([&quot;진입 /login ?redirect&quot;]):::term --&gt; redir[&quot;redirectAfter = 안전검사(/로시작 ∧ //아님 ∧ ≠/login·/auth/callback) 아니면 /my-wedding (값변환)&quot;]:::flat
+  redir --&gt; authChk{&quot;isReady ∧ session 있음?&quot;}
+  authChk -- 예 --&gt; EXITR([&quot;navigate(redirectAfter, replace)&quot;]):::term
+  authChk -- &quot;아니오(로그인 화면)&quot; --&gt; screen[&quot;로그인 화면: 구글 버튼 (DEV: 이메일·비번)&quot;]:::st
+  screen -- &quot;구글로 계속하기 [!isPending]&quot; --&gt; g[&quot;signInGoogle.mutate({redirectTo})&quot;]:::async
+  g -- &quot;성공·data.url 있음 → window.location.href=data.url&quot; --&gt; EXTOAUTH([&quot;외부: Google OAuth&quot;]):::term
+  g -- &quot;성공·url 없음 → 무동작(머무름)&quot; --&gt; screen
+  g -- &quot;실패(onError) → alert&quot; --&gt; screen
+  screen -. &quot;DEV: 이메일로 로그인&quot; .-&gt; em{&quot;email ∧ password 있음?&quot;}
+  em -- &quot;아니오 → alert(&#x27;이메일과 비밀번호 입력&#x27;)&quot; --&gt; screen
+  em -- 예 --&gt; sp[&quot;signInPassword.mutate({email,password})&quot;]:::async
+  sp -- &quot;성공 → navigate(redirectAfter)&quot; --&gt; EXITR
+  sp -- &quot;실패 → alert&quot; --&gt; screen</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

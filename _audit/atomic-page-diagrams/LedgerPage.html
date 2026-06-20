@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LedgerPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>LedgerPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/wedding/:weddingId/report`<br>**검증:** ✅ Opus 4.8 (2라운드 — 메시지탭 로딩/빈상태·편집 Drawer 닫기·받은사진 loungeId 가드 보강)<br>**요약:** 머신 없음. 4탭(장부/메시지/RSVP/받은사진, 선택 시 enabled 조회)·두 개의 독립 무한스크롤·Drawer 스택(상세→수정/삭제, 추가)·CSV. 뒤로 navigate(-1).</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  START([&quot;진입 /wedding/:weddingId/report&quot;]):::term --&gt; mount[&quot;마운트: listCashGifts(infinite)·summary·wedding(→loungeId)·me 병렬 조회&quot;]:::async
+  mount --&gt; screen[[&quot;리포트 화면 fork: Summary ∥ 탭바 ∥ Drawer층&quot;]]:::async
+  screen --&gt; summary[&quot;Summary 카드(총 축의·현장참석 축의·건수·참석)&quot;]:::flat
+  screen -. &quot;뒤로가기 navigate(-1)&quot; .-&gt; EXITBACK([&quot;뒤로&quot;]):::term
+  screen --&gt; tabs{&quot;activeTab? (setActiveTab)&quot;}
+  tabs -- 장부 --&gt; ledgerT[&quot;LedgerTabContent(gifts·로딩/빈 자식 처리·무한스크롤 lastCardRef)&quot;]:::st
+  ledgerT -. &quot;무한스크롤: observer 교차 ∧ hasNextPage → fetchNextPage&quot; .-&gt; ledgerT
+  ledgerT -. &quot;카드 클릭 → selectedGift(상세 Drawer)&quot; .-&gt; detail
+  ledgerT -. &quot;내보내기 → exportLedgerCsv(gifts)&quot; .-&gt; ledgerT
+  ledgerT -. &quot;추가 → showAddForm(추가 Drawer)&quot; .-&gt; addForm
+  tabs -- &quot;메시지(enabled listFeed)&quot; --&gt; msgT{&quot;메시지 상태&quot;}
+  msgT -- &quot;isMessagesLoading → &#x27;불러오는 중...&#x27;&quot; --&gt; msgT
+  msgT -- &quot;0건 → &#x27;아직 축하 메시지가 없습니다&#x27;&quot; --&gt; msgEmpty[&quot;빈 상태&quot;]:::flat
+  msgT -- &quot;목록 → guestbook_message 렌더(무한스크롤 lastMsgRef)&quot; --&gt; msgList[&quot;메시지 목록&quot;]:::st
+  msgList -. &quot;무한스크롤: hasNextMsgPage → fetchNextMsgPage&quot; .-&gt; msgList
+  tabs -- &quot;RSVP(enabled listRsvps)&quot; --&gt; rsvpT{&quot;RSVP 상태&quot;}
+  rsvpT -- &quot;0건 → &#x27;아직 수집된 답변이 없습니다&#x27;&quot; --&gt; rsvpEmpty[&quot;빈 상태&quot;]:::flat
+  rsvpT -- &quot;있음 → 신랑측/신부측 분리 카드&quot; --&gt; rsvpList[&quot;RSVP 목록&quot;]:::st
+  tabs -- 받은사진 --&gt; spG{&quot;loungeId 있음?&quot;}
+  spG -- &quot;예 → SharePhotosTab(loungeId·자식)&quot; --&gt; spT[&quot;받은 사진&quot;]:::st
+  spG -- &quot;아니오 → 미표시&quot; --&gt; screen
+  detail[&quot;상세 Drawer(GiftDetail)&quot;]:::st
+  detail -. &quot;닫기 → selectedGift=null&quot; .-&gt; screen
+  detail -. &quot;수정 → isEditing(수정 Drawer)&quot; .-&gt; editForm
+  detail -. &quot;삭제 → deleteConfirm(확인)&quot; .-&gt; delConf
+  editForm[&quot;수정 Drawer(GiftForm) → updateMut.mutate&quot;]:::async
+  editForm -- &quot;성공 → selectedGift=updated, isEditing=false&quot; --&gt; detail
+  editForm -. &quot;닫기(취소) → isEditing=false&quot; .-&gt; detail
+  addForm[&quot;추가 Drawer(GiftForm) → createMut.mutate (성공 콜백 없음)&quot;]:::async
+  addForm -. &quot;닫기 → showAddForm=false&quot; .-&gt; screen
+  delConf{&quot;삭제 확인 다이얼로그&quot;}
+  delConf -- &quot;취소 → deleteConfirm=null&quot; --&gt; detail
+  delConf -- &quot;삭제 → deleteMut.mutate&quot; --&gt; del[&quot;deleteMut&quot;]:::async
+  del -- &quot;성공 → selectedGift=null, deleteConfirm=null&quot; --&gt; screen</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

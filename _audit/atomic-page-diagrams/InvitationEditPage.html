@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InvitationEditPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>InvitationEditPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/invitation/edit/:weddingId` (`?invitationId`)<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** xstate `invitationEdit.machine` **미사용**(Create와 동일). 차이: slug 모달 없음(로드→hydrate), 앞단 로드(getWedding→getInvitation)·hydrate(slug당 1회 가드), 저장은 단일 update(updateWedding→조건부 updateInvitation·hasInvitationData 4필드·invalidate myWeddings+wedding), 뒤로가기·unmount reset. 업로드 파이프라인은 Create와 동일(context=wedding).</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  START([&quot;진입 /invitation/edit/:weddingId · ?invitationId&quot;]):::term --&gt; load
+  EXIT([&quot;이탈 /my-wedding&quot;]):::term
+  EXITBACK([&quot;뒤로 navigate(-1)&quot;]):::term
+  subgraph LOAD[&quot;① 로드 (useLoadWedding)&quot;]
+    load[&quot;getWedding({weddingId})&quot;]:::async --&gt; wLoad{&quot;wedding 로딩?&quot;}
+    wLoad -- 예 --&gt; loadingScreen
+    wLoad -- 아니오 --&gt; wErr{&quot;wedding 에러?&quot;}
+    wErr -- 예 --&gt; errScreen
+    wErr -- 아니오 --&gt; pick[&quot;invitation 선택: ?invitationId 매치 ?? invitations[0]&quot;]:::st
+    pick --&gt; hasInv{&quot;대상 invitation(slug) 있음?&quot;}
+    hasInv -- &quot;아니오(invitations 비어있음·slug=&#x27;&#x27;)&quot; --&gt; noInv[&quot;invitation 조회 skip(enabled=false)&quot;]:::warn
+    hasInv -- 예 --&gt; invReq[&quot;getInvitation({slug}) (enabled)&quot;]:::async
+    invReq --&gt; iLoad{&quot;invitation 로딩?&quot;}
+    iLoad -- 예 --&gt; loadingScreen
+    iLoad -- 아니오 --&gt; iErr{&quot;invitation 에러?&quot;}
+    iErr -- 예 --&gt; errScreen
+    iErr -- 아니오 --&gt; loaded
+  end
+  loadingScreen[&quot;로딩 화면 &#x27;불러오는 중...&#x27;&quot;]:::st -. &quot;쿼리 해결 시 재평가&quot; .-&gt; wLoad
+  errScreen[&quot;에러 화면 &#x27;청첩장을 불러올 수 없습니다&#x27;&quot;]:::warn -. &quot;돌아가기 Link&quot; .-&gt; EXIT
+  noInv --&gt; hydrateGate
+  loaded([&quot;로드 완료&quot;]) --&gt; hydrateGate
+  hydrateGate{&quot;hydrate 가드: wedding∧invitation∧slug 있음 ∧ hydratedSlug≠slug?&quot;}
+  hydrateGate -- &quot;아니오(데이터 없음 또는 이미 hydrate)&quot; --&gt; forkEdit
+  hydrateGate -- 예 --&gt; hydrate[&quot;폼 hydrate(useEffect 1회/slug): info·accounts·invitation·designConfig·canvas + originalSlug·hydratedSlug=slug&lt;br/&gt;※ 내부 필드 매핑=값 변환(flat)&quot;]:::flat
+  hydrate --&gt; forkEdit
+  forkEdit[[&quot;fork: 편집 ∥ 업로드 트랙&quot;]]:::async
+  forkEdit --&gt; editFlat
+  forkEdit --&gt; upIdle
+  editFlat[&quot;편집(zustand 필드 self-edit·flat)&lt;br/&gt;필수: 신랑·신부 이름·날짜·시간·예식장 이름·주소&quot;]:::flat
+  upIdle[&quot;업로드 트랙: 유휴 (presigned mobile-invitation·wedding 스코프)&quot;]:::st
+  upIdle -. &quot;커버 선택&quot; .-&gt; coverPick[&quot;기존 커버 item remove → addFiles([file])&quot;]:::st
+  upIdle -. &quot;갤러리 선택&quot; .-&gt; galCap{&quot;남은 자리&gt;0?(60−갤러리−진행중)&quot;}
+  galCap -- 아니오 --&gt; upIdle
+  galCap -- 예 --&gt; galAdd[&quot;addFiles(slice(0,남은))&quot;]:::st
+  upIdle -. &quot;캔버스 이미지&quot; .-&gt; canvasUp[&quot;canvasUpload.mutateAsync = compress→presigned(동일)·머신 미경유&quot;]:::async
+  canvasUp -- &quot;성공:URL→캔버스&quot; --&gt; upIdle
+  canvasUp -- &quot;실패:null→캔버스&quot; --&gt; upIdle
+  coverPick --&gt; addFiles
+  galAdd --&gt; addFiles
+  addFiles[[&quot;ADD_FILES→파일마다 item(localUrl·uploading)·fork 0..N&quot;]]:::async --&gt; upRun
+  subgraph UPLOAD[&quot;업로드 1건 파이프라인 (Create와 동일·검증완료 · context=wedding)&quot;]
+    upRun[&quot;runUpload→mutateAsync&quot;]:::st --&gt; cIsGif{&quot;GIF?&quot;}
+    cIsGif -- 예 --&gt; cLimGif{&quot;원본&gt;10MB?&quot;}
+    cLimGif -- 예 --&gt; upFail
+    cLimGif -- &quot;아니오(스킵)&quot; --&gt; reqP
+    cIsGif -- 아니오 --&gt; cHeic[&quot;ensureJpegIfHeic&quot;]:::async
+    cHeic -- throw --&gt; upFail
+    cHeic -- 성공 --&gt; cComp{&quot;압축가능?(jpeg/png/webp)&quot;}
+    cComp -- &quot;아니오(svg·스킵)&quot; --&gt; cLimRaw{&quot;source&gt;10MB?&quot;}
+    cLimRaw -- 예 --&gt; upFail
+    cLimRaw -- 아니오 --&gt; reqP
+    cComp -- 예 --&gt; cDo[&quot;imageCompression&quot;]:::async
+    cDo -- throw --&gt; upFail
+    cDo -- 성공 --&gt; cLimPost{&quot;압축결과&gt;10MB?&quot;}
+    cLimPost -- 예 --&gt; upFail
+    cLimPost -- 아니오 --&gt; reqP
+    reqP[&quot;createPresignedUpload&quot;]:::async
+    reqP -- throw --&gt; upRetry
+    reqP -- 성공 --&gt; put[&quot;putBinary(PUT)&quot;]:::async
+    put -- throw --&gt; upRetry
+    put -- 성공 --&gt; val{&quot;publicUrl 있음?(retry 밖)&quot;}
+    val -- 예 --&gt; upDone
+    val -- &quot;아니오/Error&quot; --&gt; upFail
+    upRetry{&quot;재시도 남음?(autoRetry=1)&quot;}
+    upRetry -- 예 --&gt; reqP
+    upRetry -- 아니오 --&gt; upFail
+    upDone[&quot;ITEM_DONE→done&quot;]:::done
+    upFail[&quot;ITEM_FAILED→failed&quot;]:::warn
+  end
+  upDone --&gt; aliveChk{&quot;item done 생존?(REMOVE 선행 skip)&quot;}
+  aliveChk -- 예 --&gt; sync[&quot;onItemDone: 커버→setField(coverImage)/갤러리→addGalleryPhoto+remove&quot;]:::st
+  aliveChk -- 아니오 --&gt; upIdle
+  sync --&gt; upIdle
+  upFail -. &quot;RETRY→uploading&quot; .-&gt; upRun
+  upFail -. &quot;REMOVE→revoke+제거&quot; .-&gt; upIdle
+  editFlat -- &quot;수정하기 클릭(항상 활성·isPending만 비활성)&quot; --&gt; gUp{&quot;커버/갤러리 item uploading?&quot;}
+  gUp -- 예 --&gt; tUp[&quot;toast:업로드 끝나면 저장&quot;]:::warn
+  tUp -.-&gt; editFlat
+  gUp -- 아니오 --&gt; v1
+  subgraph VAL[&quot;validate() 단락 체인(필수 6칸 AND)&quot;]
+    v1{&quot;신랑 이름?&quot;} -- &quot;없음·신랑 이름&quot; --&gt; tVal
+    v1 -- 있음 --&gt; v2{&quot;신부 이름?&quot;}
+    v2 -- &quot;없음·신부 이름&quot; --&gt; tVal
+    v2 -- 있음 --&gt; v3{&quot;예식 날짜?&quot;}
+    v3 -- &quot;없음·예식 날짜&quot; --&gt; tVal
+    v3 -- 있음 --&gt; v4{&quot;예식 시간?&quot;}
+    v4 -- &quot;없음·예식 시간&quot; --&gt; tVal
+    v4 -- 있음 --&gt; v5{&quot;예식장 이름?&quot;}
+    v5 -- &quot;없음·예식장 이름&quot; --&gt; tVal
+    v5 -- 있음 --&gt; v6{&quot;예식장 주소?&quot;}
+    v6 -- &quot;없음·예식장 주소&quot; --&gt; tVal
+    tVal[&quot;toast:(그 필드) 입력&quot;]:::warn
+  end
+  v6 -- &quot;있음(6칸)&quot; --&gt; updW[&quot;updateWedding({weddingId},{info,hosts}) [throwOnError]&quot;]:::async
+  tVal -.-&gt; editFlat
+  updW -- reject --&gt; editFlat
+  updW -- 성공 --&gt; upHas{&quot;hasInvitationData?(gallery·cover·message·template 중 1) ∧ invitationId 있음?&quot;}
+  upHas -- 예 --&gt; updI[&quot;updateInvitation({weddingId,invitationId}) [throwOnError]&quot;]:::async
+  updI -- reject --&gt; editFlat
+  updI -- 성공 --&gt; ok
+  upHas -- 아니오 --&gt; ok
+  ok[&quot;onSuccess: invalidate(myWeddings + wedding) · reset() · navigate(/my-wedding)&quot;]:::done --&gt; EXIT
+  editFlat -. &quot;헤더 로고&quot; .-&gt; EXIT
+  editFlat -. &quot;뒤로가기 navigate(-1)&quot; .-&gt; EXITBACK</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeddingListPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>WeddingListPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/wedding-list` (`?weddingId`, `?entryId`)<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** 머신 없음. ?weddingId 있으면 join 1회(onSettled로 URL param 제거). 참여 결혼식 조회 → 예정/지난 분리 → EventCard → 라운지 v2.</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  START([&quot;진입 /wedding-list ?weddingId ?entryId&quot;]):::term --&gt; joinChk{&quot;?weddingId 있음 ∧ joinedRef 미실행?&quot;}
+  joinChk -- &quot;예 → joinWedding.mutate({weddingId,entryId})&quot; --&gt; join[&quot;joinWedding.mutate&quot;]:::async
+  join -. &quot;onSettled(성공/실패 무관) → URL param 제거(replace)&quot; .-&gt; listLoad
+  joinChk -- 아니오 --&gt; listLoad
+  listLoad[&quot;getMyParticipatedWeddings&quot;]:::async --&gt; ld{&quot;isLoading?&quot;}
+  ld -- &quot;예 → &#x27;불러오는 중...&#x27;(예정·지난 섹션 각각)&quot; --&gt; ld
+  ld -- 아니오 --&gt; split[&quot;upcoming/past 날짜로 분리 (파생)&quot;]:::flat
+  split --&gt; up{&quot;예정 0건?&quot;}
+  up -- &quot;예 → &#x27;예정된 결혼식이 없습니다&#x27;&quot; --&gt; upEmpty[&quot;빈 상태&quot;]:::flat
+  up -- 아니오 --&gt; upList[&quot;예정 EventCard 목록&quot;]:::st
+  split --&gt; pa{&quot;지난 0건?&quot;}
+  pa -- &quot;예 → &#x27;지난 결혼식이 없습니다&#x27;&quot; --&gt; paEmpty[&quot;빈 상태&quot;]:::flat
+  pa -- 아니오 --&gt; paList[&quot;지난 EventCard 목록&quot;]:::st
+  upList -. &quot;카드 클릭 → /lounge/:loungeId/v2&quot; .-&gt; EXITV2([&quot;→ /lounge/:loungeId/v2&quot;]):::term
+  paList -. &quot;카드 클릭 → /lounge/:loungeId/v2&quot; .-&gt; EXITV2</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>

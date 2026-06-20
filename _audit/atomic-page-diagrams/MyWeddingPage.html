@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MyWeddingPage — 원자 단위 상태/액티비티 다이어그램</title>
+<style>
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;max-width:1200px;margin:0 auto;padding:20px;background:#fff;color:#111}
+  h1{font-size:20px;margin:0 0 8px}
+  .meta{font-size:13px;color:#475569;line-height:1.7;margin:0 0 14px}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;overflow:auto}
+  .mermaid{min-width:680px}
+  .foot{margin-top:14px;font-size:12px;color:#9aa6b2;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>MyWeddingPage — 원자 단위 상태/액티비티 다이어그램</h1>
+<div class="meta">**라우트:** `/my-wedding` (바텀탭)<br>**검증:** ✅ Opus 4.8 (1라운드)<br>**요약:** 머신 없음. getMyWeddings 로딩/빈(AddCard→생성)/목록(WeddingCard). 카드 핸들러: 링크 복사·공유(navigator.share/copy)·미리보기(새 탭).</div>
+<div class="card"><pre class="mermaid">flowchart TB
+  classDef st fill:#fff,stroke:#94a3b8,color:#334155;
+  classDef async fill:#E8F4FA,stroke:#185FA5,color:#13324d;
+  classDef warn fill:#fff7e6,stroke:#b8860b,color:#7a5b00;
+  classDef done fill:#e9f7ef,stroke:#1e8449,color:#145a32;
+  classDef term fill:#1E3A5F,stroke:#1E3A5F,color:#fff;
+  classDef flat fill:#f1f5f9,stroke:#64748b,stroke-dasharray:4 3,color:#334155;
+  START([&quot;진입 /my-wedding (바텀탭)&quot;]):::term --&gt; load[&quot;getMyWeddings (retry:false)&quot;]:::async
+  load --&gt; ld{&quot;isLoading?&quot;}
+  ld -- &quot;예 → &#x27;불러오는 중...&#x27;&quot; --&gt; ld
+  ld -- 아니오 --&gt; empty{&quot;목록 0건?&quot;}
+  empty -- 예 --&gt; addCard[&quot;AddCard&quot;]:::st
+  addCard -- &quot;클릭 → navigate(/invitation/create)&quot; --&gt; EXITCREATE([&quot;→ /invitation/create&quot;]):::term
+  empty -- 아니오 --&gt; list[&quot;WeddingCard 캐러셀(목록)&quot;]:::st
+  list -. &quot;청첩장 링크 복사 → copy → copyToast(2s)&quot; .-&gt; list
+  list -. &quot;청첩장 공유 → navigator.share 있으면 share(취소 무시) / 없으면 copy→toast&quot; .-&gt; list
+  list -. &quot;미리보기 → window.open(guestWeb/slug, 새 탭)&quot; .-&gt; list
+  list -. &quot;호스트 초대 공유 → navigator.share / copy→toast&quot; .-&gt; list</pre></div>
+<div class="foot">digital-guestbook-v3 · _audit/atomic-page-diagrams · Mermaid v11 · Opus 4.8 코드 대조 검증<br>Excalidraw로 가져오려면: 이 페이지의 .md에 있는 mermaid 소스를 Excalidraw의 "Mermaid to Excalidraw"에 붙여넣으세요.</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad:false, theme:'neutral', securityLevel:'loose', flowchart:{useMaxWidth:true} });
+  mermaid.run();
+</script>
+</body>
+</html>
