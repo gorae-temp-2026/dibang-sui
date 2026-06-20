@@ -1,0 +1,144 @@
+// 모이가 모인곳(④) — 풀스크린 2.5D 미니룸. 라운지 미리보기 카드로 진입(핸드오프 §3·§12-2).
+// PixiJS placeholder 시스템: 샵 구매→요네 차감→자동 배치/장착 · 아이템 드래그 · 모이 클릭→공유 프로필.
+// 모이 클릭 = 디방인연과 동일 ProfileSheet, 단 context='lounge'(③ 오프라인 = 이름·소속·전체 네트워크 공개).
+// 에셋(투명 PNG) 부재라 캐릭터·아이템은 컬러 도형 placeholder — 에셋 나오면 슬롯 교체(에셋스펙 §4).
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
+import { useMachine } from '@xstate/react'
+import { ArrowLeft, ShoppingBag } from 'lucide-react'
+import { moiPlazaMachine } from '../machines/moiPlaza.machine'
+import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
+import { ShopSheet } from '../components/moi-gather/ShopSheet'
+import { PLAZA_CROWD, CROWD_BY_ID, DECOR_SETS, PLAZA_THEME_LABEL, type PlazaTheme } from '../components/moi-gather/data'
+import { ProfileSheet } from '../components/profile/ProfileSheet'
+import { chulsooProfile } from '../components/profile/fixture'
+
+export function MoiGatherPage() {
+  const navigate = useNavigate()
+  const [state, send] = useMachine(moiPlazaMachine)
+  const [shopOpen, setShopOpen] = useState(false)
+  const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+
+  const { yone, owned, placed, equipped, theme, pendingItemId, error } = state.context
+  const placedIds = placed.map((p) => p.itemId)
+
+  // 토스트 자동 소멸
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 2600)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  const profileMoi = profileMoiId ? CROWD_BY_ID[profileMoiId] : null
+  // 공유 프로필 fixture에 클릭한 모이 이름만 덮어 placeholder(데이터는 철수 fixture 공통).
+  const profileData = profileMoi ? { ...chulsooProfile, subject: profileMoi.name } : chulsooProfile
+
+  const handleIeum = () => {
+    const m = profileMoi
+    setProfileMoiId(null)
+    setToast(m ? `${m.name}님에게 이음 신청을 보냈어요 · 대화는 디방인연에서` : '이음 신청을 보냈어요')
+  }
+
+  return (
+    <div className="relative mx-auto flex h-[100dvh] max-w-[480px] flex-col overflow-hidden bg-[#0A1626] text-[#E8EFF6]">
+      {/* 상단바 — 뒤로 · 타이틀(host) · 요네 · 샵 */}
+      <header className="absolute inset-x-0 top-0 z-20 flex items-center gap-2 bg-gradient-to-b from-[#0A1626] to-transparent px-3 py-3">
+        <button
+          type="button"
+          aria-label="뒤로"
+          onClick={() => navigate(-1)}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[15px] font-extrabold text-white">모이가 모인곳 · 광장</div>
+          <div className="truncate text-[11px] text-white/55">김수영 · 박소율 웨딩라운지 · 모이 {PLAZA_CROWD.length}</div>
+        </div>
+        <div className="rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
+          🪙 {yone.toLocaleString()}
+        </div>
+        <button
+          type="button"
+          onClick={() => setShopOpen(true)}
+          className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-[12px] font-bold text-white backdrop-blur"
+        >
+          <ShoppingBag className="h-4 w-4" /> 샵
+        </button>
+      </header>
+
+      {/* 2.5D 미니룸 캔버스 (PixiJS) */}
+      <div className="relative flex-1 overflow-hidden">
+        <MoiPlazaCanvas
+          placed={placed}
+          equipped={equipped}
+          crowd={PLAZA_CROWD}
+          decor={DECOR_SETS[theme]}
+          onMoiClick={setProfileMoiId}
+          onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
+        />
+
+        {/* 테마 데코 스왑 (결혼식 기본 · 파티/클럽 = 구조 데모) */}
+        <div className="pointer-events-none absolute inset-x-0 top-16 z-10 flex justify-center">
+          <div className="pointer-events-auto flex gap-1 rounded-full border border-white/12 bg-[#0c1a2e]/70 p-1 backdrop-blur">
+            {(['wedding', 'party', 'club'] as PlazaTheme[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => send({ type: 'SET_THEME', theme: t })}
+                className={`rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${theme === t ? 'bg-[#1E3A5F] text-white' : 'text-white/55'}`}
+              >
+                {PLAZA_THEME_LABEL[t]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 조작 힌트 */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
+          <span className="rounded-full border border-white/12 bg-[#0c1a2e]/70 px-3.5 py-1.5 text-[11px] font-medium text-white/60 backdrop-blur">
+            모이를 누르면 프로필 · 드래그/핀치로 광장 둘러보기 · 데코는 끌어서 배치
+          </span>
+        </div>
+      </div>
+
+      {/* 토스트 */}
+      {toast && (
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 z-30 flex justify-center px-6">
+          <div className="rounded-2xl bg-[#1E3A5F]/95 px-4 py-3 text-center text-[12.5px] font-bold text-white shadow-xl backdrop-blur">
+            {toast}
+          </div>
+        </div>
+      )}
+
+      {/* 샵 시트 */}
+      <ShopSheet
+        open={shopOpen}
+        onOpenChange={setShopOpen}
+        yone={yone}
+        owned={owned}
+        placedIds={placedIds}
+        equipped={equipped}
+        pendingItemId={pendingItemId}
+        error={error}
+        onPurchase={(id) => send({ type: 'PURCHASE', itemId: id })}
+        onPlace={(id) => send({ type: 'PLACE', itemId: id })}
+        onRemove={(id) => send({ type: 'REMOVE', itemId: id })}
+        onEquip={(id) => send({ type: 'EQUIP', itemId: id })}
+        onUnequip={(slot) => send({ type: 'UNEQUIP', slot })}
+        onCharge={() => send({ type: 'CHARGE' })}
+        onDismissError={() => send({ type: 'DISMISS_ERROR' })}
+      />
+
+      {/* 모이 클릭 → 공유 프로필(③ 라운지 오프라인 공개규칙). 'me'는 본인이라 이음 CTA 없음. */}
+      <ProfileSheet
+        open={!!profileMoiId}
+        onOpenChange={(o) => !o && setProfileMoiId(null)}
+        data={profileData}
+        context="lounge"
+        onIeum={profileMoiId && profileMoiId !== 'me' ? handleIeum : undefined}
+      />
+    </div>
+  )
+}
