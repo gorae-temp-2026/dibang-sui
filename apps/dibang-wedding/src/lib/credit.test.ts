@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { creditFromEvents, ACTION, EVENT, ROLE, type ActionLoggedEvent, type EventCreatedEvent } from './credit'
+import { creditFromEvents, ACTION, EVENT, ROLE, type ActionLoggedEvent, type EventCreatedEvent, type ParticipatedEvent } from './credit'
 
 const WED = 'ev_wedding'
-const weddingEvents: EventCreatedEvent[] = [{ eventId: WED, eventType: EVENT.WEDDING }]
+const weddingEvents: EventCreatedEvent[] = [{ eventId: WED, eventType: EVENT.WEDDING, creator: 'host' }]
 
 const busu = (actor: string, target: string, amount: number): ActionLoggedEvent => ({
   eventId: WED, actionType: ACTION.GIVE_MONEY, actor, target, roleId: ROLE.GUEST, amount, ts: 0,
@@ -39,7 +39,7 @@ describe('creditFromEvents (신뢰→신용)', () => {
   })
 
   it('선물(GIFT)은 CS만 — 부조 전파에서 제외(MOICREDIT_AUDIT)', () => {
-    const evs: EventCreatedEvent[] = [{ eventId: 'ev_inyeon', eventType: EVENT.INYEON }]
+    const evs: EventCreatedEvent[] = [{ eventId: 'ev_inyeon', eventType: EVENT.INYEON, creator: 'a' }]
     const { components } = creditFromEvents([cs(ACTION.GIFT, 'a', 'b', ROLE.INITIATOR, 'ev_inyeon')], evs)
     expect(components['b']!.cs).toBeGreaterThan(0) // b가 선물 받음 → CS
     expect(components['a']!.busu).toBe(0) // 선물은 부조 신용에 0 기여
@@ -51,6 +51,23 @@ describe('creditFromEvents (신뢰→신용)', () => {
     const { components } = creditFromEvents([busu('g', 'h', 100_000)], [])
     expect(Object.keys(components).length).toBe(2) // 노드는 등장
     expect(components['g']!.busu).toBe(0) // 그러나 event_type 미해석이라 부조 0
+  })
+
+  it('참석(Participated)은 참가자→혼주 CS, 혼주 본인 참가는 제외 (I1)', () => {
+    const participated: ParticipatedEvent[] = [
+      { eventId: WED, participant: 'guest1', roleId: ROLE.GUEST },
+      { eventId: WED, participant: 'host', roleId: ROLE.HOST }, // 자기 이벤트(혼주 본인) → 출석 엣지 아님
+    ]
+    const { components } = creditFromEvents([], weddingEvents, participated)
+    expect(components['host']!.cs).toBeGreaterThan(0) // 하객 참석 → 혼주에게 CS
+    expect(components['guest1']!.cs).toBe(0) // guest1은 받은 유대 없음
+  })
+
+  it('자기엣지(actor==target)는 0 기여 — 자기거래 농사 차단 (I3)', () => {
+    const actions = [busu('self', 'self', 100_000), cs(ACTION.GIFT, 'self', 'self', ROLE.GUEST)]
+    const { components } = creditFromEvents(actions, weddingEvents)
+    expect(components['self']!.busu).toBe(0)
+    expect(components['self']!.cs).toBe(0)
   })
 
   it('빈 입력 → 빈 신용', () => {

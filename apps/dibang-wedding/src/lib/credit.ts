@@ -43,10 +43,19 @@ export interface ActionLoggedEvent {
   ts: number
 }
 
-/** event::EventCreated 이벤트(event_id → event_type 해석용). */
+/** event::EventCreated 이벤트(event_id → event_type 해석 + creator). */
 export interface EventCreatedEvent {
   eventId: string
   eventType: number
+  /** 이벤트 생성자(웨딩=혼주). 참석(Participation)의 CS 대상. */
+  creator: string
+}
+
+/** event::Participated 이벤트 — 참가(역할). 참석 = CS '함께함' 신호의 원천(참가=출석). */
+export interface ParticipatedEvent {
+  eventId: string
+  participant: string
+  roleId: number
 }
 
 export interface CreditResult {
@@ -74,8 +83,13 @@ function addEdge(g: Graph, from: string, to: string, w: number) {
  * - WRITE_MESSAGE / INVITE / ACCEPT_IUM / GIFT = 유대(CS): tie[actor][target] += 1. (GIFT EM은 부조 제외)
  * - REQUEST_IUM(대기)·ATTEND(미로깅: Participation으로 표현)·target 없는 건 무신호.
  */
-function fold(actions: ActionLoggedEvent[], events: EventCreatedEvent[]): { busu: Graph; cs: Graph; nodes: Set<string> } {
+function fold(
+  actions: ActionLoggedEvent[],
+  events: EventCreatedEvent[],
+  participated: ParticipatedEvent[],
+): { busu: Graph; cs: Graph; nodes: Set<string> } {
   const eventType = new Map(events.map((e) => [e.eventId, e.eventType]))
+  const eventCreator = new Map(events.map((e) => [e.eventId, e.creator]))
   const busu: Graph = new Map()
   const cs: Graph = new Map()
   const nodes = new Set<string>()
@@ -83,7 +97,8 @@ function fold(actions: ActionLoggedEvent[], events: EventCreatedEvent[]): { busu
   for (const a of actions) {
     nodes.add(a.actor)
     if (a.target) nodes.add(a.target)
-    if (!a.target) continue // 대상 없는 액션은 엣지 신호 아님
+    // 대상 없음 / 자기엣지(actor==target = 자기거래 농사) 제외 — §8 V4 "자기통제 target은 Φ에서 필터".
+    if (!a.target || a.actor === a.target) continue
 
     const et = eventType.get(a.eventId)
     switch (a.actionType) {
@@ -101,9 +116,21 @@ function fold(actions: ActionLoggedEvent[], events: EventCreatedEvent[]): { busu
         addEdge(cs, a.actor, a.target, 1)
         break
       default:
-        break // REQUEST_IUM, ATTEND 등
+        break // REQUEST_IUM 등
     }
   }
+
+  // 참석(Participation) = CS '함께함' 신호(I1). 참가자 → 이벤트 생성자(웨딩=혼주). 자기 이벤트(혼주 본인)는 제외.
+  // (참석은 ActionLogged ATTEND가 아니라 Participated가 원천 — participate가 곧 출석.)
+  for (const p of participated) {
+    nodes.add(p.participant)
+    const creator = eventCreator.get(p.eventId)
+    if (!creator) continue
+    nodes.add(creator)
+    if (p.participant === creator) continue
+    addEdge(cs, p.participant, creator, 1)
+  }
+
   return { busu, cs, nodes }
 }
 
@@ -158,8 +185,12 @@ function normalize(scores: Record<string, number>, nodes: string[]): Record<stri
  * 온체인 raw 이벤트 → 지갑별 신용. (신뢰 → 신용)
  * decision#12: 오프체인 계산. 결정값(비중·이행 기본치)은 여기(튜닝 대상)에만 있다.
  */
-export function creditFromEvents(actions: ActionLoggedEvent[], events: EventCreatedEvent[]): CreditResult {
-  const { busu, cs, nodes } = fold(actions, events)
+export function creditFromEvents(
+  actions: ActionLoggedEvent[],
+  events: EventCreatedEvent[],
+  participated: ParticipatedEvent[] = [],
+): CreditResult {
+  const { busu, cs, nodes } = fold(actions, events, participated)
   const nodeList = [...nodes]
 
   const busuRaw = reversedGivingPageRank(busu, nodeList)
