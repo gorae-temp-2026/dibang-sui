@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from '@xstate/react';
+import { Coins, Plus } from 'lucide-react';
 import {
   getMeOptions,
   getMeQueryKey,
@@ -8,6 +10,8 @@ import {
 } from '@gorae/contracts/@tanstack/react-query.gen';
 import { useAuth } from '../providers/AuthContext';
 import { useSignOut } from '../queries/auth/useSignOut';
+import { giftActor } from '../machines/gift.machine';
+import { YoneChargeSheet } from '../components/settings/YoneChargeSheet';
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -23,6 +27,9 @@ export function SettingsPage() {
   const [userOverride, setUserOverride] = useState<boolean | null>(null);
   const marketing = userOverride ?? me?.marketing_agreed ?? false;
   const [toast, setToast] = useState<string | null>(null);
+  // 요네 잔액 = 전역 요네 지갑(giftActor — 선물·꾸미기 공유). 충전 시트로 적립.
+  const yone = useSelector(giftActor, (s) => s.context.yone);
+  const [chargeOpen, setChargeOpen] = useState(false);
 
   const marketingMutation = useMutation({
     ...updateMarketingConsentMutation(),
@@ -55,6 +62,29 @@ export function SettingsPage() {
         <p className="text-lg font-semibold text-navy">{userName}</p>
       </div>
 
+      {/* 요네 지갑 — 잔액 + Sui 충전 진입 */}
+      <div className="rounded-xl border border-line bg-white p-5 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F8C57A]/20 text-xl">🐚</div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-muted">내 요네</p>
+            <p className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-navy tabular-nums">{yone.toLocaleString()}</span>
+              <span className="text-sm text-muted">요네</span>
+            </p>
+          </div>
+          <button
+            onClick={() => setChargeOpen(true)}
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+          >
+            <Plus className="h-4 w-4" /> 요네 충전
+          </button>
+        </div>
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted">
+          <Coins className="h-3.5 w-3.5 text-[#E8A865]" /> Sui로 충전하고 선물·꾸미기에 바로 쓰세요
+        </p>
+      </div>
+
       <div className="rounded-xl border border-line bg-white p-5 mb-4">
         <p className="text-base font-semibold text-navy mb-3">약관·동의</p>
         <label className="flex items-center justify-between cursor-pointer">
@@ -78,6 +108,8 @@ export function SettingsPage() {
       >
         로그아웃
       </button>
+
+      <YoneChargeSheet open={chargeOpen} onOpenChange={setChargeOpen} />
     </div>
   );
 }
