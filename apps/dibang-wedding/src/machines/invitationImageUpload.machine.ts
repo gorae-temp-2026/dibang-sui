@@ -109,18 +109,19 @@ export const invitationImageUploadMachine = setup({
     }),
   },
 }).createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QEsB2A3ZAXAhl5A9qgJIC2OMAqgA4A2BOEAdDgMb7pgDEAggCJ8A+gDFiAGQCiAZQDaABgC6iUNQKxshVMpAAPRACYArIYA0IAJ6IA7EYC+ts2ky58RMhTA16jFu2ScuYgAVCQBZQT4AeQA5CXklJBBVdVctRL0EI1MLRAAOADZDe0cMbDxNdyo6BmY2Dm5gsJEecQk+eO1kjSJtDKyzSwQARkLikCcy1MrPap86-24AJQkgxYBNDsSu1N6DYwHEAGY5Iodx0pcK8irvWr8A5dDIgDU4xU61brTQPv2chAALADTiVnOU3NcZrdfPUuABhSQ8RabFSfHbpPbZQaGXKnM6oAgQODaCaXCEeLw1D4pTS7BAAWgBuQODKGhkOY1J4JIkMpc3uYGpXzp+TkLKGAE59PZ7EA */
   id: 'invitationImageUpload',
   context: { items: [] },
   initial: 'active',
   states: {
     active: {
       on: {
-        ADD_FILES: { actions: 'addItems' },
-        ITEM_DONE: { actions: 'markItemDone' },
-        ITEM_FAILED: { actions: 'markItemFailed' },
-        RETRY: { actions: 'retryItem' },
-        REMOVE: { actions: 'removeItem' },
-        CLEAR: { actions: 'clearItems' },
+        ADD_FILES: { actions: "addItems" },
+        ITEM_DONE: { actions: "markItemDone" },
+        ITEM_FAILED: { actions: "markItemFailed" },
+        RETRY: { actions: "retryItem" },
+        REMOVE: { actions: "removeItem" },
+        CLEAR: { actions: "clearItems" },
       },
     },
   },

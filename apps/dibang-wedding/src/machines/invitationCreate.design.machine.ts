@@ -260,6 +260,7 @@ export const invitationCreateDesignMachine = setup({
     markOnchainFailed: assign({ onchainFailed: true }),
   },
 }).createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QEsB2A3ZAXAhl5A9qgMIBOYeYAdLADYCuUAsgRDrVRGAEYH2oBjNFADEAD1i4s1HADNppABQBWAAyqAlCLSYphEuUo0GzVu048+g4QG1VAXUSgADgVjZ9TkGMQBGVQDsAEwANCAAnogALL5BAL5xYTrYePpkFNLGjCxsHFy8-EKoohJSMvJgSmqa2hgp+ETpRnTZZnmWhba+jkggru4NqF4+CACcAMwAbGGRCONBvglJdXqNhpktprlUAgAWYAIA1sIiEETUOgSHFyupaxnUmznmewfHxQiXAneodvZ-Xn6HiIw0QAXGvhmYNUyiWIGSqwMDyyWxe+yOJzOqBu6CuOPqaXWjxMzw4rwxHy+Pz+Nm6gLcwKGvRGAA4YVCECyorDEvDboMmhsSW0duj3qJKqQCKQqM5aHhZNKALZUBE-QXE1rbcniz4YAjfQY0hz0gaeZl+XzjVQcgIwuFqgVElGk0VvE6S6Wy+VYRWkFWOwnIp4inXCPW4w36Gl03pAwaghC+Xws6YRRBcnnLXTq50h3IiAAqAE0AAoAUQBcYZCYtSd8oyiHJTqgd-KDzWFBeIABkAPIAZUrJurZpBddGk1GzdiWb5Oadwa77BExD7ADkAGIASQASkwqy4a+bQCNxizfE30-WgnPA-cjJBsF76HKCDgIKqILQwCIAIIACIAQA+muABq5a7oefTHuOp6IEE542tevhTpMbYLh2mRPlgL5vh+X4-v+QHAQA4n+PY9pBxbQfGJ7eAhqhRKEKFoRhBIPthEDPjKr60O+n44AI+DoL+gEgeBkG0bBTLwUmkyqCxswNlELLsYiGpUDheH8QRQkiWJJHkZR1HSWOskMQgQRMSyzaNmpvL3kij7cbhvH4YJwnIKJIjboW5ZMMBAEbsOPRHuZiZWpM4x2ap6m5si2nubpnkGb5-mBZuf7blRAFmYyiaIamsUOdmHHOVxPFUHxAlUPp3m-ru5aFruxbAX5AX5bWclBJMQTTih9nxYuLlVTVeleT5TVMH2EHtRlXX0SMKZBAEJXDVh1BJdVHl1ZNv7sAA7jg4SwItcGWSmyi2ShwSLI57acVtrlet8GA4LAhG-gAqqW-aAaBf7rmBf4DudFlnsooxKX4AQBKV87lZp21vegH07SlmLnKq+rXDjmFPVpL0yqj6PjdxlL6lGRDGmFMERXW4wQjDSbw62D0ExVz1VaTn3kx6pBSjKcoKsq+NI86KM4O9fMeeGVJGg44OJtaTPNmzG2E0lIgABLloBkHAf2pF9srE7Mc21oI05yPEyIAHbgOTCOwOwGFn2oOFmbcmTmmsxBEEcUcxLiV2wOf4Qd7l2+PDHIB0HZUaZLYcR5WsbhQVdaXpMURUL18zKOCkwBDELIs-HvhUJMyjKFMyg56Mk6rZrXNEzxIjh5HQR03RF3LXDoxUKoEIsiyyhRKMZeT1e-uB5X1e19XDdNwELe2+3neVuMPcyYVsSqFQDbjCXUyKeoATKHHAdBFXNd18vfWr8HSfBjgmDFBYQhcDkB20Mdp1R2WqXKgARJwsgvnHHON8ojHzvI9VusA37CE-sgb+rBf7-zOunemmc5LZ0HqAyY4DL7XlVtA2Ba88xII-gIIkP8djrGEAAdUgBTUQWIcR4nFi-Zo1CoAMIePQ2hGRmGsPllTakSsRwZ26pdeuBCwEQNIQES8VAYEX0oa-d+-DhGUCEYw4oLCIBsNONjS4eMbZUO0QIvR6CbH4EMWIymkZJH-Gwb3CGfha4shAYokhsxzypjURQ5+CVeHWN0dIfRIjHHGIFkLb0ot-TcLCRsPh9iwDRNSLEthEYDSuMAQhCYg9VJENQlEVQfV-GIHGDXSYVc4bzDtJeZMGjQkjTSREuhdjXxsAcVAbc8DTHYnxlwyxWjkGRMyT05wfThCDM5nk6mvwpE7wZng0eB9CHEI5BUwuwS2mJ1SY8dJUz6G9OyQMoZnphY+j9AGeBmlEFdMETMuZxQFnlSWQU6RODZEjAqUzKgbILwwiiEQpR-sYgH1qVECeCxiGaPCZM7pXAqBED2DgNAwzOEWMeVYlFry0UYt2Fi1A3zFb-F+R4yKdS1ElxUbeayFSFi7Mfg0gIkx-D+EnqMJ+RyOknJebY4lghSXYpuYk30YtxnIpoai6gJKyUUujKs00uDLqpgCFQUYKYiHxzQuCtlilD5wy5aoHlLI+VIs6cgj8EAsn9M+YiHFoy8Wcyeek+1jr5nwJVTTNVo4NUjAmLnbZkKamKWUAcuBHqCUf29XYyJvrOauvMfiHhtqE3GJ9R8v1CtVVuLWcGjM0UQHFwbP1K1vhlC3l2dUQ+VrlDJknIvWNIc5X8MTWi5NebU2SpFtK5Jsqs1dpzUmgxVzFkFoDVS4t-zojHxvkzKGsDmx9TDVaY+VrKm3htUKu1460UXKdUMjhbqM3HJoF6o91AT0pq+TOlZc71ULqTKoScaiLUqLheCWtnK2WoR1WoaGd9RjXSiPu691ju13tmZc51PwRADruTK-FEzs0OreQh-NEjKWFKshMaNk8yk513dUuYAdtUQnmPMZiKY2m8lQOg+AvQR1gFfUtRA101ooXGFB-M7BON90QNFCjuqBPLg4Kgn8wnPHvtZdeAO1t0Odi1OYfIVgihQDk5FBYFH5jswFZtF0oYxTCF01nM+HI1DxHaSZwTHBcDXAsjSusRCYrXkzJJ9THA35YvlNwWTQa33JliBySe7bM2alRBwG5lm8EQmQrMSLUGkoJcur1XjykYjoXs1rYmbcsAZbPFyFmNbkxpcKzhIrFmQtcbmDu9dH6qtjQ8iVvwEIKM1sCK1tyGNaoyY4-VkTVka3Zb8ApSD+XW7bXJntAyHWkyjEqc2FkUw+uvWlmjVjMiGtVu69dUYm2SbbfRkNpbNHPPKSIXl4zBWeZndlpjYol2mlraIQJvhS31s+PDRRwOCkY1fesVwL+0yuBLcvFEbV-2441wPuoqLV7nmEpFcNvbo3Lwrd8RCgz9Hgczc9cKqJE6YlQCMWwqHP7cc7NIc2yuSOQdo9J8e+Dp7OZQ4mOMWnEbGvj0J-dhBpyFXorFWSqH7K4fXhiDAwXiNovQcPVhyHI35Oj3qdL-24IedM6J-GsdKvqC9qneVKHqg2S84B2XchhyFco5vUbna7zTeIih8maNWuamoWjXroXTz6ACAEHAXbfyGtWhUcC8EjdC62burszMOrrSXkLk3aKUGfzyCW5OGefh9MJASEAA */
   id: 'invitationCreate',
   context: ({ input }) => ({
     slug: '',
@@ -280,7 +281,7 @@ export const invitationCreateDesignMachine = setup({
     slugModal: {
       initial: 'idle',
       on: {
-        TYPE: { target: '.debouncing', actions: 'setSlug' },
+        TYPE: { target: '.debouncing', actions: "setSlug" },
         CLOSE: { target: 'left' },
         CONFIRM: { guard: 'slugAvailable', target: 'editor' }, // 가용일 때만
       },
@@ -295,17 +296,17 @@ export const invitationCreateDesignMachine = setup({
           },
         },
         checking: {
-          entry: 'setStatusChecking',
+          entry: "setStatusChecking",
           invoke: {
-            src: 'checkSlug',
+            src: "checkSlug",
             input: ({ context }) => ({ slug: context.slug }),
             onDone: [
-              { guard: 'slugTaken', target: 'taken', actions: 'setStatusTaken' },
-              { target: 'available', actions: 'setStatusAvailable' },
+              { guard: 'slugTaken', target: 'taken', actions: "setStatusTaken" },
+              { target: 'available', actions: "setStatusAvailable" },
             ],
             onError: [
-              { guard: 'is404', target: 'available', actions: 'setStatusAvailable' },
-              { target: 'error', actions: 'setStatusError' },
+              { guard: 'is404', target: 'available', actions: "setStatusAvailable" },
+              { target: 'error', actions: "setStatusError" },
             ],
           },
         },
@@ -321,12 +322,12 @@ export const invitationCreateDesignMachine = setup({
       type: 'parallel',
       on: {
         HEADER_LOGO: { target: 'left' },
-        DISMISS_TOAST: { actions: 'clearToast' },
+        DISMISS_TOAST: { actions: "clearToast" },
         SAVE: [
-          { guard: 'uploadingNow', actions: 'toastUploadWait' }, // 머무름
-          { guard: 'addSlugInvalid', actions: 'toastSlugRequired' }, // 머무름
-          { guard: 'createHasMissing', actions: 'toastMissing' }, // 머무름
-          { target: 'saving', actions: ['clearToast', 'setSaveMeta'] }, // 통과
+          { guard: 'uploadingNow', actions: "toastUploadWait" }, // 머무름
+          { guard: 'addSlugInvalid', actions: "toastSlugRequired" }, // 머무름
+          { guard: 'createHasMissing', actions: "toastMissing" }, // 머무름
+          { target: 'saving', actions: ["clearToast", "setSaveMeta"] }, // 통과
         ],
       },
       states: {
@@ -340,32 +341,26 @@ export const invitationCreateDesignMachine = setup({
           states: {
             idle: {
               on: {
-                ADD_COVER: { target: 'active', actions: 'spawnCover' },
-                ADD_GALLERY: { guard: 'galleryHasRoom', target: 'active', actions: 'spawnGallery' },
+                ADD_COVER: { target: 'active', actions: "spawnCover" },
+                ADD_GALLERY: { guard: 'galleryHasRoom', target: 'active', actions: "spawnGallery" },
               },
             },
             // 1건 이상 업로드 진행/완료. 파일별 상세는 spawn된 uploadItem 머신.
             active: {
               always: { guard: 'noItems', target: 'idle' },
               on: {
-                ADD_COVER: { actions: 'spawnCover' },
-                ADD_GALLERY: { guard: 'galleryHasRoom', actions: 'spawnGallery' },
-                ITEM_DONE: { actions: 'markItemDone' },
-                ITEM_FAILED: { actions: 'markItemFailed' },
+                ADD_COVER: { actions: "spawnCover" },
+                ADD_GALLERY: { guard: 'galleryHasRoom', actions: "spawnGallery" },
+                ITEM_DONE: { actions: "markItemDone" },
+                ITEM_FAILED: { actions: "markItemFailed" },
                 RETRY_ITEM: {
                   guard: 'canRetryItem',
                   actions: [
-                    'markItemRetrying',
-                    sendTo(
-                      ({ context, event }) => {
-                        const it = context.items.find((i) => i.id === (event as { id: string }).id);
-                        return it!.ref;
-                      },
-                      { type: 'RETRY' },
-                    ),
+                    "markItemRetrying",
+                    "inline:invitationCreate.editor.upload.active#RETRY_ITEM[-1]#transition[1]",
                   ],
                 },
-                REMOVE_ITEM: { actions: 'removeItem' },
+                REMOVE_ITEM: { actions: "removeItem" },
               },
             },
           },
@@ -377,7 +372,7 @@ export const invitationCreateDesignMachine = setup({
             idle: { on: { UPLOAD_CANVAS: { target: 'uploading' } } },
             uploading: {
               invoke: {
-                src: 'canvasUpload',
+                src: "canvasUpload",
                 input: ({ event }) => ({ file: (event as { file: File }).file }),
                 onDone: { target: 'idle' }, // 성공: URL → 캔버스(컴포넌트가 반영)
                 onError: { target: 'idle' }, // 실패: null → 캔버스
@@ -405,33 +400,33 @@ export const invitationCreateDesignMachine = setup({
           states: {
             creatingWedding: {
               invoke: {
-                src: 'createWedding',
+                src: "createWedding",
                 input: ({ context }) => ({ slug: context.slug }),
                 onDone: [
-                  { guard: 'hasInvitationData', target: 'updatingInvitation', actions: 'setCreatedWedding' },
-                  { target: 'onchain', actions: 'setCreatedWedding' },
+                  { guard: 'hasInvitationData', target: 'updatingInvitation', actions: "setCreatedWedding" },
+                  { target: 'onchain', actions: "setCreatedWedding" },
                 ],
-                onError: { target: '#editing', actions: 'setSaveError' },
+                onError: { target: '#editing', actions: "setSaveError" },
               },
             },
             updatingInvitation: {
               invoke: {
-                src: 'updateInvitation',
+                src: "updateInvitation",
                 input: ({ context }) => ({
                   weddingId: context.createdWeddingId ?? '',
                   invitationId: context.createdInvitationId ?? '',
                 }),
                 onDone: { target: 'onchain' },
-                onError: { target: '#editing', actions: 'setSaveError' },
+                onError: { target: '#editing', actions: "setSaveError" },
               },
             },
             // 온체인 실패는 저장을 막지 않음(best-effort) → 성공 합류로 진행
             onchain: {
               invoke: {
-                src: 'createWeddingOnchain',
+                src: "createWeddingOnchain",
                 input: ({ context }) => ({ weddingId: context.createdWeddingId ?? '' }),
                 onDone: { target: '#saved' },
-                onError: { target: '#saved', actions: 'markOnchainFailed' },
+                onError: { target: '#saved', actions: "markOnchainFailed" },
               },
             },
           },
@@ -442,24 +437,24 @@ export const invitationCreateDesignMachine = setup({
           states: {
             creatingInvitation: {
               invoke: {
-                src: 'createInvitation',
+                src: "createInvitation",
                 input: ({ context }) => ({ weddingId: context.addWeddingId ?? '', slug: context.slug }),
                 onDone: [
-                  { guard: 'hasInvitationData', target: 'updatingInvitation', actions: 'setCreatedInvitation' },
-                  { target: '#saved', actions: 'setCreatedInvitation' },
+                  { guard: 'hasInvitationData', target: 'updatingInvitation', actions: "setCreatedInvitation" },
+                  { target: '#saved', actions: "setCreatedInvitation" },
                 ],
-                onError: { target: '#editing', actions: 'setSaveError' },
+                onError: { target: '#editing', actions: "setSaveError" },
               },
             },
             updatingInvitation: {
               invoke: {
-                src: 'updateInvitation',
+                src: "updateInvitation",
                 input: ({ context }) => ({
                   weddingId: context.addWeddingId ?? '',
                   invitationId: context.createdInvitationId ?? '',
                 }),
                 onDone: { target: '#saved' },
-                onError: { target: '#editing', actions: 'setSaveError' },
+                onError: { target: '#editing', actions: "setSaveError" },
               },
             },
           },
@@ -467,7 +462,12 @@ export const invitationCreateDesignMachine = setup({
       },
     },
 
-    success: { id: 'saved', type: 'final' }, // 컴포넌트: reset() + navigate(/my-wedding)
-    left: { type: 'final' }, // 컴포넌트: navigate(/my-wedding)
+    // 컴포넌트: reset() + navigate(/my-wedding)
+    success: { id: 'saved', type: 'final' },
+
+    // 컴포넌트: navigate(/my-wedding)
+    left: { type: 'final' },
+
+    "New state 2": {}
   },
 });

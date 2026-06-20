@@ -85,20 +85,20 @@ export const invitationCreateMachine = setup({
     editing: {
       on: {
         SAVE: [
-          { guard: 'uploadingNow', actions: 'toastUploadWait' }, // 머무름
-          { guard: 'addSlugInvalid', actions: 'toastSlugRequired' }, // 머무름
-          { guard: 'createHasMissing', actions: 'toastMissing' }, // 머무름
-          { target: 'saving', actions: 'clearToast' }, // 통과
+          { guard: 'uploadingNow', actions: "toastUploadWait" }, // 머무름
+          { guard: 'addSlugInvalid', actions: "toastSlugRequired" }, // 머무름
+          { guard: 'createHasMissing', actions: "toastMissing" }, // 머무름
+          { target: 'saving', actions: "clearToast" }, // 통과
         ],
-        DISMISS_TOAST: { actions: 'clearToast' },
+        DISMISS_TOAST: { actions: "clearToast" },
       },
     },
     /** 저장 중 — 컴포넌트가 mutation 호출 후 결과를 send (버튼 비활성 = 이 상태) */
     saving: {
-      entry: 'clearSaveError',
+      entry: "clearSaveError",
       on: {
         SAVE_SUCCESS: { target: 'success' },
-        SAVE_ERROR: { target: 'editing', actions: 'setSaveError' },
+        SAVE_ERROR: { target: 'editing', actions: "setSaveError" },
       },
     },
     /** 저장 완료 — 컴포넌트가 reset() + navigate(/my-wedding) */

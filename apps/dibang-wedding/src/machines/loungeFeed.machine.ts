@@ -38,6 +38,7 @@ export const loungeFeedMachine = setup({
     resetRefreshAttempts: assign({ refreshAttempts: 0 }),
   },
 }).createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QBsD2BXAdjAYmSAdGgIYQCW2AxADIDyAggCID6AygKoDCnAoq6wG0ADAF1EoAA6pYZAC5lUmcSAAeiAKwBmACwAaEAE9EmgIwB2AL4X9aLLnwQiqUhSg0GLHgCUvtL8LEkECkZeUVlNQQAJgBOAA4CADZklNSUzX0jBFNLaxBbbDA8QjIIZDBKLx4cKtYACQDlELkFJSDI9XU9Q0REkyirGwxC4scAJzAAMwnYAAtXSuraurYuXn5GoOawttBIqMS4zI0YzUH84ftCCem4eaoqmr4V719-USbpFvD23qFjhB9AZ5ApXRxgMZjVBjRYAFS8AE1NpIvjsIogYkIkmkcYkMj1suYrHlMKgIHBlKCig5PqFWuiEP0ASYziDLtTCCRyNhad9dqoNFF-gSTHETOcqaMCKVyry0b8ENpEt0stp1LkhnYOeMpjN7lA5fSFZooiYAWYzOK2VqpRCoWNDT89sYhOoAWrclYgA */
   id: "loungeFeed",
   initial: "loading",
 
