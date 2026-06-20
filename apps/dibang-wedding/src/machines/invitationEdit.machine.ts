@@ -79,6 +79,7 @@ export const invitationEditMachine = setup({
     clearConflict: assign({ hasConflict: false }),
   },
 }).createMachine({
+  /** @xstate-layout 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 */
   id: 'invitationEdit',
   type: 'parallel',
 
@@ -101,11 +102,11 @@ export const invitationEditMachine = setup({
         loading: {
           description: 'getWedding + getInvitation fetch',
           on: {
-            LOAD_SUCCESS: { target: 'editing', actions: 'clearLoadError' },
+            LOAD_SUCCESS: { target: 'editing', actions: "clearLoadError" },
             LOAD_ERROR: {
               target: 'loadError',
               actions: {
-                type: 'setLoadError',
+                type: "setLoadError",
                 params: ({ event }) => ({ kind: event.kind }),
               },
             },
@@ -118,14 +119,14 @@ export const invitationEditMachine = setup({
             RETRY_LOAD: {
               guard: 'isNetworkError',
               target: 'loading',
-              actions: 'clearLoadError',
+              actions: "clearLoadError",
             },
           },
         },
 
         editing: {
           on: {
-            FIELD_CHANGED: { actions: 'markDirty' },
+            FIELD_CHANGED: { actions: "markDirty" },
             SAVE: [
               {
                 guard: 'hasNoUploadsInProgress',
@@ -146,7 +147,7 @@ export const invitationEditMachine = setup({
             {
               guard: 'isSlugAvailable',
               target: 'saving',
-              actions: ['clearSaveError', 'incrementSaveAttempts'],
+              actions: ["clearSaveError", "incrementSaveAttempts"],
             },
             { target: 'editing' },
           ],
@@ -155,31 +156,31 @@ export const invitationEditMachine = setup({
         saving: {
           description: 'updateWedding + updateInvitation API 호출',
           on: {
-            SAVE_SUCCESS: { target: 'success', actions: 'clearDirty' },
+            SAVE_SUCCESS: { target: 'success', actions: "clearDirty" },
             SAVE_ERROR: {
               target: 'saveError',
               actions: {
-                type: 'setSaveError',
+                type: "setSaveError",
                 params: ({ event }) => ({ error: event.error }),
               },
             },
-            SAVE_CONFLICT: { target: 'conflict', actions: 'setConflict' },
+            SAVE_CONFLICT: { target: 'conflict', actions: "setConflict" },
           },
         },
 
         saveError: {
           description: '저장 실패 — ��시도 또는 편집으로 복귀',
           on: {
-            RETRY: { target: 'saving', actions: 'incrementSaveAttempts' },
-            FIELD_CHANGED: { target: 'editing', actions: ['markDirty', 'clearSaveError'] },
+            RETRY: { target: 'saving', actions: "incrementSaveAttempts" },
+            FIELD_CHANGED: { target: 'editing', actions: ["markDirty", "clearSaveError"] },
           },
         },
 
         conflict: {
           description: '서버 데이터와 충돌 — 강제 저장 또는 서버 데이터 다시 로드',
           on: {
-            FORCE_SAVE: { target: 'saving', actions: ['clearConflict', 'incrementSaveAttempts'] },
-            RELOAD_SERVER_DATA: { target: 'loading', actions: ['clearConflict', 'clearDirty'] },
+            FORCE_SAVE: { target: 'saving', actions: ["clearConflict", "incrementSaveAttempts"] },
+            RELOAD_SERVER_DATA: { target: 'loading', actions: ["clearConflict", "clearDirty"] },
           },
         },
 
@@ -218,15 +219,15 @@ export const invitationEditMachine = setup({
           },
         },
         available: {
-          entry: 'setSlugAvailable',
+          entry: "setSlugAvailable",
           on: { SLUG_CHECK_START: { target: 'checking' } },
         },
         taken: {
-          entry: 'setSlugTaken',
+          entry: "setSlugTaken",
           on: { SLUG_CHECK_START: { target: 'checking' } },
         },
         error: {
-          entry: 'setSlugError',
+          entry: "setSlugError",
           on: { SLUG_CHECK_START: { target: 'checking' } },
         },
       },
@@ -237,26 +238,26 @@ export const invitationEditMachine = setup({
       initial: 'idle',
       states: {
         idle: {
-          on: { UPLOAD_START: { target: 'uploading', actions: 'incrementUploads' } },
+          on: { UPLOAD_START: { target: 'uploading', actions: "incrementUploads" } },
         },
         uploading: {
           on: {
-            UPLOAD_START: { actions: 'incrementUploads' },
+            UPLOAD_START: { actions: "incrementUploads" },
             UPLOAD_SUCCESS: [
               {
                 guard: 'isLastUpload',
                 target: 'idle',
-                actions: 'decrementUploads',
+                actions: "decrementUploads",
               },
-              { actions: 'decrementUploads' },
+              { actions: "decrementUploads" },
             ],
             UPLOAD_ERROR: [
               {
                 guard: 'isLastUpload',
                 target: 'idle',
-                actions: 'decrementUploads',
+                actions: "decrementUploads",
               },
-              { actions: 'decrementUploads' },
+              { actions: "decrementUploads" },
             ],
           },
         },

@@ -126,6 +126,7 @@ export const guestFlowMachine = setup({
     }),
   },
 }).createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5RQK5wC4DEA2B7A7gHQBOYAxgJYAOFYAdugMQDKAogDKsDCAKgPoAlbgEkACsNYA5HgG0ADAF1EoKrlgV0FXHWUgAHogCMxgKyE5AZivWbVgDQgAnogBMLgGwBfTw9QYcBIR0AIYAtmCMAEIAglwA0vJKSCCq6praugYIAJzZcua2hQAsDs4ILiaG3r5osFh4RCHhLACqkQCywvyS0e2sibqpGlo6yVnGAOxFhAAc7vMLi+4zpYgmci7VIH51AURkpMGadFCMXELRPKx8zC1cXKzMzAPJQ+mjoONyhvmWhTYlJyICYTGZbHb1QIHMBHCgnM4XK58VgCAQAeQELxUamGGTGiGy81mSxJE1WCHWmx821qkKIYVwKAYUViCUUgxx70yiBmRUMxJJizJQIpLgm4Npe0IDKZTDYnF4fF6aJa0ixKU5I25CAsYvJP2yVJq-ga0tCjOZzDiYiV7RVavZr01eM+RkM7gmhBc+smEpNgRlzOi7AuABEAJp8UTRYSh9VvLX4nIzfnekXGQzi6kQqXoYjBOiwABmYGILPi8edH30rg2Pszft2przBeLpbOaMkmGEAnafB4AmikmYmBRlbSiddOuWhBM+osMyzxqbgRbhZLxGIcNOA6HI5RNzuDye49x1ay7jk7ln8+WjbphDXbc328Yu+Ho4EyNRGNPXKT7r5HO6YLkuNL+kQ4SwLAwQwOWbJJNiE4ujWCAzCY15pmUGZgTmppQTBcFsJIoZ8H0TzRAA4v0jpIWe2qGLqFg3iBi73lKBGwRExGkQAEqw0QCLItEash55GHIRQzCx2GgexpqwPQEDbu0cCERE5HMFR1y3PcjzPCJCYoVkeTZF6wHYcsRrgSuRCKXQyknKp0FcYwmnad+6KYoZVbaryQHzmx2aSqaEDaBEQjMDwgnCYhon0Uml7km4XhbHQuAQHAuh4QQHJiQxWFGNZOVEKQlA0PQ6B5QlU6EoCZR5PJgRNGA1X-rV2SGOSFjzE1+yHMcUBtZOqHZBh5LuEUxUhQG5qysNxk8pU5Jjaly4Pk+G4LeJCCZu4+ouLqfWPvm66lluJzbQxY36iYRRrTZD6cTAV1JuhXXpod00QYQ9mOVAznqa9U68vVRh3Q9JWEGFdCtU6+UAW4+ozG43jeEAA */
   id: 'guestFlow',
   initial: 'recipient',
 
@@ -151,7 +152,7 @@ export const guestFlowMachine = setup({
         SELECT_RECIPIENT: {
           target: 'name',
           actions: {
-            type: 'setRecipient',
+            type: "setRecipient",
             params: ({ event }) => ({ slot: event.slot, label: event.label }),
           },
         },
@@ -165,7 +166,7 @@ export const guestFlowMachine = setup({
         SUBMIT_NAME: {
           target: 'creating',
           actions: {
-            type: 'setNameRelation',
+            type: "setNameRelation",
             params: ({ event }) => ({
               name: event.name,
               category: event.category,
@@ -182,9 +183,9 @@ export const guestFlowMachine = setup({
         CREATE_SUCCESS: {
           target: 'amount',
           actions: [
-            'clearError',
+            "clearError",
             {
-              type: 'setEntryId',
+              type: "setEntryId",
               params: ({ event }) => ({ id: event.entryId }),
             },
           ],
@@ -192,7 +193,7 @@ export const guestFlowMachine = setup({
         CREATE_ERROR: {
           target: 'name',
           actions: {
-            type: 'setError',
+            type: "setError",
             params: ({ event }) => ({ error: event.error }),
           },
         },
@@ -206,7 +207,7 @@ export const guestFlowMachine = setup({
         SELECT_AMOUNT: {
           target: 'transfer',
           actions: {
-            type: 'setAmount',
+            type: "setAmount",
             params: ({ event }) => ({ amount: event.amount }),
           },
         },
@@ -222,7 +223,7 @@ export const guestFlowMachine = setup({
         CONFIRM_TRANSFER: {
           target: 'transferring',
           actions: {
-            type: 'setPayMethod',
+            type: "setPayMethod",
             params: ({ event }) => ({ payMethod: event.payMethod }),
           },
         },
@@ -235,9 +236,9 @@ export const guestFlowMachine = setup({
         TRANSFER_SUCCESS: {
           target: 'message',
           actions: [
-            'clearError',
+            "clearError",
             {
-              type: 'setCashGiftId',
+              type: "setCashGiftId",
               params: ({ event }) => ({ id: event.cashGiftId }),
             },
           ],
@@ -245,7 +246,7 @@ export const guestFlowMachine = setup({
         TRANSFER_ERROR: {
           target: 'transfer',
           actions: {
-            type: 'setError',
+            type: "setError",
             params: ({ event }) => ({ error: event.error }),
           },
         },
@@ -259,14 +260,14 @@ export const guestFlowMachine = setup({
         SEND_MESSAGE: {
           target: 'sendingMessage',
           actions: {
-            type: 'setPendingMessage',
+            type: "setPendingMessage",
             params: ({ event }) => ({ message: event.message }),
           },
         },
         SEND_HEART: {
           target: 'sendingMessage',
           actions: {
-            type: 'setPendingMessage',
+            type: "setPendingMessage",
             params: () => ({ message: '__HEART__' }),
           },
         },
@@ -278,12 +279,12 @@ export const guestFlowMachine = setup({
       on: {
         MESSAGE_SUCCESS: {
           target: 'done',
-          actions: 'clearError',
+          actions: "clearError",
         },
         MESSAGE_ERROR: {
           target: 'message',
           actions: {
-            type: 'setError',
+            type: "setError",
             params: ({ event }) => ({ error: event.error }),
           },
         },
@@ -295,7 +296,7 @@ export const guestFlowMachine = setup({
       on: {
         RESTART: {
           target: 'recipient',
-          actions: 'resetContext',
+          actions: "resetContext",
         },
       },
     },

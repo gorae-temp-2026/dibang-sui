@@ -77,6 +77,7 @@ export const invitationPageMachine = setup({
     clearHeartError: assign({ heartError: null }),
   },
 }).createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QEsB2A3ZAXAhl5A9qgAo4wB0EeO5ANgThGlAMQBiAogCoDCAEgH0AygFUePDkKEBtAAwBdRKAAOBWNkKolIAB6IAzAFYAnABZyARgBsAdlMAmC8aumL+gBwAaEAE9Ex2Stye1lTMMMre0N7VwsAXzjvNExcfCJSCipcOgYmVFZOXkEOACUSgHkSuUUkEFV1NK1avQRTWXd7S1sHJxc3L19-QODQ8Mjo2ISkjGw8TQywSmpyMAAnVYJVlhLuEoBNAUL+au16jSJtFo8PLrtHZ1cPbz8EAKCQsNMIqJiLeMSQMlZo0FuRcAAjchA1KaFhcACCACEBPx4QA5ADiHBOtTOjUuiFMdnctx6D36z0Q7jMI0+3wmfymgJmMPSZEWEJyAFd8mA4UiUXx0VicSo1OcmqAWmELLJSfc+k9BghqeYPmMfpMAdC5myKKtYOhlFCILQ+SUhAA1YgCLgASQAsqUBAARcpo7EKU7i-HNRAuGzkfSuGzXCyGVz2AYvUzGEnqr7jX7-aYpXUkdnkA1Gk1m7ZWm3lYgcNGiuo+zQE1odIMhsMRixR0yU1px2kahkp5lpkGZ7PGgC2BCotHKyjAqHz1pRABlykJPTUxQ1K36EPpZMZaxZQ+59OHI+5m8rY-HRonNYztSz06D++QhyOxxOpzbRIiHXauGW8aupYh7BCbdd33BsmxbGxDEDBN6WTJkdV7fVDUHYccFHcdJwtad30-b8LCXcsVwuNdDFkCxgPrQ9jxedx3Gg89YK1VNgXmPtkPIWAuXBAdsHwfJX2EMQJCkH8K2I-9WisLdgx3SjGyPFtGxsd4GKTVx4JvRDFnvTjuN45gBNKCoqi9XExMlXREGUuUZJAg95IgmJ2wvTsNJ7VikJzXSeKwPjWCwm0XREYgZztHh4S4RdvSIizpX0IJbLk8DlVlWQ5RgtSr2Y1kM0841vN4yABKLEtRJiqt7BscjEr3ezkpeWUomcxiuwQjztPYiAuWUWhkAAYzwc0C1necorM8q1zbGrQKoxTZCajLLzcli9UWKAuTgLBwQIAgAGtcz5DEREkLhEXKcoAGlBI-L8yolKs3Ck+VekeaMrOU5rMtazT2vIdbNu2vaDpYI6TrOy6BDneEXQEB1KjG5d7rXex9H0LdrDuF6KWVGwPsW1zr3c1a-o22Atp2-aCt8gzQaEU7zqu0RxEkGRTMR30JNlYxOgxslFTehBIPI-G4MJlbcrW0nyaBqm-JB466fBq6jMqO6OcshBHvR7oFVeubKs+paxZy0F-rJwHKa4nyOHWTZ5bBhmBAqGcZ0ReEeAutW-w18NjEDXndexl5cZUukvuWk3MzN6XLb0rAbY2LZafpiGcNutnCKRznNx5nWsaVBr5vosOjey28o6li2ckYZgHU2Q6FZTq6oZdDgXS98SNccTdnvJAv3tDjtRbLrSSYBinq7yKA69WBuHYhlWTII39O5aCwj30Xv+YgwxhdUy9vqJiXyAACzAHBViwYG+A4eESi4W14WIDvYoAmxZH9vO+4FuxB5c4fuzi1BGfC+V9cDKHHBAFgN874PwRM-DOK9X4IHsFJciAd84C1lK4Q2DII7lwoCAy+YIcAQKKjA++hwZwiCEHwF+FVnBBAwd-OaVg-4tXwaPIhV9YATintA2+lCmbCVZsvcyVZ9BRHMMw7eOMDYiyYoAyOhDz7EN4agfhFCH6L3oWuDcsot56zkcXIeWoASoGHHAbQbVVrRSzl3CitUwIKRSp0BRsobDuE4b9LIOA7HqyuBGJhX9ZHBx3LggBNjj6+Mnswfx3sri2DlDIoxNELBqn3gTEePjlhrETvE1eBhjBuEMUHRA2D2GZW8cTGJs9GAvHZgkgwVh9Cf0xiwlKoRKmlyUQQjkOBwQFOQaYeKud2mhKsqECJiiomgk5FEoZVYviOFKf3FU81plZV6aPTk9AeQwEWWuZZbS+apPKbIEwmzqnH37IciSpFHEzXktRACVhDCbMPkAtiOZkCmjAHcjWXxN7TTqi4l4oyPnXLvOxR8aFnwWSQRI-cjzQUvIQIYWikLjZ9KzOxWWcTxr2JaLvd5ILnGKXSelTJvwoXfPylbQqEAAVrw3Ci5xaL0kRiudi0e94uo9X6oNZlrzpJ1icbNZU7gXBYuycTaOFthWa1GKsgWhhogyu2b9eVE9flmkVX8P2KqWwuC3O4z5yjJbjxlgy6m+R9WNmkSEs5KpikatmRXK1sdra21WPqow2txnOr+LYblsrj7aqBvQGu+QZ7-MJQEgCbgA2nLKS6veJcsmauJtwxVqCRlGuVIYG4ZraUqNAQdXN7gLkFpeC095JaeW-W4SQshTL41NJQVVTeKTU0BHrdSmZP1s2qJ4XwgljTCnriLjW8p6902mP+AkIAA */
   id: 'invitationPage',
   type: 'parallel',
 
@@ -97,11 +98,11 @@ export const invitationPageMachine = setup({
       states: {
         loading: {
           on: {
-            FETCH_SUCCESS: { target: 'ready', actions: 'clearFetchError' },
+            FETCH_SUCCESS: { target: 'ready', actions: "clearFetchError" },
             FETCH_ERROR: {
               target: 'error',
               actions: {
-                type: 'setFetchError',
+                type: "setFetchError",
                 params: ({ event }) => ({ kind: event.kind }),
               },
             },
@@ -109,7 +110,7 @@ export const invitationPageMachine = setup({
         },
         error: {
           on: {
-            RETRY_FETCH: { target: 'loading', actions: 'clearFetchError' },
+            RETRY_FETCH: { target: 'loading', actions: "clearFetchError" },
           },
         },
         ready: {
@@ -127,7 +128,7 @@ export const invitationPageMachine = setup({
             TAB_CHANGE: {
               guard: 'isTargetLounge',
               target: 'lounge',
-              actions: { type: 'setActiveTab', params: { tab: 'lounge' } },
+              actions: { type: "setActiveTab", params: { tab: 'lounge' } },
             },
           },
         },
@@ -136,7 +137,7 @@ export const invitationPageMachine = setup({
             TAB_CHANGE: {
               guard: 'isTargetInvitation',
               target: 'invitation',
-              actions: { type: 'setActiveTab', params: { tab: 'invitation' } },
+              actions: { type: "setActiveTab", params: { tab: 'invitation' } },
             },
           },
         },
@@ -167,15 +168,15 @@ export const invitationPageMachine = setup({
         submitting: {
           description: 'RSVP API 호출 중',
           on: {
-            RSVP_SUCCESS: { target: 'submitted', actions: ['markRsvpSubmitted', 'clearRsvpError'] },
+            RSVP_SUCCESS: { target: 'submitted', actions: ["markRsvpSubmitted", "clearRsvpError"] },
             RSVP_ERROR: {
               target: 'modalOpen',
               actions: {
-                type: 'setRsvpError',
+                type: "setRsvpError",
                 params: ({ event }) => ({ error: event.error }),
               },
             },
-            RSVP_DUPLICATE: { target: 'duplicate', actions: 'markRsvpSubmitted' },
+            RSVP_DUPLICATE: { target: 'duplicate', actions: "markRsvpSubmitted" },
           },
         },
         submitted: {
@@ -206,11 +207,11 @@ export const invitationPageMachine = setup({
         submitting: {
           description: '방명록 작성 → optimistic update 적용',
           on: {
-            GUESTBOOK_SUCCESS: { target: 'idle', actions: 'clearGuestbookError' },
+            GUESTBOOK_SUCCESS: { target: 'idle', actions: "clearGuestbookError" },
             GUESTBOOK_ERROR: {
               target: 'submitError',
               actions: {
-                type: 'setGuestbookError',
+                type: "setGuestbookError",
                 params: ({ event }) => ({ error: event.error }),
               },
             },
@@ -220,7 +221,7 @@ export const invitationPageMachine = setup({
           description: '작성 실패 — optimistic update 롤백',
           on: {
             GUESTBOOK_ROLLBACK: { target: 'idle' },
-            GUESTBOOK_SUBMIT: { target: 'submitting', actions: 'clearGuestbookError' },
+            GUESTBOOK_SUBMIT: { target: 'submitting', actions: "clearGuestbookError" },
           },
         },
         loadingMore: {
@@ -230,7 +231,7 @@ export const invitationPageMachine = setup({
             GUESTBOOK_ERROR: {
               target: 'idle',
               actions: {
-                type: 'setGuestbookError',
+                type: "setGuestbookError",
                 params: ({ event }) => ({ error: event.error }),
               },
             },
@@ -245,25 +246,25 @@ export const invitationPageMachine = setup({
       states: {
         idle: {
           on: {
-            HEART_TAP: { target: 'tapped', actions: 'incrementHeartTaps' },
+            HEART_TAP: { target: 'tapped', actions: "incrementHeartTaps" },
           },
         },
         tapped: {
           description: '탭 후 디바운스 대기 (추가 탭 수집)',
           on: {
-            HEART_TAP: { actions: 'incrementHeartTaps' },
+            HEART_TAP: { actions: "incrementHeartTaps" },
             HEART_FLUSH: { target: 'sending' },
           },
         },
         sending: {
           description: '누적 탭 수를 서버에 전송',
           on: {
-            HEART_SUCCESS: { target: 'idle', actions: ['resetHeartTaps', 'clearHeartError'] },
+            HEART_SUCCESS: { target: 'idle', actions: ["resetHeartTaps", "clearHeartError"] },
             HEART_ERROR: {
               target: 'idle',
               actions: [
-                'resetHeartTaps',
-                { type: 'setHeartError', params: ({ event }) => ({ error: event.error }) },
+                "resetHeartTaps",
+                { type: "setHeartError", params: ({ event }) => ({ error: event.error }) },
               ],
             },
           },
