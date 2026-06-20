@@ -99,8 +99,22 @@ v1의 `bind(initiator_moi, receiver_moi)`는 **불가**(receiver가 initiator의
 - **accept:** receiver가 본인 소유의 `IumRequest` + 본인 `&mut Moi`를 소비 → soulbound `Ium` 엣지 민팅 + receiver Moi df-key 기록 + `ledger::log(ACCEPT_IUM, actor=receiver, target=initiator)`.
 - **per-match `Event` 객체 안 만듦(R1 I2)** — Ium 엣지(+ACCEPT_IUM 레코드)가 곧 매칭. cross-owner `&mut` 한 번도 없음.
 
-### 3-G. 자산
-- **`MoiItem`** (key+store 유지) — 선물 의도. 단 신용 "기록" 입력에서 제외(MOICREDIT_AUDIT: gift EM은 부조 전파 제외 — sole-giver 악용 방지).
+### 3-G. 자산·화폐·샵·선물 레이어 (머지된 프론트 기준 반영 2026-06-20)
+
+프론트(`moiPlaza.machine`·`ShopSheet`·`gift.machine`/`giftActor`·`GiftPicker`·moi-gather `data.ts`/`manifest`)가 이미 구현한 도메인. 온체인 대응:
+
+- **`MoiItem`** (key+store 유지 — 유일하게 transfer 가능한 자산) = 샵 아이템. `{ id, name, category(hair/clothes/interior/accessory), slot?(head/body/acc) }`. 헤어·옷·액세서리=장착, 인테리어=광장(GatherPlace) 배치.
+- **`YONE` 화폐** (Coin<YONE>) = 구매·선물 결제 수단. SUI/USDC로 충전. **신뢰 신호 아님(MP/화폐).** 데모는 보류·SUI 직접(결정#6). 구매 1회 차감, 장착·배치 토글 무료.
+
+**세 행위의 신뢰 신호 구분 (★ 설계 핵심):**
+| 행위 | 방향 | 온체인 | 신뢰 신호 |
+|---|---|---|---|
+| **구매**(샵: 나→시스템) | 자기 | 요네 차감 + MoiItem mint(구매자 소유) | **없음** — 시장 거래(MP·즉시청산), 사람↔사람 엣지 아님 |
+| **선물**(나→상대) | giver→recipient | MoiItem `public_transfer`(자산 이동) **+** `ledger::log(GIFT)` SBT | **있음 — 증여(EM·CS)**. 단 **EM은 부조 전파에서 제외**(MOICREDIT_AUDIT: sole-giver 악용 방지) → CS 위주 |
+| **장착/배치**(내 Moi·광장 꾸미기) | 자기 | Moi.equipped(dof+VecMap) / InteriorItem 배치 좌표 | **없음** — 꾸미기 상태일 뿐, 관계 행위 아님 |
+
+→ **선물만 액션 원장(ActionRecord, action_type=GIFT, giver→recipient)에 들어가 증여 신호**가 되고, 구매·장착·배치는 자산/화폐/꾸미기 상태 변경일 뿐 신뢰 그래프에 안 들어간다. 선물은 **자산 이동(MoiItem transfer) + 신호 기록(soulbound ActionRecord)이 한 PTB에서 동시** 발생(자산은 옮겨가도 "증여했다" 기록은 giver에 soulbound로 남음).
+- **선물 받은 아이템**: 수령자 소유 MoiItem → 광장 꾸미기(GRANT_OWNED 대응)로 장착·배치 가능. 프로필엔 "받은 증여 신호 수"가 Moi Credit 재료로(profile trace L1_raw의 `선물` 축).
 
 ---
 
@@ -192,10 +206,16 @@ utils.move     유지
 
 - **Step 1 (척추 + 첫 신호=부조):** ledger.move + event.move(role) + cash_gift(give=실제 SUI 이동 + SBT ActionRecord) → 인덱서가 온체인 raw 읽어 **한 지갑 신용 점수**(오프체인, 간단 가중 호혜로 시작 → 정식 PageRank로 발전). DeFi 끝단은 그 점수를 **일단 가정**해 표시/데모; 신뢰있는 온체인 재진입(오라클/ZK)은 나중(결정#12). **= 신뢰(온체인 raw)→신용(오프체인) 파이프라인 검증.**
 - **Step 2 (정합성 정리):** Ium/Guestbook key-only / IumRegistry 제거 / WeddingCap per-host / u8 enum / 평문 민감정보 제거.
-- **Step 3 (신호 확장 — 넓이):** 이음(inyeon.move: request/accept)·방명록·참석·하트 등 신호를 action_type+entry+project 규칙으로 연달아 투입. feed(고빈도)는 이벤트 집계로.
+- **Step 3 (신호 확장 — 넓이):** 이음(inyeon.move: request/accept)·**선물(gift: MoiItem transfer + GIFT 증여 신호, §3-G)**·방명록·참석·하트 등 신호를 action_type+entry+project 규칙으로 연달아 투입. 자산·화폐 레이어(MoiItem 샵 구매·장착/배치·YONE)는 함께 들어오되 **구매·장착·배치는 신호 아님**(§3-G 구분표). feed(고빈도)는 이벤트 집계로.
 - **Step 4 (정식화):** 정식 Φ, (선택) 프라이버시 강화. USDSui 등은 서비스 로직 완성 후.
 
 **빌드 후순위(범위에서 제외 아님):** feed/하트(고빈도)·YONE 커스텀코인·정식 PageRank는 척추가 선 뒤로 미룸 — 전부 결국 포함.
+
+## 10-A. 척추 구현 상태 (2026-06-20)
+- `event.move`(module `dibang_wedding::event`, ledger에선 `gathering`으로 alias — sui::event 충돌 회피) + `ledger.move` 작성, `sui move test` 43/43.
+- **C1 해소:** `ledger::log(participation: &Participation, …)` — event_id·role_id를 actor 소유 soulbound Participation에서 **파생**(자유 입력 X) + `participant == ctx.sender()` assert → 방향 위조 차단.
+- **C3 해소:** `participate`는 self-claimable(하객·신청자·수신자)만 / 권위역할(혼주·주례)은 `new_event` 생성자 또는 `assign_role`(생성자 게이트)로만. event_type·role 경계 검증.
+- **C2 결정(다음 증분):** `wedding::create_wedding`이 `gathering::Event(EVENT_WEDDING)`를 함께 생성·링크하고 `Wedding`이 그 `event_id` 보유 → 부조(cash_gift→ledger)의 event_id가 그것을 가리킨다(§4 event_id→event_type resolve 불변식 충족). 미구현 — Step 부조 증분에서.
 
 ## 11. 사용자 결정 대기 (06 §F + 리뷰)
 1. ~~부조 amount 공개형태~~ **[결정완료 06-20]** 평문 노출 OK. 프라이버시 1순위 = 신원 비식별(온체인 PII 0 + 가명주소). amount는 나중 일.
