@@ -45,6 +45,15 @@ export function LoginPage() {
     navigate(redirectAfter, { replace: true });
   }, [isReady, session, redirectAfter, navigate]);
 
+  // DEV 지갑 로그인(zkLogin 우회)은 Supabase 세션이 아니라 dev 키페어 인증이라 위 세션
+  // effect가 안 걸린다. dev 지갑 인증이 잡히면 /my-wedding 으로 이동.
+  // effect로 미루는 이유: useApiAuthSync 의 X-Dev-Auth 헤더 세팅 effect가 같은 커밋에서
+  // 먼저 끝난 뒤 navigate 가 반영돼야 MyWeddingPage 첫 요청이 401 나지 않는다(retry:false).
+  useEffect(() => {
+    if (!isReady || session || !zk.isAuthenticated) return;
+    navigate('/my-wedding', { replace: true });
+  }, [isReady, session, zk.isAuthenticated, navigate]);
+
   const siteUrl = env.VITE_SITE_URL ?? window.location.origin;
   // OAuth 콜백 URL에 redirect 쿼리를 실어 보내야 AuthCallbackPage가 복귀 경로를 알 수 있음.
   // 기본값(/my-wedding)인 경우엔 부착하지 않아 콜백 URL allowlist 매칭을 단순하게 유지.

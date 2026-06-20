@@ -7,11 +7,13 @@ import {
   updateMarketingConsentMutation,
 } from '@gorae/contracts/@tanstack/react-query.gen';
 import { useAuth } from '../providers/AuthContext';
+import { useZkLogin } from '../providers/ZkLoginProvider';
 import { useSignOut } from '../queries/auth/useSignOut';
 
 export function SettingsPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const zk = useZkLogin();
   const signOut = useSignOut();
   const queryClient = useQueryClient();
 
@@ -41,9 +43,16 @@ export function SettingsPage() {
   };
 
   // useSignOut 훅 사용 (라운드 1 1-B). supabase 직접 호출 제거.
+  // DEV 지갑 로그인은 Supabase 세션이 아니라 dev 키페어(sessionStorage) 기반이라
+  // supabase signOut만으론 안 풀린다. zk.logout()으로 dev 키페어까지 정리해야
+  // zk.isAuthenticated가 false가 되어 /login에서 /my-wedding으로 튕기지 않고
+  // useApiAuthSync가 X-Dev-Auth 헤더도 제거한다.
   const handleLogout = () => {
     signOut.mutate(undefined, {
-      onSuccess: () => navigate('/login'),
+      onSuccess: () => {
+        zk.logout();
+        navigate('/login');
+      },
     });
   };
 
