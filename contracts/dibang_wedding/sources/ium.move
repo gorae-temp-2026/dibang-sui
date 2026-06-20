@@ -1,127 +1,91 @@
-/// Ium 도메인 — 사용자 간 신뢰 관계(이음)를 온체인 오브젝트로 구현한다.
-/// 각 관계는 소유 가능한 `Ium` 오브젝트로 표현되고, 공유 `IumRegistry`가 (from, to)
-/// 쌍을 dynamic field로 추적해 자기 자신 링크와 중복 관계를 막는다.
+/// Ium(이음) 도메인 — 인연 매칭을 온체인으로 구현한다.
+///
+/// 설계(MASTER_DIRECTIVE / SUI_CONTRACT_DESIGN_DIRECTION §3-F·§4, opus 진단 #1):
+/// - **매칭 = 관계 형성 = 이벤트 자체**다. inyeon 매칭 = `gathering::Event(INYEON)` + 양측 Participation
+///   (신청자 INITIATOR · 수신자 RECEIVER). 이 둘이 곧 CS(이음) 엣지 신호 — 인덱서가 도출한다.
+///   매칭 자체엔 별도 ActionRecord가 불필요(이벤트 안의 후속 액션(선물·대화)만 원장에 남는다).
+/// - **전역 `IumRegistry` 제거**(진단 #1: 모든 관계 생성을 단일 shared object에 직렬화 → 병렬성 말살).
+///   유니크는 per-node(신청자 Moi)로 후행 — 중복은 raw-permissive, Φ가 거른다(§2-8).
+/// - **PII 제거**: relation_type·label(사람 관계 정보) 온체인 X(결정#2). 한마디·프로필은 오프체인.
+/// - request→accept 핸드오프: `IumRequest`를 수신자에게 transfer → *소유가 곧 수락 권한*(게이트).
 module dibang_wedding::ium;
 
-use std::string::String;
 use sui::clock::Clock;
-use sui::dynamic_field as df;
 use sui::event;
+use dibang_wedding::event as gathering;
 
 // === Errors ===
 
-/// 자기 자신과는 관계를 맺을 수 없음.
+/// 자기 자신과는 이음할 수 없음.
 const ESelfLink: u64 = 0;
-/// 이미 존재하는 (from, to) 관계임.
-const EDuplicateIum: u64 = 1;
+/// 수락 시 제시한 Event가 IumRequest의 매칭 Event가 아님.
+const EWrongEvent: u64 = 1;
 
 // === Structs ===
 
-/// 신뢰 관계 한 건. `key + store`라 보관·전송 가능하다.
-public struct Ium has key, store {
+/// 대기 중인 이음 신청. 수신자에게 transfer되어, 그 소유가 곧 수락 권한이다(key-only — 양도 불가).
+/// `event_id` = 이 매칭의 inyeon Event(gathering::Event, EVENT_INYEON). 한마디 등 콘텐츠는 오프체인.
+public struct IumRequest has key {
     id: UID,
-    from_user: address,
-    to_user: address,
-    relation_type: String,
-    label: String,
+    event_id: ID,
+    initiator: address,
     created_at: u64,
-}
-
-/// 중복 관계 방지용 공유 레지스트리. (from, to) 쌍을 dynamic field 키로 기록한다.
-public struct IumRegistry has key {
-    id: UID,
-}
-
-/// (from, to) 쌍을 가리키는 dynamic field 키.
-public struct PairKey has copy, drop, store {
-    from: address,
-    to: address,
 }
 
 // === Events ===
 
-public struct IumCreated has copy, drop {
-    ium_id: ID,
-    from_user: address,
-    to_user: address,
-    relation_type: String,
-}
-
-public struct IumRevoked has copy, drop {
-    ium_id: ID,
-    from_user: address,
+public struct IumRequested has copy, drop {
+    event_id: ID,
+    initiator: address,
     to_user: address,
 }
 
-// === Init ===
-
-/// 패키지 배포 시 1회 실행되어 공유 레지스트리를 만든다.
-fun init(ctx: &mut TxContext) {
-    transfer::share_object(IumRegistry { id: object::new(ctx) });
+public struct IumAccepted has copy, drop {
+    event_id: ID,
+    initiator: address,
+    receiver: address,
 }
 
 // === Public functions ===
 
-/// 호출자(from)가 `to_user`에게 신뢰 관계를 만든다. 자기 자신·중복 쌍은 거부한다.
-/// 생성된 `Ium`을 반환해 PTB가 호출자에게 transfer 하도록 한다.
-public fun create_ium(
-    registry: &mut IumRegistry,
-    to_user: address,
-    relation_type: String,
-    label: String,
-    clock: &Clock,
-    ctx: &mut TxContext,
-): Ium {
-    let from_user = ctx.sender();
-    assert!(from_user != to_user, ESelfLink);
+/// 이음 신청 — 매칭 Event(INYEON)를 생성하고(신청자=INITIATOR Participation 발행) `IumRequest`를
+/// `to_user`에게 전달한다. 매칭 Event id 반환. 한마디·프로필은 오프체인.
+public fun request_ium(to_user: address, clock: &Clock, ctx: &mut TxContext): ID {
+    let initiator = ctx.sender();
+    assert!(initiator != to_user, ESelfLink);
 
-    let key = PairKey { from: from_user, to: to_user };
-    assert!(!df::exists_(&registry.id, key), EDuplicateIum);
-    df::add(&mut registry.id, key, true);
+    // 매칭 이벤트 생성 — 신청자가 그 이벤트의 INITIATOR(자기 Participation 발행).
+    let event_id = gathering::new_event(gathering::event_inyeon(), gathering::role_initiator(), clock, ctx);
 
-    let ium = Ium {
+    let req = IumRequest {
         id: object::new(ctx),
-        from_user,
-        to_user,
-        relation_type,
-        label,
+        event_id,
+        initiator,
         created_at: clock.timestamp_ms(),
     };
-
-    event::emit(IumCreated {
-        ium_id: object::id(&ium),
-        from_user,
-        to_user,
-        relation_type: ium.relation_type,
-    });
-
-    ium
+    event::emit(IumRequested { event_id, initiator, to_user });
+    transfer::transfer(req, to_user);
+    event_id
 }
 
-/// 신뢰 관계를 취소한다. `Ium` 오브젝트를 소비하고 레지스트리에서 쌍을 제거해
-/// 같은 쌍을 다시 만들 수 있게 한다.
-public fun revoke_ium(registry: &mut IumRegistry, ium: Ium) {
-    let ium_id = object::id(&ium);
-    let Ium { id, from_user, to_user, relation_type: _, label: _, created_at: _ } = ium;
+/// 이음 수락 — 수신자가 자기 소유 `IumRequest` + 매칭 Event로 RECEIVER로 참가해 매칭을 확정한다.
+/// 확정된 매칭 = INYEON Event + 양측 Participation(INITIATOR/RECEIVER) = CS 엣지(인덱서가 도출).
+public fun accept_ium(ev: &gathering::Event, req: IumRequest, clock: &Clock, ctx: &mut TxContext) {
+    let receiver = ctx.sender();
+    let IumRequest { id, event_id, initiator, created_at: _ } = req;
+    assert!(object::id(ev) == event_id, EWrongEvent);
 
-    let key = PairKey { from: from_user, to: to_user };
-    let _existed: bool = df::remove(&mut registry.id, key);
+    // 수신자가 매칭 이벤트에 RECEIVER로 참가(soulbound Participation). 소유한 IumRequest가 수락 게이트.
+    gathering::participate(ev, gathering::role_receiver(), clock, ctx);
 
-    event::emit(IumRevoked { ium_id, from_user, to_user });
+    event::emit(IumAccepted { event_id, initiator, receiver });
     id.delete();
 }
 
 // === Views ===
 
-public fun from_user(ium: &Ium): address { ium.from_user }
-public fun to_user(ium: &Ium): address { ium.to_user }
-public fun relation_type(ium: &Ium): String { ium.relation_type }
-public fun label(ium: &Ium): String { ium.label }
-
-/// 레지스트리에 (from, to) 관계가 존재하는지.
-public fun has_relation(registry: &IumRegistry, from: address, to: address): bool {
-    df::exists_(&registry.id, PairKey { from, to })
-}
+public fun request_event_id(req: &IumRequest): ID { req.event_id }
+public fun request_initiator(req: &IumRequest): address { req.initiator }
 
 // === Tests ===
 
@@ -133,111 +97,86 @@ use sui::clock;
 use std::unit_test::assert_eq;
 
 #[test_only]
-const ALICE: address = @0xA1;
+const ALICE: address = @0xA1; // initiator
 #[test_only]
-const BOB: address = @0xB0;
-
-#[test_only]
-/// 테스트에서 레지스트리를 만든다(배포 시 init과 동일).
-public fun init_for_testing(ctx: &mut TxContext) {
-    init(ctx);
-}
+const BOB: address = @0xB0; // receiver
 
 #[test]
-fun create_ium_marks_registry() {
+fun request_creates_inyeon_event_and_request() {
     let mut scenario = ts::begin(ALICE);
-    init_for_testing(scenario.ctx());
+    let clk = clock::create_for_testing(scenario.ctx());
 
+    let event_id = request_ium(BOB, &clk, scenario.ctx());
+
+    // 매칭 INYEON 이벤트가 공유되고, 신청자에게 INITIATOR Participation, 수신자에게 IumRequest.
     scenario.next_tx(ALICE);
-    let mut registry = scenario.take_shared<IumRegistry>();
-    let clock = clock::create_for_testing(scenario.ctx());
+    let ev = scenario.take_shared<gathering::Event>();
+    assert_eq!(object::id(&ev), event_id);
+    assert_eq!(ev.event_type(), gathering::event_inyeon());
+    let p_init = scenario.take_from_sender<gathering::Participation>();
+    assert_eq!(p_init.role_id(), gathering::role_initiator());
+    assert_eq!(p_init.participant(), ALICE);
 
-    let ium = create_ium(
-        &mut registry,
-        BOB,
-        b"friend".to_string(),
-        b"Best friend".to_string(),
-        &clock,
-        scenario.ctx(),
-    );
+    scenario.return_to_sender(p_init);
+    ts::return_shared(ev);
 
-    assert_eq!(ium.from_user, ALICE);
-    assert_eq!(ium.to_user, BOB);
-    assert!(registry.has_relation(ALICE, BOB));
-    assert!(!registry.has_relation(BOB, ALICE)); // 방향성 있음
+    scenario.next_tx(BOB);
+    let req = scenario.take_from_sender<IumRequest>();
+    assert_eq!(req.request_event_id(), event_id);
+    assert_eq!(req.request_initiator(), ALICE);
+    scenario.return_to_sender(req);
 
-    transfer::public_transfer(ium, ALICE);
-    clock::destroy_for_testing(clock);
-    ts::return_shared(registry);
+    clock::destroy_for_testing(clk);
     scenario.end();
 }
 
 #[test]
-fun revoke_allows_recreate() {
+fun accept_confirms_match_with_both_participations() {
     let mut scenario = ts::begin(ALICE);
-    init_for_testing(scenario.ctx());
+    let clk = clock::create_for_testing(scenario.ctx());
+    let event_id = request_ium(BOB, &clk, scenario.ctx());
 
-    // 생성
-    scenario.next_tx(ALICE);
-    {
-        let mut registry = scenario.take_shared<IumRegistry>();
-        let clock = clock::create_for_testing(scenario.ctx());
-        let ium = create_ium(&mut registry, BOB, b"friend".to_string(), b"x".to_string(), &clock, scenario.ctx());
-        transfer::public_transfer(ium, ALICE);
-        clock::destroy_for_testing(clock);
-        ts::return_shared(registry);
-    };
+    // 수신자(BOB)가 수락 → RECEIVER로 참가, IumRequest 소비.
+    scenario.next_tx(BOB);
+    let ev = scenario.take_shared<gathering::Event>();
+    let req = scenario.take_from_sender<IumRequest>();
+    accept_ium(&ev, req, &clk, scenario.ctx());
+    ts::return_shared(ev);
 
-    // 취소 후 같은 쌍 재생성
-    scenario.next_tx(ALICE);
-    {
-        let mut registry = scenario.take_shared<IumRegistry>();
-        let ium = scenario.take_from_sender<Ium>();
-        revoke_ium(&mut registry, ium);
-        assert!(!registry.has_relation(ALICE, BOB));
+    // BOB에게 RECEIVER Participation(매칭 확정 = 양측 참가).
+    scenario.next_tx(BOB);
+    let p_recv = scenario.take_from_sender<gathering::Participation>();
+    assert_eq!(p_recv.role_id(), gathering::role_receiver());
+    assert_eq!(p_recv.participation_event_id(), event_id);
+    assert_eq!(p_recv.participant(), BOB);
+    scenario.return_to_sender(p_recv);
 
-        let clock = clock::create_for_testing(scenario.ctx());
-        let ium2 = create_ium(&mut registry, BOB, b"friend".to_string(), b"again".to_string(), &clock, scenario.ctx());
-        assert!(registry.has_relation(ALICE, BOB));
-        transfer::public_transfer(ium2, ALICE);
-        clock::destroy_for_testing(clock);
-        ts::return_shared(registry);
-    };
+    clock::destroy_for_testing(clk);
     scenario.end();
 }
 
 #[test, expected_failure(abort_code = ESelfLink)]
 fun self_link_fails() {
     let mut scenario = ts::begin(ALICE);
-    init_for_testing(scenario.ctx());
-
-    scenario.next_tx(ALICE);
-    let mut registry = scenario.take_shared<IumRegistry>();
-    let clock = clock::create_for_testing(scenario.ctx());
-
-    let ium = create_ium(&mut registry, ALICE, b"friend".to_string(), b"self".to_string(), &clock, scenario.ctx());
-
-    transfer::public_transfer(ium, ALICE); // 미도달
-    clock::destroy_for_testing(clock);
-    ts::return_shared(registry);
-    scenario.end();
+    let clk = clock::create_for_testing(scenario.ctx());
+    request_ium(ALICE, &clk, scenario.ctx()); // 자기 자신 → ESelfLink
+    abort
 }
 
-#[test, expected_failure(abort_code = EDuplicateIum)]
-fun duplicate_ium_fails() {
+#[test, expected_failure(abort_code = EWrongEvent)]
+fun accept_wrong_event_fails() {
     let mut scenario = ts::begin(ALICE);
-    init_for_testing(scenario.ctx());
+    let clk = clock::create_for_testing(scenario.ctx());
+    request_ium(BOB, &clk, scenario.ctx()); // 매칭 X: req는 BOB에게
 
+    // ALICE가 다른 매칭 Y 생성(req는 @0xC1에게).
     scenario.next_tx(ALICE);
-    let mut registry = scenario.take_shared<IumRegistry>();
-    let clock = clock::create_for_testing(scenario.ctx());
+    let other_event_id = request_ium(@0xC1, &clk, scenario.ctx());
 
-    let ium1 = create_ium(&mut registry, BOB, b"friend".to_string(), b"x".to_string(), &clock, scenario.ctx());
-    let ium2 = create_ium(&mut registry, BOB, b"friend".to_string(), b"dup".to_string(), &clock, scenario.ctx()); // EDuplicateIum
-
-    transfer::public_transfer(ium1, ALICE); // 미도달
-    transfer::public_transfer(ium2, ALICE);
-    clock::destroy_for_testing(clock);
-    ts::return_shared(registry);
-    scenario.end();
+    // BOB이 자기 req(매칭 X)로 엉뚱한 Event Y를 들이밀어 수락 시도 → EWrongEvent.
+    scenario.next_tx(BOB);
+    let other_ev = scenario.take_shared_by_id<gathering::Event>(other_event_id);
+    let req = scenario.take_from_sender<IumRequest>();
+    accept_ium(&other_ev, req, &clk, scenario.ctx());
+    abort
 }
