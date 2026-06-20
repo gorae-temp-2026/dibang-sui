@@ -36,6 +36,16 @@ export function InyeonPage() {
   const ieumOpen = state.matches('composing') || state.matches('sending')
   const detailMoi = moiById(detailId)
   const activeMoi = moiById(activeId)
+  const profileMoiForSheet = moiById(profileMoiId)
+  const profileMeeting = profileMoiForSheet
+    ? {
+        photoHue: profileMoiForSheet.photos[0]?.hue ?? 210,
+        hook: profileMoiForSheet.hook,
+        prov: profileMoiForSheet.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: TIER_META[p.tier].label })),
+        mutualCount: profileMoiForSheet.mutualCount,
+        balLabel: profileMoiForSheet.balLabel,
+      }
+    : undefined
 
   return (
     <div className="relative mx-auto flex h-[calc(100dvh-5.5rem)] max-w-[420px] flex-col overflow-hidden bg-[#0A1626] text-[#E8EFF6]">
@@ -146,6 +156,7 @@ export function InyeonPage() {
         onOpenChange={(o) => !o && setProfileMoiId(null)}
         data={chulsooProfile}
         context="inyeon"
+        meeting={profileMeeting}
         onIeum={
           profileMoiId != null
             ? () => {

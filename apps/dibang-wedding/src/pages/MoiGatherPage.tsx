@@ -13,6 +13,19 @@ import { PLAZA_CROWD, CROWD_BY_ID } from '../components/moi-gather/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { chulsooProfile } from '../components/profile/fixture'
 
+// 모이 색 → 사진 placeholder hue (실사진 전).
+function colorToHue(hex: number): number {
+  const r = ((hex >> 16) & 255) / 255
+  const g = ((hex >> 8) & 255) / 255
+  const b = (hex & 255) / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const d = max - min
+  if (d === 0) return 210
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+  return Math.round((h * 60 + 360) % 360)
+}
+
 export function MoiGatherPage() {
   const navigate = useNavigate()
   const [state, send] = useMachine(moiPlazaMachine)
@@ -33,6 +46,15 @@ export function MoiGatherPage() {
   const profileMoi = profileMoiId ? CROWD_BY_ID[profileMoiId] : null
   // 공유 프로필 fixture에 클릭한 모이 이름만 덮어 placeholder(데이터는 철수 fixture 공통).
   const profileData = profileMoi ? { ...chulsooProfile, subject: profileMoi.name } : chulsooProfile
+  const profileMeeting = profileMoi
+    ? {
+        photoHue: colorToHue(profileMoi.color),
+        hook: profileMoi.me ? '나의 모이 · 광장의 나' : `${profileMoi.role}`,
+        prov: [{ emoji: '💍', text: '같은 결혼식에서 만난 모이', sub: profileMoi.role, tag: '오프라인' }],
+        mutualCount: profileMoi.me ? 0 : 4,
+        balLabel: '높음',
+      }
+    : undefined
 
   const handleIeum = () => {
     const m = profileMoi
@@ -120,6 +142,7 @@ export function MoiGatherPage() {
         onOpenChange={(o) => !o && setProfileMoiId(null)}
         data={profileData}
         context="lounge"
+        meeting={profileMeeting}
         onIeum={profileMoiId && profileMoiId !== 'me' ? handleIeum : undefined}
       />
     </div>

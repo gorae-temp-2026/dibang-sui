@@ -45,3 +45,17 @@ export interface ProfileData {
 
 /** 프로필 공개 범위 컨텍스트 (정보공개 테이블 ①②③, 핸드오프 §12-3·§13-3). */
 export type ProfileContext = 'inyeon' | 'lounge'
+
+/** 프로필 상단 만남 맥락(따뜻함, 목업 SSOT) — 인연 Moi(prov/photos/hook) 또는 라운지 모이 유래.
+ *  실사진 에셋 전엔 hue placeholder. 익명이어도 사진·후크·출처는 노출(기능정의 §5). */
+export interface MeetingContext {
+  /** 대표 사진 placeholder hue(0~360). */
+  photoHue: number
+  /** 후크 카피 — "함께 참여한 결혼식이 있어요" 류. */
+  hook: string
+  /** 어디서 마주쳤나 — 출처 + 관계 태그. */
+  prov: { emoji: string; text: string; sub?: string; tag?: string }[]
+  mutualCount: number
+  /** 익명 신뢰범위 라벨. */
+  balLabel: string
+}
