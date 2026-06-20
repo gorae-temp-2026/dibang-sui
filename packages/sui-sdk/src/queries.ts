@@ -239,7 +239,6 @@ export interface RsvpEvent {
   weddingId: string;
   submitter: string;
   recipientSlot: string;
-  guestName: string;
   attendance: string;
   companionCount: number;
   meal: string;
@@ -318,7 +317,6 @@ export async function getRsvpEvents(
       weddingId: asString(p.wedding_id),
       submitter: asString(p.submitter),
       recipientSlot: asString(p.recipient_slot),
-      guestName: asString(p.guest_name),
       attendance: asString(p.attendance),
       companionCount: asNumber(p.companion_count),
       meal: asString(p.meal),

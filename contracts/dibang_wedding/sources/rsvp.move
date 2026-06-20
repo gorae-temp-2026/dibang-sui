@@ -7,31 +7,28 @@ use std::string::String;
 use sui::clock::Clock;
 use sui::event;
 use dibang_wedding::wedding::{Self, WeddingLounge};
-use dibang_wedding::utils;
 
 // === Errors ===
 
-/// 게스트 이름이 최대 글자 수를 초과함.
-const EGuestNameTooLong: u64 = 0;
 /// attendance 값이 'attending' / 'absent' 가 아님.
-const EInvalidAttendance: u64 = 1;
+const EInvalidAttendance: u64 = 0;
 /// 동반 인원이 허용 범위를 초과함.
-const ETooManyCompanions: u64 = 2;
+const ETooManyCompanions: u64 = 1;
 /// meal 값이 'yes' / 'no' / 'undecided' 가 아님.
-const EInvalidMeal: u64 = 3;
+const EInvalidMeal: u64 = 2;
 
 // === Constants ===
 
-const MAX_GUEST_NAME_CHARS: u64 = 20;
 const MAX_COMPANIONS: u64 = 20;
 
 // === Events ===
 
+/// 참석 의사 — 신원은 `submitter`(지갑 주소)로만. 이름 등 PII는 온체인에 담지 않는다(결정#2/§3).
+/// 호스트는 submitter 주소 → 이름을 *오프체인*에서 매핑해 현황을 본다(신원-불가지 원칙).
 public struct RsvpSubmitted has copy, drop {
     wedding_id: ID,
     submitter: address,
     recipient_slot: String,
-    guest_name: String,
     attendance: String,
     companion_count: u64,
     meal: String,
@@ -44,7 +41,6 @@ public struct RsvpSubmitted has copy, drop {
 public fun submit_rsvp(
     lounge: &WeddingLounge,
     recipient_slot: String,
-    guest_name: String,
     attendance: String,
     companion_count: u64,
     meal: String,
@@ -52,7 +48,6 @@ public fun submit_rsvp(
     ctx: &TxContext,
 ) {
     wedding::assert_valid_recipient_slot(&recipient_slot);
-    assert!(utils::utf8_char_count(&guest_name) <= MAX_GUEST_NAME_CHARS, EGuestNameTooLong);
     assert!(is_valid_attendance(&attendance), EInvalidAttendance);
     assert!(companion_count <= MAX_COMPANIONS, ETooManyCompanions);
     assert!(is_valid_meal(&meal), EInvalidMeal);
@@ -61,7 +56,6 @@ public fun submit_rsvp(
         wedding_id: wedding::lounge_wedding_id(lounge),
         submitter: ctx.sender(),
         recipient_slot,
-        guest_name,
         attendance,
         companion_count,
         meal,
@@ -112,7 +106,6 @@ fun submit_emits_one_event() {
     submit_rsvp(
         &lounge,
         b"groom".to_string(),
-        b"Hong".to_string(),
         b"attending".to_string(),
         2,
         b"yes".to_string(),
@@ -141,7 +134,6 @@ fun invalid_attendance_fails() {
     submit_rsvp(
         &lounge,
         b"groom".to_string(),
-        b"Hong".to_string(),
         b"maybe".to_string(), // 잘못된 값
         0,
         b"yes".to_string(),
@@ -166,7 +158,6 @@ fun too_many_companions_fails() {
     submit_rsvp(
         &lounge,
         b"groom".to_string(),
-        b"Hong".to_string(),
         b"attending".to_string(),
         21, // > 20
         b"yes".to_string(),
@@ -191,7 +182,6 @@ fun invalid_meal_fails() {
     submit_rsvp(
         &lounge,
         b"groom".to_string(),
-        b"Hong".to_string(),
         b"attending".to_string(),
         0,
         b"maybe".to_string(), // 잘못된 값

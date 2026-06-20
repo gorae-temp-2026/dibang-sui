@@ -41,7 +41,7 @@ use sui::clock;
 #[test_only]
 use std::unit_test::assert_eq;
 #[test_only]
-use dibang_wedding::wedding::{Self, Wedding};
+use dibang_wedding::wedding;
 #[test_only]
 use dibang_wedding::moi;
 
