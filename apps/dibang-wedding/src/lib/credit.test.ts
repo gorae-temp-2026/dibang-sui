@@ -60,6 +60,14 @@ describe('creditFromEvents (신뢰→신용)', () => {
     expect(components['b']!.busu).toBe(0)
   })
 
+  it('ACCEPT_IUM은 양방향 CS — 매칭 양쪽 모두 적립 (I-CS1)', () => {
+    const evs: EventCreatedEvent[] = [{ eventId: 'm', eventType: EVENT.INYEON, creator: 'initiator' }]
+    // receiver가 수락(raw=receiver→initiator). 매칭은 상호 → 양쪽 CS authority 적립.
+    const { components } = creditFromEvents([cs(ACTION.ACCEPT_IUM, 'receiver', 'initiator', ROLE.RECEIVER, 'm')], evs)
+    expect(components['initiator']!.cs).toBeGreaterThan(0)
+    expect(components['receiver']!.cs).toBeGreaterThan(0) // 단방향이면 0이었을 것
+  })
+
   it('GIVE_MONEY는 결혼식 하객→혼주만 부조로 집계(맥락 가드)', () => {
     // event_type 매핑 없으면(=미등록) 부조로 안 잡힘.
     const { components } = creditFromEvents([busu('g', 'h', 100_000)], [])

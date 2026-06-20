@@ -108,9 +108,14 @@ function fold(
           addEdge(busu, a.actor, a.target, a.amount)
         }
         break
+      case ACTION.ACCEPT_IUM:
+        // 매칭 = 상호 관계 성립 → 양방향 CS(receiver↔initiator 둘 다 authority 적립). (I-CS1)
+        // raw는 단방향(receiver→initiator)이나, accept=상호 유대라는 해석을 *여기*(오프체인)서 양방향으로 편다.
+        addEdge(cs, a.actor, a.target, 1)
+        addEdge(cs, a.target, a.actor, 1)
+        break
       case ACTION.WRITE_MESSAGE:
       case ACTION.INVITE:
-      case ACTION.ACCEPT_IUM:
       case ACTION.GIFT:
         // 유대 신호(방향별 누적). 증여(GIFT)도 CS로만(EM 부조 전파 제외).
         addEdge(cs, a.actor, a.target, 1)
