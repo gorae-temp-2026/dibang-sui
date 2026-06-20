@@ -7,6 +7,8 @@ import { DAppKitProvider } from '@mysten/dapp-kit-react'
 import { dAppKit } from './lib/dapp-kit'
 import { ZkLoginProvider } from './providers/ZkLoginProvider'
 import { AuthProvider } from './providers/AuthProvider'
+import { isDevBypass } from './dev/devBypass'
+import { seedDevFixtures } from './dev/seedDevFixtures'
 // CSS는 SPA entry 관례에 따라 top-level import 유지 (FOUC 방지).
 import './App.css'
 import App from './App.tsx'
@@ -20,7 +22,11 @@ import App from './App.tsx'
  * createClientConfig에 흡수되어 entry에서 명시 호출이 필요 없다.
  */
 export function mount(): void {
-  const queryClient = new QueryClient()
+  // DEV 전용 — 로그인 우회 프리뷰: 철수 fixture 시드 + staleTime∞(더미 백엔드 refetch 방지). 프로덕션 무영향.
+  const queryClient = isDevBypass()
+    ? new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, retry: false, refetchOnWindowFocus: false } } })
+    : new QueryClient()
+  if (isDevBypass()) seedDevFixtures(queryClient)
 
   const rootEl = document.getElementById('root')
   if (!rootEl) throw new Error('Root element #root not found')

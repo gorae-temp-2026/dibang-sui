@@ -2,7 +2,8 @@
 // 구조: 다크 셸 + 상단(매칭범위·지갑) + 본문 스크린(유니버스 덱/받은이음/채팅/프로필) + 우측 irail + 시트.
 // 흐름: 카드 탐색 → 사진 게이트(2장무료/3장째 요네) → 이음 신청(한마디) → 매칭 → (Moi Credit 재료).
 // 받은이음·채팅 화면은 스텁(TODO), 프로필 상세는 ⑤ 공유 프로필 컴포넌트에서 본구현 예정.
-import { useMachine } from '@xstate/react'
+import { useMachine, useSelector } from '@xstate/react'
+import { giftActor } from '../machines/gift.machine'
 import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
 import { POOL, TIER_META } from '../components/inyeon/data'
@@ -22,6 +23,7 @@ const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.i
 
 export function InyeonPage() {
   const [state, send] = useMachine(inyeonMachine)
+  const giftSignals = useSelector(giftActor, (s) => s.context.signals)
 
   const {
     queue, photoIdx, unlocked, yone, screen, degMin, degMax, activeId, message, error,
@@ -34,6 +36,17 @@ export function InyeonPage() {
   const ieumOpen = state.matches('composing') || state.matches('sending')
   const detailMoi = moiById(detailId)
   const activeMoi = moiById(activeId)
+  const profileMoiForSheet = moiById(profileMoiId)
+  const profileMeeting = profileMoiForSheet
+    ? {
+        photoHue: profileMoiForSheet.photos[0]?.hue ?? 210,
+        photoUrl: profileMoiForSheet.photos[0]?.url,
+        hook: profileMoiForSheet.hook,
+        prov: profileMoiForSheet.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: TIER_META[p.tier].label })),
+        mutualCount: profileMoiForSheet.mutualCount,
+        balLabel: profileMoiForSheet.balLabel,
+      }
+    : undefined
 
   return (
     <div className="relative mx-auto flex h-[calc(100dvh-5.5rem)] max-w-[420px] flex-col overflow-hidden bg-[#0A1626] text-[#E8EFF6]">
@@ -149,6 +162,8 @@ export function InyeonPage() {
         onOpenChange={(o) => !o && send({ type: 'CLOSE_PROFILE' })}
         data={chulsooProfile}
         context="inyeon"
+        meeting={profileMeeting}
+        giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
         onIeum={profileMoiId != null ? () => send({ type: 'OPEN_IEUM', id: profileMoiId }) : undefined}
       />
     </div>
@@ -161,7 +176,7 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
   return (
     <div className="h-full overflow-y-auto px-5 pb-6 pt-5">
       <div className="text-center">
-        <div className="mx-auto h-24 w-24 rounded-full bg-gradient-to-br from-[#FCE6EC] to-[#E8F4FA]" />
+        <div className="mx-auto h-24 w-24 rounded-full bg-cover bg-center" style={{ backgroundImage: 'url(/assets/inyeon-photos/my-profile.jpg)' }} />
         <div className="mt-3 text-xl font-extrabold text-white">유상</div>
         <div className="mt-0.5 text-xs text-white/50">모이 #1024 · 서울</div>
       </div>
@@ -223,7 +238,11 @@ function DetailSheet({ moi, onClose, onIeum, onOpenFull }: { moi: Moi | null; on
             </SheetHeader>
             <div
               className="mb-3 h-40 rounded-2xl bg-cover bg-[center_18%]"
-              style={{ background: `linear-gradient(150deg, hsl(${moi.photos[0]?.hue ?? 210} 52% 34%), hsl(${((moi.photos[0]?.hue ?? 210) + 36) % 360} 48% 16%))` }}
+              style={
+                moi.photos[0]?.url
+                  ? { backgroundImage: `url(${moi.photos[0].url})` }
+                  : { background: `linear-gradient(150deg, hsl(${moi.photos[0]?.hue ?? 210} 52% 34%), hsl(${((moi.photos[0]?.hue ?? 210) + 36) % 360} 48% 16%))` }
+              }
             />
             <div className="space-y-2">
               {moi.prov.map((p) => (

@@ -2,16 +2,30 @@
 // PixiJS placeholder 시스템: 샵 구매→요네 차감→자동 배치/장착 · 아이템 드래그 · 모이 클릭→공유 프로필.
 // 모이 클릭 = 디방인연과 동일 ProfileSheet, 단 context='lounge'(③ 오프라인 = 이름·소속·전체 네트워크 공개).
 // 에셋(투명 PNG) 부재라 캐릭터·아이템은 컬러 도형 placeholder — 에셋 나오면 슬롯 교체(에셋스펙 §4).
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { useMachine } from '@xstate/react'
+import { useMachine, useSelector } from '@xstate/react'
+import { giftActor } from '../machines/gift.machine'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
 import { moiPlazaMachine } from '../machines/moiPlaza.machine'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
-import { PLAZA_CROWD, CROWD_BY_ID, DECOR_SETS, PLAZA_THEME_LABEL, type PlazaTheme } from '../components/moi-gather/data'
+import { PLAZA_CROWD, CROWD_BY_ID } from '../components/moi-gather/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { chulsooProfile } from '../components/profile/fixture'
+
+// 모이 색 → 사진 placeholder hue (실사진 전).
+function colorToHue(hex: number): number {
+  const r = ((hex >> 16) & 255) / 255
+  const g = ((hex >> 8) & 255) / 255
+  const b = (hex & 255) / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const d = max - min
+  if (d === 0) return 210
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+  return Math.round((h * 60 + 360) % 360)
+}
 
 export function MoiGatherPage() {
   const navigate = useNavigate()
@@ -19,12 +33,27 @@ export function MoiGatherPage() {
   const [shopOpen, setShopOpen] = useState(false)
   const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
 
-  const { yone, owned, placed, equipped, theme, pendingItemId, error, toast } = state.context
+  const { yone, owned, placed, equipped, pendingItemId, error, toast } = state.context
   const placedIds = placed.map((p) => p.itemId)
+  const giftReceived = useSelector(giftActor, (s) => s.context.received)
+  const giftSignals = useSelector(giftActor, (s) => s.context.signals)
+  // 받은 선물 → 광장 보유로 부여(꾸미기 장착·배치 가능). gift actor 브리지.
+  useEffect(() => {
+    if (giftReceived.length) send({ type: 'GRANT_OWNED', ids: giftReceived })
+  }, [giftReceived, send])
 
   const profileMoi = profileMoiId ? CROWD_BY_ID[profileMoiId] : null
   // 공유 프로필 fixture에 클릭한 모이 이름만 덮어 placeholder(데이터는 철수 fixture 공통).
   const profileData = profileMoi ? { ...chulsooProfile, subject: profileMoi.name } : chulsooProfile
+  const profileMeeting = profileMoi
+    ? {
+        photoHue: colorToHue(profileMoi.color),
+        hook: profileMoi.me ? '나의 모이 · 광장의 나' : `${profileMoi.role}`,
+        prov: [{ emoji: '💍', text: '같은 결혼식에서 만난 모이', sub: profileMoi.role, tag: '오프라인' }],
+        mutualCount: profileMoi.me ? 0 : 4,
+        balLabel: '높음',
+      }
+    : undefined
 
   // 토스트 표시·자동소멸 타이머는 머신(SHOW_TOAST → TOAST_MS 뒤 CLEAR_TOAST)이 소유.
   const handleIeum = () => {
@@ -67,26 +96,9 @@ export function MoiGatherPage() {
           placed={placed}
           equipped={equipped}
           crowd={PLAZA_CROWD}
-          decor={DECOR_SETS[theme]}
           onMoiClick={setProfileMoiId}
           onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
         />
-
-        {/* 테마 데코 스왑 (결혼식 기본 · 파티/클럽 = 구조 데모) */}
-        <div className="pointer-events-none absolute inset-x-0 top-16 z-10 flex justify-center">
-          <div className="pointer-events-auto flex gap-1 rounded-full border border-white/12 bg-[#0c1a2e]/70 p-1 backdrop-blur">
-            {(['wedding', 'party', 'club'] as PlazaTheme[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => send({ type: 'SET_THEME', theme: t })}
-                className={`rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${theme === t ? 'bg-[#1E3A5F] text-white' : 'text-white/55'}`}
-              >
-                {PLAZA_THEME_LABEL[t]}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* 조작 힌트 */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
@@ -130,6 +142,8 @@ export function MoiGatherPage() {
         onOpenChange={(o) => !o && setProfileMoiId(null)}
         data={profileData}
         context="lounge"
+        meeting={profileMeeting}
+        giftSignal={profileMoiId ? giftSignals[profileMoiId] ?? 0 : 0}
         onIeum={profileMoiId && profileMoiId !== 'me' ? handleIeum : undefined}
       />
     </div>

@@ -23,41 +23,44 @@ export const TIER_HOOK: Record<Tier, string> = {
   2: '아직 마주친 적 없는 새 인연이에요',
 }
 
-const photos = (...hues: number[]) => hues.map((hue) => ({ hue }))
+const PHOTO_BASE = '/assets/inyeon-photos'
+// 실사진 url + hue(로딩/잠금 placeholder). letter=페르소나(a~g), n=장수. 3장째부터 요네 잠금(FREE_PHOTOS).
+const photoSet = (letter: string, n: number, hue: number) =>
+  Array.from({ length: n }, (_, i) => ({ url: `${PHOTO_BASE}/${letter}${i + 1}.jpg`, hue }))
 
 export const POOL: Moi[] = [
   {
-    id: 201, name: '서아', photos: photos(212, 18, 280, 150), online: true, tier: 0, deg: 1,
+    id: 201, name: '서아', photos: photoSet('a', 4, 212), online: true, tier: 0, deg: 1,
     hook: TIER_HOOK[0], mutualCount: 3, balLabel: '매우 높음', barsF: 5, net: 41,
     prov: [{ emoji: '💍', text: '같은 결혼식 참석', sub: '하객으로 함께', tier: 0 }],
   },
   {
-    id: 202, name: '지후', photos: photos(150, 95, 40), online: false, tier: 1, deg: 2,
+    id: 202, name: '지후', photos: photoSet('b', 4, 150), online: false, tier: 1, deg: 2,
     hook: TIER_HOOK[1], mutualCount: 2, balLabel: '높음', barsF: 4, net: 28,
     prov: [{ emoji: '🤝', text: '공통 이음 2명', sub: '수아·지현을 통해 연결', tier: 1 }],
   },
   {
-    id: 203, name: '하늘', photos: photos(330, 200), online: true, tier: 0, deg: 1,
+    id: 203, name: '하늘', photos: photoSet('c', 4, 330), online: true, tier: 0, deg: 1,
     hook: TIER_HOOK[0], mutualCount: 5, balLabel: '매우 높음', barsF: 5, net: 53,
     prov: [{ emoji: '💍', text: '같은 결혼식 참석', sub: '신부측 하객', tier: 0 }],
   },
   {
-    id: 204, name: '도윤', photos: photos(20, 250, 110, 60), online: false, tier: 2, deg: 4,
+    id: 204, name: '도윤', photos: photoSet('d', 4, 20), online: false, tier: 2, deg: 4,
     hook: TIER_HOOK[2], mutualCount: 0, balLabel: '보통', barsF: 3, net: 17,
     prov: [{ emoji: '✨', text: '새로운 인연', sub: '아직 접점 없음', tier: 2 }],
   },
   {
-    id: 205, name: '수아', photos: photos(190, 300, 35), online: true, tier: 1, deg: 3,
+    id: 205, name: '수아', photos: photoSet('e', 4, 190), online: true, tier: 1, deg: 3,
     hook: TIER_HOOK[1], mutualCount: 1, balLabel: '높음', barsF: 4, net: 33,
     prov: [{ emoji: '🤝', text: '공통 이음 1명', sub: '지현을 통해 연결', tier: 1 }],
   },
   {
-    id: 206, name: '예준', photos: photos(265, 130), online: false, tier: 2, deg: 5,
+    id: 206, name: '예준', photos: photoSet('f', 4, 265), online: false, tier: 2, deg: 5,
     hook: TIER_HOOK[2], mutualCount: 0, balLabel: '상위 추정', barsF: 4, net: 22,
     prov: [{ emoji: '✨', text: '새로운 인연', sub: '먼 관계 거리', tier: 2 }],
   },
   {
-    id: 207, name: '민서', photos: photos(160, 25, 290, 80), online: true, tier: 0, deg: 1,
+    id: 207, name: '하린', photos: photoSet('g', 3, 160), online: true, tier: 0, deg: 1,
     hook: TIER_HOOK[0], mutualCount: 4, balLabel: '매우 높음', barsF: 5, net: 47,
     prov: [{ emoji: '💍', text: '같은 결혼식 참석', sub: '신랑측 하객', tier: 0 }],
   },

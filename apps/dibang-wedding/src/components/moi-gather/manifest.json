@@ -1,0 +1,256 @@
+{
+  "heads": [
+    {
+      "file": "heads/chu_default.png",
+      "ko": "철수 기본(바가지)",
+      "char": "chu",
+      "yone": 0,
+      "default": true,
+      "neck_y": 278
+    },
+    {
+      "file": "heads/chu_buzz.png",
+      "ko": "철수 반삭발",
+      "char": "chu",
+      "yone": 30,
+      "default": false,
+      "neck_y": 278
+    },
+    {
+      "file": "heads/chu_sport.png",
+      "ko": "철수 스포츠머리",
+      "char": "chu",
+      "yone": 30,
+      "default": false,
+      "neck_y": 278
+    },
+    {
+      "file": "heads/chu_shaggy.png",
+      "ko": "철수 더벅머리",
+      "char": "chu",
+      "yone": 40,
+      "default": false,
+      "neck_y": 278
+    },
+    {
+      "file": "heads/yh_pigtail.png",
+      "ko": "영희 양갈래(기본)",
+      "char": "yh",
+      "yone": 0,
+      "default": true,
+      "neck_y": 278
+    },
+    {
+      "file": "heads/yh_bob.png",
+      "ko": "영희 단발",
+      "char": "yh",
+      "yone": 40,
+      "default": false,
+      "neck_y": 278
+    },
+    {
+      "file": "heads/yh_veil.png",
+      "ko": "영희 면사포",
+      "char": "yh",
+      "yone": 90,
+      "default": false,
+      "neck_y": 278
+    }
+  ],
+  "bodies": [
+    {
+      "file": "bodies/casual.png",
+      "ko": "캐주얼(기본·리컬러)",
+      "yone": 0,
+      "default": true,
+      "neck_y": 256
+    },
+    {
+      "file": "bodies/suit.png",
+      "ko": "정장(신랑)",
+      "yone": 50,
+      "default": false,
+      "neck_y": 256
+    },
+    {
+      "file": "bodies/singer_mic.png",
+      "ko": "축가(마이크)",
+      "yone": 60,
+      "default": false,
+      "neck_y": 256
+    },
+    {
+      "file": "bodies/bride_bouquet.png",
+      "ko": "웨딩드레스(부케)",
+      "yone": 120,
+      "default": false,
+      "neck_y": 256
+    },
+    {
+      "file": "bodies/hanbok_f.png",
+      "ko": "한복(여)",
+      "yone": 90,
+      "default": false,
+      "neck_y": 256
+    },
+    {
+      "file": "bodies/party.png",
+      "ko": "파티(춤)",
+      "yone": 40,
+      "default": false,
+      "neck_y": 256
+    }
+  ],
+  "items": [
+    {
+      "file": "items/fountain.png",
+      "ko": "분수",
+      "yone": 120,
+      "category": "interior"
+    },
+    {
+      "file": "items/arch.png",
+      "ko": "꽃아치",
+      "yone": 100,
+      "category": "interior"
+    },
+    {
+      "file": "items/cake.png",
+      "ko": "웨딩케이크",
+      "yone": 60,
+      "category": "interior"
+    },
+    {
+      "file": "items/champagne.png",
+      "ko": "샴페인",
+      "yone": 30,
+      "category": "interior"
+    },
+    {
+      "file": "items/bouquet.png",
+      "ko": "부케",
+      "yone": 25,
+      "category": "interior"
+    },
+    {
+      "file": "items/table.png",
+      "ko": "웨딩테이블",
+      "yone": 40,
+      "category": "interior"
+    },
+    {
+      "file": "items/heart_balloon.png",
+      "ko": "하트풍선",
+      "yone": 20,
+      "category": "interior"
+    },
+    {
+      "file": "items/wreath.png",
+      "ko": "디방화환",
+      "yone": 80,
+      "category": "interior"
+    },
+    {
+      "file": "items/gift_box.png",
+      "ko": "축의함",
+      "yone": 25,
+      "category": "interior"
+    },
+    {
+      "file": "items/podium.png",
+      "ko": "주례대",
+      "yone": 50,
+      "category": "interior"
+    },
+    {
+      "file": "items/garland.png",
+      "ko": "가랜드",
+      "yone": 15,
+      "category": "interior"
+    },
+    {
+      "file": "items/dove.png",
+      "ko": "비둘기",
+      "yone": 20,
+      "category": "interior"
+    },
+    {
+      "file": "items/aisle_runner.png",
+      "ko": "버진로드",
+      "yone": 70,
+      "category": "interior"
+    },
+    {
+      "file": "items/flower_stand.png",
+      "ko": "버진로드 꽃장식",
+      "yone": 35,
+      "category": "interior"
+    },
+    {
+      "file": "items/round_table.png",
+      "ko": "라운드 테이블",
+      "yone": 40,
+      "category": "interior"
+    },
+    {
+      "file": "items/chair.png",
+      "ko": "의자",
+      "yone": 15,
+      "category": "interior"
+    },
+    {
+      "file": "items/candelabra.png",
+      "ko": "촛대",
+      "yone": 30,
+      "category": "interior"
+    }
+  ],
+  "accessories": [
+    {
+      "file": "accessories/flower_crown.png",
+      "ko": "화관",
+      "yone": 15
+    },
+    {
+      "file": "accessories/tiara.png",
+      "ko": "티아라",
+      "yone": 25
+    },
+    {
+      "file": "accessories/bow_tie.png",
+      "ko": "보타이",
+      "yone": 12
+    },
+    {
+      "file": "accessories/glasses.png",
+      "ko": "안경",
+      "yone": 12
+    },
+    {
+      "file": "accessories/sunglasses.png",
+      "ko": "선글라스",
+      "yone": 18
+    },
+    {
+      "file": "accessories/party_hat.png",
+      "ko": "고깔모자",
+      "yone": 10
+    },
+    {
+      "file": "accessories/heart_glasses.png",
+      "ko": "하트선글라스",
+      "yone": 16
+    },
+    {
+      "file": "accessories/wings.png",
+      "ko": "천사날개",
+      "yone": 30
+    },
+    {
+      "file": "accessories/corsage.png",
+      "ko": "코르사주",
+      "yone": 14
+    }
+  ],
+  "_note": "기본 입장 모이=원본 SVG+옷 랜덤색. 합성=heads(neck_y=278)+bodies(어깨~256, 머리 neck를 collar에 겹쳐 배치). 손그림 톤 통일. 가격=요네."
+}
