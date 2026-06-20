@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createWedding, updateInvitation, updateWeddingSuiIds } from '@gorae/contracts/sdk.gen';
 import { getMyWeddingsQueryKey } from '@gorae/contracts/@tanstack/react-query.gen';
 import type { CreateWeddingRequest, UpdateInvitationRequest } from '@gorae/contracts';
-import type { CreateWeddingParams, SuiNetwork } from '@gorae/sui-sdk';
+import type { SuiNetwork } from '@gorae/sui-sdk';
 import { useOnchainHostActions } from '../../hooks/useOnchainHostActions';
 import { useZkLogin } from '../../providers/ZkLoginProvider';
 import { env } from '../../env';
@@ -11,8 +11,6 @@ import { extractWeddingObjectIds, type WeddingObjectIds } from './onchainWedding
 export interface SaveInvitationPayload {
   weddingReq: CreateWeddingRequest;
   invitationReq: UpdateInvitationRequest;
-  /** 온체인 createWedding 인자(owner 제외 — hook이 주입). 폼에서 toCreateWeddingParams로 생성. */
-  onchainParams: Omit<CreateWeddingParams, 'owner'>;
 }
 
 export function useSaveInvitation() {
@@ -21,7 +19,7 @@ export function useSaveInvitation() {
   const { isAuthenticated } = useZkLogin();
 
   return useMutation({
-    mutationFn: async ({ weddingReq, invitationReq, onchainParams }: SaveInvitationPayload) => {
+    mutationFn: async ({ weddingReq, invitationReq }: SaveInvitationPayload) => {
       // Step 1: Supabase createWedding → weddingId 확보 (D0-1: Supabase 먼저)
       const { data: wedding } = await createWedding({
         body: weddingReq,
@@ -51,7 +49,7 @@ export function useSaveInvitation() {
       if (isAuthenticated) {
         try {
           const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
-          const digest = await createWeddingOnchain(onchainParams);
+          const digest = await createWeddingOnchain();
           const ids = await extractWeddingObjectIds(digest, network);
           // C10-1: 축의 Vault 생성(capId로) → vaultId 추출. 실패해도 wedding/lounge는 저장(흐름 유지).
           let vaultId = '';

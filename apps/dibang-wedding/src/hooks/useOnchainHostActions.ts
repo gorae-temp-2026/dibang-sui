@@ -11,7 +11,6 @@
 import { useCallback } from 'react'
 import {
   buildCreateWeddingTx,
-  buildUpdateWeddingTx,
   buildAddHostTx,
   buildCreateVaultTx,
   buildWithdrawTx,
@@ -21,8 +20,6 @@ import {
   buildUnequipItemTx,
   buildCreateIumTx,
   buildRevokeIumTx,
-  type CreateWeddingParams,
-  type UpdateWeddingParams,
   type WithdrawParams,
   type MintItemParams,
   type UnequipItemParams,
@@ -39,14 +36,10 @@ export function useOnchainHostActions() {
   }, [address])
 
   // === Wedding ===
+  // create_wedding은 익명 앵커만 생성(표시정보 인자 없음, 결정#2) — 이름·예식장은 Supabase에 별도 저장.
   const createWedding = useCallback(
-    (p: Omit<CreateWeddingParams, 'owner'>) =>
-      executeOnchain(buildCreateWeddingTx({ ...p, owner: requireAddress() })),
+    () => executeOnchain(buildCreateWeddingTx({ owner: requireAddress() })),
     [executeOnchain, requireAddress],
-  )
-  const updateWedding = useCallback(
-    (p: UpdateWeddingParams) => executeOnchain(buildUpdateWeddingTx(p)),
-    [executeOnchain],
   )
   const addHost = useCallback(
     (p: { weddingId: string; capId: string; newHost: string }) =>
@@ -98,7 +91,6 @@ export function useOnchainHostActions() {
 
   return {
     createWedding,
-    updateWedding,
     addHost,
     createVault,
     withdraw,
