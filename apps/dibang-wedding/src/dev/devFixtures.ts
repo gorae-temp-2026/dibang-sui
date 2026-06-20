@@ -1,6 +1,6 @@
 // ★ DEV 전용 — 철수 1인칭 데모 fixture(데모_시나리오_260620.md). 프로덕션 미사용(dev 시더만 참조).
 // prod 쓰기 0 · 철수·영희·예정결혼식·참여결혼식 = fixture. 날짜 기준 = 2026-06-20.
-import type { User, WeddingSummary, ParticipatedWedding } from '@gorae/contracts'
+import type { User, WeddingSummary, ParticipatedWedding, Wedding, Lounge, FeedItem, Announcement } from '@gorae/contracts'
 
 // 로그인 사용자 = 철수.
 export const CHULSOO_ME: User = {
@@ -75,3 +75,38 @@ export const WEDDING_FORECAST = {
   /** 무담보 웨딩 대출 한도(데모 — Moi Credit·예상 부조 근거). */
   loanLimit: 12_000_000,
 }
+
+// ─ 철수♥영희 라운지(LoungeV2 피드 시드) — 'Failed to fetch' 제거 + 살아있는 피드 ─
+export const CHULSOO_LOUNGE = {
+  id: CHULSOO_LOUNGE_ID,
+  wedding_id: CHULSOO_WEDDING_ID,
+  name: '김철수 · 이영희의 라운지',
+  gather_place: { id: 'gp-chulsoo', name: '모이가 모인곳' },
+} as unknown as Lounge
+
+export const CHULSOO_WEDDING_FULL = {
+  id: CHULSOO_WEDDING_ID,
+  status: 'active',
+  info: { groom_name: '김철수', bride_name: '이영희', groom_father_name: '김영호', groom_mother_name: '박순자', bride_father_name: '이상철', bride_mother_name: '최미경', date: '2026-09-19', time: '13:00', venue_name: '더채플 청담', venue_hall: '그랜드홀' },
+  hosts: { host_groom_id: CHULSOO_ME.id, host_bride_id: 'younghee-dev' },
+  lounge: { id: CHULSOO_LOUNGE_ID, name: '김철수 · 이영희의 라운지' },
+  invitations: [],
+  created_at: '2026-06-01T00:00:00Z',
+} as unknown as Wedding
+
+const fi = (type: string, id: string, created_at: string, data: Record<string, unknown>, heart?: number): FeedItem =>
+  ({ type, id, created_at, data, ...(heart != null ? { heart_count: heart, comment_count: 0, my_heart: false } : {}) } as unknown as FeedItem)
+
+export const CHULSOO_FEED: FeedItem[] = [
+  fi('memory', 'm1', '2026-06-18T10:00:00Z', { text: '영희랑 첫 데이트 장소 다시 와봤어 🥰', photo_url: '/assets/inyeon-photos/a2.jpg', author_name: '김철수' }),
+  fi('guestbook_message', 'gm1', '2026-06-17T21:00:00Z', { message: '철수야 영희야 결혼 진심으로 축하해!! 🎉', guest_name: '박준영', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '대학 동기', view_count: 42 }),
+  fi('guestbook_message', 'gm2', '2026-06-17T20:10:00Z', { message: '두 사람 너무 잘 어울려요 행복하세요 💕', guest_name: '한소희', recipient_slot: 'bride', relation_category: '직장동료', view_count: 31 }),
+  fi('guestbook_entry', 'ge1', '2026-06-16T18:00:00Z', { guest_name: '정우성', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '고향 친구' }, 12),
+  fi('memory', 'm2', '2026-06-15T12:00:00Z', { text: '상견례 무사히 마쳤습니다 🙏', photo_url: '/assets/inyeon-photos/b1.jpg', author_name: '이영희' }),
+  fi('guestbook_message', 'gm3', '2026-06-14T09:30:00Z', { message: '청첩장 너무 예뻐요! 그날 봬요 😊', guest_name: '김지원', recipient_slot: 'bride', relation_category: '동문/동창', view_count: 18 }),
+]
+
+export const CHULSOO_ANNOUNCEMENTS = [
+  { id: 'an1', lounge_id: CHULSOO_LOUNGE_ID, host_id: CHULSOO_ME.id, message: '와주시는 모든 분들께 미리 감사드려요 🙏 주차는 건물 지하 1~3층 가능합니다.', is_pinned: true, created_at: '2026-06-18T08:00:00Z' },
+] as unknown as Announcement[]
+
