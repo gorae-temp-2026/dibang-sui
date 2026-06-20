@@ -15,6 +15,8 @@ import { guestFlowMachine, type GuestFlowEvent } from '../../machines/guestFlow.
 import { useCreateGuestbookEntryMutation } from '../../queries/guestFlow/useCreateGuestbookEntryMutation';
 import { useCreateGuestbookMessageMutation } from '../../queries/guestFlow/useCreateGuestbookMessageMutation';
 import { useCreateCashGiftMutation } from '../../queries/guestFlow/useCreateCashGiftMutation';
+import { useOnchainActions } from '../useOnchainActions';
+import { useZkLogin } from '../../providers/ZkLoginProvider';
 
 type GuestFlowState = StateFrom<typeof guestFlowMachine>;
 type Send = (event: GuestFlowEvent) => void;
@@ -27,6 +29,8 @@ export function useGuestFlowSubmitter(
   const createEntryMutation = useCreateGuestbookEntryMutation();
   const createMessageMutation = useCreateGuestbookMessageMutation();
   const cashGiftMutation = useCreateCashGiftMutation();
+  const { writeGuestbook, sendCashGift } = useOnchainActions();
+  const { isAuthenticated } = useZkLogin();
 
   // StrictMode 가드: 상태당 1회만 발사.
   const firedRef = useRef<Set<string>>(new Set());
@@ -83,7 +87,25 @@ export function useGuestFlowSubmitter(
         guestbook_entry_id: c.guestbookEntryId ?? undefined,
       },
       {
-        onSuccess: (data) => send({ type: 'TRANSFER_SUCCESS', cashGiftId: data.id }),
+        onSuccess: async (data) => {
+          // C10: Supabase 축의 저장 후 온체인 sendCashGift(dev 서명, D0-1). sui_vault_id 있을 때만,
+          // 실패해도 흐름은 진행(Supabase 유지). amount는 MIST 단위로 전달.
+          const suiVaultId = wedding?.sui_vault_id;
+          if (isAuthenticated && suiVaultId) {
+            try {
+              await sendCashGift({
+                vaultId: suiVaultId,
+                amount: BigInt(c.amount),
+                guestName: c.guestName,
+                recipientSlot: c.recipientSlot!,
+                relationCategory: c.relationCategory!,
+              });
+            } catch (e) {
+              console.error('[온체인] sendCashGift 실패 — Supabase는 유지:', e);
+            }
+          }
+          send({ type: 'TRANSFER_SUCCESS', cashGiftId: data.id });
+        },
         onError: (error) => send({ type: 'TRANSFER_ERROR', error: (error as Error).message }),
       },
     );
@@ -100,7 +122,19 @@ export function useGuestFlowSubmitter(
     createMessageMutation.mutate(
       { entryId: c.guestbookEntryId!, message: c.pendingMessage },
       {
-        onSuccess: () => send({ type: 'MESSAGE_SUCCESS' }),
+        onSuccess: async () => {
+          // C8: Supabase 메시지 저장 후 온체인 방명록 기록(dev 서명, D0-1). sui_lounge_id 있을 때만,
+          // 실패해도 흐름은 진행(Supabase는 유지).
+          const suiLoungeId = wedding?.lounge.sui_lounge_id;
+          if (isAuthenticated && suiLoungeId) {
+            try {
+              await writeGuestbook({ loungeId: suiLoungeId, guestName: c.guestName, message: c.pendingMessage });
+            } catch (e) {
+              console.error('[온체인] writeGuestbook 실패 — Supabase는 유지:', e);
+            }
+          }
+          send({ type: 'MESSAGE_SUCCESS' });
+        },
         onError: (error) => send({ type: 'MESSAGE_ERROR', error: (error as Error).message }),
       },
     );

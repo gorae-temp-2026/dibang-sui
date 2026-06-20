@@ -20,6 +20,7 @@ import {
   zkLoginAddress,
   buildZkLoginSignature,
   sponsoredExecute,
+  executeAndAssert,
   ephemeralKeypairFromSession,
   loadSession,
   saveSession,
@@ -71,6 +72,12 @@ async function fetchCurrentEpoch(network: SuiNetwork): Promise<number> {
 export function ZkLoginProvider({ children }: { children: ReactNode }) {
   // sessionStorage의 기존 세션으로 초기화(브라우저 전용 SPA — effect 내 setState 불필요).
   const [session, setSession] = useState<ZkLoginSession | null>(() => loadSession())
+  // [DEV] guest-web은 로그인 UI 없는 익명 퍼널 — dev 모드 시 고정 keypair를 자동 주입해
+  // 게스트 온체인 서명(방명록/축의/RSVP)을 헤드리스로 검증한다. VITE_DEV_PRIVATE_KEY 미설정 시 null.
+  const [devKeypair] = useState<Ed25519Keypair | null>(() => {
+    const sk = env.VITE_DEV_PRIVATE_KEY
+    return sk ? Ed25519Keypair.fromSecretKey(sk) : null
+  })
 
   const login = useCallback(async (redirectUri: string) => {
     const clientId = env.VITE_GOOGLE_CLIENT_ID
@@ -141,6 +148,12 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
 
   const executeOnchain = useCallback(
     async (tx: Transaction): Promise<string> => {
+      // [DEV] dev keypair 세션이면 zkLogin proof·sponsor 없이 keypair로 직접 서명·실행.
+      if (devKeypair) {
+        const devClient = createJsonRpcClient((env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet')
+        const res = await executeAndAssert(devClient, { transaction: tx, signer: devKeypair })
+        return res.digest
+      }
       if (!session) throw new Error('zkLogin 세션 없음 — 먼저 로그인하세요')
       if (!session.proofInputs) throw new Error('ZK 증명 없음 — VITE_ZK_PROVER_URL 설정 필요')
       const sponsorUrl = env.VITE_SPONSOR_URL
@@ -170,20 +183,20 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       })
       return res.digest
     },
-    [session],
+    [session, devKeypair],
   )
 
   const value = useMemo<ZkLoginContextValue>(
     () => ({
       session,
-      address: session?.address ?? null,
-      isAuthenticated: !!session,
+      address: devKeypair?.toSuiAddress() ?? session?.address ?? null,
+      isAuthenticated: !!session || !!devKeypair,
       login,
       completeLoginFromUrl,
       logout,
       executeOnchain,
     }),
-    [session, login, completeLoginFromUrl, logout, executeOnchain],
+    [session, devKeypair, login, completeLoginFromUrl, logout, executeOnchain],
   )
 
   return <ZkLoginContext.Provider value={value}>{children}</ZkLoginContext.Provider>

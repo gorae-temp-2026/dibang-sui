@@ -188,6 +188,20 @@ export type Wedding = {
     lounge: LoungeSummary;
     invitations: Array<InvitationSummary>;
     created_at: string;
+    /**
+     * 온체인 Wedding 오브젝트 ID (dual-write, 미발행 시 null).
+     */
+    sui_wedding_id?: string | null;
+    /**
+     * 온체인 축의 Vault 오브젝트 ID (미발행 시 null).
+     */
+    sui_vault_id?: string | null;
+};
+
+export type UpdateSuiIdsRequest = {
+    sui_wedding_id?: string | null;
+    sui_lounge_id?: string | null;
+    sui_vault_id?: string | null;
 };
 
 export type WeddingSummary = {
@@ -453,6 +467,10 @@ export type LoungePreview = {
      * 라운지 체크인 수 (LoungeCheckIn 카운트)
      */
     visitor_count: number;
+    /**
+     * 온체인 WeddingLounge 오브젝트 ID (RSVP·방명록 온체인 기록용, 미발행 시 null).
+     */
+    sui_lounge_id?: string | null;
 };
 
 export type CreateInvitationRequest = {
@@ -505,6 +523,10 @@ export type LoungeSummary = {
      * 라운지에 체크인한 신부측(bride/bride_father/bride_mother) 하객 수
      */
     bride_side_guest_count: number;
+    /**
+     * 온체인 WeddingLounge 오브젝트 ID (미발행 시 null).
+     */
+    sui_lounge_id?: string | null;
 };
 
 export type GatherPlace = {
@@ -1684,6 +1706,41 @@ export type UpdateWeddingResponses = {
 };
 
 export type UpdateWeddingResponse = UpdateWeddingResponses[keyof UpdateWeddingResponses];
+
+export type UpdateWeddingSuiIdsData = {
+    body: UpdateSuiIdsRequest;
+    path: {
+        weddingId: string;
+    };
+    query?: never;
+    url: '/weddings/{weddingId}/sui-ids';
+};
+
+export type UpdateWeddingSuiIdsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: ProblemDetail;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetail;
+    /**
+     * Not Found
+     */
+    404: ProblemDetail;
+};
+
+export type UpdateWeddingSuiIdsError = UpdateWeddingSuiIdsErrors[keyof UpdateWeddingSuiIdsErrors];
+
+export type UpdateWeddingSuiIdsResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type UpdateWeddingSuiIdsResponse = UpdateWeddingSuiIdsResponses[keyof UpdateWeddingSuiIdsResponses];
 
 export type CreateInvitationData = {
     body: CreateInvitationRequest;

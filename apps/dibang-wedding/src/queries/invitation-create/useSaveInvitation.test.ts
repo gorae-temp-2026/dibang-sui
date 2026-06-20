@@ -18,12 +18,15 @@ import { QueryClient } from '@tanstack/react-query'
 const createWedding = vi.fn()
 const updateInvitation = vi.fn()
 const createWeddingOnchain = vi.fn()
+const createVaultOnchain = vi.fn()
 const extractWeddingObjectIds = vi.fn()
+const updateWeddingSuiIds = vi.fn()
 const authState = { isAuthenticated: false }
 
 vi.mock('@gorae/contracts/sdk.gen', () => ({
   createWedding: (...args: unknown[]) => createWedding(...args),
   updateInvitation: (...args: unknown[]) => updateInvitation(...args),
+  updateWeddingSuiIds: (...args: unknown[]) => updateWeddingSuiIds(...args),
 }))
 
 vi.mock('@gorae/contracts/@tanstack/react-query.gen', () => ({
@@ -31,7 +34,7 @@ vi.mock('@gorae/contracts/@tanstack/react-query.gen', () => ({
 }))
 
 vi.mock('../../hooks/useOnchainHostActions', () => ({
-  useOnchainHostActions: () => ({ createWedding: createWeddingOnchain }),
+  useOnchainHostActions: () => ({ createWedding: createWeddingOnchain, createVault: createVaultOnchain }),
 }))
 
 vi.mock('../../providers/ZkLoginProvider', () => ({
@@ -51,7 +54,9 @@ afterEach(() => {
   createWedding.mockReset()
   updateInvitation.mockReset()
   createWeddingOnchain.mockReset()
+  createVaultOnchain.mockReset()
   extractWeddingObjectIds.mockReset()
+  updateWeddingSuiIds.mockReset()
   authState.isAuthenticated = false
 })
 
@@ -117,12 +122,20 @@ describe('useSaveInvitation', () => {
     authState.isAuthenticated = true
     createWedding.mockResolvedValue({ data: { id: 'w-5', invitations: [{ id: 'i' }] } })
     createWeddingOnchain.mockResolvedValue('digest-abc')
-    extractWeddingObjectIds.mockResolvedValue({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '' })
+    createVaultOnchain.mockResolvedValue('vault-digest')
+    extractWeddingObjectIds
+      .mockResolvedValueOnce({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '' })
+      .mockResolvedValueOnce({ weddingId: '', loungeId: '', capId: '', vaultId: '0xV' })
     const { result } = renderHook(() => useSaveInvitation(), { wrapper: createQueryWrapper() })
     const res = await result.current.mutateAsync({ weddingReq, invitationReq: {}, onchainParams })
     expect(createWeddingOnchain).toHaveBeenCalledWith(onchainParams)
-    expect(extractWeddingObjectIds).toHaveBeenCalledWith('digest-abc', 'testnet')
-    expect(res.suiIds).toEqual({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '' })
+    expect(createVaultOnchain).toHaveBeenCalledWith({ weddingId: '0xW', capId: '0xC' })
+    expect(updateWeddingSuiIds).toHaveBeenCalledWith({
+      path: { weddingId: 'w-5' },
+      body: { sui_wedding_id: '0xW', sui_lounge_id: '0xL', sui_vault_id: '0xV' },
+      throwOnError: true,
+    })
+    expect(res.suiIds).toEqual({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '0xV' })
   })
 
   it('인증이어도 온체인 실패 시 throw하지 않고 Supabase 유지, suiIds null', async () => {

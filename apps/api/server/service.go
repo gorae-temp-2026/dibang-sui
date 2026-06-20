@@ -35,6 +35,8 @@ type WeddingService interface {
 	IsHost(ctx context.Context, weddingID openapi_types.UUID, userID pgtype.UUID) (bool, error)
 	Update(ctx context.Context, weddingID openapi_types.UUID, req *UpdateWeddingRequest) (*Wedding, error)
 	GetMyParticipatedWeddings(ctx context.Context, userID pgtype.UUID) ([]ParticipatedWedding, error)
+	// UpdateSuiIds: 온체인 발행 Sui 오브젝트 ID dual-write (C7). nil 인자는 변경 안 함.
+	UpdateSuiIds(ctx context.Context, weddingID openapi_types.UUID, suiWeddingID, suiLoungeID, suiVaultID *string) error
 }
 
 // InvitationService handles invitation-related business logic.

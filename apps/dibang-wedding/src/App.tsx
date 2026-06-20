@@ -20,6 +20,7 @@ import { SharePhotoUploadPage } from './pages/SharePhotoUploadPage'
 import { WeddingMemoryBookPage } from './pages/WeddingMemoryBookPage'
 import { WeddingMemoryBookCuratePage } from './pages/WeddingMemoryBookCuratePage'
 import { OnboardingConsentPage } from './pages/OnboardingConsentPage'
+import { NetworkPage } from './pages/NetworkPage'
 import { OnboardingGate } from './components/OnboardingGate'
 
 const AUTH_PATHS = ['/login', '/auth/callback'];
@@ -50,6 +51,7 @@ function App() {
         <Route path="/dm" element={<DmPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
+      <Route path="/network" element={<AuthGuard><OnboardingGate><NetworkPage /></OnboardingGate></AuthGuard>} />
       <Route path="/invitation/create" element={<AuthGuard><OnboardingGate><InvitationCreatePage /></OnboardingGate></AuthGuard>} />
       <Route path="/invitation/edit/:weddingId" element={<AuthGuard><OnboardingGate><InvitationEditPage /></OnboardingGate></AuthGuard>} />
       <Route path="/lounge/:loungeId/enter" element={<AuthGuard><OnboardingGate><LoungeCheckInGatePage /></OnboardingGate></AuthGuard>} />

@@ -2702,6 +2702,9 @@ type LoungePreview struct {
 	LoungeId   openapi_types.UUID `json:"lounge_id"`
 	LoungeName string             `json:"lounge_name"`
 
+	// SuiLoungeId 온체인 WeddingLounge 오브젝트 ID (RSVP·방명록 온체인 기록용, 미발행 시 null).
+	SuiLoungeId *string `json:"sui_lounge_id,omitempty"`
+
 	// VisitorCount 라운지 체크인 수 (LoungeCheckIn 카운트)
 	VisitorCount int `json:"visitor_count"`
 }
@@ -2716,6 +2719,9 @@ type LoungeSummary struct {
 	GroomSideGuestCount int                `json:"groom_side_guest_count"`
 	Id                  openapi_types.UUID `json:"id"`
 	Name                string             `json:"name"`
+
+	// SuiLoungeId 온체인 WeddingLounge 오브젝트 ID (미발행 시 null).
+	SuiLoungeId *string `json:"sui_lounge_id,omitempty"`
 }
 
 // Memory 라운지 V2 "온기" 게시물. text 필수 + photo 0/1. author_user_id로 식별 (entry 무관).
@@ -3153,6 +3159,13 @@ type UpdateMarketingConsentRequest struct {
 	Agreed bool `json:"agreed"`
 }
 
+// UpdateSuiIdsRequest defines model for UpdateSuiIdsRequest.
+type UpdateSuiIdsRequest struct {
+	SuiLoungeId  *string `json:"sui_lounge_id,omitempty"`
+	SuiVaultId   *string `json:"sui_vault_id,omitempty"`
+	SuiWeddingId *string `json:"sui_wedding_id,omitempty"`
+}
+
 // UpdateUserRequest defines model for UpdateUserRequest.
 type UpdateUserRequest struct {
 	Name            *string `json:"name,omitempty"`
@@ -3209,6 +3222,12 @@ type Wedding struct {
 	Invitations []InvitationSummary `json:"invitations"`
 	Lounge      LoungeSummary       `json:"lounge"`
 	Status      WeddingStatus       `json:"status"`
+
+	// SuiVaultId 온체인 축의 Vault 오브젝트 ID (미발행 시 null).
+	SuiVaultId *string `json:"sui_vault_id,omitempty"`
+
+	// SuiWeddingId 온체인 Wedding 오브젝트 ID (dual-write, 미발행 시 null).
+	SuiWeddingId *string `json:"sui_wedding_id,omitempty"`
 }
 
 // WeddingInfo defines model for WeddingInfo.
@@ -3584,3 +3603,6 @@ type ReplaceWeddingMemoryBookPhotosJSONRequestBody = ReplaceMemoryBookPhotosRequ
 
 // CreateRsvpJSONRequestBody defines body for CreateRsvp for application/json ContentType.
 type CreateRsvpJSONRequestBody = CreateRsvpRequest
+
+// UpdateWeddingSuiIdsJSONRequestBody defines body for UpdateWeddingSuiIds for application/json ContentType.
+type UpdateWeddingSuiIdsJSONRequestBody = UpdateSuiIdsRequest

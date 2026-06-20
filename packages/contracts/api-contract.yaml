@@ -288,6 +288,29 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /weddings/{weddingId}/sui-ids:
+    patch:
+      operationId: updateWeddingSuiIds
+      tags: [Weddings]
+      summary: "[host] 온체인 발행 Sui 오브젝트 ID 저장 (dual-write, D0-1)"
+      parameters:
+        - $ref: '#/components/parameters/WeddingId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSuiIdsRequest'
+      responses:
+        '204':
+          description: No Content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   # ──────────────────────────────────────
   # Invitations (청첩장)
   # ──────────────────────────────────────
@@ -2825,6 +2848,27 @@ components:
         created_at:
           type: string
           format: date-time
+        sui_wedding_id:
+          type: string
+          nullable: true
+          description: 온체인 Wedding 오브젝트 ID (dual-write, 미발행 시 null).
+        sui_vault_id:
+          type: string
+          nullable: true
+          description: 온체인 축의 Vault 오브젝트 ID (미발행 시 null).
+
+    UpdateSuiIdsRequest:
+      type: object
+      properties:
+        sui_wedding_id:
+          type: string
+          nullable: true
+        sui_lounge_id:
+          type: string
+          nullable: true
+        sui_vault_id:
+          type: string
+          nullable: true
 
     WeddingSummary:
       type: object
@@ -3239,6 +3283,10 @@ components:
         visitor_count:
           type: integer
           description: "라운지 체크인 수 (LoungeCheckIn 카운트)"
+        sui_lounge_id:
+          type: string
+          nullable: true
+          description: 온체인 WeddingLounge 오브젝트 ID (RSVP·방명록 온체인 기록용, 미발행 시 null).
 
     CreateInvitationRequest:
       type: object
@@ -3330,6 +3378,10 @@ components:
         bride_side_guest_count:
           type: integer
           description: "라운지에 체크인한 신부측(bride/bride_father/bride_mother) 하객 수"
+        sui_lounge_id:
+          type: string
+          nullable: true
+          description: 온체인 WeddingLounge 오브젝트 ID (미발행 시 null).
 
     # ── GatherPlaces ──
     GatherPlace:

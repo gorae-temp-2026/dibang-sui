@@ -63,13 +63,15 @@ func (s *invitationService) GetBySlug(ctx context.Context, slug string) (*Invita
 	loungePreview := LoungePreview{}
 	var loungeID pgtype.UUID
 	var loungeName string
+	var suiLoungeID pgtype.Text
 	err = s.pool.QueryRow(ctx,
-		`SELECT id, name FROM v3_wedding_lounges WHERE wedding_id = $1 LIMIT 1`,
+		`SELECT id, name, sui_lounge_id FROM v3_wedding_lounges WHERE wedding_id = $1 LIMIT 1`,
 		row.WeddingID,
-	).Scan(&loungeID, &loungeName)
+	).Scan(&loungeID, &loungeName, &suiLoungeID)
 	if err == nil {
 		loungePreview.LoungeId = uuidToOpenapi(loungeID)
 		loungePreview.LoungeName = loungeName
+		loungePreview.SuiLoungeId = ptrFromText(suiLoungeID)
 
 		var visitorCount int
 		err = s.pool.QueryRow(ctx,

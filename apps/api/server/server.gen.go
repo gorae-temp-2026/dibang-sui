@@ -331,6 +331,9 @@ type ServerInterface interface {
 	// [host] wedding의 모든 라운지의 공유 사진을 게스트별 그룹으로 묶어 반환 (메모리북 큐레이션용)
 	// (GET /weddings/{weddingId}/shared-photo-groups)
 	GetWeddingSharedPhotoGroups(w http.ResponseWriter, r *http.Request, weddingId WeddingId)
+	// [host] 온체인 발행 Sui 오브젝트 ID 저장 (dual-write, D0-1)
+	// (PATCH /weddings/{weddingId}/sui-ids)
+	UpdateWeddingSuiIds(w http.ResponseWriter, r *http.Request, weddingId WeddingId)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -958,6 +961,12 @@ func (_ Unimplemented) ListRsvps(w http.ResponseWriter, r *http.Request, wedding
 // [host] wedding의 모든 라운지의 공유 사진을 게스트별 그룹으로 묶어 반환 (메모리북 큐레이션용)
 // (GET /weddings/{weddingId}/shared-photo-groups)
 func (_ Unimplemented) GetWeddingSharedPhotoGroups(w http.ResponseWriter, r *http.Request, weddingId WeddingId) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// [host] 온체인 발행 Sui 오브젝트 ID 저장 (dual-write, D0-1)
+// (PATCH /weddings/{weddingId}/sui-ids)
+func (_ Unimplemented) UpdateWeddingSuiIds(w http.ResponseWriter, r *http.Request, weddingId WeddingId) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -4422,6 +4431,38 @@ func (siw *ServerInterfaceWrapper) GetWeddingSharedPhotoGroups(w http.ResponseWr
 	handler.ServeHTTP(w, r)
 }
 
+// UpdateWeddingSuiIds operation middleware
+func (siw *ServerInterfaceWrapper) UpdateWeddingSuiIds(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "weddingId" -------------
+	var weddingId WeddingId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "weddingId", chi.URLParam(r, "weddingId"), &weddingId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "weddingId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateWeddingSuiIds(w, r, weddingId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -4846,6 +4887,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/weddings/{weddingId}/shared-photo-groups", wrapper.GetWeddingSharedPhotoGroups)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/weddings/{weddingId}/sui-ids", wrapper.UpdateWeddingSuiIds)
 	})
 
 	return r
@@ -10622,6 +10666,65 @@ func (response GetWeddingSharedPhotoGroups404JSONResponse) VisitGetWeddingShared
 	return err
 }
 
+type UpdateWeddingSuiIdsRequestObject struct {
+	WeddingId WeddingId `json:"weddingId"`
+	Body      *UpdateWeddingSuiIdsJSONRequestBody
+}
+
+type UpdateWeddingSuiIdsResponseObject interface {
+	VisitUpdateWeddingSuiIdsResponse(w http.ResponseWriter) error
+}
+
+type UpdateWeddingSuiIds204Response struct {
+}
+
+func (response UpdateWeddingSuiIds204Response) VisitUpdateWeddingSuiIdsResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type UpdateWeddingSuiIds401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response UpdateWeddingSuiIds401JSONResponse) VisitUpdateWeddingSuiIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateWeddingSuiIds403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response UpdateWeddingSuiIds403JSONResponse) VisitUpdateWeddingSuiIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateWeddingSuiIds404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response UpdateWeddingSuiIds404JSONResponse) VisitUpdateWeddingSuiIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// [admin] 축의금 삭제
@@ -10936,6 +11039,9 @@ type StrictServerInterface interface {
 	// [host] wedding의 모든 라운지의 공유 사진을 게스트별 그룹으로 묶어 반환 (메모리북 큐레이션용)
 	// (GET /weddings/{weddingId}/shared-photo-groups)
 	GetWeddingSharedPhotoGroups(ctx context.Context, request GetWeddingSharedPhotoGroupsRequestObject) (GetWeddingSharedPhotoGroupsResponseObject, error)
+	// [host] 온체인 발행 Sui 오브젝트 ID 저장 (dual-write, D0-1)
+	// (PATCH /weddings/{weddingId}/sui-ids)
+	UpdateWeddingSuiIds(ctx context.Context, request UpdateWeddingSuiIdsRequestObject) (UpdateWeddingSuiIdsResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error)
@@ -13930,6 +14036,39 @@ func (sh *strictHandler) GetWeddingSharedPhotoGroups(w http.ResponseWriter, r *h
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetWeddingSharedPhotoGroupsResponseObject); ok {
 		if err := validResponse.VisitGetWeddingSharedPhotoGroupsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateWeddingSuiIds operation middleware
+func (sh *strictHandler) UpdateWeddingSuiIds(w http.ResponseWriter, r *http.Request, weddingId WeddingId) {
+	var request UpdateWeddingSuiIdsRequestObject
+
+	request.WeddingId = weddingId
+
+	var body UpdateWeddingSuiIdsJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateWeddingSuiIds(ctx, request.(UpdateWeddingSuiIdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateWeddingSuiIds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateWeddingSuiIdsResponseObject); ok {
+		if err := validResponse.VisitUpdateWeddingSuiIdsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

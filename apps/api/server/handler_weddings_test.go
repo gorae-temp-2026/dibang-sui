@@ -46,6 +46,10 @@ func (m *mockWeddingService) GetMyParticipatedWeddings(ctx context.Context, user
 	return m.GetMyParticipatedWeddingsFn(ctx, userID)
 }
 
+func (m *mockWeddingService) UpdateSuiIds(_ context.Context, _ openapi_types.UUID, _, _, _ *string) error {
+	return nil
+}
+
 // --- Helpers ---
 
 func testUUID() pgtype.UUID {

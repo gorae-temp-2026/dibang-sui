@@ -290,6 +290,28 @@ func (s *weddingService) GetByID(ctx context.Context, id openapi_types.UUID) (*W
 	return dbWeddingFullToAPI(row, invitations), nil
 }
 
+// UpdateSuiIds: 온체인 발행 Sui 오브젝트 ID를 Supabase row에 dual-write 저장 (C7).
+func (s *weddingService) UpdateSuiIds(ctx context.Context, weddingID openapi_types.UUID, suiWeddingID, suiLoungeID, suiVaultID *string) error {
+	q := db.New(s.pool)
+	wid := pgtype.UUID{Bytes: weddingID, Valid: true}
+	if err := q.UpdateWeddingSuiIds(ctx, db.UpdateWeddingSuiIdsParams{
+		ID:           wid,
+		SuiWeddingID: textFromPtr(suiWeddingID),
+		SuiVaultID:   textFromPtr(suiVaultID),
+	}); err != nil {
+		return err
+	}
+	if suiLoungeID != nil && *suiLoungeID != "" {
+		if err := q.UpdateLoungeSuiId(ctx, db.UpdateLoungeSuiIdParams{
+			WeddingID:   wid,
+			SuiLoungeID: textFromPtr(suiLoungeID),
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *weddingService) IsHost(ctx context.Context, weddingID openapi_types.UUID, userID pgtype.UUID) (bool, error) {
 	q := db.New(s.pool)
 
@@ -416,8 +438,11 @@ func dbWeddingFullToAPI(row db.GetWeddingFullRow, invitations []InvitationSummar
 			GatherPlaceId:       uuidPtrToOpenapi(row.GatherPlaceID),
 			GroomSideGuestCount: int(row.GroomSideGuestCount),
 			BrideSideGuestCount: int(row.BrideSideGuestCount),
+			SuiLoungeId:         ptrFromText(row.SuiLoungeID),
 		},
 		Invitations: invitations,
+		SuiWeddingId: ptrFromText(row.SuiWeddingID),
+		SuiVaultId:   ptrFromText(row.SuiVaultID),
 	}
 	return w
 }

@@ -205,7 +205,7 @@ func (q *Queries) GetWedding(ctx context.Context, id pgtype.UUID) (V3Wedding, er
 
 const getWeddingFull = `-- name: GetWeddingFull :one
 SELECT w.id, w.status, w.host_groom_id, w.host_bride_id, w.host_groom_father_id, w.host_groom_mother_id, w.host_bride_father_id, w.host_bride_mother_id, w.groom_name, w.bride_name, w.groom_father_name, w.groom_mother_name, w.bride_father_name, w.bride_mother_name, w.groom_father_deceased, w.groom_mother_deceased, w.bride_father_deceased, w.bride_mother_deceased, w.date, w.time, w.venue_name, w.venue_address, w.venue_hall, w.groom_account, w.bride_account, w.groom_father_account, w.groom_mother_account, w.bride_father_account, w.bride_mother_account, w.created_at, w.sui_wedding_id, w.sui_vault_id,
-       l.id AS lounge_id, l.name AS lounge_name,
+       l.id AS lounge_id, l.name AS lounge_name, l.sui_lounge_id AS sui_lounge_id,
        gp.id AS gather_place_id,
        COALESCE((SELECT COUNT(*) FROM v3_lounge_check_ins ci
                  WHERE ci.lounge_id = l.id
@@ -254,6 +254,7 @@ type GetWeddingFullRow struct {
 	SuiVaultID          pgtype.Text        `json:"sui_vault_id"`
 	LoungeID            pgtype.UUID        `json:"lounge_id"`
 	LoungeName          pgtype.Text        `json:"lounge_name"`
+	SuiLoungeID         pgtype.Text        `json:"sui_lounge_id"`
 	GatherPlaceID       pgtype.UUID        `json:"gather_place_id"`
 	GroomSideGuestCount int64              `json:"groom_side_guest_count"`
 	BrideSideGuestCount int64              `json:"bride_side_guest_count"`
@@ -297,6 +298,7 @@ func (q *Queries) GetWeddingFull(ctx context.Context, id pgtype.UUID) (GetWeddin
 		&i.SuiVaultID,
 		&i.LoungeID,
 		&i.LoungeName,
+		&i.SuiLoungeID,
 		&i.GatherPlaceID,
 		&i.GroomSideGuestCount,
 		&i.BrideSideGuestCount,

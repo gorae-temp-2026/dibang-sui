@@ -217,6 +217,12 @@ export const zWeddingInfo = z.object({
     bride_mother_account: zAccount.optional()
 });
 
+export const zUpdateSuiIdsRequest = z.object({
+    sui_wedding_id: z.string().nullish(),
+    sui_lounge_id: z.string().nullish(),
+    sui_vault_id: z.string().nullish()
+});
+
 export const zParticipatedWedding = z.object({
     id: z.uuid(),
     groom_name: z.string(),
@@ -413,7 +419,8 @@ export const zInvitation = z.object({
 export const zLoungePreview = z.object({
     lounge_id: z.uuid(),
     lounge_name: z.string(),
-    visitor_count: z.int()
+    visitor_count: z.int(),
+    sui_lounge_id: z.string().nullish()
 });
 
 export const zInvitationPublic = z.object({
@@ -463,7 +470,8 @@ export const zLoungeSummary = z.object({
     name: z.string(),
     gather_place_id: z.uuid().optional(),
     groom_side_guest_count: z.int(),
-    bride_side_guest_count: z.int()
+    bride_side_guest_count: z.int(),
+    sui_lounge_id: z.string().nullish()
 });
 
 export const zWedding = z.object({
@@ -473,7 +481,9 @@ export const zWedding = z.object({
     hosts: zHostSlots,
     lounge: zLoungeSummary,
     invitations: z.array(zInvitationSummary),
-    created_at: z.iso.datetime()
+    created_at: z.iso.datetime(),
+    sui_wedding_id: z.string().nullish(),
+    sui_vault_id: z.string().nullish()
 });
 
 export const zGatherPlace = z.object({
@@ -1534,6 +1544,17 @@ export const zUpdateWeddingPath = z.object({
  * OK
  */
 export const zUpdateWeddingResponse = zWedding;
+
+export const zUpdateWeddingSuiIdsBody = zUpdateSuiIdsRequest;
+
+export const zUpdateWeddingSuiIdsPath = z.object({
+    weddingId: z.uuid()
+});
+
+/**
+ * No Content
+ */
+export const zUpdateWeddingSuiIdsResponse = z.void();
 
 export const zCreateInvitationBody = zCreateInvitationRequest;
 

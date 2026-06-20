@@ -28,6 +28,8 @@ export const env = createEnv({
     VITE_SUI_NETWORK: z.enum(['testnet', 'mainnet', 'devnet']).optional(),
     VITE_SUI_PACKAGE_ID: z.string().optional(),
     VITE_SUI_IUM_REGISTRY_ID: z.string().optional(),
+    // [DEV] dev 지갑 직접 서명용 비밀키(헤드리스 검증 전용, prod 미설정).
+    VITE_DEV_PRIVATE_KEY: z.string().optional(),
     // zkLogin / sponsor (선택 — 미설정 시 해당 기능 비활성)
     VITE_GOOGLE_CLIENT_ID: z.string().optional(),
     VITE_SALT_SERVER_URL: z.string().url().optional(),

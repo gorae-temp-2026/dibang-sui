@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createWedding, updateInvitation } from '@gorae/contracts/sdk.gen';
+import { createWedding, updateInvitation, updateWeddingSuiIds } from '@gorae/contracts/sdk.gen';
 import { getMyWeddingsQueryKey } from '@gorae/contracts/@tanstack/react-query.gen';
 import type { CreateWeddingRequest, UpdateInvitationRequest } from '@gorae/contracts';
 import type { CreateWeddingParams, SuiNetwork } from '@gorae/sui-sdk';
@@ -17,7 +17,7 @@ export interface SaveInvitationPayload {
 
 export function useSaveInvitation() {
   const queryClient = useQueryClient();
-  const { createWedding: createWeddingOnchain } = useOnchainHostActions();
+  const { createWedding: createWeddingOnchain, createVault: createVaultOnchain } = useOnchainHostActions();
   const { isAuthenticated } = useZkLogin();
 
   return useMutation({
@@ -50,12 +50,28 @@ export function useSaveInvitation() {
       let suiIds: WeddingObjectIds | null = null;
       if (isAuthenticated) {
         try {
+          const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
           const digest = await createWeddingOnchain(onchainParams);
-          suiIds = await extractWeddingObjectIds(
-            digest,
-            (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet',
-          );
-          // TODO(C7-4): suiIds를 Supabase wedding row(sui_wedding_id 등)에 저장.
+          const ids = await extractWeddingObjectIds(digest, network);
+          // C10-1: 축의 Vault 생성(capId로) → vaultId 추출. 실패해도 wedding/lounge는 저장(흐름 유지).
+          let vaultId = '';
+          try {
+            const vaultDigest = await createVaultOnchain({ weddingId: ids.weddingId, capId: ids.capId });
+            vaultId = (await extractWeddingObjectIds(vaultDigest, network)).vaultId;
+          } catch (e) {
+            console.error('[온체인] createVault 실패 — vault 없이 저장:', e);
+          }
+          // C7-4·C10-1: 발행된 Sui ID(wedding/lounge/vault)를 Supabase row에 dual-write 저장.
+          await updateWeddingSuiIds({
+            path: { weddingId: wedding.id },
+            body: {
+              sui_wedding_id: ids.weddingId || null,
+              sui_lounge_id: ids.loungeId || null,
+              sui_vault_id: vaultId || null,
+            },
+            throwOnError: true,
+          });
+          suiIds = { ...ids, vaultId };
         } catch (e) {
           console.error('[온체인] createWedding 실패 — Supabase 유지, sui_id=null(재시도 가능):', e);
         }

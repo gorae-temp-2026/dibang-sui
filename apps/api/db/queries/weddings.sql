@@ -27,7 +27,7 @@ SELECT * FROM v3_weddings WHERE id = $1;
 
 -- name: GetWeddingFull :one
 SELECT w.*,
-       l.id AS lounge_id, l.name AS lounge_name,
+       l.id AS lounge_id, l.name AS lounge_name, l.sui_lounge_id AS sui_lounge_id,
        gp.id AS gather_place_id,
        COALESCE((SELECT COUNT(*) FROM v3_lounge_check_ins ci
                  WHERE ci.lounge_id = l.id

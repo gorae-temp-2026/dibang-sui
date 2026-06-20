@@ -18,6 +18,8 @@ import { buildMapLink, detectMobile } from '../lib/map-deep-link';
 import { buildTossLink, buildKakaoLink } from '../lib/payDeepLink';
 import { createRsvp } from '@gorae/contracts/sdk.gen';
 import type { CreateRsvpRequest } from '@gorae/contracts';
+import { useOnchainActions } from '../hooks/useOnchainActions';
+import { useZkLogin } from '../providers/ZkLoginProvider';
 
 function toUiAccount(
   apiAccount: { bank?: string; address?: string } | undefined,
@@ -219,6 +221,8 @@ interface InvitationPageProps {
 
 export function InvitationPage({ data: dataProp }: InvitationPageProps) {
   const { slug } = useParams<{ slug: string }>();
+  const { submitRsvp } = useOnchainActions();
+  const { isAuthenticated } = useZkLogin();
 
   const { data: invitation, isLoading, isError } = useQuery({
     ...getInvitationOptions({ path: { slug: slug! } }),
@@ -295,11 +299,18 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
       setRsvpOpen(false);
       return;
     }
+    // RsvpHostOption.key(camelCase) → recipient_slot enum(snake_case) 변환.
+    // (V-C10: role은 '신랑' 한글 표시값이라 그대로 보내면 DB enum 위반 500.)
+    const recipientSlot = ({
+      groom: 'groom', bride: 'bride',
+      groomFather: 'groom_father', groomMother: 'groom_mother',
+      brideFather: 'bride_father', brideMother: 'bride_mother',
+    } as const)[formData.host.key] as CreateRsvpRequest['recipient_slot'];
     try {
       await createRsvp({
         path: { weddingId },
         body: {
-          recipient_slot: formData.host.role as CreateRsvpRequest['recipient_slot'],
+          recipient_slot: recipientSlot,
           guest_name: formData.name,
           attendance: formData.attendance === '참석' ? 'attending' : 'absent',
           companion_count: formData.companion,
@@ -313,6 +324,22 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
       setRsvpResult('RSVP 제출에 실패했습니다. 잠시 후 다시 시도해주세요.');
       setRsvpOpen(false);
       return;
+    }
+    // C10-3: Supabase RSVP 저장 후 온체인 submitRsvp(dev 서명, D0-1). sui_lounge_id 있을 때만, 실패해도 진행.
+    const suiLoungeId = invitation?.lounge_preview?.sui_lounge_id;
+    if (isAuthenticated && suiLoungeId) {
+      try {
+        await submitRsvp({
+          loungeId: suiLoungeId,
+          recipientSlot,
+          guestName: formData.name,
+          attendance: formData.attendance === '참석' ? 'attending' : 'absent',
+          companionCount: formData.companion,
+          meal: formData.meal,
+        });
+      } catch (e) {
+        console.error('[온체인] submitRsvp 실패 — Supabase는 유지:', e);
+      }
     }
     const mealLabel = { yes: '식사함', no: '식사 안 함', undecided: '미정' }[formData.meal];
     setRsvpResult(
