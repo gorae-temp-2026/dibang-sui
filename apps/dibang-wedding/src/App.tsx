@@ -24,6 +24,7 @@ import { WeddingMemoryBookCuratePage } from './pages/WeddingMemoryBookCuratePage
 import { OnboardingConsentPage } from './pages/OnboardingConsentPage'
 import { NetworkPage } from './pages/NetworkPage'
 import { OnboardingGate } from './components/OnboardingGate'
+import { isDevBypass } from './dev/devBypass' // DEV 전용 로그인 우회(프로덕션 import.meta.env.DEV=false로 제거)
 
 const AUTH_PATHS = ['/login', '/auth/callback'];
 
@@ -32,6 +33,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useZkLogin();
   const location = useLocation();
 
+  if (isDevBypass()) return <>{children}</>; // DEV 전용 우회(프로덕션 제거)
   // zkLogin/dev 세션도 인증으로 인정(zkLogin이 Supabase 로그인 대체 — VISION §3).
   if (session || isAuthenticated) return <>{children}</>;
 
