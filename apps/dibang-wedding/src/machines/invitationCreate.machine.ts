@@ -70,6 +70,7 @@ export const invitationCreateMachine = setup({
     clearSaveError: assign({ saveError: null }),
   },
 }).createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QEsB2A3ZAXAhl5A9qgMIBOYeYAdLADYCuUA4pQMTEDyAcgGICSAJQCyAfQDKAGQCqTANoAGALqJQABwKxshVCpAAPRAGYATAFYANCACeiYwHYALAF8nltJlz4iZClmp1GFj92CQ4xAFEFZSQQdU0vHRiDBABGAE5DSxsEe2dXEHdsPG0fSipILVQoVjEAQQA1SKVdOK0iXWTTeXksxAdTOxc3DCKE0r9yiErqusbZFOi1DTbE0GSHO1MqQx3dvZ3jADZehFM0wfzCzxLyMor8KpqGyONF2OWEjr7D4ypD-4BgIBmWsiDshguww8xW8twm9zQM2eskMb1anySiFMKQAHH8gQTjqCEDi7JCCiNrrDfNQEY8ACJ8MRCJliEQAFQ4tTE7KiLQ+2i+ORxOJO-XJVxhJDh-hwmEes3C4ikxGI4TEYj5MXRgsxqRSKROBrShyGFOhYxlNDliKejRE4QEAg4Ai1S3iurWiEOPWJ4pc+VQBAgcF0kstNP5HvaeoAtA5RcTYyk7PIzeGbjSaAxmJQoyshcZ5MYjTjjOnKVLxrSpg8oPmMV6EIZTETsoZDqYKxbM2VYDaqg3PfpEDiHEb5Cnu6NexNYPQAMYLuDwbUCmNNg2J7IpYw402XSsRsq0MAAMywQ43I9SIpOHbyLiAA */
   id: 'invitationCreate',
   context: { toast: null, saveError: null },
   initial: 'slugGate',
