@@ -3,7 +3,8 @@
 // 흐름: 카드 탐색 → 사진 게이트(2장무료/3장째 요네) → 이음 신청(한마디) → 매칭 → (Moi Credit 재료).
 // 받은이음·채팅 화면은 스텁(TODO), 프로필 상세는 ⑤ 공유 프로필 컴포넌트에서 본구현 예정.
 import { useState } from 'react'
-import { useMachine } from '@xstate/react'
+import { useMachine, useSelector } from '@xstate/react'
+import { giftActor } from '../machines/gift.machine'
 import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
 import { POOL, TIER_META } from '../components/inyeon/data'
@@ -23,6 +24,7 @@ const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.i
 
 export function InyeonPage() {
   const [state, send] = useMachine(inyeonMachine)
+  const giftSignals = useSelector(giftActor, (s) => s.context.signals)
   const [filterOpen, setFilterOpen] = useState(false)
   const [detailId, setDetailId] = useState<number | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
@@ -157,6 +159,7 @@ export function InyeonPage() {
         data={chulsooProfile}
         context="inyeon"
         meeting={profileMeeting}
+        giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
         onIeum={
           profileMoiId != null
             ? () => {

@@ -2,8 +2,12 @@
 // 대화 열기 = 관계 거리별 요네 게이트(0/50/200, 머신 OPEN_DM). 대화방 상단 이름·사진 → 프로필(§13-5).
 // ★ 모든 대화(DM)는 인연(유니버스)에서 — 라운지에서 이음해도 대화는 여기(핸드오프 §12-3).
 import { useState } from 'react'
-import { ArrowLeft, Lock, Play, Send, X } from 'lucide-react'
+import { useSelector } from '@xstate/react'
+import { ArrowLeft, Gift, Lock, Play, Send, X } from 'lucide-react'
 import { POOL, DM_COST, MOI_MEM } from './data'
+import { giftActor, type GiftEvent } from '../../machines/gift.machine'
+import { GiftPicker } from '../moi-gather/GiftPicker'
+import { ITEM_BY_ID } from '../moi-gather/data'
 import { cn } from '../../lib/utils'
 
 const moiById = (id: number) => POOL.find((m) => m.id === id)
@@ -31,7 +35,21 @@ interface ChatScreenProps {
 export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile }: ChatScreenProps) {
   const [dmRoomId, setDmRoomId] = useState<number | null>(null)
   const [memoryId, setMemoryId] = useState<number | null>(null)
+  const [giftOpen, setGiftOpen] = useState(false)
   const [dms, setDms] = useState<Record<number, DmMsg[]>>({})
+  const giftLog = useSelector(giftActor, (s) => s.context.log)
+  const giftYone = useSelector(giftActor, (s) => s.context.yone)
+  const giftReceived = useSelector(giftActor, (s) => s.context.received)
+  const giftPending = useSelector(giftActor, (s) => s.context.pending?.itemId ?? null)
+  const giftError = useSelector(giftActor, (s) => s.context.error)
+
+  const sendGift = (toId: number, itemId: string) => {
+    const m = moiById(toId)
+    giftActor.send({ type: 'SEND_GIFT', itemId, toId: String(toId), toName: m?.name ?? '상대' })
+    // 데모: 잠시 후 상대가 답례 선물 → 수신함(인벤토리)
+    const back = ['champagne', 'bouquet', 'heart_balloon', 'garland'][giftLog.length % 4] ?? 'bouquet'
+    setTimeout(() => giftActor.send({ type: 'RECEIVE_GIFT', itemId: back, fromId: String(toId), fromName: m?.name ?? '상대' }), 1500)
+  }
 
   // 대화 열기 = 관계 거리별 요네 게이트(머신 OPEN_DM 차감). 통과하면 대화방 입장.
   const enter = (id: number) => {
@@ -118,9 +136,25 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
         <DmRoom
           moiId={dmRoomId}
           msgs={dms[dmRoomId] ?? seedDm()}
+          giftLog={giftLog.filter((g) => g.counterpartId === String(dmRoomId))}
           onSend={(t) => send(dmRoomId, t)}
           onClose={() => setDmRoomId(null)}
           onOpenProfile={() => onOpenProfile(dmRoomId)}
+          onOpenGift={() => setGiftOpen(true)}
+        />
+      )}
+      {dmRoomId != null && giftOpen && (
+        <GiftPicker
+          open={giftOpen}
+          onOpenChange={setGiftOpen}
+          toName={moiById(dmRoomId)?.name ?? '상대'}
+          yone={giftYone}
+          received={giftReceived}
+          pendingItemId={giftPending}
+          error={giftError}
+          onGift={(itemId) => sendGift(dmRoomId, itemId)}
+          onCharge={() => giftActor.send({ type: 'CHARGE' })}
+          onDismissError={() => giftActor.send({ type: 'DISMISS_ERROR' })}
         />
       )}
       {memoryId != null && <MemoryViewer moiId={memoryId} onClose={() => setMemoryId(null)} />}
@@ -128,7 +162,7 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
   )
 }
 
-function DmRoom({ moiId, msgs, onSend, onClose, onOpenProfile }: { moiId: number; msgs: DmMsg[]; onSend: (t: string) => void; onClose: () => void; onOpenProfile: () => void }) {
+function DmRoom({ moiId, msgs, giftLog, onSend, onClose, onOpenProfile, onOpenGift }: { moiId: number; msgs: DmMsg[]; giftLog: GiftEvent[]; onSend: (t: string) => void; onClose: () => void; onOpenProfile: () => void; onOpenGift: () => void }) {
   const [text, setText] = useState('')
   const m = moiById(moiId)
   if (!m) return null
@@ -162,8 +196,20 @@ function DmRoom({ moiId, msgs, onSend, onClose, onOpenProfile }: { moiId: number
             <div key={i} className="mr-auto max-w-[78%] rounded-2xl rounded-bl-md bg-white/[0.08] px-3.5 py-2 text-[13px] text-white">{msg.them}</div>
           ),
         )}
+        {giftLog.map((g) => (
+          <div key={`g${g.id}`} className="mx-auto flex max-w-[88%] items-center gap-2 rounded-xl border border-[#F8C57A]/30 bg-[#F8C57A]/10 px-3 py-2">
+            <img src={ITEM_BY_ID[g.itemId]?.url} alt="" className="h-9 w-9 flex-shrink-0 object-contain" />
+            <span className="text-[11.5px] leading-snug text-white/85">
+              {g.fromMe ? `${m.name}님에게 ${ITEM_BY_ID[g.itemId]?.name ?? '선물'} 선물했어요` : `${m.name}님이 ${ITEM_BY_ID[g.itemId]?.name ?? '선물'} 선물했어요`}
+              <b className="ml-1 text-[#F8C57A]">💝 신뢰 신호 +1</b>
+            </span>
+          </div>
+        ))}
       </div>
       <div className="flex items-center gap-2 border-t border-white/8 px-3 py-2.5">
+        <button type="button" aria-label="선물" onClick={onOpenGift} className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#F8C57A]/15 text-[#F8C57A]">
+          <Gift className="h-[18px] w-[18px]" />
+        </button>
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}

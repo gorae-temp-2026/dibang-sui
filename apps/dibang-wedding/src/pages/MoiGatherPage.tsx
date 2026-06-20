@@ -4,7 +4,8 @@
 // 에셋(투명 PNG) 부재라 캐릭터·아이템은 컬러 도형 placeholder — 에셋 나오면 슬롯 교체(에셋스펙 §4).
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useMachine } from '@xstate/react'
+import { useMachine, useSelector } from '@xstate/react'
+import { giftActor } from '../machines/gift.machine'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
 import { moiPlazaMachine } from '../machines/moiPlaza.machine'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
@@ -35,6 +36,12 @@ export function MoiGatherPage() {
 
   const { yone, owned, placed, equipped, pendingItemId, error } = state.context
   const placedIds = placed.map((p) => p.itemId)
+  const giftReceived = useSelector(giftActor, (s) => s.context.received)
+  const giftSignals = useSelector(giftActor, (s) => s.context.signals)
+  // 받은 선물 → 광장 보유로 부여(꾸미기 장착·배치 가능). gift actor 브리지.
+  useEffect(() => {
+    if (giftReceived.length) send({ type: 'GRANT_OWNED', ids: giftReceived })
+  }, [giftReceived, send])
 
   // 토스트 자동 소멸
   useEffect(() => {
@@ -143,6 +150,7 @@ export function MoiGatherPage() {
         data={profileData}
         context="lounge"
         meeting={profileMeeting}
+        giftSignal={profileMoiId ? giftSignals[profileMoiId] ?? 0 : 0}
         onIeum={profileMoiId && profileMoiId !== 'me' ? handleIeum : undefined}
       />
     </div>

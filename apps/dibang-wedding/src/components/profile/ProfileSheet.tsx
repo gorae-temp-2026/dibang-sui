@@ -31,11 +31,13 @@ interface ProfileSheetProps {
   context?: ProfileContext
   /** 상단 만남 맥락(사진·후크·출처). 미지정 시 분석만(예: 내 전체 프로필). */
   meeting?: MeetingContext
+  /** 받은 선물 신뢰 신호 누적(증여=EM·CS). ② signal에 가시화. */
+  giftSignal?: number
   /** 이음 신청 CTA(인연 ①② 온라인 · 라운지 ③ 오프라인, 핸드오프 §12-3). 미지정 시 버튼 숨김. */
   onIeum?: () => void
 }
 
-export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', meeting, onIeum }: ProfileSheetProps) {
+export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', meeting, giftSignal, onIeum }: ProfileSheetProps) {
   const offline = context === 'lounge' // ③ 오프라인 이음 = 이름·소속·전체 네트워크 공개
   const name = offline ? data.subject : '익명 모이'
 
@@ -112,6 +114,11 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
               <li><b className="text-[#9999AD]">MP</b> 거래 (스텁)</li>
             </ul>
           </div>
+          {giftSignal != null && giftSignal > 0 && (
+            <div className="mt-2 rounded-xl border border-[#F8C57A]/30 bg-[#F8C57A]/10 px-3 py-2 text-[11.5px] text-white/85">
+              💝 받은 선물 신뢰 신호 <b className="text-[#F8C57A]">+{giftSignal}</b> <span className="text-white/45">· 증여=EM·CS (라이브 Moi Credit 반영 예정)</span>
+            </div>
+          )}
         </Section>
 
         <Section title="익명 신뢰범위">

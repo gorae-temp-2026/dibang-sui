@@ -43,6 +43,7 @@ export const moiPlazaMachine = setup({
       | { type: 'REMOVE'; itemId: string }
       | { type: 'EQUIP'; itemId: string }
       | { type: 'UNEQUIP'; slot: EquipSlot }
+      | { type: 'GRANT_OWNED'; ids: string[] }
       | { type: 'CHARGE' }
       | { type: 'DISMISS_ERROR' }
   },
@@ -116,6 +117,13 @@ export const moiPlazaMachine = setup({
           delete next[event.slot]
           return next
         },
+      }),
+    },
+    // 선물로 받은 아이템을 무료 보유로 부여(꾸미기 장착·배치 가능). gift actor → MoiGatherPage 브리지.
+    GRANT_OWNED: {
+      actions: assign({
+        owned: ({ context, event }) =>
+          event.type === 'GRANT_OWNED' ? [...new Set([...context.owned, ...event.ids])] : context.owned,
       }),
     },
     CHARGE: { actions: assign({ yone: ({ context }) => context.yone + CHARGE_AMOUNT }) },
