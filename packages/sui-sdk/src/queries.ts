@@ -227,14 +227,6 @@ export async function getOwnedWeddingCapIds(
 
 // === 이벤트 조회 타입 ===
 
-export interface GuestbookFeedItem {
-  entryId: string;
-  loungeId: string;
-  author: string;
-  guestName: string;
-  message: string;
-}
-
 export interface RsvpEvent {
   weddingId: string;
   submitter: string;
@@ -243,16 +235,6 @@ export interface RsvpEvent {
   companionCount: number;
   meal: string;
   submittedAt: number;
-}
-
-export interface CashGiftEvent {
-  recordId: string;
-  weddingId: string;
-  guestName: string;
-  recipientSlot: string;
-  relationCategory: string;
-  amount: bigint;
-  createdAt: number;
 }
 
 /**
@@ -282,27 +264,6 @@ async function queryAllEvents(
   return out;
 }
 
-/** 라운지의 방명록 피드(GuestbookEntryCreated 이벤트 → lounge_id 필터). */
-export async function getGuestbookFeed(
-  client: SuiJsonRpcClient,
-  loungeId: string,
-): Promise<GuestbookFeedItem[]> {
-  const events = await queryAllEvents(client, moveTarget('guestbook', 'GuestbookEntryCreated'));
-  const out: GuestbookFeedItem[] = [];
-  for (const e of events) {
-    const p = e.parsedJson as Record<string, unknown>;
-    if (asString(p.lounge_id) !== loungeId) continue;
-    out.push({
-      entryId: asString(p.entry_id),
-      loungeId: asString(p.lounge_id),
-      author: asString(p.author),
-      guestName: asString(p.guest_name),
-      message: asString(p.message),
-    });
-  }
-  return out;
-}
-
 /** 결혼식의 RSVP 현황(RsvpSubmitted 이벤트 → wedding_id 필터). */
 export async function getRsvpEvents(
   client: SuiJsonRpcClient,
@@ -321,29 +282,6 @@ export async function getRsvpEvents(
       companionCount: asNumber(p.companion_count),
       meal: asString(p.meal),
       submittedAt: asNumber(p.submitted_at),
-    });
-  }
-  return out;
-}
-
-/** 결혼식의 축의금 현황(CashGiftSent 이벤트 → wedding_id 필터). */
-export async function getCashGiftEvents(
-  client: SuiJsonRpcClient,
-  weddingId: string,
-): Promise<CashGiftEvent[]> {
-  const events = await queryAllEvents(client, moveTarget('cash_gift', 'CashGiftSent'));
-  const out: CashGiftEvent[] = [];
-  for (const e of events) {
-    const p = e.parsedJson as Record<string, unknown>;
-    if (asString(p.wedding_id) !== weddingId) continue;
-    out.push({
-      recordId: asString(p.record_id),
-      weddingId: asString(p.wedding_id),
-      guestName: asString(p.guest_name),
-      recipientSlot: asString(p.recipient_slot),
-      relationCategory: asString(p.relation_category),
-      amount: BigInt(asString(p.amount ?? '0')),
-      createdAt: asNumber(p.created_at),
     });
   }
   return out;
