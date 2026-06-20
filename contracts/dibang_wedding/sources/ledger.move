@@ -26,20 +26,25 @@ const EInvalidActionType: u64 = 1;
 // === Constants: action_type (raw 동사 — 해석은 project) ===
 /// 돈 건넴. (하객→혼주)면 부조, (혼주→업체)면 거래, (sender→recipient)면 증여 — project가 가름.
 const ACTION_GIVE_MONEY: u8 = 0;
-/// 이음 신청.
+/// 이음 신청. (예비 — 미emit: 신청은 IumRequest 객체로, 대기 상태라 신호 아님.)
 const ACTION_REQUEST_IUM: u8 = 1;
-/// 이음 수락 = 매칭 성립(CS 엣지).
+/// 이음 수락 = 매칭 성립. (예비 — 미emit: §3-F대로 매칭 CS는 Event(INYEON)+양측 Participation에서 도출, ledger 미기록.)
 const ACTION_ACCEPT_IUM: u8 = 2;
 /// 선물(증여) — MoiItem 이전 동반. EM·CS, 단 부조 전파에선 제외(MOICREDIT_AUDIT).
 const ACTION_GIFT: u8 = 3;
 /// 방명록 메시지.
 const ACTION_WRITE_MESSAGE: u8 = 4;
-/// 참석(옴). 시간 부조(EM) + 함께함(CS) 이중 신호 — project가 fan-out.
+/// 참석(옴). (예비 — 미emit: 참석은 event::participate=Participated가 원천. vestigial 상수, EM 시간환산은 후행.)
 const ACTION_ATTEND: u8 = 5;
 /// 초대(청첩장). 혼주→하객 사전 관계 신호(CS○★, "디방의 본질") — 가장 직접적 prior-relationship.
 const ACTION_INVITE: u8 = 6;
 /// 정의된 action_type 최댓값(경계 검증용). 새 동사 추가 시 갱신.
 const ACTION_TYPE_MAX: u8 = 6;
+
+// ⚠️ 발행 계약(인덱서·credit.ts가 의존 — Critical1 교훈): 실제 emit = GIVE_MONEY(cash_gift::give)·
+// WRITE_MESSAGE(guestbook::write)·INVITE(wedding::invite)·GIFT(gift::gift)뿐. REQUEST_IUM·ACCEPT_IUM·ATTEND는
+// 예비 상수로 정의만 — 인연 매칭/참석은 ActionLogged가 아니라 *Participated*(event)에서 도출한다.
+// settles는 log에 예비 인자로 있으나 현재 모든 호출이 none — 대여 상환(이행 raw)은 #12 DeFi 재진입 시 활성.
 
 // === Structs ===
 

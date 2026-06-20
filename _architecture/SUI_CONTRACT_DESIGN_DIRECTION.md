@@ -226,7 +226,7 @@ utils.move     유지
 
 **검증 누적:** opus 적대 리뷰 — 실결함 6(C1·C3·C-IUM1·rsvp PII·C-Q1 등) + 모델보강 4(I1 참석·I3 자기엣지·CS authority·I-CS1 매칭양방향) 발견·반영.
 
-**남음(후순위/결정대기):** ①Wedding 이름 온체인 보유(사용자 결정) ②온체인 DeFi 재진입(오라클/ZK, 결정#12) = 토이 대출 끝단 ③SDK write 빌더 정렬 + guest-web 온체인 경계 위반(§2) ④test-testnet.ts 신규 API 재작성 ⑤가중치·이행 실데이터 튜닝.
+**남음(후순위/결정대기):** ①Wedding 이름 온체인 보유(사용자 결정) ②온체인 DeFi 재진입(오라클/ZK, 결정#12) = 토이 대출 끝단 ③SDK write 빌더 정렬 + guest-web 온체인 경계 위반(§2) ④test-testnet.ts 신규 API 재작성 ⑤가중치 실데이터 튜닝 ⑥**이행축(perf)**: 대여 상환=이행 raw인데 대여가 #12(온체인 DeFi 재진입) 영역이라, 그전까지 perf 0.7 고정(변별력 0)·settles는 log에 예비 인자로만(전부 none). **답례는 부조 양방향(give A→B, give B→A)으로 이미 도출되어 settles 불요** — settles는 대여 상환 1:1 링크(default 판정) 전용. DeFi 도입 시 lend/repay 진입함수가 settles를 some으로 활성.
 
 ## 11. 사용자 결정 대기 (06 §F + 리뷰)
 1. ~~부조 amount 공개형태~~ **[결정완료 06-20]** 평문 노출 OK. 프라이버시 1순위 = 신원 비식별(온체인 PII 0 + 가명주소). amount는 나중 일.
