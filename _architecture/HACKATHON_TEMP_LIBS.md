@@ -10,7 +10,7 @@
 | `lucide-react` | 아이콘 | ^1.x | 해커톤 임시 |
 | `react-force-graph-2d` | ⑤ 인연 연결 그래프(사진 노드, 2D) | latest | 해커톤 임시 |
 | `d3-hierarchy` · `d3-shape` | ⑤ signal sunburst(partition + arc) | latest | 해커톤 임시 |
-| **PixiJS** (예정) | ④ 모이가모인곳 2.5D 미니룸 | — | 미설치(④ 착수 시) |
+| **PixiJS** (`pixi.js`) | ④ 모이가모인곳 2.5D 미니룸 (raw WebGL · @pixi/react 미사용, 명령형 마운트) | ^8.19.0 | 해커톤 임시 (260620 설치) |
 
 - `framer-motion`은 이미 tech-stack-map 등재됨(스와이프·레일 애니메이션) — 임시 아님.
 - pnpm 핀 이슈: `packageManager: pnpm@9.15.0` 바이너리 부재 → `npm_config_manage_package_manager_versions=false`로 우회 설치.
