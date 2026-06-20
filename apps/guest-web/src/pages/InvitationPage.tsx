@@ -332,7 +332,6 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
         await submitRsvp({
           loungeId: suiLoungeId,
           recipientSlot,
-          guestName: formData.name,
           attendance: formData.attendance === '참석' ? 'attending' : 'absent',
           companionCount: formData.companion,
           meal: formData.meal,

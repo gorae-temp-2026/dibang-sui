@@ -27,7 +27,6 @@ export interface SendCashGiftInput {
 export interface SubmitRsvpInput {
   loungeId: string
   recipientSlot: string
-  guestName: string
   attendance: string
   companionCount: number
   meal: string
