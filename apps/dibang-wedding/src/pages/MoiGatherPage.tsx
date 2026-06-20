@@ -6,21 +6,21 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useMachine } from '@xstate/react'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
-import { moiRoomMachine } from '../machines/moiRoom.machine'
-import { MoiRoomCanvas } from '../components/moi-gather/MoiRoomCanvas'
+import { moiPlazaMachine } from '../machines/moiPlaza.machine'
+import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
-import { MOI_POOL, MOI_BY_ID } from '../components/moi-gather/data'
+import { PLAZA_CROWD, CROWD_BY_ID, DECOR_SETS, PLAZA_THEME_LABEL, type PlazaTheme } from '../components/moi-gather/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { chulsooProfile } from '../components/profile/fixture'
 
 export function MoiGatherPage() {
   const navigate = useNavigate()
-  const [state, send] = useMachine(moiRoomMachine)
+  const [state, send] = useMachine(moiPlazaMachine)
   const [shopOpen, setShopOpen] = useState(false)
   const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
-  const { yone, owned, placed, equipped, pendingItemId, error } = state.context
+  const { yone, owned, placed, equipped, theme, pendingItemId, error } = state.context
   const placedIds = placed.map((p) => p.itemId)
 
   // 토스트 자동 소멸
@@ -30,7 +30,7 @@ export function MoiGatherPage() {
     return () => clearTimeout(t)
   }, [toast])
 
-  const profileMoi = profileMoiId ? MOI_BY_ID[profileMoiId] : null
+  const profileMoi = profileMoiId ? CROWD_BY_ID[profileMoiId] : null
   // 공유 프로필 fixture에 클릭한 모이 이름만 덮어 placeholder(데이터는 철수 fixture 공통).
   const profileData = profileMoi ? { ...chulsooProfile, subject: profileMoi.name } : chulsooProfile
 
@@ -53,8 +53,8 @@ export function MoiGatherPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[15px] font-extrabold text-white">모이가 모인곳</div>
-          <div className="truncate text-[11px] text-white/55">웨딩 라운지 · host 6명</div>
+          <div className="truncate text-[15px] font-extrabold text-white">모이가 모인곳 · 광장</div>
+          <div className="truncate text-[11px] text-white/55">김수영 · 박소율 웨딩라운지 · 모이 {PLAZA_CROWD.length}</div>
         </div>
         <div className="rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
           🪙 {yone.toLocaleString()}
@@ -70,18 +70,35 @@ export function MoiGatherPage() {
 
       {/* 2.5D 미니룸 캔버스 (PixiJS) */}
       <div className="relative flex-1 overflow-hidden">
-        <MoiRoomCanvas
+        <MoiPlazaCanvas
           placed={placed}
           equipped={equipped}
-          mois={MOI_POOL}
+          crowd={PLAZA_CROWD}
+          decor={DECOR_SETS[theme]}
           onMoiClick={setProfileMoiId}
           onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
         />
 
+        {/* 테마 데코 스왑 (결혼식 기본 · 파티/클럽 = 구조 데모) */}
+        <div className="pointer-events-none absolute inset-x-0 top-16 z-10 flex justify-center">
+          <div className="pointer-events-auto flex gap-1 rounded-full border border-white/12 bg-[#0c1a2e]/70 p-1 backdrop-blur">
+            {(['wedding', 'party', 'club'] as PlazaTheme[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => send({ type: 'SET_THEME', theme: t })}
+                className={`rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${theme === t ? 'bg-[#1E3A5F] text-white' : 'text-white/55'}`}
+              >
+                {PLAZA_THEME_LABEL[t]}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* 조작 힌트 */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
           <span className="rounded-full border border-white/12 bg-[#0c1a2e]/70 px-3.5 py-1.5 text-[11px] font-medium text-white/60 backdrop-blur">
-            모이를 누르면 프로필 · 드래그로 이동/줌 · 아이템은 끌어서 배치
+            모이를 누르면 프로필 · 드래그/핀치로 광장 둘러보기 · 데코는 끌어서 배치
           </span>
         </div>
       </div>

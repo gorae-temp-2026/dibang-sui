@@ -7,10 +7,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
 import { SHOP, type ShopItem, type EquipSlot } from './data'
 import { cn } from '../../lib/utils'
 
-type Cat = 'all' | 'interior' | 'outfit' | 'mine'
+type Cat = 'all' | 'decor' | 'outfit' | 'mine'
 const CATS: { key: Cat; label: string }[] = [
   { key: 'all', label: '전체' },
-  { key: 'interior', label: '인테리어' },
+  { key: 'decor', label: '광장 데코' },
   { key: 'outfit', label: '모이옷' },
   { key: 'mine', label: '내 아이템' },
 ]
@@ -124,7 +124,7 @@ export function ShopSheet(props: ShopSheetProps) {
           <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-white/55">
             <li>· <b className="text-white/75">요네 차감</b>은 구매 시 1회 — 배치·장착 토글은 무료예요.</li>
             <li>· <b className="text-white/75">모이옷</b>은 슬롯(머리·몸)당 하나씩 착용.</li>
-            <li>· <b className="text-white/75">인테리어</b>는 방에 배치 — 끌어서 위치를 옮길 수 있어요.</li>
+            <li>· <b className="text-white/75">광장 데코</b>는 광장에 배치 — 끌어서 위치를 옮길 수 있어요.</li>
             <li>· 실제 요네 충전(SUI·USDC)·결제는 백엔드 연결 단계에서 활성화돼요.</li>
           </ul>
         </div>
@@ -185,14 +185,14 @@ function ItemCard({ item, owned, placed, equipped, canAfford, purchasing, buying
                 </>
               )}
             </button>
-          ) : item.category === 'interior' ? (
+          ) : item.category === 'decor' ? (
             placed ? (
               <button type="button" onClick={onRemove} className="w-full rounded-lg border border-white/15 py-2 text-[12px] font-bold text-white/70">
                 배치됨 · 빼기
               </button>
             ) : (
               <button type="button" onClick={onPlace} className="w-full rounded-lg bg-white/[0.08] py-2 text-[12px] font-bold text-white">
-                방에 배치
+                광장에 배치
               </button>
             )
           ) : equipped ? (
