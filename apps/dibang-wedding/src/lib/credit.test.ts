@@ -60,12 +60,24 @@ describe('creditFromEvents (신뢰→신용)', () => {
     expect(components['b']!.busu).toBe(0)
   })
 
-  it('ACCEPT_IUM은 양방향 CS — 매칭 양쪽 모두 적립 (I-CS1)', () => {
+  it('인연 매칭(INYEON)은 양방향 CS — Participated에서 도출, 양쪽 적립 (Critical1/I-CS1)', () => {
     const evs: EventCreatedEvent[] = [{ eventId: 'm', eventType: EVENT.INYEON, creator: 'initiator' }]
-    // receiver가 수락(raw=receiver→initiator). 매칭은 상호 → 양쪽 CS authority 적립.
-    const { components } = creditFromEvents([cs(ACTION.ACCEPT_IUM, 'receiver', 'initiator', ROLE.RECEIVER, 'm')], evs)
+    // 매칭 성립 = INYEON Event + 양측 Participation(initiator=creator, receiver). ium은 ledger 미기록(§3-F).
+    const participated: ParticipatedEvent[] = [
+      { eventId: 'm', participant: 'initiator', roleId: ROLE.INITIATOR }, // 생성자 자신(자기엣지 제외)
+      { eventId: 'm', participant: 'receiver', roleId: ROLE.RECEIVER },
+    ]
+    const { components } = creditFromEvents([], evs, participated)
     expect(components['initiator']!.cs).toBeGreaterThan(0)
-    expect(components['receiver']!.cs).toBeGreaterThan(0) // 단방향이면 0이었을 것
+    expect(components['receiver']!.cs).toBeGreaterThan(0) // 양방향 — 단방향이면 한쪽이 0
+  })
+
+  it('ACCEPT_IUM ActionLogged는 CS 무신호 — ium이 ledger 미기록이므로 (Critical1 회귀가드)', () => {
+    // 인연 CS는 Participated 전담. 설령 ACCEPT_IUM 액션이 와도(실제론 안 생김) CS 0.
+    const evs: EventCreatedEvent[] = [{ eventId: 'm', eventType: EVENT.INYEON, creator: 'initiator' }]
+    const { components } = creditFromEvents([cs(ACTION.ACCEPT_IUM, 'receiver', 'initiator', ROLE.RECEIVER, 'm')], evs)
+    expect(components['receiver']!.cs).toBe(0)
+    expect(components['initiator']!.cs).toBe(0)
   })
 
   it('GIVE_MONEY는 결혼식 하객→혼주만 부조로 집계(맥락 가드)', () => {

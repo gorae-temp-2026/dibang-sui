@@ -211,13 +211,22 @@ utils.move     유지
 
 **빌드 후순위(범위에서 제외 아님):** feed/하트(고빈도)·YONE 커스텀코인·정식 PageRank는 척추가 선 뒤로 미룸 — 전부 결국 포함.
 
-## 10-A. 척추 구현 상태 (2026-06-20)
-- `event.move`(module `dibang_wedding::event`, ledger에선 `gathering`으로 alias — sui::event 충돌 회피) + `ledger.move` 작성, `sui move test` 43/43.
-- **C1 해소:** `ledger::log(participation: &Participation, …)` — event_id·role_id를 actor 소유 soulbound Participation에서 **파생**(자유 입력 X) + `participant == ctx.sender()` assert → 방향 위조 차단.
-- **C3 해소:** `participate`는 self-claimable(하객·신청자·수신자)만 / 권위역할(혼주·주례)은 `new_event` 생성자 또는 `assign_role`(생성자 게이트)로만. event_type·role 경계 검증.
-- **C2 구현 완료:** `wedding::create_wedding`이 `gathering::Event(EVENT_WEDDING)` 생성·공유 + 혼주 HOST Participation 발행, `Wedding.event_id`+`primary_host` 뷰 보유. `create_default_for_testing`가 내부 test clock으로 호출처 4곳 무수정.
-- **부조 루프 완료:** `cash_gift::give(vault, wedding, participation, coin, clock, ctx)` — 실제 SUI vault 입금 + `ledger::log(GIVE_MONEY, …)` soulbound 기록 한 트랜잭션. 방향=하객 Participation에서 파생, target=primary_host, `participation.event_id == wedding.event_id` assert. `sui move test` 45/45. (구식 `send_gift`(PII·key+store)는 정리 대상.)
-- **남음(다음 증분):** participate 유니크(특히 inyeon)·settles 양끝 일치 assert·send_gift 정리·신호 확장(이음·선물·방명록·참석).
+## 10-A. 구현 상태 (2026-06-21 갱신 — 척추 + 전 신호 + 신뢰→신용 파이프라인 완성·검증)
+> 진척 상세 로그는 `MASTER_DIRECTIVE.md` 하단. 여기는 as-built 스냅샷.
+
+**컨트랙트(`contracts/dibang_wedding/sources`, `sui move test` 43/43, opus 적대 검증):**
+- `event.move`(`gathering` alias) + `ledger.move`(ActionRecord soulbound key-only, action_type 0~6, `log`=public(package), event_id·role_id를 actor 소유 Participation에서 **파생**=방향 위조 차단[C1], settles 링크). `participate`=GUEST만 self-claimable·권위역할(혼주·주례·INITIATOR·RECEIVER)은 creator/package 게이트[C3].
+- **웨딩 신호셋:** 초대 `wedding::invite`(INVITE, 혼주 HOST→하객, CS★) · 부조 `cash_gift::give`(GIVE_MONEY, **실제 SUI** vault 입금) · 방명록 `guestbook::write`(WRITE_MESSAGE) · 참석 `event::participate`(Participation/Participated emit).
+- **인연 신호셋:** 매칭 `ium::request_ium`→`accept_ium`(전역 IumRegistry 제거, 매칭=Event(INYEON)+양측 Participation, RECEIVER는 IumRequest 게이트 package mint=방향위조 차단[C-IUM1]) · 선물 `gift::gift`(MoiItem public_transfer + GIFT, 한 PTB).
+- **온체인 PII 0(결정#2):** 이름·연락처·관계라벨·메시지 본문·RSVP 이름 전부 제거(cash_gift/guestbook/ium/rsvp). key-only SBT 일관(활동기록 transfer 불가), 거래의도 자산만 key+store(MoiItem). ⚑[잔여 플래그] Wedding 구조체가 신랑/신부/부모 이름·예식장 평문 보유 = **사용자 결정 대기**(온체인 유지 vs 오프체인 이전).
+
+**신뢰→신용(오프체인, `apps/dibang-wedding/src/lib/credit.ts`, vitest 9/9, 결정#12):**
+- 온체인 raw(`ActionLogged`+`EventCreated`+`Participated`) → project(부조 EM=GIVE_MONEY@WEDDING 하객→혼주 / CS=초대·방명록·매칭(양방향)·선물·참석) → fold → Φ(부조=reversed-giving PageRank[09 PHI-5] / CS=authority PageRank) → 가중합 0.5/0.3/0.2(이행 무기록 0.7) → 지갑별 신용. 자기엣지 필터·비-기여자=0.
+- **SDK(`packages/sui-sdk/src/queries.ts`):** getActionLoggedEvents/getEventCreatedEvents/getParticipatedEvents가 credit.ts 동형 shape로 온체인→신용 읽기 경로 제공. 죽은 PII 리더(guestbook/cashgift/ium) 제거[C-Q1], SDK typecheck 0.
+
+**검증 누적:** opus 적대 리뷰 — 실결함 6(C1·C3·C-IUM1·rsvp PII·C-Q1 등) + 모델보강 4(I1 참석·I3 자기엣지·CS authority·I-CS1 매칭양방향) 발견·반영.
+
+**남음(후순위/결정대기):** ①Wedding 이름 온체인 보유(사용자 결정) ②온체인 DeFi 재진입(오라클/ZK, 결정#12) = 토이 대출 끝단 ③SDK write 빌더 정렬 + guest-web 온체인 경계 위반(§2) ④test-testnet.ts 신규 API 재작성 ⑤가중치·이행 실데이터 튜닝.
 
 ## 11. 사용자 결정 대기 (06 §F + 리뷰)
 1. ~~부조 amount 공개형태~~ **[결정완료 06-20]** 평문 노출 OK. 프라이버시 1순위 = 신원 비식별(온체인 PII 0 + 가명주소). amount는 나중 일.

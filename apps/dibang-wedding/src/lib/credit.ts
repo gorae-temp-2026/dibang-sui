@@ -80,8 +80,9 @@ function addEdge(g: Graph, from: string, to: string, w: number) {
  * project + fold — raw 액션을 EM 부조 그래프와 CS 유대 그래프로 접는다.
  * 해석 규칙(action_type × event_type × role):
  * - GIVE_MONEY @ WEDDING (하객 GUEST → 혼주) = 부조(EM): give[actor][target] += amount.
- * - WRITE_MESSAGE / INVITE / ACCEPT_IUM / GIFT = 유대(CS): tie[actor][target] += 1. (GIFT EM은 부조 제외)
- * - REQUEST_IUM(대기)·ATTEND(미로깅: Participation으로 표현)·target 없는 건 무신호.
+ * - WRITE_MESSAGE / INVITE / GIFT = 유대(CS): tie[actor][target] += 1. (GIFT EM은 부조 제외)
+ * - 인연 매칭·참석은 ActionLogged가 아니라 *Participated*에서 도출(§3-F: ium은 ledger 미기록). 아래 참가 루프.
+ * - REQUEST_IUM(대기)·ACCEPT_IUM(ledger 미기록)·target 없는 건 ActionLogged 무신호.
  */
 function fold(
   actions: ActionLoggedEvent[],
@@ -108,16 +109,11 @@ function fold(
           addEdge(busu, a.actor, a.target, a.amount)
         }
         break
-      case ACTION.ACCEPT_IUM:
-        // 매칭 = 상호 관계 성립 → 양방향 CS(receiver↔initiator 둘 다 authority 적립). (I-CS1)
-        // raw는 단방향(receiver→initiator)이나, accept=상호 유대라는 해석을 *여기*(오프체인)서 양방향으로 편다.
-        addEdge(cs, a.actor, a.target, 1)
-        addEdge(cs, a.target, a.actor, 1)
-        break
       case ACTION.WRITE_MESSAGE:
       case ACTION.INVITE:
       case ACTION.GIFT:
         // 유대 신호(방향별 누적). 증여(GIFT)도 CS로만(EM 부조 전파 제외).
+        // (ACCEPT_IUM은 ledger에 안 기록됨 — 인연 매칭 CS는 아래 Participated 루프에서 양방향 도출.)
         addEdge(cs, a.actor, a.target, 1)
         break
       default:
@@ -125,8 +121,10 @@ function fold(
     }
   }
 
-  // 참석(Participation) = CS '함께함' 신호(I1). 참가자 → 이벤트 생성자(웨딩=혼주). 자기 이벤트(혼주 본인)는 제외.
-  // (참석은 ActionLogged ATTEND가 아니라 Participated가 원천 — participate가 곧 출석.)
+  // 참석·매칭 = Participated에서 CS 도출(§3-F: 인연 매칭은 ledger 미기록 → Event+양측 Participation으로).
+  // - 웨딩: 참석 = 참가자 → 생성자(혼주) 단방향 CS(함께함). (I1)
+  // - 인연(INYEON): 매칭 = 상호 관계 → 생성자(initiator) ↔ 참가자(receiver) 양방향 CS. (Critical1/I-CS1)
+  // 생성자 본인 Participation(participant==creator)은 엣지 아님.
   for (const p of participated) {
     nodes.add(p.participant)
     const creator = eventCreator.get(p.eventId)
@@ -134,6 +132,8 @@ function fold(
     nodes.add(creator)
     if (p.participant === creator) continue
     addEdge(cs, p.participant, creator, 1)
+    // 인연 매칭은 상호 — 반대 방향(생성자→참가자)도 추가.
+    if (eventType.get(p.eventId) === EVENT.INYEON) addEdge(cs, creator, p.participant, 1)
   }
 
   return { busu, cs, nodes }
