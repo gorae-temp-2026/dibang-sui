@@ -38,6 +38,20 @@ describe('creditFromEvents (신뢰→신용)', () => {
     expect(components['guest1']!.cs).toBeGreaterThan(0) // 초대를 받음
   })
 
+  it('CS authority: 고신뢰 노드에게 유대받으면 더 높음 (flat in-tie와 구별)', () => {
+    const wm = (actor: string, target: string) => cs(ACTION.WRITE_MESSAGE, actor, target, ROLE.GUEST)
+    const { components } = creditFromEvents(
+      [
+        wm('p1', 'hub'), wm('p2', 'hub'), wm('p3', 'hub'), // hub = 높은 authority(3명에게 유대받음)
+        wm('hub', 'x'), // x는 고신뢰 hub에게 유대받음
+        wm('z', 'y'), // y는 무신뢰 z(유대받은 적 없음)에게 유대받음
+      ],
+      weddingEvents,
+    )
+    // flat in-tie라면 x·y 둘 다 in-tie 1로 동률. authority라면 x>y(유대의 질).
+    expect(components['x']!.cs).toBeGreaterThan(components['y']!.cs)
+  })
+
   it('선물(GIFT)은 CS만 — 부조 전파에서 제외(MOICREDIT_AUDIT)', () => {
     const evs: EventCreatedEvent[] = [{ eventId: 'ev_inyeon', eventType: EVENT.INYEON, creator: 'a' }]
     const { components } = creditFromEvents([cs(ACTION.GIFT, 'a', 'b', ROLE.INITIATOR, 'ev_inyeon')], evs)

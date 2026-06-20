@@ -5,7 +5,7 @@
 // - 신용 계산은 **오프체인**. 온체인은 raw 액션만. 해석(부조/EM/CS)·전파 비중은 *여기*에 산다(온체인에 안 박음).
 // - 파이프라인: raw 액션 → project(해석 규칙) → fold(EM 부조 give[g][h] / CS tie[a][b]) → Φ(전파) → 가중합.
 // - Φ = 09-credit-propagation PHI-5: **부조 = reversed-giving PageRank**(베푼 쪽이 적립, 상대 신용으로 가중),
-//   CS = in-tie authority(받는 쪽 적립, first-cut은 정규화 in-tie), 이행 = 데이터 없으면 0.7(무기록).
+//   **CS = authority PageRank**(유대받는 쪽 적립, 고신뢰자에게 받을수록↑ — 유대의 질 반영), 이행 = 데이터 없으면 0.7.
 // - 가중합(doc 09): 최종 = 0.5·부조 + 0.3·CS + 0.2·이행. (first-cut 임의값 — 실데이터로 튜닝.)
 // - 증여(GIFT) EM은 부조 전파에서 제외(MOICREDIT_AUDIT: sole-giver 농사 방지) → CS로만 집계.
 
@@ -164,12 +164,28 @@ function reversedGivingPageRank(give: Graph, nodes: string[]): Record<string, nu
   return pi
 }
 
-/** CS 신용(first-cut) = 받은 유대(in-tie) 가중 정규화. (PHI-5 정식은 authority PageRank — 후행 정밀화.) */
-function csInTie(cs: Graph, nodes: string[]): Record<string, number> {
-  const inTie: Record<string, number> = {}
-  for (const n of nodes) inTie[n] = 0
-  for (const [, m] of cs) for (const [b, w] of m) inTie[b] = (inTie[b] ?? 0) + w
-  return inTie
+/**
+ * CS 신용 = authority PageRank (PHI-5 정식). 유대받는 쪽이 적립하되, **높은 신뢰 노드에게 유대받을수록 더 높다**.
+ * π_b = (1−d)/N + d·Σ_a (tie[a][b]/out[a])·π_a (out[a] = a의 총 유대). flat in-tie와 달리 유대의 *질*(중심성)을 반영.
+ */
+function authorityPageRank(g: Graph, nodes: string[]): Record<string, number> {
+  const N = nodes.length
+  if (N === 0) return {}
+  const out: Record<string, number> = {}
+  for (const [a, m] of g) for (const [, w] of m) out[a] = (out[a] ?? 0) + w
+
+  let pi: Record<string, number> = {}
+  for (const n of nodes) pi[n] = 1 / N
+  for (let it = 0; it < ITERS; it++) {
+    const next: Record<string, number> = {}
+    for (const n of nodes) next[n] = (1 - DAMPING) / N
+    for (const [a, m] of g) {
+      const oa = out[a] ?? 0
+      if (oa > 0) for (const [b, w] of m) next[b] = (next[b] ?? 0) + DAMPING * (w / oa) * (pi[a] ?? 0)
+    }
+    pi = next
+  }
+  return pi
 }
 
 /** 0~1 정규화(최댓값 기준). 전부 0이면 0. */
@@ -200,9 +216,12 @@ export function creditFromEvents(
   const baseline = nodeList.length > 0 ? (1 - DAMPING) / nodeList.length : 0
   const busuExcess: Record<string, number> = {}
   for (const n of nodeList) busuExcess[n] = Math.max(0, (busuRaw[n] ?? 0) - baseline)
-  const csRaw = csInTie(cs, nodeList)
+  // CS도 부조와 동일하게 기준선 초과분으로(유대 없는 노드 = CS 0, 전원-만점 퇴화 방지).
+  const csRaw = authorityPageRank(cs, nodeList)
+  const csExcess: Record<string, number> = {}
+  for (const n of nodeList) csExcess[n] = Math.max(0, (csRaw[n] ?? 0) - baseline)
   const busuN = normalize(busuExcess, nodeList)
-  const csN = normalize(csRaw, nodeList)
+  const csN = normalize(csExcess, nodeList)
 
   const credit: Record<string, number> = {}
   const components: Record<string, { busu: number; cs: number; perf: number }> = {}
