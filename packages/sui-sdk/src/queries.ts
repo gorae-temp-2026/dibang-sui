@@ -86,15 +86,6 @@ export interface MoiItemOnChain {
   slot: string;
 }
 
-export interface IumOnChain {
-  id: string;
-  fromUser: string;
-  toUser: string;
-  relationType: string;
-  label: string;
-  createdAt: number;
-}
-
 // === 오브젝트 조회 ===
 
 /** Wedding 공유 오브젝트 조회. */
@@ -187,29 +178,6 @@ export async function getOwnedMoiItems(
         name: asString(f.name),
         itemType: asString(f.item_type),
         slot: asString(f.slot),
-      });
-    }
-  }
-  return items;
-}
-
-/** 주소가 소유한 Ium(신뢰 관계) 목록. */
-export async function getOwnedIums(
-  client: SuiJsonRpcClient,
-  owner: string,
-): Promise<IumOnChain[]> {
-  const objs = await listOwnedByType(client, owner, moveTarget('ium', 'Ium'));
-  const items: IumOnChain[] = [];
-  for (const res of objs) {
-    const f = objectFields(res);
-    if (f && res.data) {
-      items.push({
-        id: res.data.objectId,
-        fromUser: asString(f.from_user),
-        toUser: asString(f.to_user),
-        relationType: asString(f.relation_type),
-        label: asString(f.label),
-        createdAt: asNumber(f.created_at),
       });
     }
   }
