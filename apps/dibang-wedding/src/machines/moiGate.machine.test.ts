@@ -30,7 +30,7 @@ describe('moiGateMachine', () => {
   it('생성 실패 → visible 복귀 + error (여전히 강제)', async () => {
     const m = moiGateMachine.provide({
       actors: {
-        submit: fromPromise(async () => {
+        submit: fromPromise<string>(async () => {
           throw new Error('boom')
         }),
       },

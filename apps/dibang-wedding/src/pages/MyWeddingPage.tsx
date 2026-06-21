@@ -119,8 +119,8 @@ export function MyWeddingPage() {
                       inviteOrigin={inviteOrigin}
                       onShareInvite={handleShareInvite}
                     />
-                    <AddHostSection weddingId={wedding.sui_wedding_id} />
-                    <WithdrawSection weddingId={wedding.sui_wedding_id} vaultId={wedding.sui_vault_id} />
+                    <AddHostSection weddingId={wedding.id} />
+                    <WithdrawSection weddingId={wedding.id} />
                   </div>
                 );
               })}

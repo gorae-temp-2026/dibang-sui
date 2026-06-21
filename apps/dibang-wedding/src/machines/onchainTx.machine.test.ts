@@ -14,7 +14,7 @@ describe('onchainTxMachine', () => {
 
   it('submit 실패 → idle + error', async () => {
     const m = onchainTxMachine.provide({
-      actors: { submit: fromPromise(async () => { throw new Error('nope') }) },
+      actors: { submit: fromPromise<string>(async () => { throw new Error('nope') }) },
     })
     const actor = createActor(m).start()
     actor.send({ type: 'SUBMIT' })

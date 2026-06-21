@@ -81,8 +81,8 @@ describe('creditFromSignals (신뢰→신용 · 온체인 분류 신호 집계)'
     // getSignalEvents 반환(SignalQuery: eventId·ts 포함)이 creditFromSignals에 그대로 들어가야 한다.
     // SignalQuery가 SignalEvent 필드를 잃으면 여기서 tsc가 깨진다(런타임 C-Q1류 드리프트를 컴파일타임 차단).
     const fromSdk: SignalQuery[] = [
-      { eventId: '0x1', kind: KIND.BUSU, source: 0, from: 'g1', to: 'host', magnitude: 100_000, ts: 1 },
-      { eventId: '0x1', kind: KIND.CS, source: 4, from: 'g1', to: 'host', magnitude: 1, ts: 2 },
+      { eventId: '0x1', kind: KIND.BUSU, source: 0, resourceId: 0, from: 'g1', to: 'host', magnitude: 100_000, ts: 1 },
+      { eventId: '0x1', kind: KIND.CS, source: 4, resourceId: 0, from: 'g1', to: 'host', magnitude: 1, ts: 2 },
     ]
     const { credit, components } = creditFromSignals(fromSdk)
     expect(components['g1']!.busu).toBeGreaterThan(0)

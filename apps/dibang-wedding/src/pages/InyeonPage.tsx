@@ -81,7 +81,7 @@ export function InyeonPage() {
               onUnlock={(id) => send({ type: 'UNLOCK_PHOTOS', id })}
               onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
               onSwipeNext={() => send({ type: 'SWIPE_NEXT' })}
-              onOpenDetail={(id) => send({ type: 'OPEN_DETAIL', id })}
+              onOpenProfile={(id) => send({ type: 'OPEN_DETAIL', id })}
               onReset={() => send({ type: 'RESET_DECK' })}
             />
           </div>

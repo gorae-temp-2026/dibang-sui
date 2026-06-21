@@ -5,7 +5,7 @@ import { addHostMachine } from './addHost.machine'
 describe('addHostMachine', () => {
   it('SUBMIT → submitting → done(digest 저장), submit actor는 주입', async () => {
     const m = addHostMachine.provide({
-      actors: { submit: fromPromise(async () => 'digest_abc') },
+      actors: { submit: fromPromise<string, { newHost: string }>(async () => 'digest_abc') },
     })
     const actor = createActor(m).start()
     actor.send({ type: 'SUBMIT', newHost: '0xB' })
@@ -17,7 +17,7 @@ describe('addHostMachine', () => {
   it('submit 실패 → idle 복귀 + error 기록', async () => {
     const m = addHostMachine.provide({
       actors: {
-        submit: fromPromise(async () => {
+        submit: fromPromise<string, { newHost: string }>(async () => {
           throw new Error('boom')
         }),
       },

@@ -146,6 +146,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (!window.location.hash.includes('id_token=')) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- OAuth 콜백 1회 처리: setSession은 salt/proof 네트워크 후 비동기(.then)라 동기 cascading 아님
     completeLoginFromUrl()
       .then((ok) => {
         // 토큰 노출·재처리 방지: 성공 시 프래그먼트 제거.

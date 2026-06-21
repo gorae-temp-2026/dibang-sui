@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useMachine } from '@xstate/react'
 import { fromPromise } from 'xstate'
+import { useQuery } from '@tanstack/react-query'
+import { getWeddingOptions } from '@gorae/contracts/@tanstack/react-query.gen'
 import { createJsonRpcClient, getWeddingCapForWedding, type SuiNetwork } from '@gorae/sui-sdk'
 import { addHostMachine } from '../../machines/addHost.machine'
 import { useOnchainHostActions } from '../../hooks/useOnchainHostActions'
@@ -12,32 +14,35 @@ import { env } from '../../env'
  * 머신(addHost)은 flow만, 온체인 호출은 여기서 submit actor로 주입(cap을 결혼식별로 찾아 addHost).
  * sui_wedding_id가 없으면(온체인 미생성) 추가 불가 안내.
  */
-export function AddHostSection({ weddingId }: { weddingId?: string | null }) {
+export function AddHostSection({ weddingId }: { weddingId: string }) {
   const { address, isAuthenticated } = useZkLogin()
   const { addHost } = useOnchainHostActions()
   const [newHost, setNewHost] = useState('')
+  // WeddingSummary엔 sui_wedding_id가 없어 full wedding을 조회해 온체인 ID를 얻는다.
+  const { data: wedding } = useQuery({ ...getWeddingOptions({ path: { weddingId } }), retry: false })
+  const suiWeddingId = wedding?.sui_wedding_id ?? null
 
   const machine = useMemo(
     () =>
       addHostMachine.provide({
         actors: {
           submit: fromPromise<string, { newHost: string }>(async ({ input }) => {
-            if (!weddingId) throw new Error('온체인 결혼식이 없습니다(sui_wedding_id 없음)')
+            if (!suiWeddingId) throw new Error('온체인 결혼식이 없습니다(sui_wedding_id 없음)')
             if (!address) throw new Error('로그인이 필요합니다')
             const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
             const client = createJsonRpcClient(network)
-            const capId = await getWeddingCapForWedding(client, address, weddingId)
+            const capId = await getWeddingCapForWedding(client, address, suiWeddingId)
             if (!capId) throw new Error('이 결혼식의 WeddingCap이 없습니다(primary host만 추가 가능)')
-            return addHost({ weddingId, capId, newHost: input.newHost.trim() })
+            return addHost({ weddingId: suiWeddingId, capId, newHost: input.newHost.trim() })
           }),
         },
       }),
-    [weddingId, address, addHost],
+    [suiWeddingId, address, addHost],
   )
   const [state, send] = useMachine(machine)
 
   if (!isAuthenticated) return null
-  if (!weddingId) {
+  if (!suiWeddingId) {
     return <p className="mt-3 text-xs text-muted">온체인 결혼식이 아직 생성되지 않아 공동 혼주를 추가할 수 없습니다.</p>
   }
 
