@@ -2,16 +2,10 @@
 // 사진 갤러리(좌우 탭) + 대표포함 2장 무료/3장째 요네 게이트 + 티어/접속/hook/공통친구/익명 신뢰막대.
 // 이름은 미노출(이음 후 공개). 액션(넘기기/이음)·"프로필 보기 ▾"는 맨 위 카드에서만.
 import { ChevronDown, Lock, Share2, Users, X } from 'lucide-react'
-import type { Moi, Tier } from './types'
+import type { Moi } from './types'
 import { FREE_PHOTOS, PHOTO_COST } from './data'
 import { useT } from '../../lib/i18n'
 import { cn } from '../../lib/utils'
-
-const TIER_BADGE: Record<Tier, string> = {
-  0: 'bg-[#3FAE6E]/90 text-white',
-  1: 'bg-[#E8A865]/95 text-[#3a2606]',
-  2: 'bg-[#E0607A]/95 text-white',
-}
 
 function photoBg(hue: number) {
   return `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
@@ -93,8 +87,15 @@ export function InyeonCard({
           {t('inyeon.online')}
         </div>
       )}
-      <div className={cn('absolute right-3.5 top-5 z-[4] rounded-full px-2.5 py-1.5 text-[10px] font-extrabold backdrop-blur', TIER_BADGE[moi.tier])}>
-        {t(`inyeon.tier.${moi.tier}.label`)}
+      {/* 우상단 = 정성 연결 표기(데이팅앱 느낌, 관계거리 라벨 대신). */}
+      <div className="absolute right-3.5 top-5 z-[4] flex items-center gap-1 rounded-full bg-[#0d1621]/45 px-2.5 py-1.5 text-[10.5px] font-bold text-white backdrop-blur">
+        {moi.mutualCount > 0 ? (
+          <>
+            <Users className="h-3 w-3" /> {t('inyeon.hasMutual')}
+          </>
+        ) : (
+          t('inyeon.newConnection')
+        )}
       </div>
 
       {/* 잠금 오버레이 (3장째부터) */}
@@ -115,21 +116,6 @@ export function InyeonCard({
         <div className="flex items-center gap-2 text-[15px] font-bold">
           <span className="text-lg">{moi.prov[0]?.emoji}</span>
           {t(`inyeon.tier.${moi.tier}.hook`)}
-        </div>
-        {moi.mutualCount > 0 && (
-          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold backdrop-blur">
-            <Users className="h-3 w-3" /> {t('inyeon.mutual', { n: moi.mutualCount })}
-          </div>
-        )}
-        {/* 익명 신뢰범위 막대 */}
-        <div className="mt-2.5 flex items-center gap-2.5 rounded-xl border border-white/15 bg-[#0d1621]/40 px-3 py-2 backdrop-blur">
-          <span className="text-[11px] font-medium text-white/90">신뢰</span>
-          <span className="flex items-center gap-[3px]">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <span key={i} className={cn('h-3.5 w-[7px] rounded-sm', i < moi.barsF ? 'bg-[#F8C57A]' : 'bg-white/25')} />
-            ))}
-          </span>
-          <span className="ml-auto text-[11px] font-extrabold text-[#F8C57A]">{moi.balLabel}</span>
         </div>
         <div className="mt-2 flex items-center gap-1 text-[10px] font-bold text-white/75">
           <Lock className="h-3 w-3" /> {t('inyeon.revealName')}
