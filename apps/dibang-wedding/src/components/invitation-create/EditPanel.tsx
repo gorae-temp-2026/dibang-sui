@@ -163,6 +163,7 @@ export function EditPanel({
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-6">
 
       {/* 테마 선택 — QA 2026-05-29: 일단 숨김(기본 'moi-pink' 고정, 추후 복원 예정). */}
+      {/* eslint-disable-next-line no-constant-binary-expression -- 의도적 토글(false=숨김, 추후 복원) */}
       {false && (
       <section className="space-y-4">
         <h2 className={sectionTitleClass}>테마</h2>

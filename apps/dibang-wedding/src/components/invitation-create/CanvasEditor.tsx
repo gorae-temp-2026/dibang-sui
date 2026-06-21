@@ -529,6 +529,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
   };
 
   const editingItem = editingId ? config.items.find((it) => it.id === editingId) : null;
+  // eslint-disable-next-line react-hooks/refs -- 편집 textarea 오버레이는 stage/node DOM 측정이 필요(렌더타임 의도적)
   const textareaStyle = getTextareaStyle();
 
   // --- 레이어 패널 ---
