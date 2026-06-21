@@ -70,6 +70,13 @@ export interface CashGiftVaultOnChain {
   balance: bigint;
 }
 
+export interface MoiOnChain {
+  id: string;
+  owner: string;
+  /** 장착 슬롯→MoiItem 객체 ID 매핑(온체인 VecMap<String, ID>). */
+  equipped: Record<string, string>;
+}
+
 export interface MoiItemOnChain {
   id: string;
   name: string;
@@ -163,6 +170,28 @@ export async function getOwnedMoiItems(
     }
   }
   return items;
+}
+
+/** Moi 오브젝트 조회(장착 상태 포함). equipped는 VecMap<String, ID> → Record<slot, itemId>. */
+export async function getMoi(
+  client: SuiJsonRpcClient,
+  moiId: string,
+): Promise<MoiOnChain | null> {
+  const res = await client.getObject({ id: moiId, options: { showContent: true } });
+  const f = objectFields(res);
+  if (!f) return null;
+  const equipped: Record<string, string> = {};
+  const raw = f.equipped;
+  if (raw && typeof raw === 'object' && 'fields' in (raw as Record<string, unknown>)) {
+    const contents = ((raw as Record<string, unknown>).fields as Record<string, unknown>)?.contents;
+    if (Array.isArray(contents)) {
+      for (const entry of contents) {
+        const ef = (entry as Record<string, unknown>).fields as Record<string, unknown> | undefined;
+        if (ef) equipped[asString(ef.key)] = asString(ef.value);
+      }
+    }
+  }
+  return { id: moiId, owner: asString(f.owner), equipped };
 }
 
 /** 주소가 소유한 Moi(아바타) 오브젝트 ID 목록. soulbound 1인 1개 원칙이라 보통 0개 또는 1개. */

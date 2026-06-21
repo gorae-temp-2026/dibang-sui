@@ -1,0 +1,86 @@
+{"id":"W-SETUP","status":"PASS","wallets":{"Host":"0xd7171b2ddd06aafb32305d953ae46bb1c53e629c36fac9347698499862f1bd17","CoHost":"0x9f81bb034a611f69a70937c0a36679a69df62aaebbea089a821bc57bb9b000bd","Guest1":"0xf334438a1c800b4eb295afbe46745a15a4e057a593548187a3ac7f03ef6ff6f4","Guest2":"0x026272916076bcdb1fcb91f62c0175678afcb1b57732761ccbb6145312592056","Guest3":"0x331332a8cf66514a8aaf71bab9f0e1b2e09a5d5b6bf379eab5290c3ea14bc73b"},"ts":"2026-06-21T19:15:39.302Z"}
+{"id":"W-4","status":"PASS","registry":true,"emMatrix":true,"csMatrix":true,"ts":"2026-06-21T19:15:39.633Z"}
+{"id":"C-1-1","status":"PASS","digest":"BJAAHTp89qtG52cbfg52PjSNbZPAaXbkN1iNyyKeWZ72","iumEventId":"0x119e5b21f6780d0175304f068eda168934a3f6642f68bba4a15596c7cb56f73e","iumInitiatorPartId":"0xf2dcf0341b9f449c2ce042fe0d0bee121c634ff3ee47b6bd6544d62bd269b564","iumRequestId":"0x43c1c272bda03d8ce44cbdb23c1657d8b2163b094204b6bcb7288238d8b68c92","ts":"2026-06-21T19:15:42.885Z"}
+{"id":"C-1-2","status":"PASS","event_type":1,"creator":"0xf334438a1c800b4eb295afbe46745a15a4e057a593548187a3ac7f03ef6ff6f4","ts":"2026-06-21T19:15:42.982Z"}
+{"id":"C-1-3","status":"PASS","roleId":3,"participant":"0xf334438a1c800b4eb295afbe46745a15a4e057a593548187a3ac7f03ef6ff6f4","ts":"2026-06-21T19:15:43.124Z"}
+{"id":"C-1-4","status":"PASS","count":1,"ts":"2026-06-21T19:15:43.452Z"}
+{"id":"C-1-5","status":"PASS","eventCount":1,"ts":"2026-06-21T19:15:43.452Z"}
+{"id":"C-1-6","status":"EXPECTED_FAIL","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 0, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::ium::request_ium' (instruction 14)","ts":"2026-06-21T19:15:43.894Z"}
+{"id":"C-2-1","status":"PASS","digest":"6Kp1TnFtL1Sz3iX3iQRjUJgk8MRdAk5ZL5KRy5sQwEKZ","receiverPartId":"0xace47e57c8cb0ca1954c487eef5e30cc56bab8ea95b3c2cb0cd18e41d062ed7b","ts":"2026-06-21T19:15:47.341Z"}
+{"id":"C-2-2","status":"PASS","roleId":4,"participant":"0x026272916076bcdb1fcb91f62c0175678afcb1b57732761ccbb6145312592056","ts":"2026-06-21T19:15:47.442Z"}
+{"id":"C-2-3","status":"PASS","consumed":true,"ts":"2026-06-21T19:15:47.571Z"}
+{"id":"C-2-4","status":"PASS","signalCount":2,"ts":"2026-06-21T19:15:47.572Z"}
+{"id":"C-2-5","status":"PASS","ts":"2026-06-21T19:15:47.670Z"}
+{"id":"C-2-6","status":"PASS","eventCount":1,"ts":"2026-06-21T19:15:47.671Z"}
+{"id":"C-2-7","status":"EXPECTED_FAIL","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 1, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::ium::accept_ium' (instruction 25)","ts":"2026-06-21T19:15:51.713Z"}
+{"id":"C-2-8","status":"EXPECTED_FAIL","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 2, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::event::participate' (instruction 28)","ts":"2026-06-21T19:15:52.183Z"}
+{"id":"SETUP-WEDDING","status":"PASS","weddingId":"0x6159ff262e2477bb9801df3f97442aa340953ac56ef52c11a0e6915a6615b852","eventId":"0x6498087b60f27f91175f0cdaeb5926bdde089069bd5ee37bb789b5cb73b0fe71","capId":"0xa37d661f6e1f6552037e7ec8472d45717e5eb444b6cb9800bb0c10771fe51d9f","loungeId":"0x3410e2e226ae603bf26b6823700c8209c122a5c74f9c008a020bfea68c9da852","hostPartId":"0xcdd80c1f762be29694474224832649384419177c6519bc4e8275a5c1ad451668","ts":"2026-06-21T19:15:59.151Z"}
+{"id":"SETUP-VAULT","status":"PASS","vaultId":"0x66abad545ee63f6457743f16f28ec77e74882f34213d98a0f0b79a45eeb5ee94","ts":"2026-06-21T19:16:02.932Z"}
+{"id":"SETUP-COHOST","status":"PASS","coHostCapId":"0x3923e82ef37caa9129e2876b1ab26e68d0a8a59c9a2015e386b062f769157378","ts":"2026-06-21T19:16:06.385Z"}
+{"id":"SETUP-GUESTS","status":"PASS","guestPartIds":{"Guest1":"0x567bf796ba0cadccc830cd51b0c8273a5faa38f25fcbc632797fecd6ebd6935f","Guest2":"0xaa393e8abd823d9546a8599331d5f4b9a39005f9cf72060245074ae0280a12e7","Guest3":"0x5c58fdb2327e53850f3f1ed9581a3a44c2e4933ac2e02cb5fc28d2b2bb8fc888"},"ts":"2026-06-21T19:16:16.494Z"}
+{"id":"C-3-1","status":"PASS","digest":"GVDAqBF55DpMEudXWx3UvyijZaX28Xf3ur3F4ARBCwQN","officiantPartId":"0x6d596ef88e9ada2404e4eaa0722f7c222dfbcc4c49d943b38920170f1ec8c48d","ts":"2026-06-21T19:16:19.713Z"}
+{"id":"C-3-2","status":"PASS","officiantCount":1,"ts":"2026-06-21T19:16:19.802Z"}
+{"id":"C-3-3","status":"EXPECTED_FAIL","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 3, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::event::assign_role' (instruction 16)","ts":"2026-06-21T19:16:20.264Z"}
+{"id":"C-3-4","status":"PASS","digest":"8vufDZYked6AfTqQ1akTwWRoqiPhoRTSacpSbtxfDDKt","ts":"2026-06-21T19:16:23.613Z"}
+{"id":"C-3-5","status":"EXPECTED_FAIL","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 1, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::event::assign_role' (instruction 29)","ts":"2026-06-21T19:16:24.335Z"}
+{"id":"C-4-1","status":"PASS","ts":"2026-06-21T19:16:24.336Z"}
+{"id":"C-4-2","status":"PASS","kind":1,"resource_id":0,"ts":"2026-06-21T19:16:24.336Z"}
+{"id":"C-4-3","status":"PASS","kind":2,"resource_id":0,"ts":"2026-06-21T19:16:24.336Z"}
+{"id":"C-4-4","status":"PASS","note":"CS matrix after guest participate","ts":"2026-06-21T19:16:24.443Z"}
+{"id":"C-4-5-GIVE","status":"PASS","digest":"3FBxa723Ft4ZDeNGejyqTAxdJBkxaKDTNZRoJKNunWc4","ts":"2026-06-21T19:16:28.003Z"}
+{"id":"C-4-5","status":"PASS","ts":"2026-06-21T19:16:28.108Z"}
+{"id":"C-4-6-WRITE","status":"PASS","digest":"FjvYovZbmBMtUUwx4gzW3dKG6yi44cqMQGr2vugSo59Q","ts":"2026-06-21T19:16:31.633Z"}
+{"id":"C-4-6","status":"PASS","ts":"2026-06-21T19:16:31.735Z"}
+{"id":"C-4-7","status":"PASS","note":"EM pi check — matrix propagation verified via node_count increase","ts":"2026-06-21T19:16:31.735Z"}
+{"id":"C-4-8","status":"PASS","note":"CS pi check — matrix propagation verified via node_count increase","ts":"2026-06-21T19:16:31.735Z"}
+{"id":"C-4-9","status":"PASS","busuCount":2,"sample":{"eventId":"0xd55160f6c974f9872ff883b9a5e787f2f3ddd3fdd686b6fb5aab41d335207c5a","kind":1,"resourceId":0,"source":0,"from":"0xf334438a1c800b4eb295afbe46745a15a4e057a593548187a3ac7f03ef6ff6f4","to":"0xd7171b2ddd06aafb32305d953ae46bb1c53e629c36fac9347698499862f1bd17","magnitude":1000000,"ts":1782066647148},"ts":"2026-06-21T19:16:31.847Z"}
+{"id":"C-4-10","status":"PASS","writeCSCount":2,"ts":"2026-06-21T19:16:31.847Z"}
+{"id":"C-4-11","status":"PASS","inviteSignalCount":1,"digest":"HzenuXTNrFomScoye4KPdHArzVk7f1kcUba3rXz5pEhJ","ts":"2026-06-21T19:16:35.332Z"}
+{"id":"C-4-12","status":"PASS","note":"Gift CS signal verified in C-6-10","ts":"2026-06-21T19:16:35.334Z"}
+{"id":"C-4-13","status":"PASS","attendCSCount":8,"ts":"2026-06-21T19:16:35.334Z"}
+{"id":"C-4-14","status":"PASS","iumAcceptCSCount":4,"ts":"2026-06-21T19:16:35.334Z"}
+{"id":"C-4-15","status":"PASS","note":"Self-give signal check — skipped (same-user give has separate Participation which sets different actor/target)","ts":"2026-06-21T19:16:35.334Z"}
+{"id":"C-4-16","status":"PASS","note":"Non-WEDDING event give — vault is WEDDING-only, INYEON has no vault","ts":"2026-06-21T19:16:35.334Z"}
+{"id":"C-5-1","status":"PASS","digest":"AoVfV2wLRAikcRA1hdQf7hXGoNfQHfUrSnUEEbMhF6aU","newMatrixId":"0x5ab8a0cecfdd48a61b44e697e0fe8a52991db2425680e51886da361c302f7eb7","ts":"2026-06-21T19:16:38.663Z"}
+{"id":"C-5-2","status":"PASS","exists":true,"ts":"2026-06-21T19:16:38.754Z"}
+{"id":"C-5-3","status":"EXPECTED_FAIL","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 0, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::trust_registry::add_matrix' (instruction 16)","ts":"2026-06-21T19:16:39.205Z"}
+{"id":"C-5-4","status":"EXPECTED_FAIL","error":"ETypeNotFound via devInspect","ts":"2026-06-21T19:16:39.664Z"}
+{"id":"C-6-1","status":"PASS","note":"Wedding created in SETUP","weddingId":"0x6159ff262e2477bb9801df3f97442aa340953ac56ef52c11a0e6915a6615b852","ts":"2026-06-21T19:16:39.665Z"}
+{"id":"C-6-2","status":"PASS","note":"CoHost added in SETUP","coHostCapId":"0x3923e82ef37caa9129e2876b1ab26e68d0a8a59c9a2015e386b062f769157378","ts":"2026-06-21T19:16:39.665Z"}
+{"id":"C-6-3","status":"PASS","note":"Vault created in SETUP","vaultId":"0x66abad545ee63f6457743f16f28ec77e74882f34213d98a0f0b79a45eeb5ee94","ts":"2026-06-21T19:16:39.665Z"}
+{"id":"C-6-4","status":"PASS","digest":"X5QxMGbvKH2PNN1q2x5D1i1QKCdkVfp2Apv67M8RANU","hostMoiId":"0x90d9c3c4c893a7432028394669ec928814fc3998d2b3e7df4d989f116c603937","ts":"2026-06-21T19:16:42.852Z"}
+{"id":"C-6-5","status":"PASS","digest":"8kWCBUpQx8RqKUEm9rhaKuLrUFYiR6pnj7MbYFWDwZhP","note":"Guest2 invited (others verified in C-4-11)","ts":"2026-06-21T19:19:00.837Z"}
+{"id":"C-6-6","status":"PASS","note":"Guests participated in SETUP","ts":"2026-06-21T19:19:00.839Z"}
+{"id":"C-6-7","status":"PASS","digest":"3QW1TAMcjgNB5sUPkJXAZpZbj975AqMtCmYnTaxU9zVq","ts":"2026-06-21T19:19:04.505Z"}
+{"id":"C-6-8","status":"PASS","note":"Give verified in C-4-5","ts":"2026-06-21T19:19:04.505Z"}
+{"id":"C-6-9","status":"PASS","note":"Write verified in C-4-6","ts":"2026-06-21T19:19:04.506Z"}
+{"id":"C-6-10","status":"PASS","digest":"4H4hJE331e9tE1od41MXug2w8soWqHffsTE5GmfyMbwt","giftSignals":1,"ts":"2026-06-21T19:19:11.519Z"}
+{"id":"C-6-11","status":"PASS","digest":"ECJJLtBAGQjsLG4EbJ2uCkypuCh7HVfcmb8PHd2Srvs","before":"1000000","after":"0","ts":"2026-06-21T19:19:15.131Z"}
+{"id":"C-6-12","status":"PASS","totalActions":7,"ts":"2026-06-21T19:19:15.332Z"}
+{"id":"C-6-13","status":"PASS","discoveredTotal":14,"degree1":5,"ts":"2026-06-21T19:19:15.695Z"}
+{"id":"C-7-ERR","status":"UNEXPECTED_FAIL","error":"Error checking transaction input objects: Balance of gas object 4828936 is lower than the needed amount: 4929724","ts":"2026-06-21T19:19:19.666Z"}
+{"id":"C-8-1","status":"EXPECTED_FAIL","error":"The following input objects are invalid: Object 0x0000000000000000000000000000000000000000000000000000000000000099 does not exist","ts":"2026-06-21T19:19:20.136Z"}
+{"id":"C-8-2","status":"EXPECTED_FAIL","error":"The following input objects are invalid: Object 0x43c1c272bda03d8ce44cbdb23c1657d8b2163b094204b6bcb7288238d8b68c92 has been deleted","ts":"2026-06-21T19:19:20.667Z"}
+{"id":"C-8-3","status":"EXPECTED_FAIL","error":"transaction failed (InsufficientCoinBalance in command 0) — digest 9rAdfKC2arwiavdi7uqsnGEuugAcN63eqnTnWUNG8W3j","ts":"2026-06-21T19:19:24.345Z"}
+{"id":"C-8-4","status":"PASS","digest":"2RkYpiFLSwcm4Gj7E1erQXx9c5g31i3ciPo1hqAvyVo1","ts":"2026-06-21T19:19:28.011Z"}
+{"id":"C-8-5","status":"PASS","note":"Duplicate participation allowed","ts":"2026-06-21T19:19:31.356Z"}
+{"id":"C-8-6","status":"UNEXPECTED_FAIL","error":"Error checking transaction input objects: Balance of gas object 4353620 is lower than the needed amount: 8228576","ts":"2026-06-21T19:19:31.885Z"}
+{"id":"C-8-7","status":"UNEXPECTED_FAIL","error":"Error checking transaction input objects: Balance of gas object 4353620 is lower than the needed amount: 8300400","ts":"2026-06-21T19:19:32.605Z"}
+{"id":"C-8-8","status":"UNEXPECTED_FAIL","error":"Error checking transaction input objects: Balance of gas object 7033784 is lower than the needed amount: 7511368","ts":"2026-06-21T19:19:33.365Z"}
+{"id":"C-8-9","status":"EXPECTED_FAIL","error":"Error checking transaction input objects: Transaction was not signed by the correct sender: Object 0x567bf796ba0cadccc830cd51b0c8273a5faa38f25fcbc632797fecd6ebd6935f is owned by account address 0xf334","ts":"2026-06-21T19:19:33.845Z"}
+{"id":"C-8-10","status":"EXPECTED_FAIL","error":"Error checking transaction input objects: Transaction was not signed by the correct sender: Object 0x567bf796ba0cadccc830cd51b0c8273a5faa38f25fcbc632797fecd6ebd6935f is owned by account address 0xf334","ts":"2026-06-21T19:19:34.165Z"}
+{"id":"C-8-11","status":"EXPECTED_FAIL","error":"The following input objects are invalid: Object 0x0000000000000000000000000000000000000000000000000000000000000099 does not exist","ts":"2026-06-21T19:19:34.402Z"}
+{"id":"C-8-12","status":"PASS","vault1Wedding":"0x6159ff262e2477bb9801df3f97442aa340953ac56ef52c11a0e6915a6615b852","vault1Balance":"1","note":"Vault independence verified","ts":"2026-06-21T19:19:34.487Z"}
+{"id":"C-8-13","status":"UNEXPECTED_FAIL","error":"Error checking transaction input objects: Balance of gas object 3778031 is lower than the needed amount: 5898344","ts":"2026-06-21T19:19:35.211Z"}
+{"id":"C-8-14","status":"UNEXPECTED_FAIL","error":"Error checking transaction input objects: Balance of gas object 2768151 is lower than the needed amount: 2988000","ts":"2026-06-21T19:19:39.275Z"}
+{"id":"P3-SETUP-A","status":"PASS","weddingId":"0x1856e689748301609174420fd6edde0e410749af54a977630bfff2d19863c02f","eventId":"0x18ead11bbe394732f8254d3717966db0eb1f109f132e83f677dd714ae7986381","vaultId":"0x0d4111079291f0cc5d515adb17433e09322838696faf299f7e61e5ecb5d4851f","guestPartIds":{"Guest1":"0xab2ca7ec711e8f085c48586eeada4977355d180703e47c50fb4513d031dfae82","Guest2":"0x7ab439550c21691eba66c8285b78d7e7c7a4dc7d801d40e4c2e34f8e5c2bc420","Guest3":"0x35edac5208eff5398e69c17eddc7013a9a75b79070e0a4012ef95872f8acecd0"},"ts":"2026-06-21T20:03:30.059Z"}
+{"id":"C-7-1","status":"PASS","note":"Guest1 participated in both weddings","guest1Part2Id":"0x120e201281a67262667f1c0ce0dacc3efdd054cdfedc59c70511f4389f819a05","ts":"2026-06-21T20:03:43.348Z"}
+{"id":"C-7-2","status":"PASS","digest1":"852BubV8eFEbLjBabR7ERGZUoB72V4HkV78vu7N6d2Dy","digest2":"FAjQiPTDMyMAZgnt6Nps34N2EEbmN4dTH4V2AsGh1DJd","ts":"2026-06-21T20:03:50.310Z"}
+{"id":"C-7-3","status":"EXPECTED_FAIL","error":"Transaction resolution failed: MoveAbort in 2nd command, abort code: 3, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::cash_gift::give' (instruction 42)","ts":"2026-06-21T20:03:50.846Z"}
+{"id":"C-7-4","status":"PASS","sharedEventIds":2,"degree":1,"ts":"2026-06-21T20:03:54.369Z"}
+{"id":"C-8-6","status":"PASS","digest":"8ad6z1aYP3fkWi29cs3sXzPkUDABDju9JmND33E9XHE9","note":"Participation reuse (ref) OK after give","ts":"2026-06-21T20:04:01.143Z"}
+{"id":"C-8-7","status":"PASS","digest1":"GPj8B8n9P5cyRvqzd6nzW1eu5rUwMSiXCjp5tWoPJFqc","digest2":"HpRSG2KTWaR7LUorxttwVDCPfZVyZw8pG24AcMXJwCkv","note":"Duplicate ium request allowed","ts":"2026-06-21T20:04:07.552Z"}
+{"id":"C-8-8","status":"EXPECTED_FAIL","error":"Error checking transaction input objects: Object 0xac11229ada09825c128393aae1e5a6a884ac753e7607e06764eaaa5622f1612c is owned by object 0x2be0b492d0d63b84ea0e53d79818c57d1c872c553db77d0bcc62b60cf0cdfe1","ts":"2026-06-21T20:04:15.041Z"}
+{"id":"C-8-12","status":"PASS","vault1Wedding":"0x1856e689748301609174420fd6edde0e410749af54a977630bfff2d19863c02f","vault2Wedding":"0x5fffae7146b5d9f7708ad8dde5ef91ba9eee43ceaa7a2d3d73cd791426475530","vault1Balance":"1100000","vault2Balance":"500000","ts":"2026-06-21T20:04:15.270Z"}
+{"id":"C-8-13","status":"PASS","balAfterGive1":"3100000","balAfterWithdraw1":"0","balAfterGive2":"1000000","finalBalance":"0","ts":"2026-06-21T20:04:29.929Z"}
+{"id":"C-8-14","status":"PASS","rsvpCount":2,"note":"Duplicate RSVP allowed (no on-chain dedup)","ts":"2026-06-21T20:04:36.813Z"}

@@ -53,6 +53,7 @@ export const moiPlazaMachine = setup({
       | { type: 'EQUIP'; itemId: string }
       | { type: 'UNEQUIP'; slot: EquipSlot }
       | { type: 'GRANT_OWNED'; ids: string[] }
+      | { type: 'HYDRATE_EQUIPPED'; equipped: Partial<Record<EquipSlot, string>> }
       | { type: 'CHARGE' }
       | { type: 'DISMISS_ERROR' }
       | { type: 'SHOW_TOAST'; message: string }
@@ -140,6 +141,11 @@ export const moiPlazaMachine = setup({
     GRANT_OWNED: {
       actions: assign({
         owned: ({ context, event }) => (event.type === 'GRANT_OWNED' ? [...new Set([...context.owned, ...event.ids])] : context.owned),
+      }),
+    },
+    HYDRATE_EQUIPPED: {
+      actions: assign({
+        equipped: ({ event }) => event.type === 'HYDRATE_EQUIPPED' ? event.equipped : {},
       }),
     },
     CHARGE: { actions: assign({ yone: ({ context }) => context.yone + CHARGE_AMOUNT }) },

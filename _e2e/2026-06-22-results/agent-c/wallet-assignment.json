@@ -1,0 +1,21 @@
+{
+  "agent": "C",
+  "assignedWallets": ["Wallet4", "Wallet5"],
+  "note": "Agent B uses Wallet1~3. Agent C uses Wallet4~5. If more wallets needed, splitCoins from Wallet5.",
+  "roles": {
+    "Wallet4": {
+      "name": "Wallet4",
+      "address": "0x3aedaf785842105943c38ed906d4925bdeae382f863154abccd5d97c967bf481",
+      "usage": "Host / primary signer for wedding creation, vault, withdraw, role assign"
+    },
+    "Wallet5": {
+      "name": "Wallet5",
+      "address": "0x121f088047476d5b6ad1a10c4a435267439dda9bd426c44e6d901e39db80369c",
+      "usage": "CoHost / Guest / Ium counterpart. splitCoins source if more wallets needed"
+    }
+  },
+  "previousRuns": {
+    "part1_part2": "Used seed-e2e.json wallets (Alice~Eve) — depleted, no longer usable",
+    "part3": "Used all 5 shared wallets (Wallet1~5) before assignment rule. C-7/C-8 completed."
+  }
+}

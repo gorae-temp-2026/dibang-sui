@@ -1,12 +1,9 @@
-// 모이가 모인곳(④) — 풀스크린 2.5D 미니룸. 라운지 미리보기 카드로 진입(핸드오프 §3·§12-2).
-// PixiJS placeholder 시스템: 샵 구매→요네 차감→자동 배치/장착 · 아이템 드래그 · 모이 클릭→공유 프로필.
-// 모이 클릭 = 디방인연과 동일 ProfileSheet, 단 context='lounge'(③ 오프라인 = 이름·소속·전체 네트워크 공개).
-// 에셋(투명 PNG) 부재라 캐릭터·아이템은 컬러 도형 placeholder — 에셋 나오면 슬롯 교체(에셋스펙 §4).
+// 모이가 모인곳(④) — 온체인 Moi 보유 사용자 기반 광장.
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { useMachine, useSelector } from '@xstate/react'
 import { fromPromise } from 'xstate'
-import { getConfig, createJsonRpcClient, getOwnedMoiIds, getOwnedMoiItems, type SuiNetwork } from '@gorae/sui-sdk'
+import { getConfig, createJsonRpcClient, getOwnedMoiIds, getOwnedMoiItems, getMoi, discoverUsers, getSignalEvents, getActionLoggedEvents, type SuiNetwork, type SignalQuery, type ActionLoggedQuery } from '@gorae/sui-sdk'
 import { env } from '../env'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { giftActor } from '../machines/gift.machine'
@@ -15,18 +12,14 @@ import { moiPlazaMachine } from '../machines/moiPlaza.machine'
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
-import { PLAZA_CROWD, CROWD_BY_ID, PLAZA_WEDDING, type ShopItem, type EquipSlot } from '../components/moi-gather/data'
-import { POOL } from '../components/inyeon/data'
+import { ITEM_BY_NAME, DEFAULT_HEAD, DEFAULT_BODY, RECOLOR_BODY, type ShopItem, type EquipSlot, type PlazaMoi } from '../components/moi-gather/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
-import type { ProfileData } from '../components/profile/types'
-import { profileForPersonaId, makeGuestProfile, plazaPartnerIds, chulsooPlazaProfile } from '../components/profile/personaProfiles'
+import type { ProfileData, SignalNode } from '../components/profile/types'
 import { warmthStep } from '../lib/loungeV2Feed'
 
-// 데모 시드 온기(라운지 38.6°) → 단일축 단계. 실시간 풀 계산은 로드맵(핸드오프).
-const PLAZA_WARMTH = 38.6
-const PLAZA_WARMTH_STEP = warmthStep(PLAZA_WARMTH)
+const HEAD_POOL = ['chu_default', 'yh_pigtail', 'chu_sport', 'yh_bob', 'chu_buzz', 'yh_veil', 'chu_shaggy']
+const COLORS = [0xe6a3b6, 0x88b0d8, 0xf0c98a, 0x9ad0b0, 0xc8a6e0, 0xe0b48a, 0x9ec8e8, 0xd99bb0, 0x8fcdb6, 0xe8c07a]
 
-// 모이 색 → 사진 placeholder hue (실사진 전).
 function colorToHue(hex: number): number {
   const r = ((hex >> 16) & 255) / 255
   const g = ((hex >> 8) & 255) / 255
@@ -39,11 +32,75 @@ function colorToHue(hex: number): number {
   return Math.round((h * 60 + 360) % 360)
 }
 
+function addrShort(addr: string) {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`
+}
+
+function buildOnchainProfile(
+  targetAddr: string,
+  myAddr: string,
+  signals: SignalQuery[],
+  actions: ActionLoggedQuery[],
+): ProfileData {
+  const between = signals.filter(
+    (s) => (s.from === myAddr && s.to === targetAddr) || (s.from === targetAddr && s.to === myAddr),
+  )
+  const emSignals = between.filter((s) => s.kind === 1)
+  const csSignals = between.filter((s) => s.kind === 2)
+  const emTotal = emSignals.reduce((a, s) => a + s.magnitude, 0)
+  const csTotal = csSignals.reduce((a, s) => a + s.magnitude, 0)
+
+  const myActions = actions.filter(
+    (a) => (a.actor === myAddr && a.target === targetAddr) || (a.actor === targetAddr && a.target === myAddr),
+  )
+  const busu = myActions.filter((a) => a.actionType === 0).length
+  const ium = myActions.filter((a) => a.actionType === 1 || a.actionType === 2).length
+  const gift = myActions.filter((a) => a.actionType === 3).length
+  const write = myActions.filter((a) => a.actionType === 4).length
+
+  const score = Math.min(1000, emTotal / 100 + csTotal * 50 + busu * 30 + ium * 20 + gift * 15 + write * 10)
+  const tier = score >= 820 ? 'AAA' : score >= 760 ? 'AA' : score >= 690 ? 'A' : score >= 620 ? 'BBB' : score >= 550 ? 'BB' : 'B'
+  const label = score >= 760 ? '매우 좋음' : score >= 620 ? '좋음' : score >= 480 ? '보통' : '낮음'
+
+  const signal: SignalNode = {
+    name: '우리',
+    children: [
+      { name: 'EM', children: [{ name: '부조', value: emTotal / 1e6 }, { name: '선물', value: gift }] },
+      { name: 'CS', children: [{ name: '참석', value: csSignals.filter(s => s.source === 5).length }, { name: '이음', value: ium }, { name: '대화', value: write }, { name: '모임', value: 0 }] },
+      { name: 'AR', children: [{ name: '관계', value: 0, stub: true }] },
+      { name: 'MP', children: [{ name: '거래', value: 0, stub: true }] },
+    ],
+  }
+
+  const selfId = addrShort(myAddr)
+  const targetId = addrShort(targetAddr)
+  return {
+    subject: targetId,
+    asOf: 'now',
+    moiCredit: { value: score / 1000, score: Math.round(score), tier, rank: 0, total: 0, onchain: true },
+    trace: {
+      L1_raw: { 부조: busu, 이음: ium, 대화: write, 선물: gift, total: busu + ium + write + gift },
+      L2_fold: { 부조EM: emTotal, 증여EM: gift, topTies: [] },
+      L3_phi: { 부조: emTotal > 0 ? 1 : 0, CS: csTotal > 0 ? 1 : 0, 이행: 1, op: 'onchain signal query' },
+      L4_integrate: { W: { 부조: 0.5, cs: 0.3, 이행: 0.2 }, formula: 'onchain', value: score / 1000 },
+    },
+    graph: {
+      nodes: [
+        { id: selfId, label: selfId, hue: 210, self: true },
+        { id: targetId, label: targetId, hue: 30, here: true },
+      ],
+      links: myActions.some((a) => a.actionType === 2)
+        ? [{ source: selfId, target: targetId, type: '이음', value: 1 }]
+        : [],
+    },
+    signal,
+    trustRange: { tier, label, anon: between.length === 0 },
+  }
+}
+
 export function MoiGatherPage() {
   const navigate = useNavigate()
   const { purchaseItem, equipItem, unequipItem } = useOnchainHostActions()
-  // 샵 구매 = 온체인 Payment Kit 결제(buildPurchaseItemTx)를 buyItem actor로 주입(STATE_MANAGEMENT §4).
-  // 미인증/패키지 미배포면 actor가 throw → 머신이 error로 처리(요네 mock 폐기, SUI 결제로 전환).
   const plazaMachine = useMemo(
     () =>
       moiPlazaMachine.provide({
@@ -58,8 +115,6 @@ export function MoiGatherPage() {
                 name: input.item.name,
                 itemType: input.item.category,
                 slot: input.item.slot ?? input.item.category,
-                // 가격 = 일단 flat 0.001 SUI(priceMist 생략 → 빌더가 컨트랙트 ITEM_PRICE 기본 사용). 결정 2026-06-22.
-                // 아이템별 가격(UI 숫자→MIST)은 Move 하한 assert 완화 후(추후·재배포).
               })
             }
             return { ok: true }
@@ -73,8 +128,6 @@ export function MoiGatherPage() {
   const [shopOpen, setShopOpen] = useState(false)
   const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
 
-  // 온체인 equip/unequip: 클라이언트 상태 즉시 반영 + fire-and-forget 온체인(실패 시 토스트).
-  // Sui RPC로 유저의 Moi + MoiItem 객체 ID를 조회해 온체인 호출에 사용.
   const handleEquip = useCallback(
     (itemId: string) => {
       send({ type: 'EQUIP', itemId })
@@ -107,7 +160,99 @@ export function MoiGatherPage() {
     [address, unequipItem, send],
   )
 
-  // 첫 입장 온보딩 토스트(잠깐 떴다 사라짐). 세션당 1회.
+  // 온체인 보유 아이템 + 장착 상태 hydrate
+  useEffect(() => {
+    if (!address) return
+    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+    const client = createJsonRpcClient(network)
+    Promise.all([getOwnedMoiItems(client, address), getOwnedMoiIds(client, address)])
+      .then(async ([items, moiIds]) => {
+        const ids = items
+          .map((i) => ITEM_BY_NAME[i.name]?.id)
+          .filter((id): id is string => !!id)
+        if (ids.length) send({ type: 'GRANT_OWNED', ids })
+        // 장착 상태: Moi 오브젝트의 equipped VecMap → 각 아이템 name으로 로컬 ID 매핑
+        if (moiIds.length === 0) return
+        const moi = await getMoi(client, moiIds[0])
+        if (!moi || Object.keys(moi.equipped).length === 0) return
+        const equippedLocal: Partial<Record<EquipSlot, string>> = {}
+        const equippedItemIds = Object.values(moi.equipped)
+        for (const itemObjId of equippedItemIds) {
+          const obj = await client.getObject({ id: itemObjId, options: { showContent: true } })
+          const content = obj.data?.content
+          if (content && content.dataType === 'moveObject') {
+            const f = content.fields as Record<string, unknown>
+            const name = String(f.name ?? '')
+            const slot = String(f.slot ?? '')
+            const localItem = ITEM_BY_NAME[name]
+            if (localItem?.slot && (slot === 'head' || slot === 'body' || slot === 'acc')) {
+              equippedLocal[slot as EquipSlot] = localItem.id
+            }
+          }
+        }
+        if (Object.keys(equippedLocal).length > 0) {
+          send({ type: 'HYDRATE_EQUIPPED', equipped: equippedLocal })
+        }
+      })
+      .catch(() => {})
+  }, [address, send])
+
+  // 온체인 군중 — 같은 이벤트에 참가한 Moi 보유 사용자만(degree=1).
+  const [crowd, setCrowd] = useState<PlazaMoi[]>([])
+  useEffect(() => {
+    if (!address) return
+    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+    const client = createJsonRpcClient(network)
+    discoverUsers(client, address)
+      .then((discovered) => {
+        const me: PlazaMoi = {
+          id: 'me', name: '나', role: '나의 모이',
+          x: 0.5, y: 0.92, head: DEFAULT_HEAD, body: DEFAULT_BODY, color: 0x9ec8e8, me: true,
+        }
+        const sameEvent = discovered.filter((d) => d.degree === 1)
+        const others: PlazaMoi[] = sameEvent.map((d, i) => {
+          const hash = parseInt(d.address.slice(2, 10), 16)
+          const left = hash % 2 === 0
+          const x = left ? 0.08 + ((hash % 100) / 100) * 0.34 : 0.58 + ((hash % 100) / 100) * 0.34
+          const y = 0.15 + ((hash % 73) / 73) * 0.65
+          return {
+            id: d.address,
+            name: addrShort(d.address),
+            role: `공유 이벤트 ${d.mutualCount}개`,
+            x, y,
+            head: HEAD_POOL[i % HEAD_POOL.length],
+            body: RECOLOR_BODY,
+            color: COLORS[hash % COLORS.length],
+          }
+        })
+        setCrowd([me, ...others])
+      })
+      .catch(() => {
+        setCrowd([{
+          id: 'me', name: '나', role: '나의 모이',
+          x: 0.5, y: 0.92, head: DEFAULT_HEAD, body: DEFAULT_BODY, color: 0x9ec8e8, me: true,
+        }])
+      })
+  }, [address])
+
+  // 군중 인덱스 — 모이 클릭 시 프로필 조회용
+  const crowdById = useMemo(() => Object.fromEntries(crowd.map((m) => [m.id, m])), [crowd])
+
+  // SUI 잔액
+  const [suiBalance, setSuiBalance] = useState<string | null>(null)
+  useEffect(() => {
+    if (!address) return
+    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+    const client = createJsonRpcClient(network)
+    client.getBalance({ owner: address })
+      .then((bal) => setSuiBalance((Number(bal.totalBalance) / 1e9).toFixed(3)))
+      .catch(() => {})
+  }, [address])
+
+  // 온기 — 군중 수 기반 근사 (참가자 많을수록 온기 상승)
+  const warmth = useMemo(() => Math.min(36.5 + crowd.length * 0.1, 42), [crowd])
+  const warmthStepVal = warmthStep(warmth)
+
   const [onboard, setOnboard] = useState(true)
   useEffect(() => {
     const t = setTimeout(() => setOnboard(false), 5200)
@@ -117,106 +262,155 @@ export function MoiGatherPage() {
   const { yone, owned, placed, equipped, pendingItemId, error, toast } = state.context
   const giftReceived = useSelector(giftActor, (s) => s.context.received)
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
-  // 받은 선물 → 광장 보유로 부여(꾸미기 장착·배치 가능). gift actor 브리지.
   useEffect(() => {
     if (giftReceived.length) send({ type: 'GRANT_OWNED', ids: giftReceived })
   }, [giftReceived, send])
 
-  const profileMoi = profileMoiId ? CROWD_BY_ID[profileMoiId] : null
-  // 인물별 실제 프로필: 나=철수 sim 산출 / 만난 사람(personaId)=인연과 동일 프로필 / 익명 하객=생성.
-  const persona = profileMoi?.personaId != null ? POOL.find((p) => p.id === profileMoi.personaId) ?? null : null
-  const profileData: ProfileData = !profileMoi
-    ? chulsooPlazaProfile
-    : profileMoi.me
-      ? chulsooPlazaProfile
-      : profileMoi.personaId != null
-        ? profileForPersonaId(profileMoi.personaId)
-        : makeGuestProfile(profileMoi.id, profileMoi.name, colorToHue(profileMoi.color))
+  const profileMoi = profileMoiId ? crowdById[profileMoiId] : null
+
+  // 온체인 프로필 데이터 — 클릭 시 신호/액션 조회 ("나" 포함)
+  const [profileData, setProfileData] = useState<ProfileData | null>(null)
+  useEffect(() => {
+    if (!profileMoi || !address) {
+      setProfileData(null)
+      return
+    }
+    const targetAddr = profileMoi.me ? address : profileMoi.id
+    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+    const client = createJsonRpcClient(network)
+    Promise.all([getSignalEvents(client), getActionLoggedEvents(client)])
+      .then(([signals, actions]) => {
+        if (profileMoi.me) {
+          // "나" = 내가 주고받은 모든 신호/액션 집계
+          const mySignals = signals.filter((s) => s.from === address || s.to === address)
+          const myActions = actions.filter((a) => a.actor === address || a.target === address)
+          const emTotal = mySignals.filter((s) => s.kind === 1).reduce((a, s) => a + s.magnitude, 0)
+          const csTotal = mySignals.filter((s) => s.kind === 2).reduce((a, s) => a + s.magnitude, 0)
+          const busu = myActions.filter((a) => a.actionType === 0).length
+          const ium = myActions.filter((a) => a.actionType === 1 || a.actionType === 2).length
+          const gift = myActions.filter((a) => a.actionType === 3).length
+          const write = myActions.filter((a) => a.actionType === 4).length
+          const score = Math.min(1000, emTotal / 100 + csTotal * 50 + busu * 30 + ium * 20 + gift * 15 + write * 10)
+          const tier = score >= 820 ? 'AAA' : score >= 760 ? 'AA' : score >= 690 ? 'A' : score >= 620 ? 'BBB' : score >= 550 ? 'BB' : 'B'
+          const label = score >= 760 ? '매우 좋음' : score >= 620 ? '좋음' : score >= 480 ? '보통' : score > 0 ? '낮음' : '데이터 없음'
+          const addr = addrShort(address)
+          const signal: SignalNode = {
+            name: '나',
+            children: [
+              { name: 'EM', children: [{ name: '부조', value: emTotal / 1e6 }, { name: '선물', value: gift }] },
+              { name: 'CS', children: [{ name: '참석', value: mySignals.filter(s => s.kind === 2 && s.source === 5).length }, { name: '이음', value: ium }, { name: '대화', value: write }, { name: '모임', value: 0 }] },
+              { name: 'AR', children: [{ name: '관계', value: 0, stub: true }] },
+              { name: 'MP', children: [{ name: '거래', value: 0, stub: true }] },
+            ],
+          }
+          // 이음 완료(ACCEPT_IUM=2) 상대만 그래프에 표시
+          const iumPeers = new Set<string>()
+          myActions.filter((a) => a.actionType === 2).forEach((a) => {
+            if (a.actor !== address) iumPeers.add(a.actor)
+            if (a.target && a.target !== address) iumPeers.add(a.target)
+          })
+          const nodes = [{ id: addr, label: addr, hue: 210, self: true as const }]
+          const links: { source: string; target: string; type: string; value: number }[] = []
+          Array.from(iumPeers).slice(0, 10).forEach((p) => {
+            const pAddr = addrShort(p)
+            nodes.push({ id: pAddr, label: pAddr, hue: parseInt(p.slice(2, 6), 16) % 360, here: true })
+            links.push({ source: addr, target: pAddr, type: '이음', value: 1 })
+          })
+          setProfileData({
+            subject: addr, asOf: 'now',
+            moiCredit: { value: score / 1000, score: Math.round(score), tier, rank: 0, total: 0, onchain: true },
+            trace: {
+              L1_raw: { 부조: busu, 이음: ium, 대화: write, 선물: gift, total: busu + ium + write + gift },
+              L2_fold: { 부조EM: emTotal, 증여EM: gift, topTies: [] },
+              L3_phi: { 부조: emTotal > 0 ? 1 : 0, CS: csTotal > 0 ? 1 : 0, 이행: 1, op: 'onchain' },
+              L4_integrate: { W: { 부조: 0.5, cs: 0.3, 이행: 0.2 }, formula: 'onchain', value: score / 1000 },
+            },
+            graph: { nodes, links },
+            signal,
+            trustRange: { tier, label, anon: false },
+          })
+        } else {
+          setProfileData(buildOnchainProfile(targetAddr, address, signals, actions))
+        }
+      })
+      .catch(() => setProfileData(null))
+  }, [profileMoi?.id, address])
+
+  const emptyProfile: ProfileData = {
+    subject: '나', asOf: 'now',
+    moiCredit: { value: 0, score: 0, tier: '—', rank: 0, total: 0, onchain: true },
+    trace: { L1_raw: { 부조: 0, 이음: 0, 대화: 0, 선물: 0, total: 0 }, L2_fold: { 부조EM: 0, 증여EM: 0, topTies: [] }, L3_phi: { 부조: 0, CS: 0, 이행: 0, op: '' }, L4_integrate: { W: { 부조: 0, cs: 0, 이행: 0 }, formula: '', value: 0 } },
+    graph: { nodes: [], links: [] }, signal: { name: '우리', children: [] },
+    trustRange: { tier: '—', label: '데이터 없음', anon: true },
+  }
+  const currentProfileData = profileData ?? emptyProfile
+
   const profileMeeting = profileMoi
     ? {
-        photoHue: persona?.photos[0]?.hue ?? colorToHue(profileMoi.color),
+        photoHue: colorToHue(profileMoi.color),
         photoUrl: profileMoi.photoUrl,
-        hook: profileMoi.me ? '나의 모이 · 광장의 나' : persona ? persona.hook : profileMoi.role,
-        prov: persona
-          ? persona.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: '오프라인 · 같은 결혼식' }))
-          : [{ emoji: '💍', text: '이 결혼식에서 만난 모이', sub: profileMoi.role, tag: '오프라인' }],
-        mutualCount: profileMoi.me ? 0 : persona ? persona.mutualCount : 4,
-        balLabel: profileData.trustRange.label,
+        hook: profileMoi.me ? (address ? addrShort(address) : '나의 모이') : profileMoi.role,
+        prov: [{ emoji: '💍', text: profileMoi.name, sub: profileMoi.role, tag: '온체인' }],
+        mutualCount: 0,
+        balLabel: currentProfileData.trustRange.label,
       }
     : undefined
 
-  // 토스트 표시·자동소멸 타이머는 머신(SHOW_TOAST → TOAST_MS 뒤 CLEAR_TOAST)이 소유.
   const handleIeum = () => {
     const m = profileMoi
     setProfileMoiId(null)
-    send({ type: 'SHOW_TOAST', message: m ? `${m.name}님에게 이음 신청을 보냈어요 · 대화는 디방인연에서` : '이음 신청을 보냈어요' })
+    send({ type: 'SHOW_TOAST', message: m ? `${m.name}님에게 이음 신청을 보냈어요` : '이음 신청을 보냈어요' })
   }
 
   return (
     <div className="relative mx-auto flex h-[100dvh] max-w-[480px] flex-col overflow-hidden bg-[#0A1626] text-[#E8EFF6]">
-      {/* 상단바 — 뒤로 · 타이틀(host) · 요네 · 샵 */}
       <header className="absolute inset-x-0 top-0 z-20 flex items-center gap-2 bg-gradient-to-b from-[#0A1626] to-transparent px-3 py-3">
-        <button
-          type="button"
-          aria-label="뒤로"
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
-        >
+        <button type="button" aria-label="뒤로" onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[14.5px] font-extrabold text-white">{PLAZA_WEDDING.groom} · {PLAZA_WEDDING.bride} 웨딩라운지</div>
-          <div className="truncate text-[10px] text-white/50">혼주 · 신랑측 {PLAZA_WEDDING.groomFather}·{PLAZA_WEDDING.groomMother} · 신부측 {PLAZA_WEDDING.brideFather}·{PLAZA_WEDDING.brideMother}</div>
+          <div className="truncate text-[14.5px] font-extrabold text-white">
+            {address ? addrShort(address) : ''} 웨딩라운지
+          </div>
+          <div className="truncate text-[10px] text-white/50">온체인 참가자 {crowd.length}명</div>
         </div>
         <div className="flex flex-col items-center rounded-full bg-white/10 px-2.5 py-1 backdrop-blur">
           <span className="text-[7.5px] font-bold uppercase tracking-wide text-white/45">우리의 온기</span>
-          <span className="text-[12px] font-extrabold leading-none text-[#F8A24A]">{PLAZA_WARMTH}°</span>
+          <span className="text-[12px] font-extrabold leading-none text-[#F8A24A]">{warmth.toFixed(1)}°</span>
         </div>
-        <div className="rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
-          🪙 {yone.toLocaleString()}
+        <div className="flex flex-col items-center rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
+          {suiBalance ? <span>{suiBalance} SUI</span> : <span>—</span>}
         </div>
-        <button
-          type="button"
-          onClick={() => setShopOpen(true)}
-          className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-[12px] font-bold text-white backdrop-blur"
-        >
+        <button type="button" onClick={() => setShopOpen(true)} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-[12px] font-bold text-white backdrop-blur">
           <ShoppingBag className="h-4 w-4" /> 샵
         </button>
       </header>
 
-      {/* 2.5D 미니룸 캔버스 (PixiJS) */}
       <div className="relative flex-1 overflow-hidden">
         <MoiPlazaCanvas
           placed={placed}
           equipped={equipped}
-          crowd={PLAZA_CROWD}
+          crowd={crowd}
           onMoiClick={setProfileMoiId}
           onMovePlaced={(uid, x, y) => send({ type: 'MOVE', uid, x, y })}
-          partnersOf={plazaPartnerIds}
-          warmthStep={PLAZA_WARMTH_STEP}
+          partnersOf={() => []}
+          warmthStep={warmthStepVal}
         />
-
-        {/* 첫 입장 온보딩 토스트(잠깐 떴다 사라짐) */}
         {onboard && (
           <div className="pointer-events-none absolute inset-x-0 bottom-5 z-10 flex justify-center px-6">
             <div className="rounded-2xl border border-white/12 bg-[#0c1a2e]/85 px-4 py-2.5 text-center backdrop-blur">
-              <div className="text-[11px] font-medium text-white/75">모이를 누르면 이음망이 보여요 · ⓘ로 프로필 · 드래그·핀치로 둘러보기</div>
-              <div className="mt-1 text-[10.5px] font-medium text-[#F8C57A]">모이들과 상호작용하면 우리의 온기가 높아져요 ♨</div>
+              <div className="text-[11px] font-medium text-white/75">모이를 누르면 프로필을 볼 수 있어요</div>
             </div>
           </div>
         )}
       </div>
 
-      {/* 토스트 */}
       {toast && (
         <div className="pointer-events-none absolute inset-x-0 top-1/2 z-30 flex justify-center px-6">
-          <div className="rounded-2xl bg-[#1E3A5F]/95 px-4 py-3 text-center text-[12.5px] font-bold text-white shadow-xl backdrop-blur">
-            {toast}
-          </div>
+          <div className="rounded-2xl bg-[#1E3A5F]/95 px-4 py-3 text-center text-[12.5px] font-bold text-white shadow-xl backdrop-blur">{toast}</div>
         </div>
       )}
 
-      {/* 샵 시트 */}
       <ShopSheet
         open={shopOpen}
         onOpenChange={setShopOpen}
@@ -235,11 +429,10 @@ export function MoiGatherPage() {
         onDismissError={() => send({ type: 'DISMISS_ERROR' })}
       />
 
-      {/* 모이 클릭 → 공유 프로필(③ 라운지 오프라인 공개규칙). 'me'는 본인이라 이음 CTA 없음. */}
       <ProfileSheet
         open={!!profileMoiId}
         onOpenChange={(o) => !o && setProfileMoiId(null)}
-        data={profileData}
+        data={currentProfileData}
         context="lounge"
         meeting={profileMeeting}
         giftSignal={profileMoiId ? giftSignals[profileMoiId] ?? 0 : 0}
