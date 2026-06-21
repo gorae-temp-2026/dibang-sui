@@ -1,0 +1,75 @@
+import { useEffect, useMemo } from 'react'
+import { useMachine } from '@xstate/react'
+import { fromPromise } from 'xstate'
+import { useQuery } from '@tanstack/react-query'
+import { createJsonRpcClient, getOwnedMoiIds, type SuiNetwork } from '@gorae/sui-sdk'
+import { moiGateMachine } from '../machines/moiGate.machine'
+import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
+import { useZkLogin } from '../providers/ZkLoginProvider'
+import { env } from '../env'
+
+/**
+ * Moi(아바타) 강제 생성 게이트 모달 — Moi가 꼭 필요한 기능(인연 등) 진입 시 마운트한다.
+ * 로그인했는데 온체인 Moi가 없으면 **닫을 수 없는** 모달로 생성을 강제한다(만들어야 빠져나감).
+ * flow는 moiGate 머신, 온체인 createMoi는 submit actor 주입, 보유 여부는 React Query(머신 밖).
+ */
+export function MoiGateModal() {
+  const { address, isAuthenticated } = useZkLogin()
+  const { createMoi } = useOnchainHostActions()
+  const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+
+  const { data: moiIds, refetch, isLoading } = useQuery({
+    queryKey: ['ownedMoi', address],
+    queryFn: () => getOwnedMoiIds(createJsonRpcClient(network), address!),
+    enabled: isAuthenticated && !!address,
+  })
+
+  const machine = useMemo(
+    () =>
+      moiGateMachine.provide({
+        actors: {
+          submit: fromPromise<string>(async () => {
+            const digest = await createMoi()
+            await refetch() // 생성 후 보유로 갱신 → 더는 게이트 안 걸림.
+            return digest
+          }),
+        },
+      }),
+    [createMoi, refetch],
+  )
+  const [state, send] = useMachine(machine)
+
+  const hasMoi = (moiIds?.length ?? 0) > 0
+  // 게이트: 인증 + 조회 완료 + 미보유면 강제 모달 요청(hidden에서만 1회).
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && !hasMoi && state.matches('hidden')) {
+      send({ type: 'REQUIRE' })
+    }
+  }, [isAuthenticated, isLoading, hasMoi, state, send])
+
+  if (!state.matches('visible') && !state.matches('submitting')) return null
+  const busy = state.matches('submitting')
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-6">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+        <p className="text-lg font-bold text-navy">내 아바타(Moi)를 만들어 주세요</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          인연·상점·선물을 이용하려면 온체인 아바타가 필요해요. 계정당 1개(soulbound)이며, 한 번만 만들면 됩니다.
+        </p>
+        <button
+          type="button"
+          onClick={() => send({ type: 'SUBMIT' })}
+          disabled={busy}
+          className="mt-4 w-full rounded-lg bg-navy px-4 py-3 text-base font-semibold text-white disabled:opacity-50"
+        >
+          {busy ? '생성 중…' : '내 아바타 만들기'}
+        </button>
+        {state.context.error && (
+          <p className="mt-2 text-xs text-red-500">❌ {state.context.error}</p>
+        )}
+        {/* 닫기 버튼 없음 — 강제(만들어야 진행). */}
+      </div>
+    </div>
+  )
+}

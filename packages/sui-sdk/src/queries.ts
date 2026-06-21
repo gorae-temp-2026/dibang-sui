@@ -165,6 +165,15 @@ export async function getOwnedMoiItems(
   return items;
 }
 
+/** 주소가 소유한 Moi(아바타) 오브젝트 ID 목록. soulbound 1인 1개 원칙이라 보통 0개 또는 1개. */
+export async function getOwnedMoiIds(
+  client: SuiJsonRpcClient,
+  owner: string,
+): Promise<string[]> {
+  const objs = await listOwnedByType(client, owner, moveTarget('moi', 'Moi'));
+  return objs.filter((o) => o.data).map((o) => o.data!.objectId);
+}
+
 /** 주소가 소유한 WeddingCap의 오브젝트 ID 목록(호스트가 자신의 Cap을 찾을 때). */
 export async function getOwnedWeddingCapIds(
   client: SuiJsonRpcClient,

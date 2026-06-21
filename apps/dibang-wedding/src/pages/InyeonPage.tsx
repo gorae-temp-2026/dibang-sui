@@ -18,6 +18,7 @@ import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { chulsooProfile } from '../components/profile/fixture'
 import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
 import { ChatScreen } from '../components/inyeon/ChatScreen'
+import { MoiGateModal } from '../components/MoiGateModal'
 
 const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.id === id) ?? null)
 
@@ -50,6 +51,8 @@ export function InyeonPage() {
 
   return (
     <div className="relative mx-auto flex h-[calc(100dvh-5.5rem)] max-w-[420px] flex-col overflow-hidden bg-[#0A1626] text-[#E8EFF6]">
+      {/* Moi 미보유 시 강제 생성 게이트 — 인연은 Moi 아바타가 핵심인 기능. */}
+      <MoiGateModal />
       {/* 상단바 — 매칭범위 · 브랜드 · 요네 지갑 */}
       <header className="flex items-center gap-2.5 border-b border-white/8 bg-[#0a1626]/90 px-4 pb-2.5 pt-3 backdrop-blur">
         <button
