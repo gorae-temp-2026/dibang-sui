@@ -5,6 +5,7 @@ import { weddingListMachine } from '../machines/weddingList.machine';
 import { useQuery } from '@tanstack/react-query';
 import { getMyParticipatedWeddingsOptions } from '@gorae/contracts/@tanstack/react-query.gen';
 import type { ParticipatedWedding } from '@gorae/contracts';
+import { useOnchainWeddingList } from '../hooks/useOnchainWeddingList';
 import { colors, fonts } from '../lib/theme';
 import { useJoinWeddingFromParam } from '../queries/wedding-list/useJoinWeddingFromParam';
 import { useT } from '../lib/i18n';
@@ -233,14 +234,31 @@ export function WeddingListPage() {
   const { data: weddings, isLoading: queryLoading } = useQuery({
     ...getMyParticipatedWeddingsOptions(),
   });
-  // 페이지 로딩 flow는 머신(weddingList). 목록 분류(upcoming/past)는 파생 계산.
+  const { items: onchainWeddings, loading: onchainLoading } = useOnchainWeddingList();
+
   const [state, send] = useMachine(weddingListMachine);
   useEffect(() => {
-    if (!queryLoading) send({ type: 'LOAD_DONE' });
-  }, [queryLoading, send]);
+    if (!queryLoading && !onchainLoading) send({ type: 'LOAD_DONE' });
+  }, [queryLoading, onchainLoading, send]);
   const isLoading = state.matches('loading');
 
-  const weddingList = (Array.isArray(weddings) ? weddings : []) as EventItem[];
+  // DB 목록 + 온체인 전용 목록 합산 (DB에 없는 온체인 결혼식 추가)
+  const dbList = (Array.isArray(weddings) ? weddings : []) as EventItem[];
+  const dbIds = new Set(dbList.map((w) => w.id));
+  const onchainOnly = onchainWeddings
+    .filter((ow) => !ow.weddingId || !dbIds.has(ow.weddingId))
+    .map((ow): EventItem => ({
+      id: ow.weddingId ?? ow.eventId,
+      groom_name: ow.role === 'host' ? '혼주' : '',
+      bride_name: '',
+      date: ow.date || new Date().toISOString().slice(0, 10),
+      venue_name: '온체인 결혼식',
+      venue_hall: ow.creator.slice(0, 10) + '...',
+      lounge_id: '',
+      type: 'wedding',
+    }));
+  const weddingList = [...dbList, ...onchainOnly];
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const upcoming = weddingList.filter((w) => new Date(w.date + 'T00:00:00') >= today);

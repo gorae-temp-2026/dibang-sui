@@ -1,29 +1,51 @@
-/// Guestbook 도메인 — 방명록 작성을 *신뢰 신호*로 기록한다.
+/// Guestbook 도메인 — 방명록 작성을 *신뢰 신호* + 메시지 본문으로 기록한다.
 ///
-/// 설계(MASTER_DIRECTIVE / SUI_CONTRACT_DESIGN_DIRECTION §3-B·§4, 결정#2):
-/// - 방명록 "작성했다"는 *행위 사실*만 온체인(보편 액션 원장 WRITE_MESSAGE). 메시지 본문·작성자 이름 등
-///   사람 관련 정보는 **오프체인**(신원-불가지 지갑 그래프). 라운지 피드는 오프체인이 렌더한다.
-/// - 구식 GuestbookEntry(key+store=transfer 가능, 평문 guest_name·message 온체인)는 제거 — VISION §7·결정#2·SBT 위반.
-/// - 부조(cash_gift::give)와 같은 패턴: wedding Event + 하객 Participation으로 방향(하객→혼주) 귀속.
+/// write: 신호만(본문 없음, 하위 호환). write_message: 신호 + 메시지 본문 온체인 저장.
+/// TODO: Seal + Walrus 전환 시 message → blob_id(vector<u8>)로 교체.
 module dibang_wedding::guestbook;
 
+use std::string::String;
 use sui::clock::Clock;
+use sui::event;
 use dibang_wedding::wedding::{Self, Wedding};
 use dibang_wedding::ledger;
 use dibang_wedding::trust_matrix;
-// 도메인 이벤트 모듈은 프레임워크 sui::event와 이름이 겹쳐 gathering으로 alias.
 use dibang_wedding::event as gathering;
 
 // === Errors ===
 
-/// 하객의 참가(Participation)가 이 결혼식의 이벤트가 아님.
 const EWrongEvent: u64 = 0;
+const EEmptyMessage: u64 = 1;
+
+// === Structs ===
+
+/// 방명록 메시지. soulbound — 작성자에 귀속.
+/// TODO: Seal + Walrus 전환 시 message/guest_name → blob_id.
+public struct GuestbookMessage has key {
+    id: UID,
+    wedding_id: ID,
+    author: address,
+    guest_name: String,
+    message: String,
+    recipient_slot: u8,
+    created_at_ms: u64,
+}
+
+// === Events ===
+
+public struct GuestbookMessageCreated has copy, drop {
+    message_id: ID,
+    wedding_id: ID,
+    author: address,
+    guest_name: String,
+    message: String,
+    recipient_slot: u8,
+    created_at_ms: u64,
+}
 
 // === Public functions ===
 
-/// 방명록 작성 = 참여(WRITE_MESSAGE) 신호를 보편 액션 원장에 soulbound로 기록한다.
-/// 메시지 본문·이름은 받지 않는다(오프체인). 하객(participation)은 이 결혼식 이벤트에 참가했어야 하고,
-/// 대상은 혼주(primary host). 해석(EM/CS)은 project가 오프체인 계산. 원장 레코드 ID 반환.
+/// 방명록 작성 (신호만, 본문 없음 — 하위 호환).
 public fun write(
     wedding: &Wedding,
     participation: &gathering::Participation,
@@ -33,9 +55,59 @@ public fun write(
 ): ID {
     assert!(gathering::participation_event_id(participation) == wedding::event_id(wedding), EWrongEvent);
     let host = wedding::primary_host(wedding);
-    // role/event는 ledger가 participation에서 파생(방향 위조 차단). amount=0(돈 없음), 본문 오프체인.
     ledger::log(participation, ledger::action_write_message(), option::some(host), 0, option::none(), matrix, clock, ctx)
 }
+
+/// 방명록 작성 + 메시지 본문 온체인 저장. 신호 기록 + GuestbookMessage soulbound 발행.
+/// TODO: Seal + Walrus 전환 시 message를 blob_id로 교체.
+public fun write_message(
+    wedding: &Wedding,
+    participation: &gathering::Participation,
+    guest_name: String,
+    message: String,
+    recipient_slot: u8,
+    matrix: &mut trust_matrix::TrustMatrix,
+    clock: &Clock,
+    ctx: &mut TxContext,
+): ID {
+    assert!(gathering::participation_event_id(participation) == wedding::event_id(wedding), EWrongEvent);
+    assert!(message.length() > 0, EEmptyMessage);
+    wedding::assert_valid_recipient_slot(recipient_slot);
+
+    let host = wedding::primary_host(wedding);
+    ledger::log(participation, ledger::action_write_message(), option::some(host), 0, option::none(), matrix, clock, ctx);
+
+    let wid = object::id(wedding);
+    let msg = GuestbookMessage {
+        id: object::new(ctx),
+        wedding_id: wid,
+        author: ctx.sender(),
+        guest_name,
+        message,
+        recipient_slot,
+        created_at_ms: clock.timestamp_ms(),
+    };
+    let id = object::id(&msg);
+    event::emit(GuestbookMessageCreated {
+        message_id: id,
+        wedding_id: wid,
+        author: msg.author,
+        guest_name: msg.guest_name,
+        message: msg.message,
+        recipient_slot,
+        created_at_ms: msg.created_at_ms,
+    });
+    transfer::transfer(msg, ctx.sender());
+    id
+}
+
+// === Views ===
+
+public fun guestbook_message_wedding_id(m: &GuestbookMessage): ID { m.wedding_id }
+public fun guestbook_message_author(m: &GuestbookMessage): address { m.author }
+public fun guestbook_message_text(m: &GuestbookMessage): String { m.message }
+public fun guestbook_message_guest_name(m: &GuestbookMessage): String { m.guest_name }
+public fun guestbook_message_slot(m: &GuestbookMessage): u8 { m.recipient_slot }
 
 // === Tests ===
 

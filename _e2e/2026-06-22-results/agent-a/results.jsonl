@@ -1,0 +1,53 @@
+{"id":"A-1-1","status":"PASS","ts":"2026-06-21T19:17:57.474Z","weddingId":"0x91119b55906172d1ba2da97310444c758db6298d246794a62a4a46a7ab9d522c","eventId":"0xe75ecb256e0b1b3300119108c5157513f71ed2221de6001ce66b0d3480a61436","capId":"0x29d440f00302b4181d0de4e12b3b978e3c36db430bf539ad665807322de8d51f","loungeId":"0x7fc428c9c16b840355b22f290ad94d473fe1a1856e0f72384279130973ab834c","digest":"3krnQ73BR2U3Ufwj5nXddnzjKTNZ2FMgpGC7SDbMnQf5"}
+{"id":"A-1-2","status":"PASS","ts":"2026-06-21T19:17:57.574Z","wedding":{"id":"0x91119b55906172d1ba2da97310444c758db6298d246794a62a4a46a7ab9d522c","status":"active","hosts":["0x5b122772fc591894c635987d4902c206b32600fed3b13141e9a3bb83cb92a0c4"],"vaultId":null,"eventId":"0xe75ecb256e0b1b3300119108c5157513f71ed2221de6001ce66b0d3480a61436"}}
+{"id":"A-1-3","status":"PASS","ts":"2026-06-21T19:17:57.665Z","lounge":{"id":"0x7fc428c9c16b840355b22f290ad94d473fe1a1856e0f72384279130973ab834c","weddingId":"0x91119b55906172d1ba2da97310444c758db6298d246794a62a4a46a7ab9d522c"}}
+{"id":"A-1-4","status":"PASS","ts":"2026-06-21T19:17:57.774Z","caps":["0x29d440f00302b4181d0de4e12b3b978e3c36db430bf539ad665807322de8d51f"]}
+{"id":"A-1-5","status":"PASS","ts":"2026-06-21T19:17:57.884Z","participation":{"id":"0x6d05ee37f07b5e92609c7d269d2823dd44ea6ef53d0a816dd4d6ff369a7402e3","eventId":"0xe75ecb256e0b1b3300119108c5157513f71ed2221de6001ce66b0d3480a61436","eventType":0,"participant":"0x5b122772fc591894c635987d4902c206b32600fed3b13141e9a3bb83cb92a0c4","roleId":0}}
+{"id":"A-1-6","status":"PASS","ts":"2026-06-21T19:17:58.005Z","eventType":0,"creator":"0x5b122772fc591894c635987d4902c206b32600fed3b13141e9a3bb83cb92a0c4"}
+{"id":"A-2-1","status":"PASS","ts":"2026-06-21T19:18:01.694Z","digest":"Hbz3jQeaDNaNMKCwd1CYtRr5shUKWhLYiueMFLWQr2D9"}
+{"id":"A-2-2","status":"PASS","ts":"2026-06-21T19:18:01.804Z","coCapId":"0xf99f3de26ca1a1210ef906dd4360560901f5367c49e3f295c10aa5e590747df7"}
+{"id":"A-2-3","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:02.326Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 7, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::wedding::add_host' (instruction 28)"}
+{"id":"A-3-1","status":"PASS","ts":"2026-06-21T19:18:05.794Z","digest":"2x8ZX8QhpHXSEQNSa3bdfNEv4sq2ZtAQrkYRtmkLY9Ww"}
+{"id":"A-3-2","status":"PASS","ts":"2026-06-21T19:18:05.906Z","invite":{"eventId":"0xe75ecb256e0b1b3300119108c5157513f71ed2221de6001ce66b0d3480a61436","actionType":6,"actor":"0x5b122772fc591894c635987d4902c206b32600fed3b13141e9a3bb83cb92a0c4","target":"0x25999a3b70d6fc61bb69d5d7ae0ce419bc8c0fefe2222b18b56de70cd5191288","roleId":0,"amount":0,"ts":1782069483092}}
+{"id":"A-4-1","status":"PASS","ts":"2026-06-21T19:18:09.174Z","vaultId":"0xe19001189f93641fdbb6426c6ed8b3d61f089de1d312c722ed70adb40b499d6e","digest":"DPzEbgcVN2D8bKxfjaZJdFdAWhYavWr5egC42JYaVvsU"}
+{"id":"A-4-2","status":"PASS","ts":"2026-06-21T19:18:09.265Z","vault":{"id":"0xe19001189f93641fdbb6426c6ed8b3d61f089de1d312c722ed70adb40b499d6e","weddingId":"0x91119b55906172d1ba2da97310444c758db6298d246794a62a4a46a7ab9d522c","balance":"0"}}
+{"id":"A-4-3","status":"PASS","ts":"2026-06-21T19:18:09.364Z","vaultId":"0xe19001189f93641fdbb6426c6ed8b3d61f089de1d312c722ed70adb40b499d6e"}
+{"id":"A-4-4","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:09.816Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 4, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::wedding::set_vault' (instruction 8)"}
+{"id":"A-5-1","status":"PASS","ts":"2026-06-21T19:18:13.274Z","guest1PartId":"0xd29aaf8846563a47755ce4cf21c0548801fa6192df202ac936a54a4a8b4af1b2","digest":"Ah4VPhFbDh19W6V8zjXT9dGrE6EJ9DPMBUTYSbgk6zd8"}
+{"id":"A-5-2","status":"PASS","ts":"2026-06-21T19:18:13.374Z","participation":{"id":"0xd29aaf8846563a47755ce4cf21c0548801fa6192df202ac936a54a4a8b4af1b2","eventId":"0xe75ecb256e0b1b3300119108c5157513f71ed2221de6001ce66b0d3480a61436","eventType":0,"participant":"0x25999a3b70d6fc61bb69d5d7ae0ce419bc8c0fefe2222b18b56de70cd5191288","roleId":1}}
+{"id":"A-5-5","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:17.247Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 2, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::event::participate' (instruction 28)"}
+{"id":"A-6-1","status":"PASS","ts":"2026-06-21T19:18:20.844Z","digest":"7iD96o2hVVWPHKhwkP6VDX8mc9RJTzFnmezTY4ZsmRcv"}
+{"id":"A-6-2","status":"PASS","ts":"2026-06-21T19:18:20.974Z","balance":"1000000"}
+{"id":"A-6-6","status":"PASS","ts":"2026-06-21T19:18:24.464Z","balance":"2000000","digest":"Gtcnis9FZ2P3KyFsrSmmMJJofF9EZpU4jgmjviTqzAar"}
+{"id":"A-6-7","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:24.897Z","error":"Transaction resolution failed: MoveAbort in 2nd command, abort code: 1, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::cash_gift::give' (instruction 64)"}
+{"id":"A-7-1","status":"PASS","ts":"2026-06-21T19:18:28.374Z","digest":"9C5vSQk3L945mQoWKwVaiBtcBYMR7eAYD5EpJvX7nPEj"}
+{"id":"A-7-2","status":"PASS","ts":"2026-06-21T19:18:28.465Z","balance":"1500000","expected":"1500000"}
+{"id":"A-7-5","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:28.995Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 2, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::cash_gift::withdraw' (instruction 37)"}
+{"id":"A-7-6","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:29.426Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 1, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::cash_gift::withdraw' (instruction 24)"}
+{"id":"A-8-1","status":"PASS","ts":"2026-06-21T19:18:33.015Z","digest":"7Wv8qViZbyQuxnKcqxLogahX4vPJKzeou2QTw49GZj3G"}
+{"id":"A-8-2","status":"PASS","ts":"2026-06-21T19:18:33.114Z","rsvp":{"weddingId":"0x91119b55906172d1ba2da97310444c758db6298d246794a62a4a46a7ab9d522c","submitter":"0x25999a3b70d6fc61bb69d5d7ae0ce419bc8c0fefe2222b18b56de70cd5191288","recipientSlot":0,"attendance":0,"companionCount":2,"meal":0,"submittedAt":1782069510357}}
+{"id":"A-8-3","status":"PASS","ts":"2026-06-21T19:18:36.414Z","digest":"Fde5RYDyAA8Y7BdmY8QCy1V3knUJYSAxuWDLktSDsQsn"}
+{"id":"A-8-4","status":"PASS","ts":"2026-06-21T19:18:39.795Z","digest":"F5kpPRBuKxM5MPPU4MyvMBcgwDx3sQ6xiHy3YaLuvN3i"}
+{"id":"A-8-7","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:40.225Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 0, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::rsvp::submit_rsvp' (instruction 14)"}
+{"id":"A-8-8","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:40.626Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 1, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::rsvp::submit_rsvp' (instruction 27)"}
+{"id":"A-8-9","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:41.077Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 2, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::rsvp::submit_rsvp' (instruction 40)"}
+{"id":"A-8-10","status":"EXPECTED_FAIL","ts":"2026-06-21T19:18:41.515Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 3, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::wedding::assert_valid_recipient_slot' (instruction 5)"}
+{"id":"A-2-4","status":"EXPECTED_FAIL","ts":"2026-06-21T19:22:19.900Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 0, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::wedding::add_host' (instruction 13)"}
+{"id":"A-3-3","status":"EXPECTED_FAIL","ts":"2026-06-21T19:22:20.320Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 6, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::wedding::invite' (instruction 33)"}
+{"id":"A-3-4","status":"EXPECTED_FAIL","ts":"2026-06-21T19:22:20.940Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 5, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::wedding::invite' (instruction 17)"}
+{"id":"A-4-5","status":"EXPECTED_FAIL","ts":"2026-06-21T19:22:21.616Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 0, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::cash_gift::create_vault' (instruction 13)"}
+{"id":"A-5-3","status":"PASS","ts":"2026-06-21T19:22:21.721Z","nodeCount":23}
+{"id":"A-5-4","status":"PASS","ts":"2026-06-21T19:22:21.829Z","attendCSCount":17}
+{"id":"A-5-6","status":"EXPECTED_FAIL","ts":"2026-06-21T19:22:22.229Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 2, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::event::participate' (instruction 28)"}
+{"id":"A-5-7","status":"EXPECTED_FAIL","ts":"2026-06-21T19:22:22.680Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 2, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::event::participate' (instruction 28)"}
+{"id":"A-5-8","status":"EXPECTED_FAIL","ts":"2026-06-21T19:22:23.220Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 2, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::event::participate' (instruction 28)"}
+{"id":"A-6-3","status":"PASS","ts":"2026-06-21T19:22:23.330Z","giveCount":12}
+{"id":"A-6-4","status":"PASS","ts":"2026-06-21T19:22:23.430Z","nodeCount":11}
+{"id":"A-6-5","status":"PASS","ts":"2026-06-21T19:22:23.548Z","busuCount":8}
+{"id":"A-6-8","status":"EXPECTED_FAIL","ts":"2026-06-21T19:22:24.160Z","error":"Transaction resolution failed: MoveAbort in 2nd command, abort code: 3, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::cash_gift::give' (instruction 42)"}
+{"id":"A-7-3","status":"PASS","ts":"2026-06-21T19:22:27.679Z","before":"24973380","after":"23943200"}
+{"id":"A-7-4","status":"PASS","ts":"2026-06-21T19:22:31.248Z","balance":"0"}
+{"id":"A-7-7","status":"EXPECTED_FAIL","ts":"2026-06-21T19:22:35.440Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 0, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::cash_gift::withdraw' (instruction 13)"}
+{"id":"A-7-8","status":"PASS","ts":"2026-06-21T19:22:38.912Z"}
+{"id":"A-8-5","status":"FAIL","ts":"2026-06-21T19:22:55.949Z","error":"slot=5 실패: Error checking transaction input objects: Balance of gas object 2135628 is lower than the needed amount: 2988000"}
+{"id":"A-8-6","status":"PASS","ts":"2026-06-21T19:23:06.079Z","meals":"0~2 모두 성공"}

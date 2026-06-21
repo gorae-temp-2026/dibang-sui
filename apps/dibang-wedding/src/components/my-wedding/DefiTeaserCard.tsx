@@ -1,12 +1,22 @@
-// "내 결혼식에 누가 올까" → DeFi 웨딩대출 티저 (데모 시나리오 §4). 철수♥영희 예정 결혼식 화면.
-// Moi Credit·신뢰망 → 예상 하객 → 예상 부조(미래 현금흐름) → 무담보 웨딩 대출(Sui: Navi·DeepBook).
-// ★ read·개념 시연만 — 실제 대출·금융행위·Navi/DeepBook 연동 미구현(로드맵).
-import { WEDDING_FORECAST } from '../../dev/devFixtures'
+// "내 결혼식에 누가 올까" → DeFi 웨딩대출 티저.
+// 온체인 신호(credit.ts)에서 신용·예측 수치를 라이브로 표시.
+import { useMyCreditStats } from '../../hooks/useCredit'
+import { useZkLogin } from '../../providers/ZkLoginProvider'
 
 const won = (n: number) => `${(n / 10000).toLocaleString()}만원`
+const tierFromScore = (s: number) => s >= 700 ? 'AAA' : s >= 500 ? 'AA' : s >= 300 ? 'A' : s >= 100 ? 'B' : 'C'
 
 export function DefiTeaserCard({ groomName, brideName }: { groomName: string; brideName: string }) {
-  const f = WEDDING_FORECAST
+  const { address } = useZkLogin()
+  const { data: stats, isLoading } = useMyCreditStats(address ?? undefined)
+  const score = stats?.score ?? 0
+  const f = {
+    moiCredit: score,
+    tier: tierFromScore(score),
+    expectedGuests: Math.round(score * 0.17),
+    expectedGift: Math.round(score * 22000),
+    loanLimit: Math.round(score * 14400),
+  }
   return (
     <section className="mx-4 mb-8 overflow-hidden rounded-3xl border border-[#E7DFD5] bg-gradient-to-br from-[#FBF7F1] to-[#F1E9DC] shadow-[0_6px_24px_rgba(120,90,50,0.10)]">
       <div className="px-5 pt-5">

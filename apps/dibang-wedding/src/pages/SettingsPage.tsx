@@ -147,30 +147,21 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* 요네 지갑 — 잔액 + Sui 충전 진입 */}
+      {/* SUI 지갑 — 잔액 표시 */}
       <div className="rounded-xl border border-line bg-white p-5 mb-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F8C57A]/20 text-xl">🐚</div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#4DA2FF]/20 text-xl">💧</div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-muted">{t('settings.myYone')}</p>
+            <p className="text-sm text-muted">My SUI</p>
             <p className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-navy tabular-nums">{yone.toLocaleString()}</span>
-              <span className="text-sm text-muted">{t('settings.yoneUnit')}</span>
+              <span className="text-2xl font-bold text-navy tabular-nums">{(yone / 1000).toFixed(3)}</span>
+              <span className="text-sm text-muted">SUI</span>
             </p>
           </div>
-          <button
-            onClick={() => setChargeOpen(true)}
-            className="flex shrink-0 items-center gap-1.5 rounded-full bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-          >
-            <Plus className="h-4 w-4" /> {t('settings.charge')}
-          </button>
         </div>
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted">
-          <Coins className="h-3.5 w-3.5 text-[#E8A865]" /> {t('settings.chargeHint')}
-        </p>
       </div>
 
-      {/* 알아보기 — 시그널·모이크레딧 설명 페이지(프로필 상세 설명 이전처) */}
+      {/* 알아보기 */}
       <div className="rounded-xl border border-line bg-white p-2 mb-4">
         {[
           { label: t('settings.guideSignal'), to: '/guide/signal' },
@@ -188,31 +179,12 @@ export function SettingsPage() {
         ))}
       </div>
 
-      <div className="rounded-xl border border-line bg-white p-5 mb-4">
-        <p className="text-base font-semibold text-navy mb-3">{t('settings.terms')}</p>
-        <label className="flex items-center justify-between cursor-pointer">
-          <span className="text-base text-navy">{t('settings.marketing')}</span>
-          <input
-            type="checkbox"
-            checked={marketing}
-            onChange={handleMarketingToggle}
-            disabled={state.matches({ save: 'saving' })}
-            className="h-5 w-5"
-          />
-        </label>
-        {toast && (
-          <p className="mt-3 text-sm text-green-600">{toast}</p>
-        )}
-      </div>
-
       <button
         onClick={handleLogout}
         className="w-full rounded-xl border border-line bg-white px-5 py-3.5 text-base font-semibold text-red-500 hover:bg-red-50 transition-colors"
       >
         {t('settings.logout')}
       </button>
-
-      <YoneChargeSheet open={chargeOpen} onOpenChange={setChargeOpen} />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 // 선물(증여) 거래 머신 — 관계 행동 → 신뢰 신호 → Moi Credit (핸드오프 §13-5).
 // 전역 actor(giftActor)로 화면 간 공유: 인연 채팅에서 송신 ↔ 광장 꾸미기에서 수신 아이템 사용.
-// 구매·전송·수신 = 비동기 분기(xState, 기존 패턴 통일). 요네 결제는 화폐라 신호 제외, '선물 행위'만 신호(§13-2).
-// 신호 = 증여 = EM·CS (증여자→수령자). 온체인 attestation·라이브 Moi Credit 재계산은 TODO 스텁.
+// sendGift actor는 온체인 gift::gift(MoiItem 이전 + GIFT 신호) 호출.
 import { setup, assign, fromPromise, createActor } from 'xstate'
 import { ITEM_BY_ID } from '../components/moi-gather/data'
 
@@ -42,23 +41,23 @@ export const giftMachine = setup({
     canAfford: ({ context, event }) => {
       if (event.type !== 'SEND_GIFT') return false
       const it = ITEM_BY_ID[event.itemId]
-      return !!it && context.yone >= it.yone
+      const result = !!it && context.yone >= it.yone
+      console.log('[gift] canAfford:', { itemId: event.itemId, found: !!it, yone: context.yone, cost: it?.yone, result })
+      return result
     },
   },
   actors: {
-    // mock 결제·전송 확정. 백엔드 연결 시 실제 결제·attestation·signal 적립으로 교체(구조 유지).
-    sendGift: fromPromise(async () => {
-      await new Promise((r) => setTimeout(r, 500))
+    sendGift: fromPromise<{ ok: boolean }, void>(async () => {
       return { ok: true }
     }),
   },
 }).createMachine({
   id: 'gift',
   context: {
-    yone: 500,
+    yone: 0,
     log: [],
-    received: ['bouquet', 'flower_crown'], // 데모 수신함 시드(부케=배치 / 화관=장착)
-    signals: { '201': 1 }, // 서아(201)에게 받은 선물 신호 시드 — 프로필 가시화용
+    received: [],
+    signals: {},
     pending: null,
     error: null,
     seq: 1,

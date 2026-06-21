@@ -12,8 +12,8 @@ export const DM_COST: Record<Tier, number> = { 0: 0, 1: 50, 2: 200 }
 
 export const TIER_META: Record<Tier, { key: 'free' | 'low' | 'high'; label: string }> = {
   0: { key: 'free', label: '함께 참여한 결혼식' },
-  1: { key: 'low', label: '두 다리 건너' },
-  2: { key: 'high', label: '새 인연' },
+  1: { key: 'low', label: '아는 사람을 통해 닿은 인연' },
+  2: { key: 'high', label: '새로운 인연' },
 }
 
 /** 이음 전 generic 헤드라인 (구체 식장·하객은 이음 후 대화에서 — 기능정의 §5). */

@@ -10,6 +10,7 @@ import { giftActor } from '../machines/gift.machine'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
 import { moiPlazaMachine } from '../machines/moiPlaza.machine'
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
+import { useSuiBalance } from '../hooks/useSuiBalance'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
 import { ITEM_BY_NAME, DEFAULT_HEAD, DEFAULT_BODY, RECOLOR_BODY, type ShopItem, type EquipSlot, type PlazaMoi } from '../components/moi-gather/data'
@@ -111,6 +112,7 @@ function buildOnchainProfile(
 export function MoiGatherPage() {
   const navigate = useNavigate()
   const { purchaseItem, equipItem, unequipItem } = useOnchainHostActions()
+  const { balanceSui } = useSuiBalance()
   const plazaMachine = useMemo(
     () =>
       moiPlazaMachine.provide({
@@ -384,7 +386,7 @@ export function MoiGatherPage() {
       <ShopSheet
         open={shopOpen}
         onOpenChange={setShopOpen}
-        yone={yone}
+        yone={Math.round(balanceSui * 1000)}
         owned={owned}
         placed={placed}
         equipped={equipped}

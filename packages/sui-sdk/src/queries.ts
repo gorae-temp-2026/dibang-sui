@@ -497,11 +497,14 @@ export async function discoverUsers(
   client: SuiJsonRpcClient,
   myAddress: string,
 ): Promise<DiscoveredUser[]> {
-  const [moiEvents, participations, signals] = await Promise.all([
+  const [moiEvents, participations, signals, eventCreated] = await Promise.all([
     getMoiCreatedEvents(client),
     getParticipatedEvents(client),
     getSignalEvents(client),
+    getEventCreatedEvents(client),
   ]);
+  // WEDDING(eventType=0) 이벤트만 "공유 결혼식"으로 분류 — INYEON(1)은 제외
+  const weddingEventIds = new Set(eventCreated.filter((e) => e.eventType === 0).map((e) => e.eventId));
   const degreeMap = buildDegreeMap(signals, participations, myAddress);
   const seen = new Set<string>();
   const others = moiEvents.filter((m) => {
@@ -509,10 +512,14 @@ export async function discoverUsers(
     seen.add(m.owner);
     return true;
   });
-  const myEventIds = new Set(participations.filter((p) => p.participant === myAddress).map((p) => p.eventId));
+  const myWeddingEventIds = new Set(
+    participations.filter((p) => p.participant === myAddress && weddingEventIds.has(p.eventId)).map((p) => p.eventId),
+  );
   return others.map((m) => {
-    const theirEventIds = participations.filter((p) => p.participant === m.owner).map((p) => p.eventId);
-    const shared = theirEventIds.filter((eid) => myEventIds.has(eid));
+    const theirWeddingEventIds = participations
+      .filter((p) => p.participant === m.owner && weddingEventIds.has(p.eventId))
+      .map((p) => p.eventId);
+    const shared = theirWeddingEventIds.filter((eid) => myWeddingEventIds.has(eid));
     const degree = degreeMap.get(m.owner) ?? 6;
     return {
       address: m.owner,

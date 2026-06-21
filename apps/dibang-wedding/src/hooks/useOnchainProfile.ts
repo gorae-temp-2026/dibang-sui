@@ -16,20 +16,21 @@ const EMPTY_TRACE = {
   L4_integrate: { W: { 부조: 0, cs: 0, 이행: 0 }, formula: '', value: 0 },
 }
 
-export function buildProfileFromMoi(moi: Moi | null, options?: { ieumCount?: number }): ProfileData {
+export function buildProfileFromMoi(moi: Moi | null, options?: { ieumCount?: number; creditScore?: number }): ProfileData {
   const addr = (moi as Moi & { suiAddress?: string })?.suiAddress ?? ''
   const addrNum = addr ? parseInt(addr.slice(2, 10), 16) : 210
   const name = addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : '알 수 없음'
   const ieumCount = options?.ieumCount ?? 0
-  const degree = moi?.deg ?? 6
+  const score = options?.creditScore ?? 0
+  const tier = score >= 700 ? 'AAA' : score >= 500 ? 'AA' : score >= 300 ? 'A' : score >= 100 ? 'B' : 'C'
 
   return {
     subject: name,
     asOf: new Date().toISOString(),
     moiCredit: {
-      value: degree <= 2 ? 70 : degree <= 4 ? 50 : 30,
-      score: degree <= 2 ? 70 : degree <= 4 ? 50 : 30,
-      tier: degree <= 2 ? 'A' : degree <= 4 ? 'B' : 'C',
+      value: score,
+      score,
+      tier,
       rank: 0,
       total: 0,
       onchain: true,
@@ -51,8 +52,8 @@ export function buildProfileFromMoi(moi: Moi | null, options?: { ieumCount?: num
     },
     signal: EMPTY_SIGNAL,
     trustRange: {
-      tier: degree <= 2 ? '높음' : degree <= 4 ? '보통' : '낮음',
-      label: degree <= 2 ? '높음' : degree <= 4 ? '보통' : '낮음',
+      tier: score >= 300 ? '높음' : score >= 100 ? '보통' : '낮음',
+      label: score >= 300 ? '높음' : score >= 100 ? '보통' : '낮음',
       anon: true,
     },
   }

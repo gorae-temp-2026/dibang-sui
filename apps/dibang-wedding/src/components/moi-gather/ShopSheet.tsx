@@ -2,7 +2,7 @@
 // 구매 = '내 아이템'(owned)으로만 이동(즉시 착용/배치 안 함). 착용/배치는 '내 아이템' 탭에서 미리보기→확정.
 // 인테리어·소품 = 다중 구매·배치(보유 수 한도). 헤어·옷·액세서리 = 1개(전환·착용). 다크 시트.
 import { useState } from 'react'
-import { Coins, Plus, Check } from 'lucide-react'
+import { Coins, Check } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
 import { SHOP, ITEM_BY_ID, type ShopItem, type EquipSlot } from './data'
 import type { PlacedItem } from '../../machines/moiPlaza.machine'
@@ -181,13 +181,13 @@ export function ShopSheet(props: ShopSheetProps) {
       <SheetContent side="bottom" className="max-h-[88vh] scrollbar-hide">
         <SheetHeader><SheetTitle>샵 · 모이 꾸미기</SheetTitle></SheetHeader>
 
-        <div className="mb-3 flex items-center gap-3 rounded-2xl border border-[#F8C57A]/30 bg-gradient-to-br from-[#F8C57A]/14 to-transparent px-4 py-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F8C57A]/20 text-xl">🐚</div>
+        <div className="mb-3 flex items-center gap-3 rounded-2xl border border-[#4DA2FF]/30 bg-gradient-to-br from-[#4DA2FF]/14 to-transparent px-4 py-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#4DA2FF]/20 text-xl">💧</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10.5px] font-bold uppercase tracking-wide text-white/45">My Yone</div>
-            <div className="flex items-baseline gap-1 text-white"><b className="text-[22px] font-black tracking-tight">{yone.toLocaleString()}</b><span className="text-[11px] text-white/55">요네</span></div>
+            <div className="text-[10.5px] font-bold uppercase tracking-wide text-white/45">My SUI</div>
+            <div className="flex items-baseline gap-1 text-white"><b className="text-[22px] font-black tracking-tight">{(yone / 1000).toFixed(3)}</b><span className="text-[11px] text-white/55">SUI</span></div>
+            <div className="text-[10px] text-white/35">아이템 구매 시 0.001 SUI 결제</div>
           </div>
-          <button type="button" onClick={props.onCharge} className="flex items-center gap-1 rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3.5 py-2 text-[12px] font-extrabold text-[#5a3a12]"><Plus className="h-3.5 w-3.5" /> 충전하기</button>
         </div>
 
         {error && <button type="button" onClick={props.onDismissError} className="mb-3 block w-full rounded-xl border border-[#E0607A]/40 bg-[#E0607A]/10 px-3 py-2 text-left text-[12px] text-[#f3b6c2]">{error} <span className="text-white/40">(눌러 닫기)</span></button>}

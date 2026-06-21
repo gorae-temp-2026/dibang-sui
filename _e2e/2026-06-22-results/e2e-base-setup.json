@@ -1,0 +1,30 @@
+{
+  "createdAt": "2026-06-21T20:21:47.332Z",
+  "wallets": {
+    "Wallet1": {
+      "address": "0xa1c5d442c86ca9454f70bec6b23b40b3e30fffa8b078fd4273ed4c41e0a80757",
+      "moiId": "0x7df296764619d23dfc7205c8ef7105a67f140f3c00e49d99b8cc44c724b54f19",
+      "skipped": true
+    },
+    "Wallet2": {
+      "address": "0xc8d5454cf83eb942eedd872ef55235208f047c2bb800c253781f0e575c520e93",
+      "moiId": "0x860637236c6c7c195a8774399d65c5750be2c50a15a7d2e1f12bba61f367f6e1",
+      "skipped": true
+    },
+    "Wallet3": {
+      "address": "0x3801db86d80719c2b0ea9e8b2428927f2ee4e862c4175755f7239bc50e5893ea",
+      "moiId": "0xfdd7c34600d33a687bad0439d2aa4ceaf4573c4feac7ad9b40698f4d19aafd52",
+      "skipped": true
+    },
+    "Wallet4": {
+      "address": "0x3aedaf785842105943c38ed906d4925bdeae382f863154abccd5d97c967bf481",
+      "moiId": "0xa519ca1edd1691f112f5c8e621208539b403f88b12cee2061f65cef6be5e161a",
+      "skipped": true
+    },
+    "Wallet5": {
+      "address": "0x121f088047476d5b6ad1a10c4a435267439dda9bd426c44e6d901e39db80369c",
+      "moiId": "0xcf2673ef0f6dd5452aa20728bc86774c2ed076b1d2f94ad22fb9422b0b96698f",
+      "skipped": true
+    }
+  }
+}

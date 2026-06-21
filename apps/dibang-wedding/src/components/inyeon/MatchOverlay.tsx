@@ -2,7 +2,6 @@
 // 목업 .matchov 이식. 대화(DM)는 인연 채팅 탭에서.
 import { MessageCircle, Share2 } from 'lucide-react'
 import type { Moi } from './types'
-import { MOI_MUTUALS } from './data'
 import { useT } from '../../lib/i18n'
 import { useInyeonProfile } from '../../stores/inyeonProfile'
 
@@ -18,7 +17,7 @@ export function MatchOverlay({ open, moi, pending, onDismiss, onOpenChat }: Matc
   const t = useT()
   const myPhoto = useInyeonProfile((s) => s.photoUrl)
   if (!open || !moi) return null
-  const mutuals = MOI_MUTUALS[moi.id] ?? []
+  const mutualCount = moi.mutualCount ?? 0
   const moiPhoto = moi.photos[0]?.url
   return (
     <div className="fixed inset-0 z-[70] mx-auto flex max-w-[420px] flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_36%,rgba(30,58,95,0.95),rgba(11,23,34,0.97))] px-8 text-center">
@@ -44,14 +43,11 @@ export function MatchOverlay({ open, moi, pending, onDismiss, onOpenChat }: Matc
         />
       </div>
 
-      {/* 함께 아는 사람 — 이음 후 실명 공개(정보공개테이블 ②) */}
-      {mutuals.length > 0 && (
+      {mutualCount > 0 && (
         <div className="mb-4 max-w-[300px]">
           <div className="text-[11px] font-bold text-white/55">🤝 {t('profile.mutualKnown')}</div>
-          <div className="mt-1.5 flex flex-wrap justify-center gap-1.5">
-            {mutuals.slice(0, 4).map((n) => (
-              <span key={n} className="rounded-full bg-white/12 px-2.5 py-1 text-[11.5px] font-bold text-white">{n}</span>
-            ))}
+          <div className="mt-1.5">
+            <span className="rounded-full bg-white/12 px-2.5 py-1 text-[11.5px] font-bold text-white">공통으로 아는 사람 {mutualCount}명</span>
           </div>
         </div>
       )}
@@ -59,7 +55,7 @@ export function MatchOverlay({ open, moi, pending, onDismiss, onOpenChat }: Matc
       {/* Moi Credit 티저 — 데모 심장 */}
       <div className="max-w-[310px] rounded-2xl border border-[#F8C57A]/40 bg-white/[0.07] px-4 py-3">
         <div className="flex items-center justify-center gap-1.5 text-[11.5px] font-extrabold text-[#F8C57A]">
-          🪙 이 이음이 신용이 됩니다
+          💎 이 이음이 신용이 됩니다
         </div>
         <div className="mt-1.5 text-[11px] leading-relaxed text-white/75">
           이음·대화·이벤트 참여가 신뢰 attestation으로 쌓여 <b className="text-white/90">Moi Credit</b>(온체인 신용)의 재료가 돼요.

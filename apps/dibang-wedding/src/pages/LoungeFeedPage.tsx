@@ -18,6 +18,7 @@ import { ParticipantListModal } from '../components/lounge-feed/ParticipantListM
 import { PinnedAnnouncementBanner } from '../components/lounge-feed/PinnedAnnouncementBanner';
 import { colors, fonts } from '../lib/theme';
 import type { FeedItem } from '@gorae/contracts';
+import { useOnchainLoungeFeed } from '../hooks/useOnchainLoungeFeed';
 
 // TODO: 실제 auth에서 Host 여부를 가져와야 함. 와이어프레임이므로 일단 true.
 const IS_HOST = true;
@@ -120,19 +121,13 @@ export function LoungeFeedPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
 
-  // ---- 라운지 입장 시 LoungeCheckIn 자동 생성 ----
-  useEnsureLoungeCheckIn(loungeId);
-
-  // ---- 데이터 페치 ----
+  // DB 호출 비활성화 — 온체인 전환. Go API 없어도 동작.
+  // useEnsureLoungeCheckIn(loungeId); // DB 체크인 비활성화
   const loungeQuery = useGetLounge(loungeId ?? '');
   const weddingId = loungeQuery.data?.wedding_id;
-
   const weddingQuery = useGetWedding(weddingId);
-
   const feedQuery = useGetFeed(loungeId ?? '');
   const observerRef = useRef<HTMLDivElement>(null);
-
-  // ---- 공지 데이터 (AnnouncementForm 컨테이너) ----
   const announcementsQuery = useGetAnnouncements(loungeId ?? '');
   const createAnnouncement = useCreateAnnouncement(loungeId ?? '');
   const deleteAnnouncement = useDeleteAnnouncement(loungeId ?? '');
@@ -165,14 +160,10 @@ export function LoungeFeedPage() {
 
   // ---- xState와 TanStack Query 동기화 ----
   useEffect(() => {
-    if (feedQuery.isSuccess && state.matches('loading')) {
+    if ((feedQuery.isSuccess || feedQuery.isError) && state.matches('loading')) {
       send({ type: 'LOAD_SUCCESS' });
     }
-    if (feedQuery.isError && state.matches('loading')) {
-      // String()은 절대 null/undefined를 반환하지 않으므로 ??(no-constant-binary-expression) 대신 사전 가드.
-      send({ type: 'LOAD_ERROR', error: feedQuery.error ? String(feedQuery.error) : 'Unknown error' });
-    }
-  }, [feedQuery.isSuccess, feedQuery.isError, feedQuery.error, state, send]);
+  }, [feedQuery.isSuccess, feedQuery.isError, state, send]);
 
   // ---- 무한스크롤 ----
   useEffect(() => {
@@ -216,14 +207,35 @@ export function LoungeFeedPage() {
     pullDistance.current = currentY - touchStartY.current;
   }, []);
 
-  // ---- 피드 아이템 분리: 고정글 + 일반 ----
-  const allItems: FeedItem[] = feedQuery.data?.pages.flatMap((page) => page.data) ?? [];
+  // ---- 온체인 피드 ----
+  const onchainFeed = useOnchainLoungeFeed(weddingId);
+
+  // ---- 피드 아이템 분리: DB + 온체인 합산 ----
+  const dbItems: FeedItem[] = feedQuery.data?.pages.flatMap((page) => page.data) ?? [];
+  // DB가 실패하면 온체인 피드로 폴백
+  const onchainAsFeedItems: FeedItem[] = onchainFeed.feed
+    .filter((oc) => oc.type === 'give' || oc.type === 'write' || oc.type === 'note')
+    .map((oc) => ({
+      type: 'guestbook_message' as const,
+      id: oc.id,
+      created_at: oc.ts ? new Date(oc.ts).toISOString() : new Date().toISOString(),
+      data: {
+        guest_name: `${oc.actor.slice(0, 6)}…${oc.actor.slice(-4)}`,
+        message: oc.type === 'give' ? `💧 축의금 ${(oc.amount / 1e6).toFixed(3)} SUI`
+          : oc.type === 'note' ? `💌 ${oc.message ?? '쪽지'}`
+          : '✍️ 방명록 (온체인)',
+        recipient_slot: 'groom',
+        relation_category: '온체인',
+      },
+    } as unknown as FeedItem));
+
+  const allItems = dbItems.length > 0 ? dbItems : onchainAsFeedItems;
   const pinnedItems = allItems.filter((item) => item.type === 'host_announcement' && (item.data as Record<string, unknown>)?.is_pinned);
   const regularItems = allItems.filter((item) => !(item.type === 'host_announcement' && (item.data as Record<string, unknown>)?.is_pinned));
 
-  // ---- 참여자 데이터 (피드의 lounge_check_in에서 추출) ----
+  // ---- 참여자 데이터 ----
   const loungeCheckInItems = allItems.filter((item) => item.type === 'lounge_check_in');
-  const participantCount = loungeCheckInItems.length;
+  const participantCount = onchainFeed.participantCount || loungeCheckInItems.length;
   const visibleAvatars = loungeCheckInItems.slice(0, MAX_VISIBLE_AVATARS);
   const overflowCount = participantCount - MAX_VISIBLE_AVATARS;
 
@@ -237,7 +249,7 @@ export function LoungeFeedPage() {
   }
 
   // 로딩 중 스켈레톤
-  if ((weddingQuery.isLoading || loungeQuery.isLoading) && !weddingInfo) {
+  if ((weddingQuery.isLoading || loungeQuery.isLoading) && !weddingInfo && onchainFeed.loading) {
     return <LoungeSkeleton />;
   }
 

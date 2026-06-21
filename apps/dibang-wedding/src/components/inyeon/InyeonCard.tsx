@@ -4,7 +4,7 @@
 // 액션(넘기기/이음)·프로필 보기는 맨 위 카드만. 아이콘=목업 심볼(이음=i-nodes).
 import { Lock, Users, X } from 'lucide-react'
 import type { Moi } from './types'
-import { FREE_PHOTOS, PHOTO_COST } from './data'
+import { FREE_PHOTOS } from './data'
 import { IeumIcon } from './icons'
 import { useT } from '../../lib/i18n'
 import { cn } from '../../lib/utils'
@@ -114,7 +114,7 @@ export function InyeonCard({
         >
           <Lock className="h-5 w-5" />
           <span className="text-sm font-bold">{t('inyeon.morePhotos')}</span>
-          <span className="text-xs font-extrabold text-[#F8C57A]">🪙 {PHOTO_COST}</span>
+          <span className="text-xs font-extrabold text-[#4DA2FF]">💧 0.001 SUI</span>
         </button>
       )}
 

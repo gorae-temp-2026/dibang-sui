@@ -3,7 +3,7 @@
 // 백엔드 연결 시 sendIeum actor를 실제 attestation/수락 폴링으로 교체(나머지 구조 유지).
 import { setup, assign, fromPromise, raise } from 'xstate'
 import type { Moi, IncomingReq, DmMsg } from '../components/inyeon/types'
-import { POOL, PHOTO_COST, START_YONE, DM_COST, seedDm, DM_AUTO_REPLY } from '../components/inyeon/data'
+import { PHOTO_COST, START_YONE, DM_COST, seedDm, DM_AUTO_REPLY } from '../components/inyeon/data'
 
 export type InyeonScreen = 'universe' | 'received' | 'chat' | 'me'
 
@@ -103,8 +103,8 @@ export const inyeonMachine = setup({
 }).createMachine({
   id: 'inyeon',
   context: {
-    pool: POOL,
-    queue: buildQueue(POOL, 1, 6, []),
+    pool: [],
+    queue: [],
     photoIdx: {},
     unlocked: {},
     yone: START_YONE,
