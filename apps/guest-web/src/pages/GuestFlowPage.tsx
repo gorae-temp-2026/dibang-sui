@@ -18,6 +18,7 @@ import { EnvelopeSendingOverlay } from '../components/guest-flow/EnvelopeSending
 import { useGuestFlowSubmitter } from '../hooks/guestFlow/useGuestFlowSubmitter';
 import { useBodyStyleScope } from '../hooks/useBodyStyleScope';
 import { useDibangNavigator } from '../hooks/useDibangNavigator';
+import { useZkLogin } from '../providers/ZkLoginProvider';
 import { stepEnter, serif, colors } from '../styles/tokens';
 import { trackEvent } from '../lib/analytics';
 
@@ -53,6 +54,7 @@ export function GuestFlowPage() {
   });
 
   const navigator = useDibangNavigator();
+  const zk = useZkLogin();
 
   const [searchParams] = useSearchParams();
   const weddingId = searchParams.get('weddingId');
@@ -139,6 +141,18 @@ export function GuestFlowPage() {
   // --- 스텝 렌더링 ---
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      {!zk.isAuthenticated && (
+        <div style={{ padding: '12px 16px', background: '#1E3A5F', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ ...serif, fontSize: 13, color: '#fff' }}>SUI로 축의하려면 로그인이 필요해요</span>
+          <button
+            type="button"
+            onClick={() => zk.login(window.location.href)}
+            style={{ background: '#F8C57A', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, color: '#5a3a12', cursor: 'pointer' }}
+          >
+            구글 로그인
+          </button>
+        </div>
+      )}
       {showIndicator && (
         <StepIndicator
           step={indicatorStep}

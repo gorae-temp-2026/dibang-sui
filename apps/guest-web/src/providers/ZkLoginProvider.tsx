@@ -26,7 +26,6 @@ import {
   clearSession,
   type SuiNetwork,
   type ZkLoginSession,
-  type ZkProofInputs,
 } from '@gorae/sui-sdk'
 import { env } from '../env'
 

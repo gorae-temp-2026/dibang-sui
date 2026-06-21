@@ -15,6 +15,9 @@ import { guestFlowMachine, type GuestFlowEvent } from '../../machines/guestFlow.
 import { useCreateGuestbookEntryMutation } from '../../queries/guestFlow/useCreateGuestbookEntryMutation';
 import { useCreateGuestbookMessageMutation } from '../../queries/guestFlow/useCreateGuestbookMessageMutation';
 import { useCreateCashGiftMutation } from '../../queries/guestFlow/useCreateCashGiftMutation';
+import { useZkLogin } from '../../providers/ZkLoginProvider';
+import { buildParticipateTx, getWedding, createJsonRpcClient, configureSui, type SuiNetwork } from '@gorae/sui-sdk';
+import { env } from '../../env';
 
 type GuestFlowState = StateFrom<typeof guestFlowMachine>;
 type Send = (event: GuestFlowEvent) => void;
@@ -110,4 +113,24 @@ export function useGuestFlowSubmitter(
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSendingMessage]);
+
+  // done 진입 → 온체인 participate(결혼식 참석 기록) 1회. zkLogin 인증 시에만.
+  const isDone = state.matches('done');
+  const zk = useZkLogin();
+  useEffect(() => {
+    if (!isDone || !zk.isAuthenticated || !wedding) return;
+    if (firedRef.current.has('participate')) return;
+    firedRef.current.add('participate');
+    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
+    if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID });
+    const client = createJsonRpcClient(network);
+    getWedding(client, wedding.id)
+      .then((w) => {
+        if (!w?.eventId) return;
+        return zk.executeOnchain(buildParticipateTx({ eventId: w.eventId, roleId: 1 }));
+      })
+      .then((digest) => { if (digest) console.log('[participate] onchain:', digest); })
+      .catch((e) => console.error('[participate] failed:', e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDone]);
 }
