@@ -553,3 +553,32 @@ export async function getOwnedIumRequests(
   }
   return out;
 }
+
+// === 쪽지(Note) 이벤트 ===
+
+export interface NoteSentQuery {
+  noteBoxId: string;
+  from: string;
+  to: string;
+  blobId: string;
+  ts: number;
+}
+
+export async function getNoteSentEvents(
+  client: SuiJsonRpcClient,
+  myAddress: string,
+): Promise<NoteSentQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('note', 'NoteSent'));
+  return events
+    .map((e) => {
+      const p = e.parsedJson as Record<string, unknown>;
+      return {
+        noteBoxId: asString(p.note_box_id),
+        from: asString(p.from),
+        to: asString(p.to),
+        blobId: asString(p.blob_id),
+        ts: asNumber(p.created_at_ms),
+      };
+    })
+    .filter((n) => n.from === myAddress || n.to === myAddress);
+}

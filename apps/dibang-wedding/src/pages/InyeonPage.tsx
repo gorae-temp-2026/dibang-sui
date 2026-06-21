@@ -25,9 +25,11 @@ import { ChatScreen } from '../components/inyeon/ChatScreen'
 import { MoiGateModal } from '../components/MoiGateModal'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { useMyCreditStats } from '../hooks/useCredit'
+import { useNotes } from '../hooks/useNotes'
 
 export function InyeonPage() {
-  const { requestIum, acceptIum } = useOnchainHostActions()
+  const { requestIum, acceptIum, gift: onchainGift, purchaseItem } = useOnchainHostActions()
+  const noteActions = useNotes()
   const { users: discoveredUsers, incoming: discoveredIncoming, sentMoiIds, matchedAddresses, loading: discoverLoading, refetch: refetchDiscover } = useDiscoverUsers()
   const pool = discoveredUsers
   const moiById = (id: number | null) => (id == null ? null : pool.find((m) => m.id === id) ?? null)
@@ -158,6 +160,7 @@ export function InyeonPage() {
 
         {screen === 'chat' && (
           <ChatScreen
+            pool={pool}
             matchedIds={matchedIds}
             chatOpen={chatOpen}
             dms={dms}
@@ -167,7 +170,12 @@ export function InyeonPage() {
             onCloseDmRoom={() => send({ type: 'CLOSE_DM_ROOM' })}
             onOpenMemory={(id) => send({ type: 'OPEN_MEMORY', id })}
             onCloseMemory={() => send({ type: 'CLOSE_MEMORY' })}
-            onSendDm={(id, text) => send({ type: 'SEND_DM', id, text })}
+            onSendDm={(id, text) => {
+              send({ type: 'SEND_DM', id, text })
+              const target = pool.find((m) => m.id === id)
+              const suiAddr = target && (target as Moi & { suiAddress?: string }).suiAddress
+              if (suiAddr) noteActions.sendNote(suiAddr, text).catch(() => {})
+            }}
             onOpenProfile={(id) => send({ type: 'OPEN_PROFILE', id })}
           />
         )}
