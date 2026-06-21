@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { SignalQuery } from '@gorae/sui-sdk'
-import { creditFromSignals, KIND, type SignalEvent } from './credit'
+import { creditFromSignals, KIND, SOURCE, signalBreakdownFor, type SignalEvent } from './credit'
 
 // 온체인에서 분류된 신호(signal::SignalEmitted)를 흉내. 분류는 온체인 몫이므로 테스트는 신호를 직접 준다.
 // source: 부조=GIVE_MONEY(0), CS 기본=WRITE_MESSAGE(4) — signal.move 미러.
@@ -91,5 +91,24 @@ describe('creditFromSignals (신뢰→신용 · 온체인 분류 신호 집계)'
       expect(v).toBeGreaterThanOrEqual(0)
       expect(v).toBeLessThanOrEqual(1)
     }
+  })
+
+  it('signalBreakdownFor: 받은 신호를 행위별로 분해', () => {
+    const signals: SignalEvent[] = [
+      busu('g1', 'host', 100_000), // host 부조+1
+      cs('g1', 'host', SOURCE.WRITE_MESSAGE), // host 방명록+1
+      cs('host', 'g1', SOURCE.INVITE), // g1 초대+1
+      cs('g1', 'host', SOURCE.ATTEND), // host 참석+1
+      cs('a', 'b', SOURCE.ACCEPT_IUM), // b 매칭+1
+    ]
+    const host = signalBreakdownFor(signals, 'host')
+    expect(host.부조).toBe(1)
+    expect(host.방명록).toBe(1)
+    expect(host.참석).toBe(1)
+    expect(host.초대).toBe(0)
+    expect(host.total).toBe(3)
+    expect(signalBreakdownFor(signals, 'g1').초대).toBe(1)
+    expect(signalBreakdownFor(signals, 'b').매칭).toBe(1)
+    expect(signalBreakdownFor(signals, 'nobody').total).toBe(0)
   })
 })

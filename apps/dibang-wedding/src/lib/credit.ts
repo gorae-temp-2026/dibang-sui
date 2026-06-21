@@ -9,6 +9,9 @@
 // SignalKind — contracts/dibang_wedding/sources/signal.move 와 일치(u8).
 export const KIND = { NONE: 0, BUSU: 1, CS: 2 } as const
 
+// 신호 출처(원천 action) — signal.move 미러. 신뢰 신호의 *행위별* 분해(L1 raw)에 쓴다.
+export const SOURCE = { GIVE_MONEY: 0, ACCEPT_IUM: 2, GIFT: 3, WRITE_MESSAGE: 4, ATTEND: 5, INVITE: 6 } as const
+
 const DAMPING = 0.85
 const ITERS = 60
 const W_BUSU = 0.5
@@ -171,4 +174,34 @@ export function creditFromSignals(signals: SignalEvent[]): CreditResult {
     components[n] = { busu: b, cs: c, perf: p }
   }
   return { credit, components }
+}
+
+/** 한 지갑이 *받은* 신호의 행위별 분해(신용 설명용 L1 raw). 분류 SSOT는 온체인 source(실제 분류). */
+export interface SignalBreakdown {
+  부조: number
+  방명록: number
+  초대: number
+  선물: number
+  참석: number
+  매칭: number
+  total: number
+}
+
+/** 온체인 분류 신호 → address가 받은 신호의 행위별 카운트. UI(MoiCreditPanel 등) 신용 근거 표시용. */
+export function signalBreakdownFor(signals: SignalEvent[], address: string): SignalBreakdown {
+  const b: SignalBreakdown = { 부조: 0, 방명록: 0, 초대: 0, 선물: 0, 참석: 0, 매칭: 0, total: 0 }
+  for (const s of signals) {
+    if (s.to !== address) continue
+    switch (s.source) {
+      case SOURCE.GIVE_MONEY: b.부조++; break
+      case SOURCE.WRITE_MESSAGE: b.방명록++; break
+      case SOURCE.INVITE: b.초대++; break
+      case SOURCE.GIFT: b.선물++; break
+      case SOURCE.ATTEND: b.참석++; break
+      case SOURCE.ACCEPT_IUM: b.매칭++; break
+      default: continue
+    }
+    b.total++
+  }
+  return b
 }
