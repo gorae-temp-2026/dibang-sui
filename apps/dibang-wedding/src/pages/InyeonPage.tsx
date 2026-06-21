@@ -16,6 +16,7 @@ import { MatchOverlay } from '../components/inyeon/MatchOverlay'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { chulsooProfile } from '../components/profile/fixture'
+import { chulsooPlazaProfile } from '../components/profile/personaProfiles'
 import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
 import { ChatScreen } from '../components/inyeon/ChatScreen'
 
@@ -150,11 +151,14 @@ export function InyeonPage() {
         onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
         onOpenFull={(id) => send({ type: 'OPEN_PROFILE', id })}
       />
+      {/* 내 전체 프로필 — 내 거라 항상 공개(revealed)·풀페이지. chulsooPlazaProfile=가족·만난사람 노드 포함. */}
       <ProfileSheet
         open={myProfileOpen}
         onOpenChange={(o) => send({ type: o ? 'OPEN_MY_PROFILE' : 'CLOSE_MY_PROFILE' })}
-        data={chulsooProfile}
+        data={chulsooPlazaProfile}
         context="inyeon"
+        revealed
+        presentation="page"
       />
       {/* 다른 모이 프로필(카드 상세·받은이음·채팅에서 진입) — 이음 전 익명 + 이음 CTA. */}
       <ProfileSheet
