@@ -2,18 +2,20 @@
 // PixiJS placeholder 시스템: 샵 구매→요네 차감→자동 배치/장착 · 아이템 드래그 · 모이 클릭→공유 프로필.
 // 모이 클릭 = 디방인연과 동일 ProfileSheet, 단 context='lounge'(③ 오프라인 = 이름·소속·전체 네트워크 공개).
 // 에셋(투명 PNG) 부재라 캐릭터·아이템은 컬러 도형 placeholder — 에셋 나오면 슬롯 교체(에셋스펙 §4).
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { useMachine, useSelector } from '@xstate/react'
 import { fromPromise } from 'xstate'
-import { getConfig } from '@gorae/sui-sdk'
+import { getConfig, createJsonRpcClient, getOwnedMoiIds, getOwnedMoiItems, type SuiNetwork } from '@gorae/sui-sdk'
+import { env } from '../env'
+import { useZkLogin } from '../providers/ZkLoginProvider'
 import { giftActor } from '../machines/gift.machine'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
 import { moiPlazaMachine } from '../machines/moiPlaza.machine'
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
-import { PLAZA_CROWD, CROWD_BY_ID, PLAZA_WEDDING, type ShopItem } from '../components/moi-gather/data'
+import { PLAZA_CROWD, CROWD_BY_ID, PLAZA_WEDDING, type ShopItem, type EquipSlot } from '../components/moi-gather/data'
 import { POOL } from '../components/inyeon/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import type { ProfileData } from '../components/profile/types'
@@ -39,7 +41,7 @@ function colorToHue(hex: number): number {
 
 export function MoiGatherPage() {
   const navigate = useNavigate()
-  const { purchaseItem } = useOnchainHostActions()
+  const { purchaseItem, equipItem, unequipItem } = useOnchainHostActions()
   // 샵 구매 = 온체인 Payment Kit 결제(buildPurchaseItemTx)를 buyItem actor로 주입(STATE_MANAGEMENT §4).
   // 미인증/패키지 미배포면 actor가 throw → 머신이 error로 처리(요네 mock 폐기, SUI 결제로 전환).
   const plazaMachine = useMemo(
@@ -67,8 +69,44 @@ export function MoiGatherPage() {
     [purchaseItem],
   )
   const [state, send] = useMachine(plazaMachine)
+  const { address } = useZkLogin()
   const [shopOpen, setShopOpen] = useState(false)
   const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
+
+  // 온체인 equip/unequip: 클라이언트 상태 즉시 반영 + fire-and-forget 온체인(실패 시 토스트).
+  // Sui RPC로 유저의 Moi + MoiItem 객체 ID를 조회해 온체인 호출에 사용.
+  const handleEquip = useCallback(
+    (itemId: string) => {
+      send({ type: 'EQUIP', itemId })
+      if (!address) return
+      const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+      const client = createJsonRpcClient(network)
+      Promise.all([getOwnedMoiIds(client, address), getOwnedMoiItems(client, address)])
+        .then(([moiIds, items]) => {
+          const moiId = moiIds[0]
+          const suiItem = items.find((i) => i.name === itemId || i.itemType === itemId)
+          if (moiId && suiItem) return equipItem({ moiId, itemId: suiItem.id })
+        })
+        .catch(() => {})
+    },
+    [address, equipItem, send],
+  )
+  const handleUnequip = useCallback(
+    (slot: EquipSlot) => {
+      send({ type: 'UNEQUIP', slot })
+      if (!address) return
+      const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+      const client = createJsonRpcClient(network)
+      getOwnedMoiIds(client, address)
+        .then((moiIds) => {
+          const moiId = moiIds[0]
+          if (moiId) return unequipItem({ moiId, slot })
+        })
+        .catch(() => {})
+    },
+    [address, unequipItem, send],
+  )
+
   // 첫 입장 온보딩 토스트(잠깐 떴다 사라짐). 세션당 1회.
   const [onboard, setOnboard] = useState(true)
   useEffect(() => {
@@ -191,8 +229,8 @@ export function MoiGatherPage() {
         onPurchase={(id) => send({ type: 'PURCHASE', itemId: id })}
         onPlace={(id) => send({ type: 'PLACE', itemId: id })}
         onRemove={(uid) => send({ type: 'REMOVE', uid })}
-        onEquip={(id) => send({ type: 'EQUIP', itemId: id })}
-        onUnequip={(slot) => send({ type: 'UNEQUIP', slot })}
+        onEquip={handleEquip}
+        onUnequip={handleUnequip}
         onCharge={() => send({ type: 'CHARGE' })}
         onDismissError={() => send({ type: 'DISMISS_ERROR' })}
       />
