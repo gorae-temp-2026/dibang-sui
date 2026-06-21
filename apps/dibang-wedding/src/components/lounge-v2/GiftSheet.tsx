@@ -11,6 +11,7 @@ import {
   TEAM_LABEL,
   MEDAL_LABEL,
   timeUntil,
+  VENDORS,
   type RoleSlot,
 } from './giftData'
 
@@ -146,6 +147,26 @@ function GiftSection() {
   )
 }
 
+function MakersSection() {
+  return (
+    <section className="mb-6">
+      <SectionHead eyebrow="Makers" title="참여" desc="우리 결혼식을 함께 만든 사람들이에요." />
+      <div className="grid grid-cols-3 gap-2">
+        {VENDORS.map((v) => (
+          <div key={v.id} className="flex flex-col items-center rounded-2xl border border-lng-line bg-white px-1.5 py-2.5 text-center">
+            <span className="text-[22px]">{v.icon}</span>
+            <span className="mt-1 text-[9px] font-bold uppercase tracking-wide text-lng-muted">{v.category}</span>
+            <span className="mt-0.5 text-[11px] font-bold leading-tight text-lng-ink">{v.vendor}</span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2.5 text-center text-[10px] leading-relaxed text-lng-muted">
+        참여 업체가 라운지에 들어와 자기를 소개하는 흐름은 V3.X에서 본격 활성화돼요.
+      </p>
+    </section>
+  )
+}
+
 export function GiftSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -157,6 +178,7 @@ export function GiftSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
 
         <BridesmaidSection />
         <GiftSection />
+        <MakersSection />
 
         <button
           type="button"

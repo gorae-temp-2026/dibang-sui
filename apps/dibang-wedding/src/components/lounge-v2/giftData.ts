@@ -82,3 +82,24 @@ export function timeUntil(deadlineIso: string): { days: number; hours: number; e
   const hours = Math.floor((diff % 86_400_000) / 3_600_000)
   return { days, hours, expired: false, label: days > 0 ? `D-${days}` : `${hours}시간` }
 }
+
+// ── 참여(MAKERS) — 이 결혼식에 기여한 업체(목업). Host·Guest와 다른 자리. ──
+// v2.0의 'iPhone' 타일은 의미 카테고리 'Snap'(아이폰 스냅)으로 정리.
+export interface VendorSlot {
+  id: string
+  icon: string
+  category: string
+  vendor: string
+}
+
+export const VENDORS: VendorSlot[] = [
+  { id: 'venue', icon: '🏛️', category: 'Venue', vendor: '더채플 청담' },
+  { id: 'directing', icon: '🎬', category: 'Directing', vendor: '세컨드플로우' },
+  { id: 'catering', icon: '🍽️', category: 'Catering', vendor: '테이블오브제' },
+  { id: 'sound', icon: '🎵', category: 'Sound & Performance', vendor: '라이브웨이브' },
+  { id: 'video', icon: '🎥', category: 'Video', vendor: '필름드구' },
+  { id: 'photo', icon: '📸', category: 'Photo', vendor: '그라피 스튜디오' },
+  { id: 'snap', icon: '📱', category: 'Snap', vendor: '데이라잇 스냅' },
+  { id: 'dress', icon: '👰', category: 'Dress', vendor: '아틀리에 케이' },
+  { id: 'makeup', icon: '💄', category: 'Make-up', vendor: '정샵 청담' },
+]
