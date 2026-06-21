@@ -87,7 +87,9 @@ export const inyeonMachine = setup({
       event.type === 'UNLOCK_PHOTOS' && !context.unlocked[event.id] && context.yone >= PHOTO_COST,
   },
   actors: {
-    sendIeum: fromPromise(async () => {
+    // 온체인 이음 신청 — 컴포넌트가 .provide()로 requestIum 호출 actor를 주입(STATE_MANAGEMENT §4).
+    // 기본은 mock(미주입/데모). input.targetId로 상대 식별자 전달.
+    sendIeum: fromPromise<{ accepted: boolean }, { targetId: number | null }>(async () => {
       await new Promise((resolve) => setTimeout(resolve, 650))
       return { accepted: true }
     }),
@@ -278,6 +280,7 @@ export const inyeonMachine = setup({
     sending: {
       invoke: {
         src: 'sendIeum',
+        input: ({ context }) => ({ targetId: context.activeId }),
         onDone: {
           target: 'matched',
           actions: assign({
