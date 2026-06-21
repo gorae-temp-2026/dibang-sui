@@ -392,3 +392,50 @@ export async function getSignalEvents(client: SuiJsonRpcClient): Promise<SignalQ
     };
   });
 }
+
+// === 유저 발견 (디방인연 카드 소스) ===
+
+export interface MoiCreatedQuery {
+  moiId: string;
+  owner: string;
+}
+
+export async function getMoiCreatedEvents(client: SuiJsonRpcClient): Promise<MoiCreatedQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('moi', 'MoiCreated'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return { moiId: asString(p.moi_id), owner: asString(p.owner) };
+  });
+}
+
+export interface DiscoveredUser {
+  address: string;
+  moiId: string;
+  sharedEventIds: string[];
+  mutualCount: number;
+  degree: number;
+}
+
+export async function discoverUsers(
+  client: SuiJsonRpcClient,
+  myAddress: string,
+): Promise<DiscoveredUser[]> {
+  const [moiEvents, participations] = await Promise.all([
+    getMoiCreatedEvents(client),
+    getParticipatedEvents(client),
+  ]);
+  const others = moiEvents.filter((m) => m.owner !== myAddress);
+  const myEventIds = new Set(participations.filter((p) => p.participant === myAddress).map((p) => p.eventId));
+  return others.map((m) => {
+    const theirEventIds = participations.filter((p) => p.participant === m.owner).map((p) => p.eventId);
+    const shared = theirEventIds.filter((eid) => myEventIds.has(eid));
+    const degree = shared.length > 0 ? 1 : theirEventIds.length > 0 ? 3 : 5;
+    return {
+      address: m.owner,
+      moiId: m.moiId,
+      sharedEventIds: shared,
+      mutualCount: shared.length,
+      degree,
+    };
+  });
+}

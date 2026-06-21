@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { useMachine } from '@xstate/react';
 import { loginMachine } from '../machines/login.machine';
 import { useAuth } from '../providers/AuthContext';
-import { useSignInWithGoogle } from '../queries/auth/useSignInWithGoogle';
 import { useSignInWithPassword } from '../queries/auth/useSignInWithPassword';
 import { useZkLogin } from '../providers/ZkLoginProvider';
 import { env } from '../env';
@@ -35,10 +34,8 @@ export function LoginPage() {
   const redirectAfter = resolveSafeRedirect(searchParams.get('redirect'));
   const [devEmail, setDevEmail] = useState('');
   const [devPassword, setDevPassword] = useState('');
-  const signInGoogle = useSignInWithGoogle();
   const signInPassword = useSignInWithPassword();
   const zk = useZkLogin();
-  // 로그인 진행 flow는 머신(login): idle → signingGoogle/signingPassword.
   const [state, send] = useMachine(loginMachine);
   const isDisabled = !state.matches('idle');
 
@@ -60,27 +57,18 @@ export function LoginPage() {
 
   const siteUrl = env.VITE_SITE_URL ?? window.location.origin;
   // OAuth 콜백 URL에 redirect 쿼리를 실어 보내야 AuthCallbackPage가 복귀 경로를 알 수 있음.
-  // 기본값(/my-wedding)인 경우엔 부착하지 않아 콜백 URL allowlist 매칭을 단순하게 유지.
-  const redirectTo =
-    redirectAfter && redirectAfter !== '/my-wedding'
-      ? `${siteUrl}/auth/callback?redirect=${encodeURIComponent(redirectAfter)}`
-      : `${siteUrl}/auth/callback`;
+  // OAuth redirect_uri는 항상 고정(Google Cloud Console 등록값과 일치해야). 복귀 경로는 sessionStorage에 저장.
+  const callbackUrl = `${siteUrl}/auth/callback`;
 
   function signInWithGoogle() {
     send({ type: 'SIGN_IN_GOOGLE' });
-    signInGoogle.mutate(
-      { redirectTo },
-      {
-        onSuccess: (data) => {
-          if (data.url) window.location.href = data.url;
-          else send({ type: 'SIGN_IN_DONE' });
-        },
-        onError: (err) => {
-          send({ type: 'SIGN_IN_ERROR' });
-          window.alert(err instanceof Error ? err.message : '로그인 실패');
-        },
-      },
-    );
+    if (redirectAfter && redirectAfter !== '/my-wedding') {
+      sessionStorage.setItem('dibang.login.redirect', redirectAfter);
+    }
+    zk.login(callbackUrl).catch((err) => {
+      send({ type: 'SIGN_IN_ERROR' });
+      window.alert(err instanceof Error ? err.message : '로그인 실패');
+    });
   }
 
   function signInWithEmail() {

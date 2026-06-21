@@ -88,36 +88,45 @@ export async function fetchZkProof(params: {
   maxEpoch: number;
   randomness: string;
   proverUrl: string;
+  enokiApiKey?: string;
+  network?: string;
 }): Promise<ZkProofInputs> {
   const extendedEphemeralPublicKey = getExtendedEphemeralPublicKey(params.ephemeralPublicKey);
-  const res = await fetch(params.proverUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jwt: params.jwt,
-      extendedEphemeralPublicKey,
-      maxEpoch: params.maxEpoch,
-      jwtRandomness: params.randomness,
-      salt: params.salt,
-      keyClaimName: 'sub',
-    }),
-  });
-  if (!res.ok) throw new Error(`prover error: ${res.status}`);
-  return (await res.json()) as ZkProofInputs;
+  const isEnoki = !!params.enokiApiKey;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (isEnoki) {
+    headers['Authorization'] = `Bearer ${params.enokiApiKey}`;
+    headers['zklogin-jwt'] = params.jwt;
+    headers['enoki-network'] = params.network ?? 'testnet';
+  }
+  const body = isEnoki
+    ? { ephemeralPublicKey: extendedEphemeralPublicKey, maxEpoch: params.maxEpoch, randomness: params.randomness, network: params.network ?? 'testnet' }
+    : { jwt: params.jwt, extendedEphemeralPublicKey, maxEpoch: params.maxEpoch, jwtRandomness: params.randomness, salt: params.salt, keyClaimName: 'sub' };
+  const res = await fetch(params.proverUrl, { method: 'POST', headers, body: JSON.stringify(body) });
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '');
+    throw new Error(`prover error: ${res.status} ${errBody}`);
+  }
+  const json = await res.json();
+  const proof = isEnoki ? (json as { data: ZkProofInputs & { addressSeed?: string } }).data : (json as ZkProofInputs);
+  return proof;
 }
 
 /** ephemeral 서명 + 증명 + addressSeed로 최종 zkLogin 서명을 조합한다. */
 export function buildZkLoginSignature(params: {
-  proofInputs: ZkProofInputs;
+  proofInputs: ZkProofInputs & { addressSeed?: string };
   maxEpoch: number;
-  /** ephemeral keypair로 트랜잭션 bytes를 서명한 결과(base64). */
   userSignature: string;
   salt: string;
   jwt: string;
 }): string {
-  const claims = decodeJwt(params.jwt);
-  const aud = Array.isArray(claims.aud) ? claims.aud[0] : claims.aud;
-  const addressSeed = genAddressSeed(BigInt(params.salt), 'sub', claims.sub, aud ?? '').toString();
+  // Enoki prover는 addressSeed를 응답에 포함 → 그대로 사용. 없으면 직접 계산(자체 salt 서버).
+  let addressSeed = (params.proofInputs as { addressSeed?: string }).addressSeed;
+  if (!addressSeed) {
+    const claims = decodeJwt(params.jwt);
+    const aud = Array.isArray(claims.aud) ? claims.aud[0] : claims.aud;
+    addressSeed = genAddressSeed(BigInt(params.salt), 'sub', claims.sub, aud ?? '').toString();
+  }
   return getZkLoginSignature({
     inputs: { ...params.proofInputs, addressSeed },
     maxEpoch: params.maxEpoch,

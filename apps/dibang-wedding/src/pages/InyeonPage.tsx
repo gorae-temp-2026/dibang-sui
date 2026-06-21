@@ -2,13 +2,14 @@
 // 구조: 다크 셸 + 상단(매칭범위·지갑) + 본문 스크린(유니버스 덱/받은이음/채팅/프로필) + 우측 irail + 시트.
 // 흐름: 카드 탐색 → 사진 게이트(2장무료/3장째 요네) → 이음 신청(한마디) → 매칭 → (Moi Credit 재료).
 // 받은이음·채팅 화면은 스텁(TODO), 프로필 상세는 ⑤ 공유 프로필 컴포넌트에서 본구현 예정.
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useMachine, useSelector } from '@xstate/react'
 import { fromPromise } from 'xstate'
 import { giftActor } from '../machines/gift.machine'
 import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
+import { useDiscoverUsers } from '../hooks/useDiscoverUsers'
 import { POOL, TIER_META } from '../components/inyeon/data'
 import type { Moi } from '../components/inyeon/types'
 import { SwipeDeck } from '../components/inyeon/SwipeDeck'
@@ -25,31 +26,37 @@ import { MoiGateModal } from '../components/MoiGateModal'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { useMyCreditStats } from '../hooks/useCredit'
 
-const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.id === id) ?? null)
-
 export function InyeonPage() {
   const { requestIum, acceptIum } = useOnchainHostActions()
-  // 이음 신청 = 온체인 request_ium(상대 Sui 주소). 컴포넌트가 .provide()로 actor를 주입(STATE_MANAGEMENT §4).
-  // 현재 데모 데이터(POOL)는 숫자 moiId뿐(실 Sui 주소 없음) — 실유저 매핑 후 toUser를 넘기게 됨.
-  // 지금은 온체인 호출을 시도하되 주소가 없으면 mock 성공(accepted:true)으로 fallback.
+  const { users: discoveredUsers } = useDiscoverUsers()
+  // 온체인 발견 유저가 있으면 실 데이터, 없으면 POOL mock fallback.
+  const pool = discoveredUsers.length > 0 ? discoveredUsers : POOL
+  const moiById = (id: number | null) => (id == null ? null : pool.find((m) => m.id === id) ?? null)
+
   const machine = useMemo(
     () =>
       inyeonMachine.provide({
         actors: {
           sendIeum: fromPromise<{ accepted: boolean }, { targetId: number | null }>(async ({ input }) => {
             if (input.targetId != null) {
-              // TODO: targetId(데모 moiId) → 실 Sui 주소 변환. 실유저 매핑 테이블 후 교체.
-              // 지금은 데모 주소가 없어 온체인 skip — 실유저 데이터 연결 시 아래 주석 해제.
-              // const toUser = lookupSuiAddress(input.targetId)
-              // if (toUser) await requestIum({ toUser })
+              const target = pool.find((m) => m.id === input.targetId)
+              const suiAddress = target && (target as Moi & { suiAddress?: string }).suiAddress
+              if (suiAddress) await requestIum({ toUser: suiAddress })
             }
             return { accepted: true }
           }),
         },
       }),
-    [requestIum],
+    [requestIum, pool],
   )
   const [state, send] = useMachine(machine)
+
+  // 온체인 발견 유저가 로드되면 머신의 pool을 교체(queue도 재빌드).
+  useEffect(() => {
+    if (discoveredUsers.length > 0) {
+      send({ type: 'SET_POOL', pool: discoveredUsers })
+    }
+  }, [discoveredUsers, send])
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
 
   const {

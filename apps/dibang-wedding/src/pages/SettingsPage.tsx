@@ -96,6 +96,16 @@ export function SettingsPage() {
       <div className="rounded-xl border border-line bg-white p-5 mb-4">
         <p className="text-sm text-muted mb-1">{t('settings.currentLogin')}</p>
         <p className="text-lg font-semibold text-navy">{userName}</p>
+        {zk.address && (
+          <button
+            type="button"
+            onClick={() => { navigator.clipboard.writeText(zk.address!); send({ type: 'SHOW_TOAST', msg: '주소 복사됨' }); }}
+            className="mt-2 w-full rounded-lg bg-gray-50 px-3 py-2 text-left"
+          >
+            <p className="text-xs text-muted">Sui 지갑 주소</p>
+            <p className="break-all text-xs font-mono text-navy">{zk.address}</p>
+          </button>
+        )}
       </div>
 
       {/* 디방인연 대표 사진 — 전 화면 공통(프로필·이음 신청·채팅). 업로드=축소 data URL 저장. */}

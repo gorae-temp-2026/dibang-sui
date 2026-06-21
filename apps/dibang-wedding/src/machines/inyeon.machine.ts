@@ -8,6 +8,7 @@ import { POOL, PHOTO_COST, START_YONE, DM_COST, INCOMING, seedDm, DM_AUTO_REPLY 
 export type InyeonScreen = 'universe' | 'received' | 'chat' | 'me'
 
 export interface InyeonContext {
+  pool: Moi[]
   queue: number[]
   photoIdx: Record<number, number>
   unlocked: Record<number, boolean>
@@ -42,11 +43,10 @@ export interface InyeonContext {
   dms: Record<number, DmMsg[]>
 }
 
-const moiById = (id: number): Moi | undefined => POOL.find((m) => m.id === id)
-/** 대화방 메시지 시드(없으면 seedDm로 채움) — 진입·전송 어느 쪽이든 동일 보장. */
+const moiById = (pool: Moi[], id: number): Moi | undefined => pool.find((m) => m.id === id)
 const seedIfAbsent = (dms: Record<number, DmMsg[]>, id: number): Record<number, DmMsg[]> =>
   dms[id] ? dms : { ...dms, [id]: seedDm() }
-const buildQueue = (lo: number, hi: number) => POOL.filter((m) => m.deg >= lo && m.deg <= hi).map((m) => m.id)
+const buildQueue = (pool: Moi[], lo: number, hi: number) => pool.filter((m) => m.deg >= lo && m.deg <= hi).map((m) => m.id)
 
 export const inyeonMachine = setup({
   types: {} as {
@@ -63,6 +63,7 @@ export const inyeonMachine = setup({
       | { type: 'DISMISS_MATCH' }
       | { type: 'SET_FILTER'; degMin: number; degMax: number }
       | { type: 'RESET_DECK' }
+      | { type: 'SET_POOL'; pool: Moi[] }
       | { type: 'ACCEPT_REQ'; moiId: number }
       | { type: 'DECLINE_REQ'; moiId: number }
       // 오버레이/시트 네비
@@ -97,7 +98,8 @@ export const inyeonMachine = setup({
 }).createMachine({
   id: 'inyeon',
   context: {
-    queue: buildQueue(1, 6),
+    pool: POOL,
+    queue: buildQueue(POOL, 1, 6),
     photoIdx: {},
     unlocked: {},
     yone: START_YONE,
@@ -135,13 +137,20 @@ export const inyeonMachine = setup({
       actions: assign({
         degMin: ({ event }) => event.degMin,
         degMax: ({ event }) => event.degMax,
-        queue: ({ event }) => buildQueue(event.degMin, event.degMax),
+        queue: ({ context, event }) => buildQueue(context.pool, event.degMin, event.degMax),
         photoIdx: () => ({}),
       }),
     },
     RESET_DECK: {
       actions: assign({
-        queue: ({ context }) => buildQueue(context.degMin, context.degMax),
+        queue: ({ context }) => buildQueue(context.pool, context.degMin, context.degMax),
+        photoIdx: () => ({}),
+      }),
+    },
+    SET_POOL: {
+      actions: assign({
+        pool: ({ event }) => event.pool,
+        queue: ({ event, context }) => buildQueue(event.pool, context.degMin, context.degMax),
         photoIdx: () => ({}),
       }),
     },
@@ -149,7 +158,7 @@ export const inyeonMachine = setup({
       actions: assign({
         photoIdx: ({ context, event }) => {
           if (event.type !== 'PHOTO_NAV') return context.photoIdx
-          const m = moiById(event.id)
+          const m = moiById(context.pool, event.id)
           if (!m) return context.photoIdx
           const len = m.photos.length
           const cur = context.photoIdx[event.id] ?? 0
@@ -205,7 +214,7 @@ export const inyeonMachine = setup({
     OPEN_DM_ROOM: {
       actions: assign(({ context, event }) => {
         if (event.type !== 'OPEN_DM_ROOM') return {}
-        const m = moiById(event.id)
+        const m = moiById(context.pool, event.id)
         if (!m) return {}
         if (context.chatOpen[event.id]) {
           return { dmRoomId: event.id, dms: seedIfAbsent(context.dms, event.id), error: null }

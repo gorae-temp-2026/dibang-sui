@@ -2,7 +2,7 @@
  * zkLogin 인증 Provider.
  *
  * Google 로그인으로 Sui 주소를 쓰게 하는 zkLogin 흐름을 React 컨텍스트로 감싼다.
- * sui-sdk의 zklogin 유틸을 사용한다. 트랜잭션 가스는 sponsor 서비스가 대납한다.
+ * sui-sdk의 zklogin 유틸을 사용한다. 가스비는 유저 본인 SUI로 직접 지불.
  *
  * 주의: 실제 로그인 완료(OAuth → ZK prover → 서명)는 실 Google OAuth client id와
  * 실행 중인 ZK prover가 있어야 동작한다. 미설정 시 login()은 안내만 한다.
@@ -19,7 +19,6 @@ import {
   fetchZkProof,
   zkLoginAddress,
   buildZkLoginSignature,
-  sponsoredExecute,
   executeAndAssert,
   ephemeralKeypairFromSession,
   loadSession,
@@ -27,7 +26,6 @@ import {
   clearSession,
   type SuiNetwork,
   type ZkLoginSession,
-  type ZkProofInputs,
 } from '@gorae/sui-sdk'
 import { env } from '../env'
 
@@ -131,25 +129,33 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     if (!jwt || !pendingRaw) return false
 
     const pending = JSON.parse(pendingRaw) as PendingLogin
-    const saltServerUrl = env.VITE_SALT_SERVER_URL
-    if (!saltServerUrl) throw new Error('VITE_SALT_SERVER_URL 미설정')
-
-    const salt = await fetchSalt(jwt, saltServerUrl)
-    const address = zkLoginAddress(jwt, salt)
-
-    // ZK 증명 조회 (prover 설정 시). 없으면 주소까지만 — 트랜잭션 서명은 prover 필요.
-    let proofInputs: ZkProofInputs | undefined
     const proverUrl = env.VITE_ZK_PROVER_URL
-    if (proverUrl) {
-      const kp = Ed25519Keypair.fromSecretKey(pending.ephemeralSecretKey)
-      proofInputs = await fetchZkProof({
-        jwt,
-        salt,
-        ephemeralPublicKey: kp.getPublicKey(),
-        maxEpoch: pending.maxEpoch,
-        randomness: pending.randomness,
-        proverUrl,
-      })
+    if (!proverUrl) throw new Error('VITE_ZK_PROVER_URL 미설정')
+
+    const kp = Ed25519Keypair.fromSecretKey(pending.ephemeralSecretKey)
+    const proofResult = await fetchZkProof({
+      jwt,
+      salt: '',
+      ephemeralPublicKey: kp.getPublicKey(),
+      maxEpoch: pending.maxEpoch,
+      randomness: pending.randomness,
+      proverUrl,
+      enokiApiKey: env.VITE_ENOKI_API_KEY,
+      network: env.VITE_SUI_NETWORK ?? 'testnet',
+    })
+
+    // Enoki가 addressSeed를 돌려주면 그걸로 주소 계산(Go salt 서버 불필요).
+    const addressSeed = (proofResult as { addressSeed?: string }).addressSeed
+    let address: string
+    if (addressSeed) {
+      const { computeZkLoginAddressFromSeed, decodeJwt: decodeJwtDynamic } = await import('@mysten/sui/zklogin')
+      const claims = decodeJwtDynamic(jwt)
+      address = computeZkLoginAddressFromSeed(BigInt(addressSeed), claims.iss!, false)
+    } else {
+      const saltServerUrl = env.VITE_SALT_SERVER_URL
+      if (!saltServerUrl) throw new Error('VITE_SALT_SERVER_URL 미설정')
+      const salt = await fetchSalt(jwt, saltServerUrl)
+      address = zkLoginAddress(jwt, salt)
     }
 
     const next: ZkLoginSession = {
@@ -157,9 +163,9 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       maxEpoch: pending.maxEpoch,
       randomness: pending.randomness,
       jwt,
-      salt,
+      salt: '',
       address,
-      proofInputs,
+      proofInputs: proofResult,
     }
     saveSession(next)
     sessionStorage.removeItem(PENDING_KEY)
@@ -184,31 +190,28 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       }
       if (!session) throw new Error('zkLogin 세션 없음 — 먼저 로그인하세요')
       if (!session.proofInputs) throw new Error('ZK 증명 없음 — VITE_ZK_PROVER_URL 설정 필요')
-      const sponsorUrl = env.VITE_SPONSOR_URL
-      if (!sponsorUrl) throw new Error('VITE_SPONSOR_URL 미설정 — 가스 대납 불가')
 
       const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
       const client = createJsonRpcClient(network)
       const ephemeral = ephemeralKeypairFromSession(session)
-      const proofInputs = session.proofInputs
 
-      const res = await sponsoredExecute({
-        client,
-        transaction: tx,
-        senderAddress: session.address,
-        sponsorUrl,
-        // ephemeral 서명을 zkLogin 서명으로 감싼다.
-        signUserTransaction: async (bytes) => {
-          const { signature } = await ephemeral.signTransaction(bytes)
-          return buildZkLoginSignature({
-            proofInputs,
-            maxEpoch: session.maxEpoch,
-            userSignature: signature,
-            salt: session.salt,
-            jwt: session.jwt,
-          })
-        },
+      tx.setSender(session.address)
+      const built = await tx.build({ client })
+      const { signature: ephSig } = await ephemeral.signTransaction(built)
+      const zkSig = buildZkLoginSignature({
+        proofInputs: session.proofInputs,
+        maxEpoch: session.maxEpoch,
+        userSignature: ephSig,
+        salt: session.salt,
+        jwt: session.jwt,
       })
+      const res = await client.executeTransactionBlock({
+        transactionBlock: built,
+        signature: zkSig,
+        options: { showEffects: true, showObjectChanges: true },
+      })
+      const status = res.effects?.status?.status
+      if (status !== 'success') throw new Error(`트랜잭션 실패: ${res.effects?.status?.error ?? status}`)
       return res.digest
     },
     [session, devKeypair],

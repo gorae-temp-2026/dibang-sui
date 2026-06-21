@@ -19,7 +19,6 @@ import {
   fetchZkProof,
   zkLoginAddress,
   buildZkLoginSignature,
-  sponsoredExecute,
   executeAndAssert,
   ephemeralKeypairFromSession,
   loadSession,
@@ -122,6 +121,8 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
         maxEpoch: pending.maxEpoch,
         randomness: pending.randomness,
         proverUrl,
+        enokiApiKey: env.VITE_ENOKI_API_KEY,
+        network: env.VITE_SUI_NETWORK ?? 'testnet',
       })
     }
 
@@ -170,31 +171,28 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       }
       if (!session) throw new Error('zkLogin 세션 없음 — 먼저 로그인하세요')
       if (!session.proofInputs) throw new Error('ZK 증명 없음 — VITE_ZK_PROVER_URL 설정 필요')
-      const sponsorUrl = env.VITE_SPONSOR_URL
-      if (!sponsorUrl) throw new Error('VITE_SPONSOR_URL 미설정 — 가스 대납 불가')
 
       const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
       const client = createJsonRpcClient(network)
       const ephemeral = ephemeralKeypairFromSession(session)
-      const proofInputs = session.proofInputs
 
-      const res = await sponsoredExecute({
-        client,
-        transaction: tx,
-        senderAddress: session.address,
-        sponsorUrl,
-        // ephemeral 서명을 zkLogin 서명으로 감싼다.
-        signUserTransaction: async (bytes) => {
-          const { signature } = await ephemeral.signTransaction(bytes)
-          return buildZkLoginSignature({
-            proofInputs,
-            maxEpoch: session.maxEpoch,
-            userSignature: signature,
-            salt: session.salt,
-            jwt: session.jwt,
-          })
-        },
+      tx.setSender(session.address)
+      const built = await tx.build({ client })
+      const { signature: ephSig } = await ephemeral.signTransaction(built)
+      const zkSig = buildZkLoginSignature({
+        proofInputs: session.proofInputs,
+        maxEpoch: session.maxEpoch,
+        userSignature: ephSig,
+        salt: session.salt,
+        jwt: session.jwt,
       })
+      const res = await client.executeTransactionBlock({
+        transactionBlock: built,
+        signature: zkSig,
+        options: { showEffects: true, showObjectChanges: true },
+      })
+      const status = res.effects?.status?.status
+      if (status !== 'success') throw new Error(`트랜잭션 실패: ${res.effects?.status?.error ?? status}`)
       return res.digest
     },
     [session, devKeypair],

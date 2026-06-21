@@ -27,7 +27,7 @@ export const env = createEnv({
     VITE_GOOGLE_CLIENT_ID: z.string().optional(),
     VITE_SALT_SERVER_URL: z.string().url().optional(),
     VITE_ZK_PROVER_URL: z.string().url().optional(),
-    VITE_SPONSOR_URL: z.string().url().optional(),
+    VITE_ENOKI_API_KEY: z.string().optional(),
     // [DEV] 헤드리스 테스트용 dev 지갑 비밀키(suiprivkey…). import.meta.env.DEV에서만 사용.
     VITE_DEV_PRIVATE_KEY: z.string().optional(),
   },
