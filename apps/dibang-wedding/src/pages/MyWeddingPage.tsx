@@ -9,6 +9,7 @@ import { useCopyToClipboard } from '@gorae/web-utils';
 import { WeddingCard } from '../components/my-wedding/WeddingCard';
 import { AddCard } from '../components/my-wedding/AddCard';
 import { AddHostSection } from '../components/my-wedding/AddHostSection';
+import { WithdrawSection } from '../components/my-wedding/WithdrawSection';
 // [데모 전용·비활성] '우리 결혼식 누가 올까' DeFi 하객예측 카드 — 제품 기능 아님(데모 영상 전용).
 // 촬영 시 이 import + upcomingWedding + 렌더 3곳을 함께 주석 해제(T14).
 // import { DefiTeaserCard } from '../components/my-wedding/DefiTeaserCard';
@@ -119,6 +120,7 @@ export function MyWeddingPage() {
                       onShareInvite={handleShareInvite}
                     />
                     <AddHostSection weddingId={wedding.sui_wedding_id} />
+                    <WithdrawSection weddingId={wedding.sui_wedding_id} vaultId={wedding.sui_vault_id} />
                   </div>
                 );
               })}
