@@ -26,6 +26,7 @@ import { OnboardingConsentPage } from './pages/OnboardingConsentPage'
 // import { NetworkPage } from './pages/NetworkPage'
 import { SignalGuidePage } from './pages/SignalGuidePage'
 import { MoiCreditGuidePage } from './pages/MoiCreditGuidePage'
+import { TrustGraphPage } from './pages/TrustGraphPage'
 import { OnboardingGate } from './components/OnboardingGate'
 import { isDevBypass } from './dev/devBypass' // DEV 전용 로그인 우회(프로덕션 import.meta.env.DEV=false로 제거)
 
@@ -50,6 +51,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
+      <Route path="/trust-graph" element={<TrustGraphPage />} />
       <Route path="/onboarding/consent" element={<AuthGuard><OnboardingConsentPage /></AuthGuard>} />
       <Route element={<AuthGuard><OnboardingGate><MainLayout /></OnboardingGate></AuthGuard>}>
         <Route path="/inyeon" element={<InyeonPage />} />
