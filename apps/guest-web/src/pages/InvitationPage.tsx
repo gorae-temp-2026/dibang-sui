@@ -329,12 +329,15 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
     const suiLoungeId = invitation?.lounge_preview?.sui_lounge_id;
     if (isAuthenticated && suiLoungeId) {
       try {
+        // u8 코드 매핑(§1-6): slot 0~5 · attendance attending=0/absent=1 · meal yes=0/no=1/undecided=2.
+        const slotCode = { groom: 0, bride: 1, groom_father: 2, groom_mother: 3, bride_father: 4, bride_mother: 5 }[recipientSlot] ?? 0;
+        const mealCode = { yes: 0, no: 1, undecided: 2 }[formData.meal] ?? 2;
         await submitRsvp({
           loungeId: suiLoungeId,
-          recipientSlot,
-          attendance: formData.attendance === '참석' ? 'attending' : 'absent',
+          recipientSlot: slotCode,
+          attendance: formData.attendance === '참석' ? 0 : 1,
           companionCount: formData.companion,
-          meal: formData.meal,
+          meal: mealCode,
         });
       } catch (e) {
         console.error('[온체인] submitRsvp 실패 — Supabase는 유지:', e);

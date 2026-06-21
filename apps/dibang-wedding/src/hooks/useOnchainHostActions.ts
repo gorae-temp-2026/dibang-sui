@@ -21,12 +21,13 @@ import {
   buildMintItemTx,
   buildEquipItemTx,
   buildUnequipItemTx,
-  buildCreateIumTx,
-  buildRevokeIumTx,
+  buildRequestIumTx,
+  buildAcceptIumTx,
   type WithdrawParams,
   type MintItemParams,
   type UnequipItemParams,
-  type CreateIumParams,
+  type RequestIumParams,
+  type AcceptIumParams,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 
@@ -81,14 +82,14 @@ export function useOnchainHostActions() {
     [executeOnchain, requireAddress],
   )
 
-  // === Ium 신뢰관계 ===
-  const createIum = useCallback(
-    (p: Omit<CreateIumParams, 'owner'>) =>
-      executeOnchain(buildCreateIumTx({ ...p, owner: requireAddress() })),
-    [executeOnchain, requireAddress],
+  // === Ium 인연 매칭 (2단계 합의: 신청 request_ium → 상대가 수락 accept_ium) ===
+  // relationType·label(PII)은 온체인에 안 보낸다(결정#2) — 오프체인 저장.
+  const requestIum = useCallback(
+    (p: RequestIumParams) => executeOnchain(buildRequestIumTx(p)),
+    [executeOnchain],
   )
-  const revokeIum = useCallback(
-    (p: { iumId: string }) => executeOnchain(buildRevokeIumTx(p)),
+  const acceptIum = useCallback(
+    (p: AcceptIumParams) => executeOnchain(buildAcceptIumTx(p)),
     [executeOnchain],
   )
 
@@ -101,7 +102,7 @@ export function useOnchainHostActions() {
     mintItem,
     equipItem,
     unequipItem,
-    createIum,
-    revokeIum,
+    requestIum,
+    acceptIum,
   }
 }

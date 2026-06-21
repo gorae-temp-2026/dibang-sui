@@ -11,7 +11,7 @@ import { useZkLogin } from '../providers/ZkLoginProvider';
  * 둘 다 dev 서명/zkLogin으로 온체인 발행한다.
  */
 export function NetworkPage() {
-  const { createMoi, createIum } = useOnchainHostActions();
+  const { createMoi, requestIum } = useOnchainHostActions();
   const { isAuthenticated, address } = useZkLogin();
 
   const [moiResult, setMoiResult] = useState('');
@@ -36,18 +36,20 @@ export function NetworkPage() {
     }
   }, [createMoi]);
 
-  const handleCreateIum = useCallback(async () => {
+  // 인연 매칭 = 2단계 합의. 여기선 *신청*(request_ium) — 상대가 수락(accept_ium)하면 매칭 확정.
+  // relationType·label은 오프체인 메모(온체인 미전송, 결정#2). 오프체인 저장 연동은 후속.
+  const handleRequestIum = useCallback(async () => {
     setIumBusy(true);
-    setIumResult('Ium 발행 중...');
+    setIumResult('이음 신청 중...');
     try {
-      const digest = await createIum({ toUser: toUser.trim(), relationType, label: label.trim() });
-      setIumResult(`✅ Ium 발행 완료 · digest ${digest}`);
+      const digest = await requestIum({ toUser: toUser.trim() });
+      setIumResult(`✅ 이음 신청 완료 (상대 수락 대기) · digest ${digest}`);
     } catch (e) {
       setIumResult(`❌ ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setIumBusy(false);
     }
-  }, [createIum, toUser, relationType, label]);
+  }, [requestIum, toUser]);
 
   if (!isAuthenticated) {
     return <div className="mx-auto max-w-xl p-8 text-center text-gray-500">로그인이 필요합니다.</div>;
@@ -76,10 +78,12 @@ export function NetworkPage() {
         {moiResult && <p className="mt-3 break-all text-sm">{moiResult}</p>}
       </section>
 
-      {/* C11-2: Ium 신뢰관계 */}
+      {/* C11-2: Ium 인연 매칭 (2단계 합의: 신청→수락) */}
       <section className="rounded-xl border border-gray-200 p-5">
-        <h2 className="text-lg font-semibold">신뢰관계 (Ium)</h2>
-        <p className="mt-1 text-sm text-gray-500">상대를 향한 신뢰관계를 온체인에 기록합니다.</p>
+        <h2 className="text-lg font-semibold">인연 매칭 (이음)</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          상대에게 이음을 신청합니다. 상대가 수락하면 매칭 확정 = 양방향 신뢰(CS) 신호. (관계유형·라벨은 오프체인.)
+        </p>
         <div className="mt-3 space-y-2">
           <input
             value={toUser}
@@ -101,11 +105,11 @@ export function NetworkPage() {
           />
         </div>
         <button
-          onClick={handleCreateIum}
+          onClick={handleRequestIum}
           disabled={iumBusy || !toUser.trim()}
           className="mt-3 rounded-lg bg-navy px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {iumBusy ? '발행 중…' : 'Ium 생성'}
+          {iumBusy ? '신청 중…' : '이음 신청'}
         </button>
         {iumResult && <p className="mt-3 break-all text-sm">{iumResult}</p>}
       </section>

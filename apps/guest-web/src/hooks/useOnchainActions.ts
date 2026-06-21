@@ -1,66 +1,36 @@
 // ⚠️ TRANSITIONAL(전환기) — 아키텍처 의도: 온체인(Sui) = 신뢰/Wedding SSOT, DB(Go/Supabase)는 보조.
-// 게스트 온체인 쓰기를 DB 흐름과 dual-write하는 건 *전환기*일 뿐 "DB 우선" 아님. 목표(미완): 앱 온체인-읽기 이관.
 // 상세: CLAUDE.md 상단 SSOT 배너 / _architecture/SUI_CONTRACT_DESIGN_DIRECTION §SSOT 선언.
 /**
- * 게스트 온체인 액션 훅.
+ * 게스트 온체인 액션 훅 (RSVP 한정).
  *
- * 기존 Supabase/API 흐름을 온체인으로 전환하는 진입점. 각 액션은 @gorae/sui-sdk 빌더로
- * PTB를 만들고, ZkLoginProvider.executeOnchain(zkLogin 서명 + sponsor 가스 대납)으로 실행한다.
- * 하객은 지갑·SUI 없이 Google 로그인만으로 온체인에 기록한다.
+ * cutover(2026-06-21): 새 컨트랙트의 부조(give)·방명록(write)은 하객 *Participation*(온체인 신원, 참가-먼저)을
+ * 요구한다. guest-web은 §2(비로그인 익명 전환 퍼널)라 그 흐름이 없으므로 **온체인 give/write를 여기서 하지 않는다**
+ * — 로그인 본체(dibang-wedding)에서 Participation을 갖고 수행한다. RSVP는 이벤트 발행만이라(participation 불요)
+ * 여기 유지한다. (단 guest-web이 zkLogin/executeOnchain을 갖는 것 자체의 §2 정합은 별도 과제 — _audit/2026-06-21-sdk-contract-drift.)
  */
 import { useCallback } from 'react'
-import { buildWriteEntryTx, buildSendGiftTx, buildSubmitRsvpTx } from '@gorae/sui-sdk'
+import { buildSubmitRsvpTx } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-
-export interface WriteGuestbookInput {
-  loungeId: string
-  guestName: string
-  message: string
-}
-
-export interface SendCashGiftInput {
-  vaultId: string
-  /** MIST 단위. */
-  amount: bigint
-  guestName: string
-  recipientSlot: string
-  relationCategory: string
-}
 
 export interface SubmitRsvpInput {
   loungeId: string
-  recipientSlot: string
-  attendance: string
+  /** u8(§1-6): groom=0·bride=1·groom_father=2·groom_mother=3·bride_father=4·bride_mother=5. */
+  recipientSlot: number
+  /** u8: attending=0, absent=1. */
+  attendance: number
   companionCount: number
-  meal: string
+  /** u8: yes=0, no=1, undecided=2. */
+  meal: number
 }
 
 export function useOnchainActions() {
-  const { address, executeOnchain } = useZkLogin()
-
-  const writeGuestbook = useCallback(
-    async (input: WriteGuestbookInput): Promise<string> => {
-      if (!address) throw new Error('zkLogin 로그인이 필요합니다')
-      return executeOnchain(buildWriteEntryTx({ ...input, owner: address }))
-    },
-    [address, executeOnchain],
-  )
-
-  const sendCashGift = useCallback(
-    async (input: SendCashGiftInput): Promise<string> => {
-      if (!address) throw new Error('zkLogin 로그인이 필요합니다')
-      return executeOnchain(buildSendGiftTx({ ...input, owner: address }))
-    },
-    [address, executeOnchain],
-  )
+  const { executeOnchain } = useZkLogin()
 
   const submitRsvp = useCallback(
-    async (input: SubmitRsvpInput): Promise<string> => {
-      // RSVP는 이벤트만 발행(오브젝트 없음) — owner 불필요.
-      return executeOnchain(buildSubmitRsvpTx(input))
-    },
+    // RSVP는 이벤트만 발행(오브젝트·participation 불요).
+    async (input: SubmitRsvpInput): Promise<string> => executeOnchain(buildSubmitRsvpTx(input)),
     [executeOnchain],
   )
 
-  return { writeGuestbook, sendCashGift, submitRsvp }
+  return { submitRsvp }
 }
