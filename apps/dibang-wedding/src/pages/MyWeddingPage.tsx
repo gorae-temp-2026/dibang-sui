@@ -6,7 +6,9 @@ import type { WeddingSummary } from '@gorae/contracts';
 import { useCopyToClipboard } from '@gorae/web-utils';
 import { WeddingCard } from '../components/my-wedding/WeddingCard';
 import { AddCard } from '../components/my-wedding/AddCard';
-import { DefiTeaserCard } from '../components/my-wedding/DefiTeaserCard';
+// [데모 전용·비활성] '우리 결혼식 누가 올까' DeFi 하객예측 카드 — 제품 기능 아님(데모 영상 전용).
+// 촬영 시 이 import + upcomingWedding + 렌더 3곳을 함께 주석 해제(T14).
+// import { DefiTeaserCard } from '../components/my-wedding/DefiTeaserCard';
 import { getGuestWebOrigin } from '../lib/external-urls';
 import { useT } from '../lib/i18n';
 
@@ -26,7 +28,8 @@ export function MyWeddingPage() {
   }, []);
 
   const weddingList = Array.isArray(weddings) ? weddings : [];
-  const upcomingWedding = weddingList.find((w) => w.status === 'active');
+  // [데모 전용·비활성] DeFi 티저 카드용 — 촬영 시 주석 해제(T14).
+  // const upcomingWedding = weddingList.find((w) => w.status === 'active');
   const guestWebOrigin = getGuestWebOrigin();
   // window.location.origin은 SPA mount 후 호출이라 브라우저 보장. SSR 가드만 추가.
   // (UI/데이터 분리 라운드 3 A2: HostSlotSectionContainer에 prop으로 흘려보냄)
@@ -113,7 +116,9 @@ export function MyWeddingPage() {
         </div>
       )}
 
-      {upcomingWedding && <DefiTeaserCard groomName={upcomingWedding.groom_name} brideName={upcomingWedding.bride_name} />}
+      {/* [데모 전용·비활성] '우리 결혼식, 누가 올까' — MOI CREDIT·하객 예측(예상 하객·예상 축의금·내 Moi Credit·
+          무담보 웨딩 대출 Sui 티저·예상 한도). 제품 기능 아님 = 데모 영상 전용. 촬영 시 import·upcomingWedding과 함께 주석 해제(T14).
+      {upcomingWedding && <DefiTeaserCard groomName={upcomingWedding.groom_name} brideName={upcomingWedding.bride_name} />} */}
 
       {copyToast && (
         <div className="fixed bottom-24 left-4 right-4 z-50 flex justify-center pointer-events-none">
