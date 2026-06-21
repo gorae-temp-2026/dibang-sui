@@ -3,7 +3,7 @@
  * 온체인 이벤트(SignalEmitted + Participated + IumAccepted)로 구성.
  * 우측 세로 타임라인 슬라이더 + 노드 클릭 프로필 패널.
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 import { createJsonRpcClient, getSignalEvents, getParticipatedEvents, getMoiCreatedEvents, getIumAcceptedEvents, configureSui, type SuiNetwork } from '@gorae/sui-sdk'
 import { env } from '../env'
@@ -46,7 +46,7 @@ export function TrustGraphPage() {
   const [iumMap, setIumMap] = useState<Map<string, string[]>>(new Map())
   const [timeRange, setTimeRange] = useState<[number, number]>([0, Date.now()])
   const [sliderValue, setSliderValue] = useState(100)
-  const [selectedNode, setSelectedNode] = useState<GNode | null>(null)
+  const [selectedNode, setSelectedNode] = useState<(GNode & { screenX?: number; screenY?: number }) | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -151,7 +151,16 @@ export function TrustGraphPage() {
     )
   }
 
+  const graphRef = useRef<any>(null)
   const tsLabel = new Date(currentMaxTs).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const handleNodeClick = useCallback((node: GNode & { x?: number; y?: number }) => {
+    if (graphRef.current && node.x != null && node.y != null) {
+      const coords = graphRef.current.graph2ScreenCoords(node.x, node.y)
+      setSelectedNode({ ...node, screenX: coords.x, screenY: coords.y })
+    } else {
+      setSelectedNode(node)
+    }
+  }, [])
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#0A1626]">
@@ -168,12 +177,12 @@ export function TrustGraphPage() {
       </div>
 
       {/* 상단 이벤트 로그 */}
-      <div className="absolute left-1/2 top-4 z-10 w-[340px] -translate-x-1/2 rounded-xl bg-black/60 backdrop-blur">
+      <div className="absolute left-1/2 top-4 z-10 w-[520px] -translate-x-1/2 rounded-xl bg-black/60 backdrop-blur">
         <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
           <span className="text-[11px] font-bold text-white/70">이벤트 로그</span>
           <span className="text-[9px] text-white/40">{eventLog.length}건 (최근 50)</span>
         </div>
-        <div className="max-h-[120px] overflow-y-auto px-2 py-1">
+        <div className="max-h-[200px] overflow-y-auto px-2 py-1">
           {eventLog.length === 0 ? (
             <p className="py-2 text-center text-[10px] text-white/30">이벤트 없음</p>
           ) : (
@@ -207,9 +216,21 @@ export function TrustGraphPage() {
         <span className="text-[9px] text-white/40">초기</span>
       </div>
 
-      {/* 노드 클릭 프로필 패널 */}
+      {/* 바깥 클릭 닫기 오버레이 */}
       {selectedNode && (
-        <div className="absolute bottom-4 left-4 z-10 w-80 rounded-xl bg-black/70 p-4 backdrop-blur">
+        <div className="absolute inset-0 z-[9]" onClick={() => setSelectedNode(null)} />
+      )}
+
+      {/* 노드 클릭 프로필 패널 — 좌하단 꼭지점이 노드 위에 */}
+      {selectedNode && (
+        <div
+          className="absolute z-10 w-72 rounded-xl bg-black/80 p-4 backdrop-blur"
+          style={{
+            left: (selectedNode.screenX ?? 100),
+            top: (selectedNode.screenY ?? 100) - 8,
+            transform: 'translateY(-100%)',
+          }}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full" style={{ background: `hsl(${selectedNode.hue}, 60%, 55%)` }} />
@@ -250,11 +271,12 @@ export function TrustGraphPage() {
 
       {/* 그래프 */}
       <ForceGraph2D
+        ref={graphRef}
         graphData={{ nodes, links }}
         width={typeof window !== 'undefined' ? window.innerWidth : 800}
         height={typeof window !== 'undefined' ? window.innerHeight : 600}
         backgroundColor="#0A1626"
-        onNodeClick={(node: GNode) => setSelectedNode(node)}
+        onNodeClick={handleNodeClick}
         nodeColor={(n: GNode) => selectedNode?.id === n.id ? '#F8C57A' : `hsl(${n.hue}, 60%, 55%)`}
         nodeVal={(n: GNode) => Math.max(2, n.signalCount + 1)}
         linkColor={(l: GLink) => l.kind.includes('EM') ? '#D4687A' : l.kind.includes('CS') ? '#5B89B3' : 'rgba(255,255,255,0.12)'}
