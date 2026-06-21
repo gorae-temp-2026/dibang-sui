@@ -24,7 +24,6 @@ export const env = createEnv({
     // Sui 온체인 (선택 — 미설정 시 @gorae/sui-sdk testnet 기본값)
     VITE_SUI_NETWORK: z.enum(['testnet', 'mainnet', 'devnet']).optional(),
     VITE_SUI_PACKAGE_ID: z.string().optional(),
-    VITE_SUI_IUM_REGISTRY_ID: z.string().optional(),
     VITE_GOOGLE_CLIENT_ID: z.string().optional(),
     VITE_SALT_SERVER_URL: z.string().url().optional(),
     VITE_ZK_PROVER_URL: z.string().url().optional(),

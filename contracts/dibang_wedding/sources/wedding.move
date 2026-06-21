@@ -32,6 +32,8 @@ const EVaultAlreadySet: u64 = 4;
 const EWrongEvent: u64 = 5;
 /// 초대는 혼주(HOST 역할)만 가능.
 const ENotHost: u64 = 6;
+/// 공동 혼주 추가(add_host)는 primary_host만 가능 — Cap(=인출권) 무제한 확산 차단.
+const ENotPrimaryHost: u64 = 7;
 
 // === Structs ===
 
@@ -104,10 +106,13 @@ public fun create_wedding(clock: &Clock, ctx: &mut TxContext): WeddingCap {
 }
 
 /// 공동 혼주 추가 = 새 `WeddingCap`을 발행해 `new_host`에게 전달한다(§1-5: 권위 = Cap 소지).
-/// 주소 allowlist를 저장하지 않는다 — 공동혼주는 곧 Cap 보유자다. 호출자는 이 결혼식의 유효한 Cap 소지자여야 한다.
-/// (시빌: 누구나 자기 alts에 Cap을 늘려도 raw일 뿐 — 신뢰는 Φ가 거른다. §8.)
+/// 주소 allowlist를 저장하지 않는다 — 공동혼주는 곧 Cap 보유자다.
+/// **primary_host(생성자)만 호출 가능**(ENotPrimaryHost): WeddingCap은 모금함 인출권을 주므로(cash_gift::withdraw),
+/// 공동혼주가 또 add_host로 Cap을 무한 번지면 인출권이 통제 불능으로 확산된다. primary 게이트로 발행 주체를 1명으로
+/// 묶어 그 확산을 차단한다(opus 적대 리뷰 HIGH). cap은 결혼식 링크 증명용.
 public fun add_host(wedding: &Wedding, cap: &WeddingCap, new_host: address, ctx: &mut TxContext) {
     assert!(cap.wedding_id == object::id(wedding), EWrongCap);
+    assert!(ctx.sender() == wedding.primary_host, ENotPrimaryHost);
     let new_cap = WeddingCap { id: object::new(ctx), wedding_id: object::id(wedding) };
     transfer::public_transfer(new_cap, new_host);
     event::emit(HostAdded { wedding_id: object::id(wedding), host: new_host });
@@ -294,6 +299,29 @@ fun add_host_issues_cap() {
     scenario.next_tx(@0xB);
     let cap_b = scenario.take_from_sender<WeddingCap>();
     assert_eq!(cap_b.wedding_id, wid);
+    scenario.return_to_sender(cap_b);
+    scenario.end();
+}
+
+#[test, expected_failure(abort_code = ENotPrimaryHost)]
+fun add_host_by_non_primary_fails() {
+    let mut scenario = ts::begin(HOST);
+    new_wedding_for_test(&mut scenario);
+
+    // primary(HOST)가 @0xB를 공동혼주로 추가 → @0xB가 Cap 수령.
+    scenario.next_tx(HOST);
+    let wedding = scenario.take_shared<Wedding>();
+    let cap = scenario.take_from_sender<WeddingCap>();
+    add_host(&wedding, &cap, @0xB, scenario.ctx());
+    ts::return_shared(wedding);
+    scenario.return_to_sender(cap);
+
+    // @0xB(비-primary)가 자기 Cap으로 또 add_host 시도 → ENotPrimaryHost(인출권 확산 차단).
+    scenario.next_tx(@0xB);
+    let wedding2 = scenario.take_shared<Wedding>();
+    let cap_b = scenario.take_from_sender<WeddingCap>();
+    add_host(&wedding2, &cap_b, @0xC, scenario.ctx());
+    ts::return_shared(wedding2);
     scenario.return_to_sender(cap_b);
     scenario.end();
 }

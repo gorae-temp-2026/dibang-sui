@@ -14,10 +14,10 @@ export interface SuiContractConfig {
   packageId: string;
 }
 
-/** testnet 배포 기본값 (2026-06-21 cutover — 신뢰그래프+신호 컨트랙트, digest 84fwKgkth...). 구 0x6bb8(구 API) 대체. */
+/** testnet 배포 기본값 (2026-06-21 cutover — 신뢰그래프+신호+add_host primary 게이트, digest CEhq5tz1...). 구 0x6bb8 대체. */
 export const TESTNET_CONFIG: SuiContractConfig = {
   network: 'testnet',
-  packageId: '0x9c9b4bda0e4a548246ea67fbf129d80592f5c41e1ed8c6ff59c767bf5f96748e',
+  packageId: '0x258e9a29572e4a3729257299a85cda52f8415c25b92d7576b863fb3d9b0731ee',
 };
 
 let activeConfig: SuiContractConfig = { ...TESTNET_CONFIG };

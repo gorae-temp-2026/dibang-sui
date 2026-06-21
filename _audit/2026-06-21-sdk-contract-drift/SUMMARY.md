@@ -54,7 +54,9 @@ SDK 빌더는 **현재 배포된 canonical 패키지 `0x6bb8`(구 API)와 일치
 - 구 하네스 `test-testnet.ts`도 같은 드리프트(컴파일조차 안 됨 — buildCreateWeddingTx에 groomName 전달) → 정렬 시 함께 재작성/폐기.
 
 ## ✅ CUTOVER 완료 (2026-06-21) — 드리프트 해소
-"한 번에" 지시로 일괄 진행. C1(Cap-per-host)·C2(u8 enum) 컨트랙트 구조 정리 + 새 canonical 배포(`0x9c9b…748e`, 구 0x6bb8 대체) + SDK 구빌더 제거·신빌더 정렬 + 앱 호출부(dibang ium 2-step, guest-web give/write 제거·rsvp u8) 정렬. 커밋 c5d4b10·195a1d1·11dc3a6·67fcbdc·184e718.
+"한 번에" 지시로 일괄 진행. C1(Cap-per-host)·C2(u8 enum) 컨트랙트 구조 정리 + 새 canonical 배포 + SDK 구빌더 제거·신빌더 정렬 + 앱 호출부(dibang ium 2-step, guest-web give/write 제거·rsvp u8) 정렬. 커밋 c5d4b10·195a1d1·11dc3a6·67fcbdc·184e718.
+- **최종 canonical = `0x258e9a29…31ee`** (digest CEhq5tz1). 1차 배포(0x9c9b)에 opus 적대 리뷰 HIGH(add_host가 인출권 무제한 확산)를 반영해 **add_host를 primary_host 전용 게이트**로 고친 뒤 재배포한 결과다. 구 0x6bb8 → (0x9c9b) → 0x258e.
+- **opus cutover 리뷰 4건 전부 반영:** HIGH(add_host primary 게이트, 재배포) · MEDIUM(test-sponsor.ts 시그니처 정렬 / .env.testnet.sui 패키지ID·IumRegistry 갱신) · LOW(ZkLoginProvider·env.ts 죽은 iumRegistryId 제거).
 - **검증:** Move 49/49 · SDK·양앱 tsc 0 · 양앱 build OK · testnet e2e(새 pkg, 4종 신호+읽기층) · **라이브 앱**(dev-bypass→NetworkPage→이음 신청→request_ium 성공, digest `8tBP92ES…`).
 - **★ 교훈(다음 cutover 필수):** 앱 패키지ID는 `constants.ts` 기본값이 아니라 **`.env`의 `VITE_SUI_PACKAGE_ID`**가 startup `configureSui`로 주입한다(`.env`→`.env.localhost` 심링크, gitignore). .env 교체 + **dev 서버 재시작**해야 새 패키지가 먹는다(Vite는 .env HMR 안 함). 안 그러면 구 패키지로 가 `FunctionNotFound`.
 - **남은 §2 과제:** guest-web이 zkLogin/executeOnchain을 갖는 것 자체의 §2(익명 퍼널) 정합은 별도(이번 cutover는 give/write만 제거, RSVP·zkLogin 유지).
