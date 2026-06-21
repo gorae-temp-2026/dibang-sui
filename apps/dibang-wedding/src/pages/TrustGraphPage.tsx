@@ -128,6 +128,21 @@ export function TrustGraphPage() {
 
   const iumPartners = selectedNode ? (iumMap.get(selectedNode.id) ?? []) : []
 
+  const eventLog = useMemo(() => {
+    const addr = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`
+    return rawEdges
+      .filter((e) => e.ts <= currentMaxTs)
+      .sort((a, b) => b.ts - a.ts)
+      .slice(0, 50)
+      .map((e) => ({
+        time: new Date(e.ts).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        from: addr(e.from),
+        to: addr(e.to),
+        kind: e.kind,
+        value: e.value,
+      }))
+  }, [rawEdges, currentMaxTs])
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0A1626]">
@@ -149,6 +164,31 @@ export function TrustGraphPage() {
           <span className="text-[#D4687A]">● EM(부조)</span>
           <span className="text-[#5B89B3]">● CS(유대)</span>
           <span className="text-white/40">● 참가</span>
+        </div>
+      </div>
+
+      {/* 상단 이벤트 로그 */}
+      <div className="absolute left-1/2 top-4 z-10 w-[340px] -translate-x-1/2 rounded-xl bg-black/60 backdrop-blur">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+          <span className="text-[11px] font-bold text-white/70">이벤트 로그</span>
+          <span className="text-[9px] text-white/40">{eventLog.length}건 (최근 50)</span>
+        </div>
+        <div className="max-h-[120px] overflow-y-auto px-2 py-1">
+          {eventLog.length === 0 ? (
+            <p className="py-2 text-center text-[10px] text-white/30">이벤트 없음</p>
+          ) : (
+            eventLog.map((e, i) => (
+              <div key={i} className="flex items-center gap-1.5 py-0.5 text-[9px]">
+                <span className="flex-shrink-0 text-white/30">{e.time}</span>
+                <span className="text-white/60">{e.from}</span>
+                <span className="text-white/30">→</span>
+                <span className="text-white/60">{e.to}</span>
+                <span className={`ml-auto flex-shrink-0 font-bold ${e.kind.includes('EM') ? 'text-[#D4687A]' : e.kind.includes('CS') ? 'text-[#5B89B3]' : 'text-white/30'}`}>
+                  {e.kind} {e.value > 1 ? e.value : ''}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
