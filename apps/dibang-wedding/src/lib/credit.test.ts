@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { creditFromSignals, KIND, type SignalEvent } from './credit'
 
 // 온체인에서 분류된 신호(signal::SignalEmitted)를 흉내. 분류는 온체인 몫이므로 테스트는 신호를 직접 준다.
-const busu = (from: string, to: string, magnitude: number): SignalEvent => ({ kind: KIND.BUSU, from, to, magnitude })
-const cs = (from: string, to: string): SignalEvent => ({ kind: KIND.CS, from, to, magnitude: 1 })
+// source: 부조=GIVE_MONEY(0), CS 기본=WRITE_MESSAGE(4) — signal.move 미러.
+const busu = (from: string, to: string, magnitude: number): SignalEvent => ({ kind: KIND.BUSU, source: 0, from, to, magnitude })
+const cs = (from: string, to: string, source = 4): SignalEvent => ({ kind: KIND.CS, source, from, to, magnitude: 1 })
 
 describe('creditFromSignals (신뢰→신용 · 온체인 분류 신호 집계)', () => {
   it('부조: 베푼 쪽이 적립, 기여 몫에 비례 (reversed-giving)', () => {

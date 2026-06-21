@@ -304,6 +304,8 @@ export async function getParticipatedEvents(client: SuiJsonRpcClient): Promise<P
 export interface SignalQuery {
   eventId: string;
   kind: number;
+  /** 원천 행위(action_type / 참석=5 / 매칭=2) — 오프체인 행위별 CS 차등 가중용. */
+  source: number;
   from: string;
   to: string;
   magnitude: number;
@@ -317,6 +319,7 @@ export async function getSignalEvents(client: SuiJsonRpcClient): Promise<SignalQ
     return {
       eventId: asString(p.event_id),
       kind: asNumber(p.kind),
+      source: asNumber(p.source),
       from: asString(p.from),
       to: asString(p.to),
       magnitude: asNumber(p.magnitude),
