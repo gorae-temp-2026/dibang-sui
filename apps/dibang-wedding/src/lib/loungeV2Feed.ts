@@ -96,6 +96,16 @@ export function computeWarmth(items: FeedItem[]): number {
   return Math.min(WARMTH_CAP, Math.round(t * 10) / 10);
 }
 
+/** 온기 °  → 단일축 단계(1~WARMTH_STEPS). 모이가모인곳 공간 링·밝기가 단계로 반응.
+ *  시드 38.6° → 3단계. (정밀 °는 KPI 텍스트, 공간·밝기는 단계로.) */
+export function warmthStep(value: number): number {
+  if (value < 37.5) return 1;
+  if (value < 38.5) return 2;
+  if (value < 39.5) return 3;
+  if (value < 40.5) return 4;
+  return WARMTH_STEPS;
+}
+
 /** 스토리 뷰어/피드 카드 본문 텍스트 추출.
  *  Memory: data.text 우선(domain split 후 신규 도메인) / LIVE 축하메세지: data.message / Announcement: data.message.
  *  하트 전용 __HEART__는 표시 안 함. */

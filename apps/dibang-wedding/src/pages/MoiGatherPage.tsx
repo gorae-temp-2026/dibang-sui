@@ -15,6 +15,10 @@ import { POOL } from '../components/inyeon/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import type { ProfileData } from '../components/profile/types'
 import { profileForPersonaId, makeGuestProfile, plazaPartnerIds, chulsooPlazaProfile } from '../components/profile/personaProfiles'
+import { warmthStep } from '../lib/loungeV2Feed'
+
+// 데모 시드 온기(라운지 38.6°) → 단일축 단계. 실시간 풀 계산은 로드맵(핸드오프).
+const PLAZA_WARMTH_STEP = warmthStep(38.6)
 
 // 모이 색 → 사진 placeholder hue (실사진 전).
 function colorToHue(hex: number): number {
@@ -118,6 +122,7 @@ export function MoiGatherPage() {
           onMoiClick={setProfileMoiId}
           onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
           partnersOf={plazaPartnerIds}
+          warmthStep={PLAZA_WARMTH_STEP}
         />
 
         {/* 조작 힌트 */}

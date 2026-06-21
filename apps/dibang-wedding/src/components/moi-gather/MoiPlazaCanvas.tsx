@@ -70,13 +70,16 @@ interface Props {
   onMovePlaced: (itemId: string, x: number, y: number) => void
   /** 광장 ego — 모이 id → 광장에서 이어진 상대 스프라이트 id 목록(하이라이트·이음 선). */
   partnersOf: (id: string) => string[]
+  /** 우리의 온기 단계(1~N) — 공간 링·바닥 글로우가 단계로 확장(단일축 단계식). */
+  warmthStep?: number
 }
 
-export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlaced, partnersOf }: Props) {
+export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlaced, partnersOf, warmthStep = 3 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const onMoiClickRef = useRef(onMoiClick)
   const onMoveRef = useRef(onMovePlaced)
   const partnersOfRef = useRef(partnersOf)
+  const warmthStepRef = useRef(warmthStep)
   const placedRef = useRef(placed)
   const equippedRef = useRef(equipped)
   const crowdRef = useRef(crowd)
@@ -85,6 +88,7 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
     onMoiClickRef.current = onMoiClick
     onMoveRef.current = onMovePlaced
     partnersOfRef.current = partnersOf
+    warmthStepRef.current = warmthStep
     placedRef.current = placed
     equippedRef.current = equipped
     crowdRef.current = crowd
@@ -117,13 +121,15 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
       a.stage.addChild(world)
       const floor = new Graphics()
       world.addChild(floor)
-      drawPlaza(floor)
-      // 바닥 따뜻한 ambient glow (광장 중앙).
-      const glow = new Sprite(radialTex(512, 'rgba(255,238,205,0.55)', 'rgba(255,238,205,0)'))
+      const wStep = warmthStepRef.current
+      drawPlaza(floor, wStep)
+      // 바닥 따뜻한 ambient glow — 우리의 온기 단계로 크기·밝기 확장(단일축 단계식).
+      const glow = new Sprite(radialTex(512, 'rgba(255,238,205,0.6)', 'rgba(255,238,205,0)'))
       glow.anchor.set(0.5)
       glow.position.set(PLAZA_W / 2, PLAZA_H * 0.42)
-      glow.width = PLAZA_W * 1.25
-      glow.height = PLAZA_H * 1.05
+      glow.width = PLAZA_W * (0.85 + wStep * 0.13)
+      glow.height = PLAZA_H * (0.7 + wStep * 0.11)
+      glow.alpha = Math.min(1, 0.5 + wStep * 0.1)
       glow.eventMode = 'none'
       world.addChild(glow)
       // ego 하이라이트 FX(모이 아래) — 이음 선 + 상대 glow. 레이어 alpha로 페이드.
@@ -494,7 +500,7 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
 }
 
 // ─ 기본 흰 바닥(풀블리드) + 45° 부감 느낌 옅은 그리드 ─
-function drawPlaza(g: Graphics) {
+function drawPlaza(g: Graphics, warmthStep = 3) {
   g.clear()
   g.rect(0, 0, PLAZA_W, PLAZA_H).fill(FLOOR)
   for (let i = 1; i < 10; i++) {
@@ -504,5 +510,11 @@ function drawPlaza(g: Graphics) {
   for (let j = 1; j < 12; j++) {
     const y = (PLAZA_H * j) / 12
     g.moveTo(0, y).lineTo(PLAZA_W, y).stroke({ color: 0x1e3a5f, alpha: 0.03, width: 2 })
+  }
+  // 우리의 온기 단계 링 — 한 단계↑ = 동심원 한 링 확장(공간이 단계로 넓어짐).
+  const cx = PLAZA_W / 2
+  const cy = PLAZA_H * 0.5
+  for (let i = 1; i <= warmthStep; i++) {
+    g.circle(cx, cy, PLAZA_W * 0.13 * i).stroke({ color: 0xe0a23a, alpha: 0.05 + i * 0.012, width: 3 })
   }
 }
