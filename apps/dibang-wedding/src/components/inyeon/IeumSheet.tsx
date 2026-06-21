@@ -1,8 +1,9 @@
 // 이음 신청 시트 — 폼은 "한마디(주관식)"만 + 미리보기(내 대표사진·이름·한마디). 신청 자체 무료.
 // 이음 신청 = 내 이름·관계를 먼저 공개(기능정의 §1·§4). 미리보기 사진 = 디방인연 대표사진(Setting 설정).
-import { Loader2, Share2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet'
 import type { Moi } from './types'
+import { IeumIcon } from './icons'
 import { useT } from '../../lib/i18n'
 import { useInyeonProfile } from '../../stores/inyeonProfile'
 
@@ -66,7 +67,7 @@ export function IeumSheet({ open, message, sending, error, onMessage, onSend, on
           disabled={sending || !message.trim()}
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#1E3A5F] to-[#2d6a9e] py-4 text-[14.5px] font-extrabold text-white disabled:opacity-40"
         >
-          {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Share2 className="h-5 w-5" />}
+          {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <IeumIcon className="h-5 w-5" />}
           {sending ? t('ieum.sending') : t('inyeon.ieum')}
         </button>
       </SheetContent>

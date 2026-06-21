@@ -1,14 +1,17 @@
 // 디방인연 우측 세로 네비 레일(irail) — 목업(.irail) 규격: 우하단(right:12·bottom) 플로팅,
 // 독립 버튼(박스 래퍼 없음) 50px·radius 15·19px 아이콘·8px 라벨, 다크 "유니버스" 톤.
 // 기능정의 §0: 유니버스(피드)·받은이음·채팅·프로필. 네비라 상시 노출.
-import { Globe, Inbox, MessageCircle, User } from 'lucide-react'
+import type { ComponentType } from 'react'
+import { Globe, MessageCircle, User } from 'lucide-react'
 import type { InyeonScreen } from '../../machines/inyeon.machine'
+import { ReceivedIcon } from './icons'
 import { useT } from '../../lib/i18n'
 import { cn } from '../../lib/utils'
 
-const ITEMS: { key: InyeonScreen; tkey: string; Icon: typeof Globe }[] = [
+// 받은이음 = 목업 심볼 i-inbox 복원(나머지는 lucide).
+const ITEMS: { key: InyeonScreen; tkey: string; Icon: ComponentType<{ className?: string; strokeWidth?: number }> }[] = [
   { key: 'universe', tkey: 'inyeon.rail.universe', Icon: Globe },
-  { key: 'received', tkey: 'inyeon.rail.received', Icon: Inbox },
+  { key: 'received', tkey: 'inyeon.rail.received', Icon: ReceivedIcon },
   { key: 'chat', tkey: 'inyeon.rail.chat', Icon: MessageCircle },
   { key: 'me', tkey: 'inyeon.rail.me', Icon: User },
 ]

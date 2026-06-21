@@ -180,7 +180,7 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
           </button>
           <h2 className="text-[16px] font-extrabold text-white">{showDetail ? `${name} · 프로필` : '프로필'}</h2>
         </header>
-        <div className="flex-1 overflow-y-auto px-4 pb-24 pt-3">{body}</div>
+        <div className="scrollbar-hide flex-1 overflow-y-auto px-4 pb-24 pt-3">{body}</div>
       </motion.div>
     )
   }
