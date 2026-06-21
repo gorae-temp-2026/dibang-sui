@@ -128,6 +128,16 @@ export function TrustGraphPage() {
 
   const iumPartners = selectedNode ? (iumMap.get(selectedNode.id) ?? []) : []
 
+  const graphRef = useRef<any>(null)
+  const handleNodeClick = useCallback((node: GNode & { x?: number; y?: number }) => {
+    if (graphRef.current && node.x != null && node.y != null) {
+      const coords = graphRef.current.graph2ScreenCoords(node.x, node.y)
+      setSelectedNode({ ...node, screenX: coords.x, screenY: coords.y })
+    } else {
+      setSelectedNode(node)
+    }
+  }, [])
+
   const eventLog = useMemo(() => {
     const addr = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`
     return rawEdges
@@ -151,16 +161,7 @@ export function TrustGraphPage() {
     )
   }
 
-  const graphRef = useRef<any>(null)
   const tsLabel = new Date(currentMaxTs).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-  const handleNodeClick = useCallback((node: GNode & { x?: number; y?: number }) => {
-    if (graphRef.current && node.x != null && node.y != null) {
-      const coords = graphRef.current.graph2ScreenCoords(node.x, node.y)
-      setSelectedNode({ ...node, screenX: coords.x, screenY: coords.y })
-    } else {
-      setSelectedNode(node)
-    }
-  }, [])
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#0A1626]">
