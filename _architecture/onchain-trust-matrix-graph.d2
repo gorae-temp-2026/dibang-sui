@@ -1,0 +1,162 @@
+# 디방 웨딩 Move 컨트랙트 — struct ↔ 주요 public function 관계도
+# 생성: d2 onchain-trust-matrix-graph.d2 onchain-trust-matrix-graph.svg
+direction: right
+
+classes: {
+  fn: { shape: hexagon; style: { fill: "#E8F5E9"; stroke: "#2E7D32" } }
+  obj: { shape: sql_table; style: { fill: "#E3F2FD"; stroke: "#1565C0" } } # 공유/소유 오브젝트(key)
+  sbt: { shape: sql_table; style: { fill: "#FFF3E0"; stroke: "#E65100" } } # soulbound(key-only, 이전불가)
+  val: { shape: sql_table; style: { fill: "#F3E5F5"; stroke: "#6A1B9A" } } # 값타입/이벤트
+}
+
+legend: 범례 {
+  near: top-left
+  obj: "■ obj = 오브젝트(key, shared/owned)" { class: obj }
+  sbt: "■ sbt = soulbound(key-only)" { class: sbt }
+  val: "■ val = 값타입/이벤트" { class: val }
+  fn: "⬡ public fn" { class: fn }
+}
+
+# ─────────────── 1층: 영수증·원천 ───────────────
+signal: "signal — 분류(온체인 SSOT)" {
+  Signal: { class: val; kind: u8; resource_id: u8; source: u8; "from→to": address; magnitude: u64 }
+  SignalEmitted: { class: val; note: "인덱서/credit.ts 입력" }
+  project_action: "project_action() →[Signal]" { class: fn }
+  match_signals: "match_signals() →[Signal]x2" { class: fn }
+  attendance_signals: "attendance_signals() →[Signal]" { class: fn }
+  emit_signals: "emit_signals()" { class: fn }
+}
+
+ledger: "ledger — 보편 액션 원장" {
+  ActionRecord: { class: sbt; action_type: u8; actor: address; target: "Option<addr>"; amount: u64; signals: "[Signal]" }
+  log: "log() [package]" { class: fn }
+}
+
+event: "event — 방향의 원천" {
+  Event: { class: obj; event_type: u8; creator: address }
+  Participation: { class: sbt; event_id: ID; participant: address; role_id: u8 }
+  new_event: "new_event()" { class: fn }
+  participate: "participate()" { class: fn }
+  assign_role: "assign_role()" { class: fn }
+  mint_participation_for: "mint_participation_for() [pkg]" { class: fn }
+}
+
+# ─────────────── 2·3층: 온체인 집계 ───────────────
+trust_matrix: "trust_matrix — 타입별 신뢰망 행렬" {
+  TrustMatrix: { class: obj; kind: u8; resource_id: u8; nodes: "[address]"; give: "VecMap N×N"; pi: "VecMap(π)" }
+  new_matrix: "new_matrix()" { class: fn }
+  apply_classified: "apply_classified()" { class: fn }
+  apply_signal: "apply_signal() → propagate" { class: fn }
+}
+
+trust_registry: "trust_registry — 타입→매트릭스 라우팅" {
+  TrustRegistry: { class: obj; matrices: "VecMap<u16, ID>" }
+  bootstrap: "bootstrap()" { class: fn }
+  add_matrix: "add_matrix()" { class: fn }
+  matrix_id: "matrix_id() (view)" { class: fn }
+}
+
+edge_balance: "edge_balance — per-pair 잔액" {
+  EdgeBalance: { class: obj; p0: address; p1: address; balances: "VecMap<u16,DirPair>" }
+  DirPair: { class: val; p0_to_p1: u64; p1_to_p0: u64 }
+  create_edge: "create_edge()" { class: fn }
+  record: "record()" { class: fn }
+}
+
+fixed_point: "fixed_point — 1e9 고정소수" {
+  fp_mul: "fp_mul / fp_div" { class: fn }
+}
+
+# ─────────────── 도메인 ───────────────
+wedding: "wedding — 결혼식 익명 앵커" {
+  Wedding: { class: obj; event_id: ID; primary_host: address; vault_id: "Option<ID>" }
+  WeddingCap: { class: obj; wedding_id: ID }
+  WeddingLounge: { class: obj; wedding_id: ID }
+  create_wedding: "create_wedding()" { class: fn }
+  add_host: "add_host()" { class: fn }
+  invite: "invite()" { class: fn }
+  set_vault: "set_vault() [pkg]" { class: fn }
+}
+
+cash_gift: "cash_gift — 축의금" {
+  CashGiftVault: { class: obj; wedding_id: ID; balance: "Balance<SUI>" }
+  create_vault: "create_vault()" { class: fn }
+  give: "give() (부조)" { class: fn }
+  withdraw: "withdraw()" { class: fn }
+}
+
+guestbook: "guestbook" {
+  write: "write() (방명록)" { class: fn }
+}
+
+gift: "gift" {
+  gift_fn: "gift() (선물)" { class: fn }
+}
+
+ium: "ium — 이음(인연 매칭)" {
+  IumRequest: { class: obj; event_id: ID; initiator: address }
+  request_ium: "request_ium()" { class: fn }
+  accept_ium: "accept_ium()" { class: fn }
+}
+
+moi: "moi — 아바타/아이템" {
+  Moi: { class: obj; owner: address; equipped: "VecMap" }
+  MoiItem: { class: obj; name; item_type; slot }
+  create_moi: "create_moi()" { class: fn }
+  mint_item: "mint_item / purchase_item" { class: fn }
+  equip_item: "equip_item / unequip_item" { class: fn }
+}
+
+rsvp: "rsvp — 참석응답" {
+  RsvpSubmitted: { class: val; note: "event만(객체X)" }
+  submit_rsvp: "submit_rsvp()" { class: fn }
+}
+
+# ════════════ 관계: 생성/변경 (fn → struct) ════════════
+event.new_event -> event.Event: shares
+event.new_event -> event.Participation: mints
+event.participate -> event.Participation: mints
+event.assign_role -> event.Participation: mints
+ium.accept_ium -> event.mint_participation_for: gate
+event.mint_participation_for -> event.Participation: mints
+ledger.log -> ledger.ActionRecord: mints(soulbound)
+trust_matrix.new_matrix -> trust_matrix.TrustMatrix: creates
+trust_registry.bootstrap -> trust_registry.TrustRegistry: creates
+trust_registry.bootstrap -> trust_matrix.new_matrix: "EM·CS x2"
+trust_registry.add_matrix -> trust_matrix.new_matrix: new type
+edge_balance.create_edge -> edge_balance.EdgeBalance: creates
+edge_balance.EdgeBalance -> edge_balance.DirPair: holds
+wedding.create_wedding -> wedding.Wedding: shares
+wedding.create_wedding -> wedding.WeddingCap: mints
+wedding.create_wedding -> wedding.WeddingLounge: shares
+wedding.add_host -> wedding.WeddingCap: mints
+cash_gift.create_vault -> cash_gift.CashGiftVault: creates
+cash_gift.create_vault -> wedding.set_vault: link
+cash_gift.give -> cash_gift.CashGiftVault: deposit
+ium.request_ium -> ium.IumRequest: creates
+moi.create_moi -> moi.Moi: creates
+moi.mint_item -> moi.MoiItem: creates
+moi.equip_item -> moi.Moi: mutates
+rsvp.submit_rsvp -> rsvp.RsvpSubmitted: emits
+
+# ════════════ 관계: 핵심 배선 (액션 → 원장 → 분류 → 매트릭스) ════════════
+wedding.create_wedding -> event.new_event: "Event 생성"
+ium.request_ium -> event.new_event: "INYEON Event"
+cash_gift.give -> ledger.log: GIVE_MONEY
+guestbook.write -> ledger.log: WRITE_MESSAGE
+wedding.invite -> ledger.log: INVITE
+gift.gift_fn -> ledger.log: GIFT
+gift.gift_fn -> moi.MoiItem: transfer
+ledger.log -> signal.project_action: 분류
+ledger.log -> signal.emit_signals: 발행
+signal.emit_signals -> signal.SignalEmitted: emit
+ledger.log -> trust_matrix.apply_classified: "★ 집계 배선"
+event.participate -> signal.attendance_signals: 참석CS
+event.participate -> trust_matrix.apply_classified: "★ 집계 배선"
+ium.accept_ium -> signal.match_signals: 매칭CS
+ium.accept_ium -> trust_matrix.apply_classified: "★ 집계 배선"
+trust_matrix.apply_classified -> trust_matrix.apply_signal: per-signal
+trust_matrix.apply_signal -> trust_matrix.TrustMatrix: fold+전파
+trust_matrix.apply_signal -> fixed_point.fp_mul: 전파 계산
+edge_balance.record -> trust_matrix.apply_signal: 엣지+매트릭스
+trust_registry.matrix_id -> trust_matrix.TrustMatrix: routes(read)
