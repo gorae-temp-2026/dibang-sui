@@ -1,5 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
+import { useMachine } from '@xstate/react';
+import { myWeddingMachine } from '../machines/myWedding.machine';
 import { useQuery } from '@tanstack/react-query';
 import { getMyWeddingsOptions } from '@gorae/contracts/@tanstack/react-query.gen';
 import type { WeddingSummary } from '@gorae/contracts';
@@ -14,13 +16,20 @@ export function MyWeddingPage() {
     ...getMyWeddingsOptions(),
     retry: false,
   });
-  const [copyToast, setCopyToast] = useState(false);
+  // 페이지 flow는 머신(myWedding): data(로딩 표시)·toast(복사 알림 자동닫힘).
+  const [state, send] = useMachine(myWeddingMachine);
+  const copyToast = state.matches({ toast: 'visible' });
   const { copy } = useCopyToClipboard();
 
+  // 목록 로딩 완료 → 머신 data축 동기.
+  useEffect(() => {
+    if (!isLoading) send({ type: 'LOAD_DONE' });
+  }, [isLoading, send]);
+
+  // 복사 성공 → 머신 toast축(2초 자동닫힘은 머신 after 타이머).
   const showCopyToast = useCallback(() => {
-    setCopyToast(true);
-    setTimeout(() => setCopyToast(false), 2000);
-  }, []);
+    send({ type: 'COPY_DONE' });
+  }, [send]);
 
   const weddingList = Array.isArray(weddings) ? weddings : [];
   const guestWebOrigin = getGuestWebOrigin();
@@ -75,11 +84,11 @@ export function MyWeddingPage() {
         <h1 className="text-[28px] font-semibold text-navy">나의 결혼식</h1>
       </div>
 
-      {isLoading && (
+      {state.matches({ data: 'loading' }) && (
         <p className="text-base text-muted text-center py-8">불러오는 중...</p>
       )}
 
-      {!isLoading && (
+      {state.matches({ data: 'loaded' }) && (
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide px-4">
           {weddingList.length === 0 ? (
             <div className="shrink-0 w-[calc(100vw-2rem)] max-w-lg snap-center mx-auto">

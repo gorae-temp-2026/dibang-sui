@@ -32,7 +32,7 @@ func (q *Queries) DeleteInvitation(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getInvitationByID = `-- name: GetInvitationByID :one
-SELECT id, wedding_id, design_template_id, custom_message, visited_count, heart_count, gallery_photos, cover_image, cover_text_config, design_config, created_at, slug FROM v3_mobile_invitations WHERE id = $1
+SELECT id, wedding_id, design_template_id, custom_message, visited_count, heart_count, gallery_photos, cover_image, cover_text_config, design_config, created_at, slug, version FROM v3_mobile_invitations WHERE id = $1
 `
 
 func (q *Queries) GetInvitationByID(ctx context.Context, id pgtype.UUID) (V3MobileInvitation, error) {
@@ -51,12 +51,13 @@ func (q *Queries) GetInvitationByID(ctx context.Context, id pgtype.UUID) (V3Mobi
 		&i.DesignConfig,
 		&i.CreatedAt,
 		&i.Slug,
+		&i.Version,
 	)
 	return i, err
 }
 
 const getInvitationBySlug = `-- name: GetInvitationBySlug :one
-SELECT i.id, i.wedding_id, i.design_template_id, i.custom_message, i.visited_count, i.heart_count, i.gallery_photos, i.cover_image, i.cover_text_config, i.design_config, i.created_at, i.slug, w.groom_name, w.bride_name, w.date, w."time",
+SELECT i.id, i.wedding_id, i.design_template_id, i.custom_message, i.visited_count, i.heart_count, i.gallery_photos, i.cover_image, i.cover_text_config, i.design_config, i.created_at, i.slug, i.version, w.groom_name, w.bride_name, w.date, w."time",
        w.venue_name, w.venue_address, w.venue_hall,
        w.groom_father_name, w.groom_mother_name,
        w.bride_father_name, w.bride_mother_name,
@@ -83,6 +84,7 @@ type GetInvitationBySlugRow struct {
 	DesignConfig        []byte             `json:"design_config"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	Slug                string             `json:"slug"`
+	Version             int32              `json:"version"`
 	GroomName           string             `json:"groom_name"`
 	BrideName           string             `json:"bride_name"`
 	Date                pgtype.Date        `json:"date"`
@@ -122,6 +124,7 @@ func (q *Queries) GetInvitationBySlug(ctx context.Context, slug string) (GetInvi
 		&i.DesignConfig,
 		&i.CreatedAt,
 		&i.Slug,
+		&i.Version,
 		&i.GroomName,
 		&i.BrideName,
 		&i.Date,
@@ -164,7 +167,7 @@ func (q *Queries) IncrementHeartCount(ctx context.Context, slug string) (int32, 
 const insertInvitation = `-- name: InsertInvitation :one
 INSERT INTO v3_mobile_invitations (wedding_id, slug, design_template_id)
 VALUES ($1, $2, $3)
-RETURNING id, wedding_id, design_template_id, custom_message, visited_count, heart_count, gallery_photos, cover_image, cover_text_config, design_config, created_at, slug
+RETURNING id, wedding_id, design_template_id, custom_message, visited_count, heart_count, gallery_photos, cover_image, cover_text_config, design_config, created_at, slug, version
 `
 
 type InsertInvitationParams struct {
@@ -189,6 +192,7 @@ func (q *Queries) InsertInvitation(ctx context.Context, arg InsertInvitationPara
 		&i.DesignConfig,
 		&i.CreatedAt,
 		&i.Slug,
+		&i.Version,
 	)
 	return i, err
 }
@@ -230,9 +234,10 @@ SET design_template_id = COALESCE($2, design_template_id),
     gallery_photos = COALESCE(convert_from($4, 'UTF8')::jsonb, gallery_photos),
     cover_image = COALESCE($5, cover_image),
     cover_text_config = COALESCE(convert_from($6, 'UTF8')::jsonb, cover_text_config),
-    design_config = COALESCE(convert_from($7, 'UTF8')::jsonb, design_config)
-WHERE id = $1
-RETURNING id, wedding_id, design_template_id, custom_message, visited_count, heart_count, gallery_photos, cover_image, cover_text_config, design_config, created_at, slug
+    design_config = COALESCE(convert_from($7, 'UTF8')::jsonb, design_config),
+    version = version + 1
+WHERE id = $1 AND ($8 < 0 OR version = $8)
+RETURNING id, wedding_id, design_template_id, custom_message, visited_count, heart_count, gallery_photos, cover_image, cover_text_config, design_config, created_at, slug, version
 `
 
 type UpdateInvitationParams struct {
@@ -243,6 +248,7 @@ type UpdateInvitationParams struct {
 	CoverImage       pgtype.Text `json:"cover_image"`
 	CoverTextConfig  []byte      `json:"cover_text_config"`
 	DesignConfig     []byte      `json:"design_config"`
+	ExpectedVersion  interface{} `json:"expected_version"`
 }
 
 func (q *Queries) UpdateInvitation(ctx context.Context, arg UpdateInvitationParams) (V3MobileInvitation, error) {
@@ -254,6 +260,7 @@ func (q *Queries) UpdateInvitation(ctx context.Context, arg UpdateInvitationPara
 		arg.CoverImage,
 		arg.CoverTextConfig,
 		arg.DesignConfig,
+		arg.ExpectedVersion,
 	)
 	var i V3MobileInvitation
 	err := row.Scan(
@@ -269,6 +276,7 @@ func (q *Queries) UpdateInvitation(ctx context.Context, arg UpdateInvitationPara
 		&i.DesignConfig,
 		&i.CreatedAt,
 		&i.Slug,
+		&i.Version,
 	)
 	return i, err
 }

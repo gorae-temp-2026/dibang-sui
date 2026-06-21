@@ -25,7 +25,8 @@ export const loungeFeedMachine = setup({
     events: {} as LoungeFeedEvent,
   },
   guards: {
-    hasError: ({ context }) => context.errorMessage !== null,
+    // 새로고침 누적 실패 3회 이상 → 일시 오류가 아니라 error 상태로 격리(자동 무한재시도 방지).
+    maxRefreshFailsReached: ({ context }) => context.refreshAttempts >= 3,
   },
   actions: {
     setError: assign({
@@ -82,13 +83,19 @@ export const loungeFeedMachine = setup({
           target: "idle",
           actions: ["clearError", "resetRefreshAttempts"],
         },
-        REFRESH_ERROR: {
-          target: "idle",
-          actions: {
-            type: "setError",
-            params: ({ event }) => ({ error: event.error }),
+        REFRESH_ERROR: [
+          {
+            // 누적 실패 임계 초과 → error 상태로 격리(RETRY로만 복구)
+            guard: "maxRefreshFailsReached",
+            target: "error",
+            actions: { type: "setError", params: ({ event }) => ({ error: event.error }) },
           },
-        },
+          {
+            // 임계 미만 → idle 유지(다시 풀다운 새로고침 가능)
+            target: "idle",
+            actions: { type: "setError", params: ({ event }) => ({ error: event.error }) },
+          },
+        ],
       },
     },
 
@@ -97,7 +104,7 @@ export const loungeFeedMachine = setup({
       on: {
         RETRY: {
           target: "loading",
-          actions: "clearError",
+          actions: ["clearError", "resetRefreshAttempts"],
         },
       },
     },

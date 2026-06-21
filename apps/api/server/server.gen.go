@@ -9525,6 +9525,20 @@ func (response UpdateWedding404JSONResponse) VisitUpdateWeddingResponse(w http.R
 	return err
 }
 
+type UpdateWedding409JSONResponse struct{ ConflictJSONResponse }
+
+func (response UpdateWedding409JSONResponse) VisitUpdateWeddingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListCashGiftsRequestObject struct {
 	WeddingId WeddingId `json:"weddingId"`
 	Params    ListCashGiftsParams
@@ -10204,6 +10218,20 @@ func (response UpdateInvitation404JSONResponse) VisitUpdateInvitationResponse(w 
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateInvitation409JSONResponse struct{ ConflictJSONResponse }
+
+func (response UpdateInvitation409JSONResponse) VisitUpdateInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 	_, err := buf.WriteTo(w)
 	return err
 }

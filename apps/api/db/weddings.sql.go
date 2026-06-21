@@ -160,7 +160,7 @@ func (q *Queries) GetParticipatedWeddings(ctx context.Context, userID pgtype.UUI
 }
 
 const getWedding = `-- name: GetWedding :one
-SELECT id, status, host_groom_id, host_bride_id, host_groom_father_id, host_groom_mother_id, host_bride_father_id, host_bride_mother_id, groom_name, bride_name, groom_father_name, groom_mother_name, bride_father_name, bride_mother_name, groom_father_deceased, groom_mother_deceased, bride_father_deceased, bride_mother_deceased, date, time, venue_name, venue_address, venue_hall, groom_account, bride_account, groom_father_account, groom_mother_account, bride_father_account, bride_mother_account, created_at, sui_wedding_id, sui_vault_id FROM v3_weddings WHERE id = $1
+SELECT id, status, host_groom_id, host_bride_id, host_groom_father_id, host_groom_mother_id, host_bride_father_id, host_bride_mother_id, groom_name, bride_name, groom_father_name, groom_mother_name, bride_father_name, bride_mother_name, groom_father_deceased, groom_mother_deceased, bride_father_deceased, bride_mother_deceased, date, time, venue_name, venue_address, venue_hall, groom_account, bride_account, groom_father_account, groom_mother_account, bride_father_account, bride_mother_account, created_at, sui_wedding_id, sui_vault_id, version FROM v3_weddings WHERE id = $1
 `
 
 func (q *Queries) GetWedding(ctx context.Context, id pgtype.UUID) (V3Wedding, error) {
@@ -199,12 +199,13 @@ func (q *Queries) GetWedding(ctx context.Context, id pgtype.UUID) (V3Wedding, er
 		&i.CreatedAt,
 		&i.SuiWeddingID,
 		&i.SuiVaultID,
+		&i.Version,
 	)
 	return i, err
 }
 
 const getWeddingFull = `-- name: GetWeddingFull :one
-SELECT w.id, w.status, w.host_groom_id, w.host_bride_id, w.host_groom_father_id, w.host_groom_mother_id, w.host_bride_father_id, w.host_bride_mother_id, w.groom_name, w.bride_name, w.groom_father_name, w.groom_mother_name, w.bride_father_name, w.bride_mother_name, w.groom_father_deceased, w.groom_mother_deceased, w.bride_father_deceased, w.bride_mother_deceased, w.date, w.time, w.venue_name, w.venue_address, w.venue_hall, w.groom_account, w.bride_account, w.groom_father_account, w.groom_mother_account, w.bride_father_account, w.bride_mother_account, w.created_at, w.sui_wedding_id, w.sui_vault_id,
+SELECT w.id, w.status, w.host_groom_id, w.host_bride_id, w.host_groom_father_id, w.host_groom_mother_id, w.host_bride_father_id, w.host_bride_mother_id, w.groom_name, w.bride_name, w.groom_father_name, w.groom_mother_name, w.bride_father_name, w.bride_mother_name, w.groom_father_deceased, w.groom_mother_deceased, w.bride_father_deceased, w.bride_mother_deceased, w.date, w.time, w.venue_name, w.venue_address, w.venue_hall, w.groom_account, w.bride_account, w.groom_father_account, w.groom_mother_account, w.bride_father_account, w.bride_mother_account, w.created_at, w.sui_wedding_id, w.sui_vault_id, w.version,
        l.id AS lounge_id, l.name AS lounge_name, l.sui_lounge_id AS sui_lounge_id,
        gp.id AS gather_place_id,
        COALESCE((SELECT COUNT(*) FROM v3_lounge_check_ins ci
@@ -252,6 +253,7 @@ type GetWeddingFullRow struct {
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	SuiWeddingID        pgtype.Text        `json:"sui_wedding_id"`
 	SuiVaultID          pgtype.Text        `json:"sui_vault_id"`
+	Version             int32              `json:"version"`
 	LoungeID            pgtype.UUID        `json:"lounge_id"`
 	LoungeName          pgtype.Text        `json:"lounge_name"`
 	SuiLoungeID         pgtype.Text        `json:"sui_lounge_id"`
@@ -296,6 +298,7 @@ func (q *Queries) GetWeddingFull(ctx context.Context, id pgtype.UUID) (GetWeddin
 		&i.CreatedAt,
 		&i.SuiWeddingID,
 		&i.SuiVaultID,
+		&i.Version,
 		&i.LoungeID,
 		&i.LoungeName,
 		&i.SuiLoungeID,
@@ -328,7 +331,7 @@ INSERT INTO v3_weddings (
     convert_from($18, 'UTF8')::jsonb, convert_from($19, 'UTF8')::jsonb,
     convert_from($20, 'UTF8')::jsonb, convert_from($21, 'UTF8')::jsonb,
     $22, $23, $24, $25, $26, $27
-) RETURNING id, status, host_groom_id, host_bride_id, host_groom_father_id, host_groom_mother_id, host_bride_father_id, host_bride_mother_id, groom_name, bride_name, groom_father_name, groom_mother_name, bride_father_name, bride_mother_name, groom_father_deceased, groom_mother_deceased, bride_father_deceased, bride_mother_deceased, date, time, venue_name, venue_address, venue_hall, groom_account, bride_account, groom_father_account, groom_mother_account, bride_father_account, bride_mother_account, created_at, sui_wedding_id, sui_vault_id
+) RETURNING id, status, host_groom_id, host_bride_id, host_groom_father_id, host_groom_mother_id, host_bride_father_id, host_bride_mother_id, groom_name, bride_name, groom_father_name, groom_mother_name, bride_father_name, bride_mother_name, groom_father_deceased, groom_mother_deceased, bride_father_deceased, bride_mother_deceased, date, time, venue_name, venue_address, venue_hall, groom_account, bride_account, groom_father_account, groom_mother_account, bride_father_account, bride_mother_account, created_at, sui_wedding_id, sui_vault_id, version
 `
 
 type InsertWeddingParams struct {
@@ -425,6 +428,7 @@ func (q *Queries) InsertWedding(ctx context.Context, arg InsertWeddingParams) (V
 		&i.CreatedAt,
 		&i.SuiWeddingID,
 		&i.SuiVaultID,
+		&i.Version,
 	)
 	return i, err
 }
@@ -457,9 +461,10 @@ SET groom_name = COALESCE($2, groom_name),
     host_groom_father_id = COALESCE($25, host_groom_father_id),
     host_groom_mother_id = COALESCE($26, host_groom_mother_id),
     host_bride_father_id = COALESCE($27, host_bride_father_id),
-    host_bride_mother_id = COALESCE($28, host_bride_mother_id)
-WHERE id = $1
-RETURNING id, status, host_groom_id, host_bride_id, host_groom_father_id, host_groom_mother_id, host_bride_father_id, host_bride_mother_id, groom_name, bride_name, groom_father_name, groom_mother_name, bride_father_name, bride_mother_name, groom_father_deceased, groom_mother_deceased, bride_father_deceased, bride_mother_deceased, date, time, venue_name, venue_address, venue_hall, groom_account, bride_account, groom_father_account, groom_mother_account, bride_father_account, bride_mother_account, created_at, sui_wedding_id, sui_vault_id
+    host_bride_mother_id = COALESCE($28, host_bride_mother_id),
+    version = version + 1
+WHERE id = $1 AND ($29 < 0 OR version = $29)
+RETURNING id, status, host_groom_id, host_bride_id, host_groom_father_id, host_groom_mother_id, host_bride_father_id, host_bride_mother_id, groom_name, bride_name, groom_father_name, groom_mother_name, bride_father_name, bride_mother_name, groom_father_deceased, groom_mother_deceased, bride_father_deceased, bride_mother_deceased, date, time, venue_name, venue_address, venue_hall, groom_account, bride_account, groom_father_account, groom_mother_account, bride_father_account, bride_mother_account, created_at, sui_wedding_id, sui_vault_id, version
 `
 
 type UpdateWeddingInfoParams struct {
@@ -491,6 +496,7 @@ type UpdateWeddingInfoParams struct {
 	HostGroomMotherID   pgtype.UUID `json:"host_groom_mother_id"`
 	HostBrideFatherID   pgtype.UUID `json:"host_bride_father_id"`
 	HostBrideMotherID   pgtype.UUID `json:"host_bride_mother_id"`
+	ExpectedVersion     interface{} `json:"expected_version"`
 }
 
 func (q *Queries) UpdateWeddingInfo(ctx context.Context, arg UpdateWeddingInfoParams) (V3Wedding, error) {
@@ -523,6 +529,7 @@ func (q *Queries) UpdateWeddingInfo(ctx context.Context, arg UpdateWeddingInfoPa
 		arg.HostGroomMotherID,
 		arg.HostBrideFatherID,
 		arg.HostBrideMotherID,
+		arg.ExpectedVersion,
 	)
 	var i V3Wedding
 	err := row.Scan(
@@ -558,6 +565,7 @@ func (q *Queries) UpdateWeddingInfo(ctx context.Context, arg UpdateWeddingInfoPa
 		&i.CreatedAt,
 		&i.SuiWeddingID,
 		&i.SuiVaultID,
+		&i.Version,
 	)
 	return i, err
 }

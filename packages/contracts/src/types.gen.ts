@@ -189,6 +189,10 @@ export type Wedding = {
     invitations: Array<InvitationSummary>;
     created_at: string;
     /**
+     * 낙관잠금 버전. 수정 시 UpdateWeddingRequest.version에 그대로 실어 보낸다.
+     */
+    version?: number;
+    /**
      * 온체인 Wedding 오브젝트 ID (dual-write, 미발행 시 null).
      */
     sui_wedding_id?: string | null;
@@ -254,6 +258,10 @@ export type CreateWeddingRequest = {
 export type UpdateWeddingRequest = {
     info?: WeddingInfo;
     hosts?: HostSlots;
+    /**
+     * 낙관잠금: 클라이언트가 마지막으로 받은 version. 서버 version과 다르면 409 conflict.
+     */
+    version?: number;
 };
 
 export type Invitation = {
@@ -269,6 +277,10 @@ export type Invitation = {
     design_config?: DesignConfig;
     slug: string;
     created_at: string;
+    /**
+     * 낙관잠금 버전. 수정 시 UpdateInvitationRequest.version에 실어 보낸다.
+     */
+    version?: number;
 };
 
 export type InvitationSummary = {
@@ -292,6 +304,10 @@ export type InvitationPublic = {
     visited_count: number;
     heart_count: number;
     lounge_preview: LoungePreview;
+    /**
+     * 낙관잠금 버전. 호스트 수정 시 UpdateInvitationRequest.version에 실어 보낸다.
+     */
+    version?: number;
 };
 
 export type CoverTextConfig = {
@@ -493,6 +509,10 @@ export type UpdateInvitationRequest = {
     cover_image?: string;
     cover_text_config?: CoverTextConfig;
     design_config?: DesignConfig;
+    /**
+     * 낙관잠금: 클라이언트가 마지막으로 받은 version. 서버 version과 다르면 409 conflict.
+     */
+    version?: number;
 };
 
 export type HeartResponse = {
@@ -1694,6 +1714,10 @@ export type UpdateWeddingErrors = {
      * Not Found
      */
     404: ProblemDetail;
+    /**
+     * Conflict
+     */
+    409: ProblemDetail;
 };
 
 export type UpdateWeddingError = UpdateWeddingErrors[keyof UpdateWeddingErrors];
@@ -1893,6 +1917,10 @@ export type UpdateInvitationErrors = {
      * Not Found
      */
     404: ProblemDetail;
+    /**
+     * Conflict
+     */
+    409: ProblemDetail;
 };
 
 export type UpdateInvitationError = UpdateInvitationErrors[keyof UpdateInvitationErrors];

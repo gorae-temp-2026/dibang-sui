@@ -1,4 +1,7 @@
 import { useParams, useNavigate } from 'react-router';
+import { useEffect } from 'react';
+import { useMachine } from '@xstate/react';
+import { hostInviteAcceptMachine } from '../machines/hostInviteAccept.machine';
 import { useAuth } from '../providers/AuthContext';
 import { useGetHostInvite } from '../queries/host-invite/useGetHostInvite';
 import { useAcceptHostInvite } from '../queries/host-invite/useAcceptHostInvite';
@@ -9,16 +12,30 @@ export function HostInviteAcceptPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
 
-  const { data: invite, isLoading, isError } = useGetHostInvite(token);
+  const { data: invite, isLoading: queryLoading, isError: queryError } = useGetHostInvite(token);
+  const { mutate: acceptMutate } = useAcceptHostInvite(token);
 
-  const { mutate: acceptMutate, isPending } = useAcceptHostInvite(token);
+  // 페이지 flow는 머신(hostInviteAccept): data(조회 로딩) + accept(수락 진행).
+  const [state, send] = useMachine(hostInviteAcceptMachine);
+  useEffect(() => {
+    if (queryLoading) return;
+    if (queryError || !invite) send({ type: 'LOAD_ERROR' });
+    else send({ type: 'LOAD_DONE' });
+  }, [queryLoading, queryError, invite, send]);
+  const isLoading = state.matches({ data: 'loading' });
+  const isError = state.matches({ data: 'error' });
+  const isPending = state.matches({ accept: 'accepting' });
 
-  const accept = () =>
+  const accept = () => {
+    send({ type: 'ACCEPT' });
     acceptMutate(undefined, {
       onSuccess: () => {
+        send({ type: 'ACCEPT_DONE' });
         navigate('/my-wedding');
       },
+      onError: () => send({ type: 'ACCEPT_ERROR' }),
     });
+  };
 
   if (isLoading) {
     return (

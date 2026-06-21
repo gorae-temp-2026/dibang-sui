@@ -179,7 +179,8 @@ CREATE TABLE public.v3_mobile_invitations (
     cover_text_config jsonb,
     design_config jsonb,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    slug text NOT NULL
+    slug text NOT NULL,
+    version integer DEFAULT 0 NOT NULL
 );
 
 CREATE TABLE public.v3_moi_gather_places (
@@ -251,7 +252,8 @@ CREATE TABLE public.v3_weddings (
     bride_mother_account jsonb,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     sui_wedding_id text,
-    sui_vault_id text
+    sui_vault_id text,
+    version integer DEFAULT 0 NOT NULL
 );
 
 ALTER TABLE ONLY public.v3_feed_hearts

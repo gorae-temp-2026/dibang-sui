@@ -13,7 +13,8 @@ import { LetteringControls } from './LetteringControls';
 import { SectionControls } from './SectionControls';
 import { ThemeControls } from './ThemeControls';
 import { CanvasEditor } from './CanvasEditor';
-import { inputClass, inputErrorClass, sectionTitleClass, requiredMark, errorMessage } from './styles';
+import { inputClass, inputErrorClass, sectionTitleClass, requiredMark, errorMessage, slugStatusConfig } from './styles';
+import type { SlugAvailability } from '../../queries/invitation/useSlugAvailability';
 import { openDaumPostcode } from '../../lib/daum-postcode';
 
 // 에디터 설정 카드의 탭 칩 스타일 — 레터링 모드 선택 칩과 동일 디자인
@@ -43,6 +44,8 @@ interface EditPanelProps {
   onRetryGalleryItem: (id: string) => void;
   onRemoveGalleryItem: (id: string) => void;
   onUploadImage: (file: File) => Promise<string | null>;
+  /** Edit 전용: slug 입력 카드 표시 + 가용성(page가 useSlugCheck로 주입). 없으면(Create) 미표시. */
+  slugAvailability?: SlugAvailability;
 }
 
 export function EditPanel({
@@ -60,6 +63,7 @@ export function EditPanel({
   onRetryGalleryItem,
   onRemoveGalleryItem,
   onUploadImage,
+  slugAvailability,
 }: EditPanelProps) {
   const store = useInvitationForm();
   const [configTab, setConfigTab] = useState<'sections' | 'design'>('sections');
@@ -108,6 +112,28 @@ export function EditPanel({
   return (
     <div className="overflow-y-auto h-full p-6 space-y-6 bg-gray-50">
       <h1 className="text-[28px] font-semibold text-gray-900">{title}</h1>
+
+      {/* 카드: 공유 링크(slug) — Edit 전용. 중복검증은 page가 useSlugCheck로 주입(머신 slug 병렬). */}
+      {slugAvailability !== undefined && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
+          <h2 className={sectionTitleClass}>공유 링크</h2>
+          <div className="flex items-center gap-2">
+            <span className="text-base text-gray-400">gorae.com/</span>
+            <input
+              type="text"
+              placeholder="my-wedding"
+              value={store.slug}
+              onChange={(e) => store.setField('slug', e.target.value)}
+              className={`flex-1 ${inputClass}`}
+            />
+          </div>
+          {slugStatusConfig[slugAvailability].text && (
+            <p className={`text-sm ${slugStatusConfig[slugAvailability].color}`}>
+              {slugStatusConfig[slugAvailability].text}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* 카드: 에디터 설정 (섹션 구성 + 디자인 설정 탭) */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">

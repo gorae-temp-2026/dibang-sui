@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { useEffect } from 'react'
 import {
   onboardingConsentMachine,
-  isRequiredAllChecked,
   type TermsType,
 } from '../machines/onboardingConsent.machine'
 import { createConsentsMutation, getMeQueryKey } from '@gorae/contracts/@tanstack/react-query.gen'
@@ -21,7 +20,9 @@ export function OnboardingConsentPage() {
 
   const [state, send] = useMachine(onboardingConsentMachine)
   const ctx = state.context
-  const canSubmit = isRequiredAllChecked(ctx)
+  // 단일 진실원천: '지금 SUBMIT 가능한가'는 머신 guard(canSubmit)가 판정한다.
+  // page에서 따로 재계산하지 않고 state.can()으로 그 guard 결과를 파생한다.
+  const canSubmit = state.can({ type: 'SUBMIT' })
   const allChecked = ctx.age_verification && ctx.service && ctx.privacy && ctx.marketing
 
   const mutation = useMutation(createConsentsMutation())

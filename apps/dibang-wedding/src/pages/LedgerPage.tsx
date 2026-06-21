@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useCallback, useState, useMemo } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
+import { useMachine } from '@xstate/react';
+import { ledgerMachine } from '../machines/ledger.machine';
 import { SharePhotosTab } from '../components/share-photos/SharePhotosTab';
 import { getWeddingOptions, listRsvpsOptions } from '@gorae/contracts/@tanstack/react-query.gen';
 import type { CashGift, HostCreateCashGiftRequest, Rsvp } from '@gorae/contracts';
@@ -58,11 +60,14 @@ export function LedgerPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<TabKey>('ledger');
-  const [selectedGift, setSelectedGift] = useState<CashGift | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  // 페이지 flow는 머신(ledger): modal 상태(상세/편집/추가/삭제확인) + activeTab/selectedGift context.
+  // 파생 변수로 풀어 렌더 JSX 조건은 그대로 두고, 핸들러만 send로 바꾼다.
+  const [state, send] = useMachine(ledgerMachine);
+  const activeTab = state.context.activeTab;
+  const selectedGift = state.context.selectedGift;
+  const isEditing = state.matches('editing');
+  const showAddForm = state.matches('adding');
+  const deleteConfirm = state.context.deleteTargetId;
 
   // --- Data Fetching ---
   const {
@@ -214,7 +219,7 @@ export function LedgerPage() {
           {TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => send({ type: 'TAB_CHANGE', tab: tab.key })}
               className={`flex-1 py-3 text-sm font-medium text-center transition-colors relative ${
                 activeTab === tab.key
                   ? 'text-[#6A9AB8]'
@@ -241,9 +246,9 @@ export function LedgerPage() {
             isGiftsLoading={isGiftsLoading}
             isFetchingNextPage={isFetchingNextPage}
             lastCardRef={lastCardRef}
-            onGiftClick={(gift) => { setSelectedGift(gift); setIsEditing(false); }}
+            onGiftClick={(gift) => send({ type: 'OPEN_DETAIL', gift })}
             onExport={handleExport}
-            onAdd={() => setShowAddForm(true)}
+            onAdd={() => send({ type: 'OPEN_ADD' })}
             note={TAB_DESCRIPTIONS.ledger}
           />
         )}
@@ -300,18 +305,18 @@ export function LedgerPage() {
 
       {/* Detail Drawer */}
       {selectedGift && !isEditing && (
-        <DrawerOverlay onClose={() => setSelectedGift(null)}>
+        <DrawerOverlay onClose={() => send({ type: 'CLOSE' })}>
           <GiftDetail
             gift={selectedGift}
-            onEdit={() => setIsEditing(true)}
-            onDelete={() => setDeleteConfirm(selectedGift.id)}
+            onEdit={() => send({ type: 'EDIT' })}
+            onDelete={() => send({ type: 'DELETE' })}
           />
         </DrawerOverlay>
       )}
 
       {/* Edit Form Drawer */}
       {selectedGift && isEditing && (
-        <DrawerOverlay onClose={() => setIsEditing(false)}>
+        <DrawerOverlay onClose={() => send({ type: 'CLOSE' })}>
           <GiftForm
             title="축의 수정"
             initial={selectedGift}
@@ -323,8 +328,7 @@ export function LedgerPage() {
                 },
                 {
                   onSuccess: (updated) => {
-                    setSelectedGift(updated as CashGift);
-                    setIsEditing(false);
+                    send({ type: 'SAVED', gift: updated as CashGift });
                   },
                 },
               )
@@ -337,7 +341,7 @@ export function LedgerPage() {
 
       {/* Add Form Drawer */}
       {showAddForm && (
-        <DrawerOverlay onClose={() => setShowAddForm(false)}>
+        <DrawerOverlay onClose={() => send({ type: 'CLOSE' })}>
           <GiftForm
             title="내역 추가"
             onSubmit={(values) =>
@@ -354,12 +358,12 @@ export function LedgerPage() {
 
       {/* Delete Confirm Dialog */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => setDeleteConfirm(null)}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => send({ type: 'CANCEL_DELETE' })}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-xs mx-4 space-y-4 text-center" onClick={(e) => e.stopPropagation()}>
             <p className="text-base font-medium text-gray-900">이 축의 내역을 삭제할까요?</p>
             <p className="text-sm text-gray-500">삭제하면 복구할 수 없습니다.</p>
             <div className="flex gap-2">
-              <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-600 text-sm">
+              <button onClick={() => send({ type: 'CANCEL_DELETE' })} className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-600 text-sm">
                 취소
               </button>
               <button
@@ -368,8 +372,7 @@ export function LedgerPage() {
                     { path: { weddingId: weddingId!, giftId: deleteConfirm } },
                     {
                       onSuccess: () => {
-                        setSelectedGift(null);
-                        setDeleteConfirm(null);
+                        send({ type: 'CONFIRM_DELETE' });
                       },
                     },
                   )

@@ -94,6 +94,8 @@ func (s *invitationService) GetBySlug(ctx context.Context, slug string) (*Invita
 		Info:             info,
 		LoungePreview:    loungePreview,
 	}
+	pubVersion := int(row.Version)
+	pub.Version = &pubVersion
 	if len(row.CoverTextConfig) > 0 {
 		var cfg CoverTextConfig
 		if err := json.Unmarshal(row.CoverTextConfig, &cfg); err == nil {
@@ -178,6 +180,12 @@ func (s *invitationService) Update(ctx context.Context, invitationID openapi_typ
 	params := db.UpdateInvitationParams{
 		ID: pgtype.UUID{Bytes: invitationID, Valid: true},
 	}
+	// 낙관잠금: version을 보내면 그 값과 DB version이 같아야 UPDATE 성공(0행=충돌→ErrConflict→409).
+	// 미전달(nil)이면 -1로 두어 잠금 skip — FORCE_SAVE(강제 덮어쓰기) 경로.
+	params.ExpectedVersion = -1
+	if req.Version != nil {
+		params.ExpectedVersion = int32(*req.Version)
+	}
 
 	if req.DesignTemplateId != nil {
 		params.DesignTemplateID = pgtype.Text{String: *req.DesignTemplateId, Valid: true}
@@ -213,7 +221,8 @@ func (s *invitationService) Update(ctx context.Context, invitationID openapi_typ
 	inv, err := q.UpdateInvitation(ctx, params)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
+			// 0행 = version 불일치(낙관잠금 충돌). Edit은 로드한 행을 저장하므로 conflict.
+			return nil, ErrConflict
 		}
 		return nil, err
 	}
@@ -316,6 +325,8 @@ func toInvitation(inv db.V3MobileInvitation) *Invitation {
 		Slug:             inv.Slug,
 		CreatedAt:        inv.CreatedAt.Time,
 	}
+	invVersion := int(inv.Version)
+	result.Version = &invVersion
 	if len(inv.CoverTextConfig) > 0 {
 		var cfg CoverTextConfig
 		if err := json.Unmarshal(inv.CoverTextConfig, &cfg); err == nil {

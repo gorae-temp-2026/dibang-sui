@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useMachine } from '@xstate/react';
+import { canvasEditorMachine } from '../../machines/canvasEditor.machine';
 import { Stage, Layer, Rect, Group, Path, Text, Image as KImage, Transformer } from 'react-konva';
 import type Konva from 'konva';
 import useImage from 'use-image';
@@ -166,7 +168,9 @@ function LayerRow({ item, label, selected, onSelect, onRemove }: LayerRowProps) 
 /* ---------- 메인 에디터 ---------- */
 
 export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorProps) {
-  const [tool, setTool] = useState<Tool>('select');
+  // 도구 모드(tool)·이미지 탭·업로드 진행은 머신(canvasEditor). 그리기/선택은 캔버스 로컬 유지.
+  const [canvasState, canvasSend] = useMachine(canvasEditorMachine);
+  const tool = canvasState.context.tool;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -180,8 +184,8 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
   const [drawRedo, setDrawRedo] = useState<CanvasItem[]>([]);
 
   // 이미지/스티커 도구
-  const [imageTab, setImageTab] = useState<'upload' | 'sticker'>('upload');
-  const [uploading, setUploading] = useState(false);
+  const imageTab = canvasState.context.imageTab;
+  const uploading = canvasState.matches('uploading');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Konva refs
@@ -326,7 +330,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
     });
     setSelectedId(id);
     setEditingId(id);
-    setTool('select');
+    canvasSend({ type: 'SET_TOOL', tool: 'select' });
   };
 
   // --- 이미지/스티커 ---
@@ -346,7 +350,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
       zIndex: nextZIndex(),
     });
     setSelectedId(id);
-    setTool('select');
+    canvasSend({ type: 'SET_TOOL', tool: 'select' });
   };
 
   const loadImageDims = (url: string): Promise<{ width: number; height: number } | null> =>
@@ -358,7 +362,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
     });
 
   const handlePickImageFile = async (file: File) => {
-    setUploading(true);
+    canvasSend({ type: 'UPLOAD_START' });
     try {
       const url = await onUploadImage(file);
       if (!url) return;
@@ -367,7 +371,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
       const h = dims && dims.width > 0 ? Math.round(baseW * (dims.height / dims.width)) : baseW;
       addImageItem(url, false, baseW, h);
     } finally {
-      setUploading(false);
+      canvasSend({ type: 'UPLOAD_DONE' });
     }
   };
 
@@ -587,7 +591,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
             key={t.value}
             type="button"
             onClick={() => {
-              setTool(t.value);
+              canvasSend({ type: 'SET_TOOL', tool: t.value });
               deselect();
             }}
             className={chip(tool === t.value)}
@@ -649,10 +653,10 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
         ) : tool === 'image' ? (
           <div className="space-y-3">
             <div className="flex gap-2">
-              <button type="button" className={chip(imageTab === 'upload')} onClick={() => setImageTab('upload')}>
+              <button type="button" className={chip(imageTab === 'upload')} onClick={() => canvasSend({ type: 'SET_IMAGE_TAB', tab: 'upload' })}>
                 이미지 업로드
               </button>
-              <button type="button" className={chip(imageTab === 'sticker')} onClick={() => setImageTab('sticker')}>
+              <button type="button" className={chip(imageTab === 'sticker')} onClick={() => canvasSend({ type: 'SET_IMAGE_TAB', tab: 'sticker' })}>
                 이모지 스티커
               </button>
             </div>
@@ -933,7 +937,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
                         selected={selectedId === item.id}
                         onSelect={() => {
                           setSelectedId(item.id);
-                          setTool('select');
+                          canvasSend({ type: 'SET_TOOL', tool: 'select' });
                         }}
                         onRemove={() => removeItem(item.id)}
                       />

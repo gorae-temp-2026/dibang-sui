@@ -53,7 +53,7 @@ export default function DisplayPage() {
 
   const { wedding, loungeId, photoUrls, isLoading, notFound } = useDisplayWedding(weddingId)
 
-  const [, send] = useMachine(displayMachine, { input: { weddingId } })
+  const [state, send] = useMachine(displayMachine, { input: { weddingId } })
 
   const { visible, historyCount, addLiveEnvelope, addNoticeEnvelope, removeEnvelope, seedHistory, containerRef, qrRef, headerRef } = useEnvelopeQueue()
   const vpScale = useViewportScale()
@@ -116,15 +116,18 @@ export default function DisplayPage() {
   useDisplayLiveFeed({ loungeId, addLiveEnvelope, seedHistory, addSticker, send })
 
   // ─── Render ───────────────────────────────────────────────────────
-  if (!weddingId) {
+  // 머신 상태로 화면 분기 — db 로딩·구독·재연결·치명오류를 UI에 반영(허울 해소, XS-1).
+  if (state.matches('fatalError')) {
     return (
       <div className="flex h-screen items-center justify-center text-zinc-400">
-        URL에 ?weddingId=xxx를 입력해주세요
+        {state.context.fatalReason === 'wedding 미존재'
+          ? '결혼식을 찾을 수 없습니다'
+          : 'URL에 ?weddingId=xxx를 입력해주세요'}
       </div>
     )
   }
 
-  if (isLoading || !wedding) {
+  if (state.matches('loadingWedding') || isLoading || !wedding) {
     return (
       <div className="flex h-screen items-center justify-center text-zinc-400">
         결혼식 정보를 불러오는 중...
@@ -137,6 +140,13 @@ export default function DisplayPage() {
 
   return (
     <div className="relative h-screen overflow-hidden" style={{ background: '#080808' }}>
+
+      {/* 실시간 구독 재연결 표시 — 머신 reconnecting 상태(SUBSCRIBE_ERROR/TIMEOUT) 반영 */}
+      {state.matches('reconnecting') && (
+        <div className="absolute left-1/2 top-3 z-[30] -translate-x-1/2 rounded-full bg-black/60 px-4 py-1.5 text-xs text-amber-300">
+          실시간 연결 재시도 중…
+        </div>
+      )}
 
       {/* -- Layer 1: 배경 사진 (슬라이드쇼, 2슬롯 DOM) -- */}
       <BackgroundSlideshow photos={photoUrls} photoUrl={wedding?.photoUrl} />

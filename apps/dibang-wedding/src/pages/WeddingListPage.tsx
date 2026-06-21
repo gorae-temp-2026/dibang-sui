@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { useMachine } from '@xstate/react';
+import { weddingListMachine } from '../machines/weddingList.machine';
 import { useQuery } from '@tanstack/react-query';
 import { getMyParticipatedWeddingsOptions } from '@gorae/contracts/@tanstack/react-query.gen';
 import type { ParticipatedWedding } from '@gorae/contracts';
@@ -201,9 +203,15 @@ export function WeddingListPage() {
     );
   }, [weddingIdParam, entryIdParam, joinWedding, searchParams, setSearchParams]);
 
-  const { data: weddings, isLoading } = useQuery({
+  const { data: weddings, isLoading: queryLoading } = useQuery({
     ...getMyParticipatedWeddingsOptions(),
   });
+  // 페이지 로딩 flow는 머신(weddingList). 목록 분류(upcoming/past)는 파생 계산.
+  const [state, send] = useMachine(weddingListMachine);
+  useEffect(() => {
+    if (!queryLoading) send({ type: 'LOAD_DONE' });
+  }, [queryLoading, send]);
+  const isLoading = state.matches('loading');
 
   const weddingList = Array.isArray(weddings) ? weddings : [];
   const today = new Date();

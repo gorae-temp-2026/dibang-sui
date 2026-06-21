@@ -206,6 +206,7 @@ type V3MobileInvitation struct {
 	DesignConfig     []byte             `json:"design_config"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 	Slug             string             `json:"slug"`
+	Version          int32              `json:"version"`
 }
 
 type V3MobileInvitationPhoto struct {
@@ -306,6 +307,7 @@ type V3Wedding struct {
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 	SuiWeddingID        pgtype.Text        `json:"sui_wedding_id"`
 	SuiVaultID          pgtype.Text        `json:"sui_vault_id"`
+	Version             int32              `json:"version"`
 }
 
 type V3WeddingLounge struct {

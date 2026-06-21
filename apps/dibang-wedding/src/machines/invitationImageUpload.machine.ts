@@ -14,6 +14,17 @@ import { assign, setup } from 'xstate';
  * localUrl 해제: REMOVE/CLEAR에서 revokeObjectURL. done 시에는 해제하지
  * 않는다 — 서버 이미지가 로드되기 전 미리보기가 깜빡이는 것을 막기 위해
  * 페이지 이탈(CLEAR)까지 유지한다.
+ *
+ * ▶ 설계 근거 (XS-6 — reducer형이 정석인 이유):
+ *   단일 상태 'active' + items[] reducer가 정석이다. 여러 파일이 동시에 서로 다른
+ *   단계(하나 uploading·하나 done·하나 failed)에 있으므로, 머신 '전체'를
+ *   idle/uploading/settling 같은 단계 상태로 나누면 파일별 독립성이 깨진다.
+ *   진행 상태는 파일(item)별로 보유하고, 머신은 그 컬렉션을 관리하는 오케스트레이터다.
+ *   (STATE_MANAGEMENT.md '병렬 독립 항목 오케스트레이션' 케이스)
+ *   ▷ 단건 업로드 내부 파이프라인(HEIC변환·압축·presign·PUT·검증)을 statechart로
+ *     펼친 uploadItem.machine을 각 파일 actor로 invoke하면 더 세분화·시각화할 수
+ *     있으나, uploadItem은 현재 설계/시뮬용(프로덕션 미연결)이라 그 통합 여부는
+ *     XS-9(design/uploadItem 정리)에서 결정한다.
  */
 
 export type UploadItemStatus = 'uploading' | 'done' | 'failed';

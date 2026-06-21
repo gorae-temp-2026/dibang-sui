@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
+import { useMachine } from '@xstate/react';
+import { loginMachine } from '../machines/login.machine';
 import { useAuth } from '../providers/AuthContext';
 import { useSignInWithGoogle } from '../queries/auth/useSignInWithGoogle';
 import { useSignInWithPassword } from '../queries/auth/useSignInWithPassword';
@@ -36,7 +38,9 @@ export function LoginPage() {
   const signInGoogle = useSignInWithGoogle();
   const signInPassword = useSignInWithPassword();
   const zk = useZkLogin();
-  const isDisabled = signInGoogle.isPending || signInPassword.isPending;
+  // 로그인 진행 flow는 머신(login): idle → signingGoogle/signingPassword.
+  const [state, send] = useMachine(loginMachine);
+  const isDisabled = !state.matches('idle');
 
   // 이미 로그인된 사용자가 /login 에 진입하면 redirect 쿼리(또는 기본 /my-wedding)로 보낸다.
   // (기존엔 AuthProvider 가 라우팅 책임을 가졌으나, provider 는 상태 공급만 하도록 분리.)
@@ -54,13 +58,16 @@ export function LoginPage() {
       : `${siteUrl}/auth/callback`;
 
   function signInWithGoogle() {
+    send({ type: 'SIGN_IN_GOOGLE' });
     signInGoogle.mutate(
       { redirectTo },
       {
         onSuccess: (data) => {
           if (data.url) window.location.href = data.url;
+          else send({ type: 'SIGN_IN_DONE' });
         },
         onError: (err) => {
+          send({ type: 'SIGN_IN_ERROR' });
           window.alert(err instanceof Error ? err.message : '로그인 실패');
         },
       },
@@ -72,14 +79,17 @@ export function LoginPage() {
       window.alert('이메일과 비밀번호를 입력하세요');
       return;
     }
+    send({ type: 'SIGN_IN_PASSWORD' });
     signInPassword.mutate(
       { email: devEmail, password: devPassword },
       {
         onSuccess: () => {
           // auth 헤더 주입은 AuthProvider 의 onAuthStateChange(SIGNED_IN) 가 처리한다.
+          send({ type: 'SIGN_IN_DONE' });
           navigate(redirectAfter);
         },
         onError: (err) => {
+          send({ type: 'SIGN_IN_ERROR' });
           window.alert(err instanceof Error ? err.message : '로그인 실패');
         },
       },
@@ -130,7 +140,7 @@ export function LoginPage() {
               disabled={isDisabled}
               className="w-full rounded-xl border border-line bg-white px-5 py-3 text-base text-muted hover:border-soft-sky hover:bg-pale-sky/30 transition-colors disabled:opacity-50 disabled:cursor-default"
             >
-              {signInPassword.isPending ? '로그인 중...' : '이메일로 로그인'}
+              {state.matches('signingPassword') ? '로그인 중...' : '이메일로 로그인'}
             </button>
 
             <button

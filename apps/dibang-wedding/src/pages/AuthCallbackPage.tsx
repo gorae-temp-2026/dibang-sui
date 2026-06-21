@@ -1,10 +1,14 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { useMachine } from '@xstate/react';
+import { authCallbackMachine } from '../machines/authCallback.machine';
 import { useAuth } from '../providers/AuthContext';
 
 export function AuthCallbackPage() {
   const navigate = useNavigate();
   const { session, isReady } = useAuth();
+  // 콜백 처리 flow는 머신(authCallback): processing → resolved/redirectingLogin/timedOut.
+  const [state, send] = useMachine(authCallbackMachine);
 
   useEffect(() => {
     if (!isReady) return;
@@ -13,6 +17,7 @@ export function AuthCallbackPage() {
       const raw = new URLSearchParams(window.location.search).get('redirect');
       const isSafe =
         !!raw && raw.startsWith('/') && !raw.startsWith('//') && raw !== '/login' && raw !== '/auth/callback';
+      send({ type: 'RESOLVE' });
       navigate(isSafe ? raw! : '/my-wedding', { replace: true });
       return;
     }
@@ -24,21 +29,25 @@ export function AuthCallbackPage() {
       const raw = params.get('redirect');
       const isSafe =
         !!raw && raw.startsWith('/') && !raw.startsWith('//') && raw !== '/login' && raw !== '/auth/callback';
+      send({ type: 'NO_SESSION' });
       navigate(isSafe ? `/login?redirect=${encodeURIComponent(raw!)}` : '/login', { replace: true });
     }
-  }, [isReady, session, navigate]);
+  }, [isReady, session, navigate, send]);
 
   // 10초 타임아웃 안전장치
   useEffect(() => {
     const timer = setTimeout(() => {
+      send({ type: 'TIMEOUT' });
       navigate('/login', { replace: true });
     }, 10_000);
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, send]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-pale-sky to-white">
-      <div className="text-base text-muted">로그인 처리 중...</div>
+      <div className="text-base text-muted">
+        {state.matches('timedOut') ? '시간이 초과되어 로그인으로 이동합니다...' : '로그인 처리 중...'}
+      </div>
     </div>
   );
 }

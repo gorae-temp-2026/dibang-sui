@@ -27,8 +27,9 @@ SET design_template_id = COALESCE(sqlc.narg('design_template_id'), design_templa
     gallery_photos = COALESCE(convert_from(sqlc.narg('gallery_photos'), 'UTF8')::jsonb, gallery_photos),
     cover_image = COALESCE(sqlc.narg('cover_image'), cover_image),
     cover_text_config = COALESCE(convert_from(sqlc.narg('cover_text_config'), 'UTF8')::jsonb, cover_text_config),
-    design_config = COALESCE(convert_from(sqlc.narg('design_config'), 'UTF8')::jsonb, design_config)
-WHERE id = $1
+    design_config = COALESCE(convert_from(sqlc.narg('design_config'), 'UTF8')::jsonb, design_config),
+    version = version + 1
+WHERE id = $1 AND (sqlc.arg('expected_version') < 0 OR version = sqlc.arg('expected_version'))
 RETURNING *;
 
 -- name: DeleteInvitation :exec

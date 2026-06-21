@@ -2613,8 +2613,11 @@ type Invitation struct {
 	HeartCount       int                `json:"heart_count"`
 	Id               openapi_types.UUID `json:"id"`
 	Slug             string             `json:"slug"`
-	VisitedCount     int                `json:"visited_count"`
-	WeddingId        openapi_types.UUID `json:"wedding_id"`
+
+	// Version 낙관잠금 버전. 수정 시 UpdateInvitationRequest.version에 실어 보낸다.
+	Version      *int               `json:"version,omitempty"`
+	VisitedCount int                `json:"visited_count"`
+	WeddingId    openapi_types.UUID `json:"wedding_id"`
 }
 
 // InvitationPublic defines model for InvitationPublic.
@@ -2630,7 +2633,10 @@ type InvitationPublic struct {
 	HeartCount       int           `json:"heart_count"`
 	Info             WeddingInfo   `json:"info"`
 	LoungePreview    LoungePreview `json:"lounge_preview"`
-	VisitedCount     int           `json:"visited_count"`
+
+	// Version 낙관잠금 버전. 호스트 수정 시 UpdateInvitationRequest.version에 실어 보낸다.
+	Version      *int `json:"version,omitempty"`
+	VisitedCount int  `json:"visited_count"`
 
 	// WeddingId RSVP 등 wedding 단위 액션에 필요(QA 2026-05-29 G1).
 	WeddingId openapi_types.UUID `json:"wedding_id"`
@@ -3152,6 +3158,9 @@ type UpdateInvitationRequest struct {
 	DesignConfig     *DesignConfig `json:"design_config,omitempty"`
 	DesignTemplateId *string       `json:"design_template_id,omitempty"`
 	GalleryPhotos    *[]string     `json:"gallery_photos,omitempty"`
+
+	// Version 낙관잠금: 클라이언트가 마지막으로 받은 version. 서버 version과 다르면 409 conflict.
+	Version *int `json:"version,omitempty"`
 }
 
 // UpdateMarketingConsentRequest defines model for UpdateMarketingConsentRequest.
@@ -3177,6 +3186,9 @@ type UpdateUserRequest struct {
 type UpdateWeddingRequest struct {
 	Hosts *HostSlots   `json:"hosts,omitempty"`
 	Info  *WeddingInfo `json:"info,omitempty"`
+
+	// Version 낙관잠금: 클라이언트가 마지막으로 받은 version. 서버 version과 다르면 409 conflict.
+	Version *int `json:"version,omitempty"`
 }
 
 // User defines model for User.
@@ -3228,6 +3240,9 @@ type Wedding struct {
 
 	// SuiWeddingId 온체인 Wedding 오브젝트 ID (dual-write, 미발행 시 null).
 	SuiWeddingId *string `json:"sui_wedding_id,omitempty"`
+
+	// Version 낙관잠금 버전. 수정 시 UpdateWeddingRequest.version에 그대로 실어 보낸다.
+	Version *int `json:"version,omitempty"`
 }
 
 // WeddingInfo defines model for WeddingInfo.

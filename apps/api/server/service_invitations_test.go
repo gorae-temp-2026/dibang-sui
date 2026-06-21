@@ -193,9 +193,10 @@ func TestInvitationService_Update_DesignConfig(t *testing.T) {
 	require.NotNil(t, updated.DesignConfig.Sections)
 	assert.Len(t, *updated.DesignConfig.Sections, 4)
 
-	// nil design_config로 Update → 기존 값 보존
+	// nil design_config로 Update → 기존 값 보존. (낙관잠금: 첫 update 응답 version을 실어 보낸다)
 	updated2, err := svc.Update(ctx, openapi_types.UUID(iid), &UpdateInvitationRequest{
 		CustomMessage: ptrString("hello"),
+		Version:       updated.Version,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, updated2.DesignConfig, "design_config가 nil 업데이트로 사라지면 안 됨")

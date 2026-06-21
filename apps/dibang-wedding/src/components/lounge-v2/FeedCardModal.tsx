@@ -43,9 +43,18 @@ export function FeedCardModal({ groups, openKey, onClose, onItemView, hostNames 
   useLayoutEffect(() => {
     if (startGroupIdx < 0) return;
     seededKeyRef.current = openKey;
-    send({ type: 'OPEN', groupIndex: startGroupIdx, itemIndex: 0 });
+    send({ type: 'OPEN', groupIndex: startGroupIdx, itemCounts: groups.map((g) => g.items.length) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openKey]);
+
+  // 머신이 closed로 가면(마지막 글 끝의 NEXT_ITEM 또는 CLOSE) 부모에 1회 onClose.
+  // open 의도(openKey 존재) + 시드된 키일 때만 — 초기/미오픈 closed는 무시(FCM 레이스 회피).
+  useEffect(() => {
+    if (openKey !== null && seededKeyRef.current === openKey && state.matches('closed')) {
+      onClose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, openKey]);
 
   // 새 클릭 첫 렌더는 props(startGroupIdx, 0) — 머신 시드 지연 회피(FCM2).
   // ref.current를 render 중 비교하는 건 의도된 패턴(useLayoutEffect 이전 1프레임만 사용)
@@ -57,30 +66,15 @@ export function FeedCardModal({ groups, openKey, onClose, onItemView, hostNames 
   const group = groups[gi];
   const items = group?.items ?? [];
 
-  // 닫힘은 명시적 트리거에서만 onClose() 직접(머신 closed 감시 effect 없음 — FCM3).
-  const handleClose = () => {
-    send({ type: 'CLOSE' });
-    onClose();
-  };
-  const setPos = (g: number, i: number) => send({ type: 'SET_POS', groupIndex: g, itemIndex: i });
+  // 닫힘 트리거 → 머신 CLOSE. 실제 onClose는 머신 closed 진입 effect에서 단일 경로로(위).
+  const handleClose = () => send({ type: 'CLOSE' });
 
-  // 탭 우: 다음 글 → 프로필 끝이면 다음 프로필 첫 글 → 마지막의 마지막이면 닫힘.
-  const goNextItem = () => {
-    if (ii < items.length - 1) setPos(gi, ii + 1);
-    else if (gi < groups.length - 1) setPos(gi + 1, 0);
-    else handleClose();
-  };
-  // 탭 좌: 이전 글 → 첫 글이면 이전 프로필 마지막 글 → 맨 앞이면 멈춤.
-  const goPrevItem = () => {
-    if (ii > 0) setPos(gi, ii - 1);
-    else if (gi > 0) {
-      const prev = groups[gi - 1];
-      setPos(gi - 1, Math.max(0, prev.items.length - 1));
-    }
-  };
-  // 스와이프: 프로필 이동(itemIndex 0), 양끝 멈춤.
-  const goNextProfile = () => { if (gi < groups.length - 1) setPos(gi + 1, 0); };
-  const goPrevProfile = () => { if (gi > 0) setPos(gi - 1, 0); };
+  // 탭/스와이프/타이머 → 머신에 흐름 이벤트만 보낸다.
+  // 롤오버(프로필 끝→다음 프로필 첫 글)·바운드(양끝 멈춤)·마지막의 마지막→닫힘 계산은 모두 머신(XS-5).
+  const goNextItem = () => send({ type: 'NEXT_ITEM' });
+  const goPrevItem = () => send({ type: 'PREV_ITEM' });
+  const goNextProfile = () => send({ type: 'NEXT_PROFILE' });
+  const goPrevProfile = () => send({ type: 'PREV_PROFILE' });
 
   // 5초 자동전환(다음 글, 롤오버·끝 닫힘). 위치 변경 시 deps(state) 바뀌어 리셋.
   useEffect(() => {

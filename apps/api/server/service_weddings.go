@@ -347,6 +347,12 @@ func (s *weddingService) Update(ctx context.Context, weddingID openapi_types.UUI
 	params := db.UpdateWeddingInfoParams{
 		ID: pgtype.UUID{Bytes: weddingID, Valid: true},
 	}
+	// 낙관잠금: version을 보내면 그 값과 DB version이 같아야 UPDATE 성공(0행=충돌→ErrConflict→409).
+	// 미전달(nil)이면 -1로 두어 잠금 skip — FORCE_SAVE(강제 덮어쓰기) 경로.
+	params.ExpectedVersion = -1
+	if req.Version != nil {
+		params.ExpectedVersion = int32(*req.Version)
+	}
 
 	if req.Info != nil {
 		info := req.Info
@@ -385,7 +391,8 @@ func (s *weddingService) Update(ctx context.Context, weddingID openapi_types.UUI
 	_, err := q.UpdateWeddingInfo(ctx, params)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
+			// 0행 = version 불일치(낙관잠금 충돌). Edit은 이미 로드한 행을 저장하므로 conflict로 본다.
+			return nil, ErrConflict
 		}
 		return nil, err
 	}
@@ -444,5 +451,7 @@ func dbWeddingFullToAPI(row db.GetWeddingFullRow, invitations []InvitationSummar
 		SuiWeddingId: ptrFromText(row.SuiWeddingID),
 		SuiVaultId:   ptrFromText(row.SuiVaultID),
 	}
+	wVersion := int(row.Version)
+	w.Version = &wVersion
 	return w
 }

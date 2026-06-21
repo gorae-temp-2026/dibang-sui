@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -10,6 +10,8 @@ import { useSignedUrls } from '../queries/share-photo/useSignedUrls';
 import { useReplaceCurated } from '../queries/memory-book/useReplaceCurated';
 import { PhotoLightbox } from '../components/memorybook/PhotoLightbox';
 import { SelectionDot } from '../components/memorybook/SelectionDot';
+import { useMachine } from '@xstate/react';
+import { memoryBookCurateMachine } from '../machines/memoryBookCurate.machine';
 
 // _scenario/wedding-memorybook-ui-2026-05-24/SCENARIOS.md §B(S-02~S-06).
 // T-18: 그룹 그리드 + 빈 상태.
@@ -98,10 +100,11 @@ export function WeddingMemoryBookCuratePage() {
   const [userSelected, setUserSelected] = useState<string[] | null>(null);
   const selectedIds = userSelected ?? serverInitialSelected ?? EMPTY_IDS;
 
-  // 저장 상태 — handleToggle이 토스트를 리셋해야 하므로 위로 끌어올림(TDZ 회피).
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [emptyConfirmOpen, setEmptyConfirmOpen] = useState(false);
+  // 페이지 flow는 머신(memoryBookCurate): data(로딩) + save(저장 빈확인/saving/성공/에러) + lightbox.
+  const [state, send] = useMachine(memoryBookCurateMachine);
+  const saveError = state.context.saveError;
+  const saveSuccess = state.matches({ save: 'success' });
+  const emptyConfirmOpen = state.matches({ save: 'confirmingEmpty' });
   // 저장 — queries/memory-book/useReplaceCurated 훅 (라운드 3-I). invalidate는 훅 안에서 자동.
   const saveMutation = useReplaceCurated(weddingId);
 
@@ -112,31 +115,28 @@ export function WeddingMemoryBookCuratePage() {
       if (base.length >= MAX_SELECTION) return base; // 31번째 무시
       return [...base, photoId];
     });
-    // 선택 변경 시 토스트 리셋. 이전엔 selectedIds deps의 useEffect였으나 set-state-in-effect.
-    setSaveError(null);
-    setSaveSuccess(false);
-  }, [serverInitialSelected]);
+    // 선택 변경 시 토스트 리셋(머신 save축 → idle).
+    send({ type: 'RESET_TOAST' });
+  }, [serverInitialSelected, send]);
 
-  // 라이트박스
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  // 라이트박스 — 현재 index는 머신 context.
+  const lightboxIndex = state.context.lightboxIndex;
   const openLightboxAt = useCallback(
     (photoId: string) => {
       const idx = allPhotos.findIndex((p) => p.id === photoId);
-      if (idx >= 0) setLightboxIndex(idx);
+      if (idx >= 0) send({ type: 'OPEN_LIGHTBOX', index: idx });
     },
-    [allPhotos],
+    [allPhotos, send],
   );
 
   const performSave = useCallback(async () => {
     if (!weddingId) return;
-    setSaveError(null);
-    setSaveSuccess(false);
     try {
       await saveMutation.mutateAsync({
         path: { weddingId },
         body: { photo_ids: selectedIds },
       });
-      setSaveSuccess(true);
+      send({ type: 'SAVE_SUCCESS' });
       window.setTimeout(() => {
         if (selectedIds.length === 0) {
           navigate('/my-wedding', { replace: true });
@@ -148,30 +148,39 @@ export function WeddingMemoryBookCuratePage() {
       // invalid_ids 등 400/500 처리
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const detail = (err as any)?.error ?? (err as Error)?.message ?? '저장에 실패했습니다.';
-      setSaveError(typeof detail === 'string' ? detail : '저장에 실패했습니다.');
+      send({ type: 'SAVE_ERROR', error: typeof detail === 'string' ? detail : '저장에 실패했습니다.' });
     }
-  }, [weddingId, selectedIds, saveMutation, navigate]);
+  }, [weddingId, selectedIds, saveMutation, navigate, send]);
 
   const handleSave = useCallback(() => {
     if (!weddingId) return;
     if (selectedIds.length === 0) {
-      setEmptyConfirmOpen(true);
+      send({ type: 'SAVE_EMPTY' });
       return;
     }
+    send({ type: 'SAVE' });
     void performSave();
-  }, [weddingId, selectedIds, performSave]);
+  }, [weddingId, selectedIds, performSave, send]);
 
   const handleEmptyConfirm = useCallback(() => {
-    setEmptyConfirmOpen(false);
+    send({ type: 'CONFIRM_EMPTY' });
     void performSave();
-  }, [performSave]);
+  }, [performSave, send]);
 
   const handleEmptyCancel = useCallback(() => {
-    setEmptyConfirmOpen(false);
-  }, []);
+    send({ type: 'CANCEL_EMPTY' });
+  }, [send]);
 
-  const isLoading = groupsQuery.isLoading || memoryBookQuery.isLoading;
-  const hasError = groupsQuery.isError || memoryBookQuery.isError;
+  // 그룹/메모리북 로딩 완료 → 머신 data축 동기.
+  const queryLoading = groupsQuery.isLoading || memoryBookQuery.isLoading;
+  const queryError = groupsQuery.isError || memoryBookQuery.isError;
+  useEffect(() => {
+    if (queryLoading) return;
+    if (queryError) send({ type: 'LOAD_ERROR' });
+    else send({ type: 'LOAD_DONE' });
+  }, [queryLoading, queryError, send]);
+  const isLoading = state.matches({ data: 'loading' });
+  const hasError = state.matches({ data: 'error' });
 
   return (
     <div className="min-h-dvh bg-stone-50 mx-auto max-w-[480px] pb-24">
@@ -321,9 +330,9 @@ export function WeddingMemoryBookCuratePage() {
           photos={allPhotos}
           signedUrls={signedUrls}
           index={lightboxIndex}
-          onIndexChange={setLightboxIndex}
+          onIndexChange={(i) => send({ type: 'CHANGE_LIGHTBOX', index: i })}
           selectedIds={selectedIds}
-          onClose={() => setLightboxIndex(null)}
+          onClose={() => send({ type: 'CLOSE_LIGHTBOX' })}
           onToggle={handleToggle}
         />
       )}

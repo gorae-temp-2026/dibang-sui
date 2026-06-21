@@ -243,7 +243,8 @@ export const zCreateWeddingRequest = z.object({
 
 export const zUpdateWeddingRequest = z.object({
     info: zWeddingInfo.optional(),
-    hosts: zHostSlots.optional()
+    hosts: zHostSlots.optional(),
+    version: z.int().optional()
 });
 
 export const zInvitationSummary = z.object({
@@ -413,7 +414,8 @@ export const zInvitation = z.object({
     cover_text_config: zCoverTextConfig.optional(),
     design_config: zDesignConfig.optional(),
     slug: z.string(),
-    created_at: z.iso.datetime()
+    created_at: z.iso.datetime(),
+    version: z.int().optional()
 });
 
 export const zLoungePreview = z.object({
@@ -434,7 +436,8 @@ export const zInvitationPublic = z.object({
     design_config: zDesignConfig.optional(),
     visited_count: z.int(),
     heart_count: z.int(),
-    lounge_preview: zLoungePreview
+    lounge_preview: zLoungePreview,
+    version: z.int().optional()
 });
 
 export const zCreateInvitationRequest = z.object({
@@ -453,7 +456,8 @@ export const zUpdateInvitationRequest = z.object({
     gallery_photos: z.array(z.string()).optional(),
     cover_image: z.string().optional(),
     cover_text_config: zCoverTextConfig.optional(),
-    design_config: zDesignConfig.optional()
+    design_config: zDesignConfig.optional(),
+    version: z.int().optional()
 });
 
 export const zHeartResponse = z.object({
@@ -482,6 +486,7 @@ export const zWedding = z.object({
     lounge: zLoungeSummary,
     invitations: z.array(zInvitationSummary),
     created_at: z.iso.datetime(),
+    version: z.int().optional(),
     sui_wedding_id: z.string().nullish(),
     sui_vault_id: z.string().nullish()
 });

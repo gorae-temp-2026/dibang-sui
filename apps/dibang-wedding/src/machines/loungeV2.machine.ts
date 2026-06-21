@@ -30,7 +30,8 @@ export const loungeV2Machine = setup({
     events: {} as LoungeV2Event,
   },
   guards: {
-    hasError: ({ context }) => context.errorMessage !== null,
+    // 새로고침 누적 실패 3회 이상 → error 상태로 격리(자동 무한재시도 방지).
+    maxRefreshFailsReached: ({ context }) => context.refreshAttempts >= 3,
   },
   actions: {
     setError: assign({
@@ -83,20 +84,24 @@ export const loungeV2Machine = setup({
           target: "idle",
           actions: ["clearError", "resetRefreshAttempts"],
         },
-        REFRESH_ERROR: {
-          target: "idle",
-          actions: {
-            type: "setError",
-            params: ({ event }) => ({ error: event.error }),
+        REFRESH_ERROR: [
+          {
+            guard: "maxRefreshFailsReached",
+            target: "error",
+            actions: { type: "setError", params: ({ event }) => ({ error: event.error }) },
           },
-        },
+          {
+            target: "idle",
+            actions: { type: "setError", params: ({ event }) => ({ error: event.error }) },
+          },
+        ],
       },
     },
 
     error: {
       description: "라운지 로딩 실패",
       on: {
-        RETRY: { target: "loading", actions: "clearError" },
+        RETRY: { target: "loading", actions: ["clearError", "resetRefreshAttempts"] },
       },
     },
   },

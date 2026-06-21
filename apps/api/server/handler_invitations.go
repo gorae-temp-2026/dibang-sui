@@ -115,6 +115,9 @@ func (s *Server) UpdateInvitation(ctx context.Context, req UpdateInvitationReque
 
 	inv, err := s.Invitations.Update(ctx, req.InvitationId, req.Body)
 	if err != nil {
+		if errors.Is(err, ErrConflict) {
+			return UpdateInvitation409JSONResponse{conflict("다른 곳에서 먼저 수정됐어요. 새로고침 후 다시 시도해주세요.")}, nil
+		}
 		if errors.Is(err, ErrNotFound) {
 			return UpdateInvitation404JSONResponse{NotFoundJSONResponse{
 				Type:   "about:blank",

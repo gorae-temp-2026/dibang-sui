@@ -68,8 +68,9 @@ SET groom_name = COALESCE(sqlc.narg('groom_name'), groom_name),
     host_groom_father_id = COALESCE(sqlc.narg('host_groom_father_id'), host_groom_father_id),
     host_groom_mother_id = COALESCE(sqlc.narg('host_groom_mother_id'), host_groom_mother_id),
     host_bride_father_id = COALESCE(sqlc.narg('host_bride_father_id'), host_bride_father_id),
-    host_bride_mother_id = COALESCE(sqlc.narg('host_bride_mother_id'), host_bride_mother_id)
-WHERE id = $1
+    host_bride_mother_id = COALESCE(sqlc.narg('host_bride_mother_id'), host_bride_mother_id),
+    version = version + 1
+WHERE id = $1 AND (sqlc.arg('expected_version') < 0 OR version = sqlc.arg('expected_version'))
 RETURNING *;
 
 -- name: GetMyWeddings :many

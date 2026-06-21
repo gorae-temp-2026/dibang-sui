@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router';
+import { useMachine } from '@xstate/react';
+import { invitationPageMachine } from '../machines/invitation.machine';
 import { useQuery } from '@tanstack/react-query';
 import { getInvitationOptions } from '@gorae/contracts/@tanstack/react-query.gen';
 import type { InvitationPublic } from '@gorae/contracts';
@@ -231,10 +233,11 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
 
   const data = dataProp ?? (invitation ? toWeddingData(invitation, slug!) : undefined);
 
-  const [activeTab, setActiveTab] = useState<'invitation' | 'lounge'>('invitation');
-  const [rsvpOpen, setRsvpOpen] = useState(false);
-  const [rsvpDismissed, setRsvpDismissed] = useState(false);
-  // RSVP 제출 결과 인라인 모달 — alert() 대체 (사내 ToastProvider 미마운트 상태이므로 modal 후퇴)
+  // 페이지 flow는 머신이 제어(STATE_MANAGEMENT.md). data(로딩)/tab(전환)/rsvp(회신) 3축 parallel.
+  const [state, send, rsvpActor] = useMachine(invitationPageMachine);
+  const activeTab = state.context.activeTab;
+  const rsvpOpen = state.matches({ rsvp: 'modalOpen' });
+  // RSVP 제출 결과/복사 안내 — flow와 무관한 표시 전용 토스트라 useState 유지(XS-D0 예외).
   const [rsvpResult, setRsvpResult] = useState<string | null>(null);
   const { trigger: triggerHeart, syncedCount: heartSyncedCount } = useHeartInvitationOnce(slug ?? '');
   const { copy } = useCopyToClipboard();
@@ -285,18 +288,30 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
   }, []);
 
   const hasData = !!data;
+  // 데이터 로딩/에러 → 머신 data축 동기. dataProp(미리보기)면 즉시 ready.
   useEffect(() => {
-    if (!hasData || rsvpDismissed) return;
-    const timer = setTimeout(() => setRsvpOpen(true), 3200);
+    if (dataProp) { send({ type: 'FETCH_SUCCESS' }); return; }
+    if (isLoading) return;
+    if (isError) send({ type: 'FETCH_ERROR', kind: 'not_found' });
+    else if (invitation) send({ type: 'FETCH_SUCCESS' });
+  }, [dataProp, isLoading, isError, invitation, send]);
+
+  // 진입 3.2초 후 RSVP 모달 1회 자동 오픈(머신 rsvp idle→modalOpen). 닫은 뒤엔 idle이라도 재오픈 안 함(타이머 1회).
+  useEffect(() => {
+    if (!hasData) return;
+    const timer = setTimeout(() => send({ type: 'RSVP_TIMER_DONE' }), 3200);
     return () => clearTimeout(timer);
-  }, [hasData, rsvpDismissed]);
+  }, [hasData, send]);
 
   const handleRsvpSubmit = async (formData: RsvpFormData) => {
+    send({ type: 'RSVP_SUBMIT' });
+    // 중복 제출(이미 submitted)이면 머신이 duplicate로 가 submitting 미진입 → 호출 중단.
+    if (!rsvpActor.getSnapshot().matches({ rsvp: 'submitting' })) return;
     // 백엔드 RSVP 저장(QA 2026-05-29 G1). weddingId는 InvitationPublic.wedding_id.
     const weddingId = invitation?.wedding_id;
     if (!weddingId) {
       setRsvpResult('RSVP를 보낼 수 없습니다. 잠시 후 다시 시도해주세요.');
-      setRsvpOpen(false);
+      send({ type: 'RSVP_ERROR', error: 'weddingId 없음' });
       return;
     }
     // RsvpHostOption.key(camelCase) → recipient_slot enum(snake_case) 변환.
@@ -322,7 +337,7 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
     } catch {
       // 제출 실패 시 거짓 성공 대신 실패를 알린다 (#51).
       setRsvpResult('RSVP 제출에 실패했습니다. 잠시 후 다시 시도해주세요.');
-      setRsvpOpen(false);
+      send({ type: 'RSVP_ERROR', error: '제출 실패' });
       return;
     }
     // C10-3: Supabase RSVP 저장 후 온체인 submitRsvp(dev 서명, D0-1). sui_lounge_id 있을 때만, 실패해도 진행.
@@ -353,15 +368,15 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
         `전화 뒤 4자리: ${formData.phoneLast4 ?? '-'}`,
       ].join('\n'),
     );
-    setRsvpOpen(false);
+    send({ type: 'RSVP_SUCCESS' });
   };
 
   const handleTabChange = (tab: 'invitation' | 'lounge') => {
-    setActiveTab(tab);
+    send({ type: 'TAB_CHANGE', tab });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (isLoading) {
+  if (state.matches({ data: 'loading' }) && !data) {
     return (
       <div className="w-full max-w-[420px] bg-ivory rounded-[32px] overflow-hidden shadow-frame relative px-7 py-20 text-center">
         <div className="font-serif text-xl text-navy mb-4">청첩장을 불러오는 중...</div>
@@ -369,7 +384,7 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
     );
   }
 
-  if (isError || !data) {
+  if (state.matches({ data: 'error' }) || !data) {
     return (
       <div className="w-full max-w-[420px] bg-ivory rounded-[32px] overflow-hidden shadow-frame relative px-7 py-20 text-center">
         <div className="font-serif text-xl text-navy mb-4">청첩장을 찾을 수 없습니다</div>
@@ -416,7 +431,7 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
       <BottomToggle activeTab={activeTab} onTabChange={handleTabChange} />
       <RsvpModal
         isOpen={rsvpOpen}
-        onClose={() => { setRsvpOpen(false); setRsvpDismissed(true); }}
+        onClose={() => send({ type: 'RSVP_CLOSE' })}
         onSubmit={handleRsvpSubmit}
         hostOptions={rsvpHostOptions}
       />

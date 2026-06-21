@@ -287,6 +287,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /weddings/{weddingId}/sui-ids:
     patch:
@@ -406,6 +408,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
     delete:
       operationId: deleteInvitation
       tags: [Invitations]
@@ -2848,6 +2852,9 @@ components:
         created_at:
           type: string
           format: date-time
+        version:
+          type: integer
+          description: "낙관잠금 버전. 수정 시 UpdateWeddingRequest.version에 그대로 실어 보낸다."
         sui_wedding_id:
           type: string
           nullable: true
@@ -2959,6 +2966,9 @@ components:
           $ref: '#/components/schemas/WeddingInfo'
         hosts:
           $ref: '#/components/schemas/HostSlots'
+        version:
+          type: integer
+          description: "낙관잠금: 클라이언트가 마지막으로 받은 version. 서버 version과 다르면 409 conflict."
 
     # ── Invitations ──
     Invitation:
@@ -2994,6 +3004,9 @@ components:
         created_at:
           type: string
           format: date-time
+        version:
+          type: integer
+          description: "낙관잠금 버전. 수정 시 UpdateInvitationRequest.version에 실어 보낸다."
 
     InvitationSummary:
       type: object
@@ -3038,6 +3051,9 @@ components:
         lounge_preview:
           $ref: '#/components/schemas/LoungePreview'
           description: "비로그인 상태에서 청첩장과 함께 노출되는 라운지 티저 정보"
+        version:
+          type: integer
+          description: "낙관잠금 버전. 호스트 수정 시 UpdateInvitationRequest.version에 실어 보낸다."
 
     CoverTextConfig:
       type: object
@@ -3327,6 +3343,9 @@ components:
           $ref: '#/components/schemas/CoverTextConfig'
         design_config:
           $ref: '#/components/schemas/DesignConfig'
+        version:
+          type: integer
+          description: "낙관잠금: 클라이언트가 마지막으로 받은 version. 서버 version과 다르면 409 conflict."
 
     HeartResponse:
       type: object

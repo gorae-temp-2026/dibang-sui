@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
+import { useMachine } from '@xstate/react';
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions';
+import { networkMachine } from '../machines/network.machine';
 import { useZkLogin } from '../providers/ZkLoginProvider';
 
 /**
@@ -14,40 +16,37 @@ export function NetworkPage() {
   const { createMoi, createIum } = useOnchainHostActions();
   const { isAuthenticated, address } = useZkLogin();
 
-  const [moiResult, setMoiResult] = useState('');
-  const [moiBusy, setMoiBusy] = useState(false);
+  // 발행 flow는 머신(network): moi/ium 각 idle→submitting→idle(result). busy/result 파생.
+  const [state, send] = useMachine(networkMachine);
+  const moiResult = state.context.moiResult;
+  const moiBusy = state.matches({ moi: 'submitting' });
+  const iumResult = state.context.iumResult;
+  const iumBusy = state.matches({ ium: 'submitting' });
 
+  // ium 폼값은 로컬 입력 — 머신은 발행 flow만 담당.
   const [toUser, setToUser] = useState('');
   const [relationType, setRelationType] = useState('friend');
   const [label, setLabel] = useState('');
-  const [iumResult, setIumResult] = useState('');
-  const [iumBusy, setIumBusy] = useState(false);
 
   const handleCreateMoi = useCallback(async () => {
-    setMoiBusy(true);
-    setMoiResult('Moi 발행 중...');
+    send({ type: 'CREATE_MOI' });
     try {
       const digest = await createMoi();
-      setMoiResult(`✅ Moi 발행 완료 · digest ${digest}`);
+      send({ type: 'MOI_DONE', result: `✅ Moi 발행 완료 · digest ${digest}` });
     } catch (e) {
-      setMoiResult(`❌ ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setMoiBusy(false);
+      send({ type: 'MOI_ERROR', result: `❌ ${e instanceof Error ? e.message : String(e)}` });
     }
-  }, [createMoi]);
+  }, [createMoi, send]);
 
   const handleCreateIum = useCallback(async () => {
-    setIumBusy(true);
-    setIumResult('Ium 발행 중...');
+    send({ type: 'CREATE_IUM' });
     try {
       const digest = await createIum({ toUser: toUser.trim(), relationType, label: label.trim() });
-      setIumResult(`✅ Ium 발행 완료 · digest ${digest}`);
+      send({ type: 'IUM_DONE', result: `✅ Ium 발행 완료 · digest ${digest}` });
     } catch (e) {
-      setIumResult(`❌ ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setIumBusy(false);
+      send({ type: 'IUM_ERROR', result: `❌ ${e instanceof Error ? e.message : String(e)}` });
     }
-  }, [createIum, toUser, relationType, label]);
+  }, [createIum, toUser, relationType, label, send]);
 
   if (!isAuthenticated) {
     return <div className="mx-auto max-w-xl p-8 text-center text-gray-500">로그인이 필요합니다.</div>;

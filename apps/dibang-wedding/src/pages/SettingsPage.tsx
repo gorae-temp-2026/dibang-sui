@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router';
 import { useState } from 'react';
+import { useMachine } from '@xstate/react';
+import { settingsMachine } from '../machines/settings.machine';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getMeOptions,
@@ -23,20 +25,25 @@ export function SettingsPage() {
   const { data: me } = useQuery(getMeOptions());
   const [userOverride, setUserOverride] = useState<boolean | null>(null);
   const marketing = userOverride ?? me?.marketing_agreed ?? false;
-  const [toast, setToast] = useState<string | null>(null);
+
+  // 저장 진행 + 토스트(2초 자동닫힘) flow는 머신(settings).
+  const [state, send] = useMachine(settingsMachine);
+  const toast = state.matches({ toast: 'visible' }) ? state.context.toastMsg : null;
 
   const marketingMutation = useMutation({
     ...updateMarketingConsentMutation(),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: getMeQueryKey() });
-      setToast('변경되었습니다');
-      setTimeout(() => setToast(null), 2000);
+      send({ type: 'SAVE_DONE' });
+      send({ type: 'SHOW_TOAST', msg: '변경되었습니다' });
     },
+    onError: () => send({ type: 'SAVE_ERROR' }),
   });
 
   const handleMarketingToggle = () => {
     const newValue = !marketing;
     setUserOverride(newValue);
+    send({ type: 'SAVE' });
     marketingMutation.mutate({ body: { agreed: newValue } });
   };
 
@@ -64,7 +71,7 @@ export function SettingsPage() {
             type="checkbox"
             checked={marketing}
             onChange={handleMarketingToggle}
-            disabled={marketingMutation.isPending}
+            disabled={state.matches({ save: 'saving' })}
             className="h-5 w-5"
           />
         </label>

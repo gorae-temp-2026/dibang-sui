@@ -67,4 +67,29 @@ describe('loungeV2Machine', () => {
     actor.send({ type: 'RETRY' })
     expect(actor.getSnapshot().value).toBe('loading')
   })
+
+  it('REFRESH 누적 실패 3회 → error 격리 (maxRefreshFailsReached guard)', () => {
+    const actor = spawn()
+    actor.send({ type: 'LOAD_SUCCESS' })
+    actor.send({ type: 'REFRESH' }); actor.send({ type: 'REFRESH_ERROR', error: 'e1' })
+    expect(actor.getSnapshot().value).toBe('idle') // 1 < 3
+    actor.send({ type: 'REFRESH' }); actor.send({ type: 'REFRESH_ERROR', error: 'e2' })
+    expect(actor.getSnapshot().value).toBe('idle') // 2 < 3
+    actor.send({ type: 'REFRESH' }); actor.send({ type: 'REFRESH_ERROR', error: 'e3' })
+    const s = actor.getSnapshot()
+    expect(s.value).toBe('error') // 3 >= 3
+    expect(s.context.refreshAttempts).toBe(3)
+  })
+
+  it('누적실패 error → RETRY 시 refreshAttempts 리셋', () => {
+    const actor = spawn()
+    actor.send({ type: 'LOAD_SUCCESS' })
+    actor.send({ type: 'REFRESH' }); actor.send({ type: 'REFRESH_ERROR', error: 'e1' })
+    actor.send({ type: 'REFRESH' }); actor.send({ type: 'REFRESH_ERROR', error: 'e2' })
+    actor.send({ type: 'REFRESH' }); actor.send({ type: 'REFRESH_ERROR', error: 'e3' })
+    actor.send({ type: 'RETRY' })
+    const s = actor.getSnapshot()
+    expect(s.value).toBe('loading')
+    expect(s.context.refreshAttempts).toBe(0)
+  })
 })

@@ -1,25 +1,30 @@
 import { setup, assign } from 'xstate';
 
-// ---------- Types ----------
+// invitationEdit.machine — 청첩장 수정 페이지 flow (InvitationEditPage 연결, XS-7).
+//
+// parallel: flow(로딩→편집→저장→완료/충돌/이탈) + slug(중복검증 병렬).
+// 역할분담(STATE_MANAGEMENT.md §4): 머신은 flow만. 로드/저장/slug체크 API는 페이지가
+//   React Query로 호출하고 결과를 send로 회신한다. 폼 값은 zustand(useInvitationForm).
+// upload 상태는 useInvitationImageUpload(파일별 자체 머신)가 SSOT — 여기선 SAVE 시
+//   uploadingNow 플래그만 받는다(중복 상태 방지, invitationCreate.machine과 동일 패턴).
+// 저장 게이트 = editing SAVE 가드 체인(업로드중 → 필수누락 → slug미확인 → toast 머무름, 통과 → saving).
+// 저장 실패(SAVE_ERROR)는 editing 복귀 + 실패 toast(invitationCreate.machine과 동일) — 별도 saveError 상태를
+//   두지 않는다(갇힘 방지). 사용자는 즉시 재저장 가능하고 toast로 실패를 통보받는다.
 
 export type LoadErrorKind = 'not_found' | 'forbidden' | 'network';
 
 export interface InvitationEditContext {
   /** 데이터 로딩 에러 종류 */
   loadError: LoadErrorKind | null;
-  /** slug 검증 상태 */
-  slugStatus: 'idle' | 'checking' | 'available' | 'taken' | 'error';
-  /** 업로드 ���인 파일 수 */
-  uploadsInProgress: number;
-  /** 폼 검증 에��� 목록 */
-  validationErrors: string[];
+  /** slug 검증 상태(slug 병렬과 동기) — 저장 가드용 */
+  slugStatus: 'available' | 'checking' | 'taken' | 'error';
+  /** 저장 차단/검증/실패 안내 통합 토스트 */
+  toast: string | null;
   /** 저장 시도 횟수 */
   saveAttempts: number;
-  /** 저장 ���패 에러 메시지 */
-  saveError: string | null;
-  /** 폼이 수정되었는지 (dirty tracking) */
+  /** 폼 수정 여부(이탈 경고용) */
   isDirty: boolean;
-  /** 서버 데이터와 충돌 발생 */
+  /** 서버 데이터와 충돌(낙관잠금) */
   hasConflict: boolean;
 }
 
@@ -32,21 +37,16 @@ export type InvitationEditEvent =
   | { type: 'SLUG_AVAILABLE' }
   | { type: 'SLUG_TAKEN' }
   | { type: 'SLUG_ERROR' }
-  | { type: 'UPLOAD_START' }
-  | { type: 'UPLOAD_SUCCESS' }
-  | { type: 'UPLOAD_ERROR'; error: string }
-  | { type: 'SAVE' }
+  | { type: 'SAVE'; missing: string[]; uploadingNow: boolean }
   | { type: 'SAVE_SUCCESS' }
   | { type: 'SAVE_ERROR'; error: string }
   | { type: 'SAVE_CONFLICT' }
-  | { type: 'RETRY' }
   | { type: 'FORCE_SAVE' }
   | { type: 'RELOAD_SERVER_DATA' }
   | { type: 'NAVIGATE_AWAY' }
   | { type: 'CONFIRM_LEAVE' }
-  | { type: 'CANCEL_LEAVE' };
-
-// ---------- Machine ----------
+  | { type: 'CANCEL_LEAVE' }
+  | { type: 'DISMISS_TOAST' };
 
 export const invitationEditMachine = setup({
   types: {
@@ -54,163 +54,125 @@ export const invitationEditMachine = setup({
     events: {} as InvitationEditEvent,
   },
   guards: {
-    isSlugAvailable: ({ context }) => context.slugStatus === 'available',
-    hasNoUploadsInProgress: ({ context }) => context.uploadsInProgress === 0,
+    uploadingNow: ({ event }) => event.type === 'SAVE' && event.uploadingNow,
+    hasMissing: ({ event }) => event.type === 'SAVE' && event.missing.length > 0,
+    slugNotAvailable: ({ context }) => context.slugStatus !== 'available',
     isDirty: ({ context }) => context.isDirty,
     isNotDirty: ({ context }) => !context.isDirty,
-    hasValidationErrors: ({ context }) => context.validationErrors.length > 0,
     isNetworkError: ({ context }) => context.loadError === 'network',
-    isLastUpload: ({ context }) => context.uploadsInProgress <= 1,
   },
   actions: {
     markDirty: assign({ isDirty: true }),
     clearDirty: assign({ isDirty: false }),
-    setLoadError: assign({ loadError: (_, params: { kind: LoadErrorKind }) => params.kind }),
+    setLoadError: assign({ loadError: (_, p: { kind: LoadErrorKind }) => p.kind }),
     clearLoadError: assign({ loadError: null }),
+    setSlugChecking: assign({ slugStatus: 'checking' }),
     setSlugAvailable: assign({ slugStatus: 'available' }),
     setSlugTaken: assign({ slugStatus: 'taken' }),
     setSlugError: assign({ slugStatus: 'error' }),
-    incrementUploads: assign({ uploadsInProgress: ({ context }) => context.uploadsInProgress + 1 }),
-    decrementUploads: assign({ uploadsInProgress: ({ context }) => Math.max(0, context.uploadsInProgress - 1) }),
     incrementSaveAttempts: assign({ saveAttempts: ({ context }) => context.saveAttempts + 1 }),
-    setSaveError: assign({ saveError: (_, params: { error: string }) => params.error }),
-    clearSaveError: assign({ saveError: null }),
+    toastUploadWait: assign({ toast: '사진 업로드가 끝나면 저장할 수 있어요' }),
+    toastMissing: assign({
+      toast: ({ event }) =>
+        event.type === 'SAVE' && event.missing[0] ? `${event.missing[0]}을(를) 입력해주세요` : null,
+    }),
+    toastSlugCheck: assign({ toast: '공유 링크 중복 확인이 필요해요' }),
+    toastSaveError: assign({ toast: (_, p: { error: string }) => p.error }),
+    clearToast: assign({ toast: null }),
     setConflict: assign({ hasConflict: true }),
     clearConflict: assign({ hasConflict: false }),
   },
 }).createMachine({
-  /** @xstate-layout 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 */
   id: 'invitationEdit',
   type: 'parallel',
-
   context: {
     loadError: null,
-    slugStatus: 'idle',
-    uploadsInProgress: 0,
-    validationErrors: [],
+    slugStatus: 'available',
+    toast: null,
     saveAttempts: 0,
-    saveError: null,
     isDirty: false,
     hasConflict: false,
   },
-
   states: {
-    /** ��인 페이지 flow */
+    /** 메인 페이지 flow */
     flow: {
       initial: 'loading',
       states: {
         loading: {
           description: 'getWedding + getInvitation fetch',
           on: {
-            LOAD_SUCCESS: { target: 'editing', actions: "clearLoadError" },
+            LOAD_SUCCESS: { target: 'editing', actions: 'clearLoadError' },
             LOAD_ERROR: {
               target: 'loadError',
               actions: {
-                type: "setLoadError",
-                params: ({ event }) => ({ kind: event.kind }),
+                type: 'setLoadError',
+                params: ({ event }) => ({ kind: event.type === 'LOAD_ERROR' ? event.kind : 'network' }),
               },
             },
           },
         },
-
         loadError: {
-          description: '데이터 로딩 실패 — 에러 종류에 따라 UI 분기',
+          description: '데이터 로딩 실패 — network면 재시도 가능',
           on: {
-            RETRY_LOAD: {
-              guard: 'isNetworkError',
-              target: 'loading',
-              actions: "clearLoadError",
-            },
+            RETRY_LOAD: { guard: 'isNetworkError', target: 'loading', actions: 'clearLoadError' },
           },
         },
-
         editing: {
+          description: '편집 — 저장 가드 체인(업로드중→필수누락→slug미확인→통과)',
           on: {
-            FIELD_CHANGED: { actions: "markDirty" },
+            FIELD_CHANGED: { actions: 'markDirty' },
             SAVE: [
-              {
-                guard: 'hasNoUploadsInProgress',
-                target: 'validating',
-              },
+              { guard: 'uploadingNow', actions: 'toastUploadWait' },
+              { guard: 'hasMissing', actions: 'toastMissing' },
+              { guard: 'slugNotAvailable', actions: 'toastSlugCheck' },
+              { target: 'saving', actions: ['clearToast', 'incrementSaveAttempts'] },
             ],
+            DISMISS_TOAST: { actions: 'clearToast' },
             NAVIGATE_AWAY: [
               { guard: 'isDirty', target: 'confirmingLeave' },
-              { guard: 'isNotDirty', target: 'left' },
+              { target: 'left' },
             ],
           },
         },
-
-        validating: {
-          description: '필수 필드 검증 + slug 상��� 확인',
-          always: [
-            { guard: 'hasValidationErrors', target: 'editing' },
-            {
-              guard: 'isSlugAvailable',
-              target: 'saving',
-              actions: ["clearSaveError", "incrementSaveAttempts"],
-            },
-            { target: 'editing' },
-          ],
-        },
-
         saving: {
-          description: 'updateWedding + updateInvitation API 호출',
+          description: 'updateWedding + updateInvitation API 호출(컴포넌트가 결과 send)',
+          entry: 'clearToast',
           on: {
-            SAVE_SUCCESS: { target: 'success', actions: "clearDirty" },
+            SAVE_SUCCESS: { target: 'success', actions: 'clearDirty' },
+            // 저장 실패 → editing 복귀 + 실패 토스트(별도 상태 두지 않음, 갇힘 방지). 즉시 재저장 가능.
             SAVE_ERROR: {
-              target: 'saveError',
+              target: 'editing',
               actions: {
-                type: "setSaveError",
-                params: ({ event }) => ({ error: event.error }),
+                type: 'toastSaveError',
+                params: ({ event }) => ({ error: event.type === 'SAVE_ERROR' ? event.error : '저장에 실패했습니다.' }),
               },
             },
-            SAVE_CONFLICT: { target: 'conflict', actions: "setConflict" },
+            SAVE_CONFLICT: { target: 'conflict', actions: 'setConflict' },
           },
         },
-
-        saveError: {
-          description: '저장 실패 — ��시도 또는 편집으로 복귀',
-          on: {
-            RETRY: { target: 'saving', actions: "incrementSaveAttempts" },
-            FIELD_CHANGED: { target: 'editing', actions: ["markDirty", "clearSaveError"] },
-          },
-        },
-
         conflict: {
-          description: '서버 데이터와 충돌 — 강제 저장 또는 서버 데이터 다시 로드',
+          description: '서버 데이터 충돌(낙관잠금) — 강제 저장 또는 서버 데이터 재로드',
           on: {
-            FORCE_SAVE: { target: 'saving', actions: ["clearConflict", "incrementSaveAttempts"] },
-            RELOAD_SERVER_DATA: { target: 'loading', actions: ["clearConflict", "clearDirty"] },
+            FORCE_SAVE: { target: 'saving', actions: ['clearConflict', 'incrementSaveAttempts'] },
+            RELOAD_SERVER_DATA: { target: 'loading', actions: ['clearConflict', 'clearDirty'] },
           },
         },
-
-        success: {
-          description: '저장 완료 — 컴포넌트에서 navigate 처��',
-          type: 'final',
-        },
-
+        success: { description: '저장 완료 — 컴포넌트 navigate', type: 'final' },
         confirmingLeave: {
-          description: '미저장 변경사항 경고 모달',
+          description: '미저장 변경 경고 모달',
           on: {
             CONFIRM_LEAVE: { target: 'left' },
             CANCEL_LEAVE: { target: 'editing' },
           },
         },
-
-        left: {
-          description: '페이지 이탈 확정',
-          type: 'final',
-        },
+        left: { description: '페이지 이탈 확정 — 컴포넌트 navigate', type: 'final' },
       },
     },
 
-    /** slug 검증 (메인 flow��� 병렬) */
+    /** slug 중복검증 (메인 flow와 병렬). Edit은 기존 slug=available에서 시작. */
     slug: {
-      initial: 'idle',
+      initial: 'available',
       states: {
-        idle: {
-          on: { SLUG_CHECK_START: { target: 'checking' } },
-        },
         checking: {
           on: {
             SLUG_AVAILABLE: { target: 'available' },
@@ -219,47 +181,16 @@ export const invitationEditMachine = setup({
           },
         },
         available: {
-          entry: "setSlugAvailable",
-          on: { SLUG_CHECK_START: { target: 'checking' } },
+          entry: 'setSlugAvailable',
+          on: { SLUG_CHECK_START: { target: 'checking', actions: 'setSlugChecking' } },
         },
         taken: {
-          entry: "setSlugTaken",
-          on: { SLUG_CHECK_START: { target: 'checking' } },
+          entry: 'setSlugTaken',
+          on: { SLUG_CHECK_START: { target: 'checking', actions: 'setSlugChecking' } },
         },
         error: {
-          entry: "setSlugError",
-          on: { SLUG_CHECK_START: { target: 'checking' } },
-        },
-      },
-    },
-
-    /** 이미지 업로드 추적 (메인 flow와 병렬) */
-    upload: {
-      initial: 'idle',
-      states: {
-        idle: {
-          on: { UPLOAD_START: { target: 'uploading', actions: "incrementUploads" } },
-        },
-        uploading: {
-          on: {
-            UPLOAD_START: { actions: "incrementUploads" },
-            UPLOAD_SUCCESS: [
-              {
-                guard: 'isLastUpload',
-                target: 'idle',
-                actions: "decrementUploads",
-              },
-              { actions: "decrementUploads" },
-            ],
-            UPLOAD_ERROR: [
-              {
-                guard: 'isLastUpload',
-                target: 'idle',
-                actions: "decrementUploads",
-              },
-              { actions: "decrementUploads" },
-            ],
-          },
+          entry: 'setSlugError',
+          on: { SLUG_CHECK_START: { target: 'checking', actions: 'setSlugChecking' } },
         },
       },
     },
