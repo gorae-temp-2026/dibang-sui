@@ -22,6 +22,8 @@ import {
   executeAndAssert,
   configureSui,
   getSignalEvents,
+  getWedding,
+  getCashGiftVault,
 } from '../src/index';
 import { creditFromSignals, type SignalEvent } from '../../../apps/dibang-wedding/src/lib/credit';
 
@@ -170,7 +172,16 @@ async function main() {
   assert((components[G]?.busu ?? 0) > 0, '하객(베푼 쪽) 부조 신용 > 0');
   assert((components[H]?.cs ?? 0) > 0, '혼주(유대받은 쪽) CS 신용 > 0');
 
-  console.log('\n=== TESTNET 신호 e2e 실증 통과 ===');
+  // 9) 온체인 읽기 층(#43) 실증: getWedding/getCashGiftVault = useOnchainWedding/useOnchainVault의 SDK 경로.
+  const w = await getWedding(client, weddingId);
+  assert(
+    !!w && w.hosts.includes(H) && w.eventId === eventId && w.vaultId === vaultId,
+    'getWedding 온체인 앵커(혼주·event_id·vault) 정합 — DB 아닌 온체인 읽기',
+  );
+  const v = await getCashGiftVault(client, vaultId);
+  assert(!!v && v.balance >= 1000n, 'getCashGiftVault 온체인 잔액 >= 부조 1000 MIST');
+
+  console.log('\n=== TESTNET 신호 e2e + 읽기층 실증 통과 ===');
 }
 
 main().catch((e) => {
