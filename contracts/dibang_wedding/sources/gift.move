@@ -57,8 +57,7 @@ const RECIPIENT: address = @0xB0;
 fun gift_transfers_item_and_logs_signal() {
     let mut scenario = ts::begin(HOST);
     // 혼주가 결혼식 생성(Event 포함). (gift는 event-agnostic이라 웨딩 참가로 테스트.)
-    let cap = wedding::create_default_for_testing(scenario.ctx());
-    transfer::public_transfer(cap, HOST);
+    wedding::create_default_for_testing(scenario.ctx()); // cap → sender(HOST) 내부 transfer(key-only)
 
     // GIVER가 결혼식 이벤트에 GUEST로 참가.
     scenario.next_tx(GIVER);

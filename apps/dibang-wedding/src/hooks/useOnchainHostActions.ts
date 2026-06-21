@@ -15,19 +15,23 @@ import { useCallback } from 'react'
 import {
   buildCreateWeddingTx,
   buildAddHostTx,
+  buildInviteTx,
   buildCreateVaultTx,
   buildWithdrawTx,
   buildCreateMoiTx,
-  buildMintItemTx,
+  buildPurchaseItemTx,
   buildEquipItemTx,
   buildUnequipItemTx,
   buildRequestIumTx,
   buildAcceptIumTx,
+  buildGiftTx,
   type WithdrawParams,
-  type MintItemParams,
+  type PurchaseItemParams,
   type UnequipItemParams,
   type RequestIumParams,
   type AcceptIumParams,
+  type GiftParams,
+  type InviteParams,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 
@@ -50,6 +54,11 @@ export function useOnchainHostActions() {
       executeOnchain(buildAddHostTx(p)),
     [executeOnchain],
   )
+  // 초대(청첩장) — 혼주가 하객을 초대했다는 관계 신호(CS) 기록.
+  const invite = useCallback(
+    (p: InviteParams) => executeOnchain(buildInviteTx(p)),
+    [executeOnchain],
+  )
 
   // === CashGift Vault ===
   const createVault = useCallback(
@@ -67,9 +76,10 @@ export function useOnchainHostActions() {
     () => executeOnchain(buildCreateMoiTx({ recipient: requireAddress() })),
     [executeOnchain, requireAddress],
   )
-  const mintItem = useCallback(
-    (p: Omit<MintItemParams, 'owner'>) =>
-      executeOnchain(buildMintItemTx({ ...p, owner: requireAddress() })),
+  // 샵 아이템 = SUI 결제 '구매'(결정#6). 무료 mint 폐기 — buildPurchaseItemTx가 가스에서 가격 분리 결제.
+  const purchaseItem = useCallback(
+    (p: Omit<PurchaseItemParams, 'owner'>) =>
+      executeOnchain(buildPurchaseItemTx({ ...p, owner: requireAddress() })),
     [executeOnchain, requireAddress],
   )
   const equipItem = useCallback(
@@ -93,16 +103,24 @@ export function useOnchainHostActions() {
     [executeOnchain],
   )
 
+  // === Gift 선물 (MoiItem 증여 + GIFT 신호) — giver의 Participation·item으로 서명. ===
+  const gift = useCallback(
+    (p: GiftParams) => executeOnchain(buildGiftTx(p)),
+    [executeOnchain],
+  )
+
   return {
     createWedding,
     addHost,
+    invite,
     createVault,
     withdraw,
     createMoi,
-    mintItem,
+    purchaseItem,
     equipItem,
     unequipItem,
     requestIum,
     acceptIum,
+    gift,
   }
 }

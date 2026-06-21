@@ -14,13 +14,20 @@ export interface CreateMoiParams {
   recipient: string;
 }
 
-export interface MintItemParams {
+export interface PurchaseItemParams {
   name: string;
   itemType: string;
   slot: string;
-  /** 발행한 아이템 NFT를 받을 주소. */
+  /** 발행한 아이템 NFT를 받을 주소(보통 구매자 본인). */
   owner: string;
+  /** 결제(SUI)를 받을 시스템 treasury 주소. */
+  treasury: string;
+  /** 아이템 가격(MIST). 기본=컨트랙트 moi::ITEM_PRICE. */
+  priceMist?: bigint;
 }
+
+/** moi::ITEM_PRICE(MIST)와 동기 — 0.001 SUI(데모). 컨트랙트 변경 시 함께 갱신. */
+export const MOI_ITEM_PRICE_MIST = 1_000_000n;
 
 export interface EquipItemParams {
   moiId: string;
@@ -45,16 +52,20 @@ export function buildCreateMoiTx(params: CreateMoiParams): Transaction {
 }
 
 /**
- * 아이템 발행 + owner에게 전송.
- * TODO(결정#6, 2026-06-21): '발행'이 아니라 'SUI 결제 구매'여야 한다. Sui payment SDK로 Coin<SUI>
- *   입력을 받아 moi::purchase_item(payment, …)을 호출하는 buildPurchaseItemTx로 전환(무료 mint는 임시).
- *   YONE(Coin<YONE>) 전환은 후순위 — 지금은 모든 결제=SUI 직접.
+ * 샵 아이템 **구매**(SUI 결제 게이트, 결정#6). 가스 코인에서 가격만큼 분리해 결제하고,
+ * moi::purchase_item(payment, treasury, …)으로 발행받은 MoiItem을 owner에게 전송한다.
+ * mint_item은 봉인(public(package))됐으므로 외부는 이 게이트만 통과한다 — 발행 비용이 gift-CS 시빌 내성을 만든다.
  */
-export function buildMintItemTx(params: MintItemParams): Transaction {
+export function buildPurchaseItemTx(params: PurchaseItemParams): Transaction {
   const tx = new Transaction();
+  const price = params.priceMist ?? MOI_ITEM_PRICE_MIST;
+  // 가스 코인에서 정확히 price만큼 분리 → 결제 Coin<SUI>.
+  const [payment] = tx.splitCoins(tx.gas, [price]);
   const item = tx.moveCall({
-    target: moveTarget('moi', 'mint_item'),
+    target: moveTarget('moi', 'purchase_item'),
     arguments: [
+      payment,
+      tx.pure.address(params.treasury),
       tx.pure.string(params.name),
       tx.pure.string(params.itemType),
       tx.pure.string(params.slot),

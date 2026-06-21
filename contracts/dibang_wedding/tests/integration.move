@@ -28,11 +28,12 @@ const GUEST: address = @0xB;
 fun wedding_signals_share_one_event_and_roles() {
     let mut scenario = ts::begin(HOST);
     // 1) 혼주가 결혼식 생성 — Event(WEDDING) + 혼주 HOST Participation + WeddingCap.
-    let cap = wedding::create_default_for_testing(scenario.ctx());
+    wedding::create_default_for_testing(scenario.ctx()); // cap → sender(HOST) 내부 transfer(key-only)
 
     // 2) 혼주가 모금함 생성 + 하객 초대(INVITE, 혼주 HOST participation으로).
     scenario.next_tx(HOST);
     let mut wedding = scenario.take_shared<Wedding>();
+    let cap = scenario.take_from_sender<wedding::WeddingCap>(); // key-only: 생성 시 sender(HOST)에게 transfer됨
     cash_gift::create_vault(&mut wedding, &cap, scenario.ctx());
     let host_part = scenario.take_from_sender<gathering::Participation>();
     let clk = clock::create_for_testing(scenario.ctx());
@@ -93,7 +94,7 @@ fun wedding_signals_share_one_event_and_roles() {
     scenario.return_to_sender(g);
     scenario.return_to_sender(w);
 
-    transfer::public_transfer(cap, HOST);
+    ts::return_to_address(HOST, cap); // key-only: take_from(HOST)했으니 HOST로 명시 반환
     clock::destroy_for_testing(clk);
     scenario.end();
 }

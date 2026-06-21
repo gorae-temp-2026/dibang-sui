@@ -135,8 +135,7 @@ const GUEST: address = @0x6;
 #[test_only]
 /// tx1: 결혼식 생성 후 Cap을 HOST에게 전달.
 fun setup_wedding(scenario: &mut ts::Scenario) {
-    let cap = wedding::create_default_for_testing(scenario.ctx());
-    transfer::public_transfer(cap, HOST);
+    wedding::create_default_for_testing(scenario.ctx()); // cap → sender(HOST) 내부 transfer(key-only)
 }
 
 #[test_only]

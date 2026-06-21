@@ -85,8 +85,7 @@ const GUEST: address = @0x6;
 #[test_only]
 /// 결혼식을 생성해 공유 라운지를 만든다 (Cap은 GUEST에게 전달, RSVP 자체엔 불필요).
 fun setup_lounge(scenario: &mut ts::Scenario) {
-    let cap = wedding::create_default_for_testing(scenario.ctx());
-    transfer::public_transfer(cap, GUEST);
+    wedding::create_default_for_testing(scenario.ctx()); // cap → sender 내부 transfer(key-only, rsvp 미사용)
 }
 
 #[test]

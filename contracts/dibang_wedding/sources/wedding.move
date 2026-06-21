@@ -52,7 +52,9 @@ public struct Wedding has key {
 }
 
 /// 결혼식 수정 권한 증명. 생성자(첫 호스트)에게 전달되고, add_host가 공동혼주에게 추가 발행한다.
-public struct WeddingCap has key, store {
+/// **key-only soulbound(D15, 결정 2026-06-21):** `store` 없음 → 자유 transfer/판매 불가(권한 탈취·host-invite 우회 차단).
+/// 발행은 모듈 내부 transfer::transfer로만 한다(create_wedding·add_host).
+public struct WeddingCap has key {
     id: UID,
     wedding_id: ID,
 }
@@ -80,8 +82,9 @@ public struct HostAdded has copy, drop {
 
 /// 결혼식을 생성한다(익명 앵커). 호출자가 첫 호스트(primary_host)가 되며, `Wedding`과 `WeddingLounge`는
 /// 공유 오브젝트로 등록된다. 표시 정보(이름·예식장 등)는 *온체인에 받지 않는다* — 오프체인에서
-/// 반환된 wedding_id/event_id로 키잉해 저장한다. 생성된 `WeddingCap`은 반환(PTB가 transfer).
-public fun create_wedding(clock: &Clock, ctx: &mut TxContext): WeddingCap {
+/// 반환된 wedding_id/event_id로 키잉해 저장한다. 생성된 `WeddingCap`(key-only soulbound)은 생성자(ctx.sender())에게
+/// **모듈 내부 transfer로 직접 전달**한다(PTB가 transfer 불가 — store 없음). capId는 트잭 object change로 조회.
+public fun create_wedding(clock: &Clock, ctx: &mut TxContext) {
     // 이 결혼식을 관통하는 이벤트 생성(생성자=혼주, ROLE_HOST Participation도 발행). 부조의 event_id가 된다.
     let event_id = gathering::new_event(gathering::event_wedding(), gathering::role_host(), clock, ctx);
     let wedding = Wedding {
@@ -102,7 +105,7 @@ public fun create_wedding(clock: &Clock, ctx: &mut TxContext): WeddingCap {
 
     transfer::share_object(wedding);
     transfer::share_object(lounge);
-    cap
+    transfer::transfer(cap, ctx.sender()); // key-only soulbound: 모듈 내부 transfer로 생성자에게.
 }
 
 /// 공동 혼주 추가 = 새 `WeddingCap`을 발행해 `new_host`에게 전달한다(§1-5: 권위 = Cap 소지).
@@ -114,7 +117,7 @@ public fun add_host(wedding: &Wedding, cap: &WeddingCap, new_host: address, ctx:
     assert!(cap.wedding_id == object::id(wedding), EWrongCap);
     assert!(ctx.sender() == wedding.primary_host, ENotPrimaryHost);
     let new_cap = WeddingCap { id: object::new(ctx), wedding_id: object::id(wedding) };
-    transfer::public_transfer(new_cap, new_host);
+    transfer::transfer(new_cap, new_host); // key-only soulbound: 모듈 내부 transfer.
     event::emit(HostAdded { wedding_id: object::id(wedding), host: new_host });
 }
 
@@ -187,13 +190,12 @@ use std::unit_test::assert_eq;
 const HOST: address = @0xA;
 
 #[test_only]
-/// 결혼식을 생성하고 `WeddingCap`을 반환한다(앵커만 — 표시 정보 인자 없음). 다른 모듈 테스트에서도 재사용.
-public fun create_default_for_testing(ctx: &mut TxContext): WeddingCap {
-    // 시그니처 파급 0: 내부에서 test clock을 만들어 create_wedding에 넘기고 파기. 호출처(rsvp·cash_gift·guestbook·gift·integration) 무수정.
+/// 결혼식을 생성한다(앵커만 — 표시 정보 인자 없음). WeddingCap은 create_wedding이 ctx.sender()에게
+/// 내부 transfer(key-only soulbound) — 헬퍼는 반환하지 않는다. 호출처는 take_from_sender로 Cap 취득.
+public fun create_default_for_testing(ctx: &mut TxContext) {
     let clk = sui::clock::create_for_testing(ctx);
-    let cap = create_wedding(&clk, ctx);
+    create_wedding(&clk, ctx); // cap → ctx.sender()
     sui::clock::destroy_for_testing(clk);
-    cap
 }
 
 #[test_only]
@@ -203,11 +205,9 @@ public fun new_cap_for_testing(wedding_id: ID, ctx: &mut TxContext): WeddingCap 
 }
 
 #[test_only]
-/// 결혼식을 생성하고 Cap을 호출자(sender)에게 전달한다 (wedding 모듈 자체 테스트용).
+/// 결혼식을 생성한다 — Cap은 create_default_for_testing이 sender에게 내부 transfer (wedding 모듈 자체 테스트용).
 fun new_wedding_for_test(scenario: &mut ts::Scenario) {
-    let sender = scenario.ctx().sender();
-    let cap = create_default_for_testing(scenario.ctx());
-    transfer::public_transfer(cap, sender);
+    create_default_for_testing(scenario.ctx());
 }
 
 #[test]

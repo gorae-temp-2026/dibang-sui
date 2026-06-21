@@ -53,8 +53,7 @@ const GUEST: address = @0x6;
 fun write_logs_message_action() {
     let mut scenario = ts::begin(HOST);
     // 혼주가 결혼식 생성(Event 포함). Cap은 HOST에게.
-    let cap = wedding::create_default_for_testing(scenario.ctx());
-    transfer::public_transfer(cap, HOST);
+    wedding::create_default_for_testing(scenario.ctx()); // cap → sender(HOST) 내부 transfer(key-only)
 
     // 하객이 결혼식 이벤트에 GUEST로 참가.
     scenario.next_tx(GUEST);

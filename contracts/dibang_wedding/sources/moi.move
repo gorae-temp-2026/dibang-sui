@@ -8,6 +8,8 @@ use std::string::String;
 use sui::dynamic_object_field as dof;
 use sui::event;
 use sui::vec_map::{Self, VecMap};
+use sui::coin::Coin;
+use sui::sui::SUI;
 
 // === Errors ===
 
@@ -15,6 +17,13 @@ use sui::vec_map::{Self, VecMap};
 const ESlotOccupied: u64 = 0;
 /// 해당 슬롯이 비어 있음(해제할 아이템 없음).
 const ESlotEmpty: u64 = 1;
+/// 구매 결제(SUI)가 아이템 가격보다 적음.
+const EInsufficientPayment: u64 = 2;
+
+// === Config ===
+
+/// 샵 아이템 1개 가격(MIST, 결정#6 SUI 직접 결제). 데모 값 — 운영에서 조정.
+const ITEM_PRICE: u64 = 1_000_000; // 0.001 SUI
 
 // === Structs ===
 
@@ -77,17 +86,11 @@ public fun create_moi(recipient: address, ctx: &mut TxContext) {
     transfer::transfer(moi, recipient);
 }
 
-/// 아이템을 발행해 반환한다. PTB가 호출자에게 transfer 한다.
-///
-/// ⚠️ 현재 `public` + 무료·무게이트(임시) — 누구나 MoiItem을 무한 발행 가능.
-/// gift::gift가 MoiItem 이전 + GIFT(CS 신호)를 찍으므로 **무료 발행 + 선물 = CS 시빌 농사** 벡터다(L8).
-///
-/// ★ 결정#6 확정(2026-06-21): 모든 결제·비용 = **SUI 직접 결제**(YONE(Coin<YONE>) 전환은 후순위).
-///   샵 아이템은 **무료 발행을 폐기**하고, **Sui payment SDK 기반 SUI 결제 '구매'로 mint를 게이트**한다 —
-///   `purchase_item(payment: Coin<SUI>, …): MoiItem` 형태로 결제를 받고, `mint_item`은 `public(package)`로
-///   봉인해 샵/구매 모듈 경유로만 발행. SUI 결제 게이트가 서야 **gift-CS를 신뢰**할 수 있다(행위 비용=신호 무결성).
-///   TODO(샵 구매 로직): `purchase_item`(SUI 결제 게이트) 도입 + `mint_item` 봉인 + sui-sdk buildPurchaseItemTx.
-public fun mint_item(
+/// 아이템을 발행해 반환한다(내부용). **`public(package)`로 봉인**(결정#6, 2026-06-21):
+/// 무료 무게이트 발행은 폐기됐고, 외부는 `purchase_item`(SUI 결제 게이트)을 거쳐야만 아이템을 얻는다.
+/// 무료 발행 + gift(MoiItem 이전 + GIFT CS 신호)를 허용하면 **CS 시빌 농사**가 가능하므로(L8),
+/// 발행에 행위 비용(SUI)을 강제해 gift-CS 신호 무결성을 지킨다. 패키지 내부(purchase_item)만 호출.
+public(package) fun mint_item(
     name: String,
     item_type: String,
     slot: String,
@@ -100,6 +103,22 @@ public fun mint_item(
         slot: item.slot,
     });
     item
+}
+
+/// 샵 아이템 **구매** — SUI 결제 게이트(결정#6). `payment`(≥ ITEM_PRICE)를 `treasury`(시스템)로 보내고
+/// MoiItem을 발행해 반환한다(PTB가 구매자에게 transfer). 무료 발행(mint_item)은 봉인됐고 외부는 이 게이트만 통과한다.
+/// 구매는 **시장 거래(MP·즉시청산)**일 뿐 신뢰 신호가 아니다(§3-G) — 발행 비용이 gift-CS 신호의 시빌 내성을 만든다.
+public fun purchase_item(
+    payment: Coin<SUI>,
+    treasury: address,
+    name: String,
+    item_type: String,
+    slot: String,
+    ctx: &mut TxContext,
+): MoiItem {
+    assert!(payment.value() >= ITEM_PRICE, EInsufficientPayment);
+    transfer::public_transfer(payment, treasury); // 결제 → 시스템(treasury). MP, 신뢰 신호 아님.
+    mint_item(name, item_type, slot, ctx)
 }
 
 /// 아이템을 아바타의 슬롯에 장착한다. 같은 슬롯이 이미 차 있으면 abort.
@@ -146,6 +165,8 @@ use std::unit_test::{assert_eq, destroy};
 
 #[test_only]
 const USER: address = @0x6;
+#[test_only]
+const TREASURY: address = @0x7;
 
 #[test_only]
 /// 단위 테스트용 — Moi를 반환한다(production `create_moi`는 sender에게 transfer).
@@ -217,4 +238,33 @@ fun unequip_empty_slot_fails() {
 
     destroy(item); // 미도달 — 컴파일 위한 소비
     destroy(moi);
+}
+
+// === purchase_item (SUI 결제 게이트, 결정#6) ===
+
+#[test]
+fun purchase_item_mints_and_pays_treasury() {
+    let mut scenario = ts::begin(USER);
+    // 정확히 가격만큼 SUI 결제 → 아이템 발행 + 결제는 treasury로.
+    let payment = sui::coin::mint_for_testing<sui::sui::SUI>(ITEM_PRICE, scenario.ctx());
+    let item = purchase_item(payment, TREASURY, b"Hat".to_string(), b"head".to_string(), b"head_slot".to_string(), scenario.ctx());
+    assert_eq!(item.name, b"Hat".to_string());
+    assert_eq!(item.slot, b"head_slot".to_string());
+    destroy(item);
+
+    // treasury가 결제(ITEM_PRICE)를 받았는지 확인.
+    scenario.next_tx(TREASURY);
+    let paid = scenario.take_from_sender<sui::coin::Coin<sui::sui::SUI>>();
+    assert_eq!(paid.value(), ITEM_PRICE);
+    destroy(paid);
+    scenario.end();
+}
+
+#[test, expected_failure(abort_code = EInsufficientPayment)]
+fun purchase_item_insufficient_payment_fails() {
+    let mut scenario = ts::begin(USER);
+    let payment = sui::coin::mint_for_testing<sui::sui::SUI>(ITEM_PRICE - 1, scenario.ctx());
+    let item = purchase_item(payment, TREASURY, b"Hat".to_string(), b"head".to_string(), b"head_slot".to_string(), scenario.ctx());
+    destroy(item); // 미도달 — EInsufficientPayment
+    scenario.end();
 }
