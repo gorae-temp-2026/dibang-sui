@@ -22,7 +22,8 @@ import { SharePhotoUploadPage } from './pages/SharePhotoUploadPage'
 import { WeddingMemoryBookPage } from './pages/WeddingMemoryBookPage'
 import { WeddingMemoryBookCuratePage } from './pages/WeddingMemoryBookCuratePage'
 import { OnboardingConsentPage } from './pages/OnboardingConsentPage'
-import { NetworkPage } from './pages/NetworkPage'
+// [비활성] NetworkPage 전체 주석처리 — dev 스캐폴드(비서비스). 진짜 자리는 InyeonPage(태스크 #24).
+// import { NetworkPage } from './pages/NetworkPage'
 import { OnboardingGate } from './components/OnboardingGate'
 import { isDevBypass } from './dev/devBypass' // DEV 전용 로그인 우회(프로덕션 import.meta.env.DEV=false로 제거)
 
@@ -56,7 +57,7 @@ function App() {
         <Route path="/dm" element={<DmPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
-      <Route path="/network" element={<AuthGuard><OnboardingGate><NetworkPage /></OnboardingGate></AuthGuard>} />
+      {/* [비활성] NetworkPage(dev 스캐폴드) 주석처리: <Route path="/network" element={<AuthGuard><OnboardingGate><NetworkPage /></OnboardingGate></AuthGuard>} /> */}
       <Route path="/invitation/create" element={<AuthGuard><OnboardingGate><InvitationCreatePage /></OnboardingGate></AuthGuard>} />
       <Route path="/invitation/edit/:weddingId" element={<AuthGuard><OnboardingGate><InvitationEditPage /></OnboardingGate></AuthGuard>} />
       <Route path="/lounge/:loungeId/enter" element={<AuthGuard><OnboardingGate><LoungeCheckInGatePage /></OnboardingGate></AuthGuard>} />
