@@ -174,6 +174,25 @@ export async function getOwnedWeddingCapIds(
   return objs.filter((o) => o.data).map((o) => o.data!.objectId);
 }
 
+/**
+ * 주소가 소유한 WeddingCap 중 특정 weddingId를 가리키는 Cap의 ID(없으면 null).
+ * add_host·withdraw가 요구하는 Cap을 결혼식별로 찾을 때 사용(Cap.wedding_id 필드 매칭).
+ */
+export async function getWeddingCapForWedding(
+  client: SuiJsonRpcClient,
+  owner: string,
+  weddingId: string,
+): Promise<string | null> {
+  const objs = await listOwnedByType(client, owner, moveTarget('wedding', 'WeddingCap'));
+  for (const res of objs) {
+    const f = objectFields(res);
+    if (f && res.data && asString(f.wedding_id) === weddingId) {
+      return res.data.objectId;
+    }
+  }
+  return null;
+}
+
 // === 이벤트 조회 타입 ===
 
 export interface RsvpEvent {
