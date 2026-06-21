@@ -4,6 +4,7 @@ import { MessageCircle, Share2 } from 'lucide-react'
 import type { Moi } from './types'
 import { MOI_MUTUALS } from './data'
 import { useT } from '../../lib/i18n'
+import { useInyeonProfile } from '../../stores/inyeonProfile'
 
 interface MatchOverlayProps {
   open: boolean
@@ -14,8 +15,10 @@ interface MatchOverlayProps {
 
 export function MatchOverlay({ open, moi, onDismiss, onOpenChat }: MatchOverlayProps) {
   const t = useT()
+  const myPhoto = useInyeonProfile((s) => s.photoUrl)
   if (!open || !moi) return null
   const mutuals = MOI_MUTUALS[moi.id] ?? []
+  const moiPhoto = moi.photos[0]?.url
   return (
     <div className="fixed inset-0 z-[70] mx-auto flex max-w-[420px] flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_36%,rgba(30,58,95,0.95),rgba(11,23,34,0.97))] px-8 text-center">
       <div className="text-[12px] font-extrabold tracking-[0.24em] text-[#F8C57A]">이음 성사</div>
@@ -25,13 +28,18 @@ export function MatchOverlay({ open, moi, onDismiss, onOpenChat }: MatchOverlayP
       </p>
 
       <div className="my-7 flex items-center">
-        <div className="z-[2] -mr-5 flex h-24 w-24 items-center justify-center rounded-full border-[3px] border-[#FDFBF7] bg-gradient-to-br from-[#FCE6EC] to-[#E8F4FA]" />
+        {/* 나 = 디방인연 대표사진 */}
+        <div
+          className="z-[2] -mr-5 h-24 w-24 rounded-full border-[3px] border-[#FDFBF7] bg-cover bg-[center_30%]"
+          style={{ backgroundImage: `url(${myPhoto})` }}
+        />
         <div className="z-[3] flex h-[50px] w-[50px] items-center justify-center rounded-full bg-[#F8C57A] text-[#5a3a12] shadow-[0_8px_22px_rgba(248,197,122,0.55)]">
           <Share2 className="h-6 w-6" />
         </div>
+        {/* 상대 = 실제 프로필 사진(없으면 hue 그라데이션) */}
         <div
           className="z-[2] -ml-5 h-24 w-24 rounded-full border-[3px] border-[#FDFBF7] bg-cover bg-[center_18%]"
-          style={{ background: `linear-gradient(150deg, hsl(${moi.photos[0]?.hue ?? 210} 52% 34%), hsl(${((moi.photos[0]?.hue ?? 210) + 36) % 360} 48% 16%))` }}
+          style={moiPhoto ? { backgroundImage: `url(${moiPhoto})` } : { background: `linear-gradient(150deg, hsl(${moi.photos[0]?.hue ?? 210} 52% 34%), hsl(${((moi.photos[0]?.hue ?? 210) + 36) % 360} 48% 16%))` }}
         />
       </div>
 

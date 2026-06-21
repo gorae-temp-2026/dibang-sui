@@ -19,7 +19,7 @@ const ITEMS: { key: InyeonScreen; tkey: string; Icon: ComponentType<{ className?
 export function InyeonRail({ active, onNav }: { active: InyeonScreen; onNav: (s: InyeonScreen) => void }) {
   const t = useT()
   return (
-    <nav className="pointer-events-none fixed inset-x-0 bottom-[96px] z-40">
+    <nav className="pointer-events-none fixed inset-x-0 bottom-[150px] z-40">
       <div className="relative mx-auto h-0 max-w-[420px]">
         <div className="absolute bottom-0 right-3 flex flex-col items-center gap-[9px]">
           {ITEMS.map(({ key, tkey, Icon }) => {

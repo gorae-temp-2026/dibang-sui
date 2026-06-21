@@ -49,13 +49,16 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
   const ieumCount = Math.max(0, data.graph.nodes.length - 1)
   const creditGood = ['AAA', 'AA', 'A'].includes(data.moiCredit.tier)
   const creditLabel = creditGood ? t('profile.creditGood') : t('profile.creditFair')
+  // 풀페이지(인연)에선 대표 사진을 크게(모바일 꽉 채움), 사진 탭=닫기(유니버스 복귀). 바텀시트는 기존 유지.
+  const isPage = presentation === 'page'
+  const heroClass = isPage ? 'h-[48vh] min-h-[300px] cursor-pointer' : 'h-52'
 
   const body = (
     <>
       {meeting && (
         <>
-          {/* 큰 프로필 사진 + 단계 뱃지 + 후크(정성 closeness) */}
-          <div className="relative mb-3 h-52 overflow-hidden rounded-2xl bg-cover bg-[center_22%]" style={meeting.photoUrl ? { backgroundImage: `url(${meeting.photoUrl})` } : { background: photoBg(meeting.photoHue) }}>
+          {/* 큰 프로필 사진 + 단계 뱃지 + 후크(정성 closeness). 풀페이지=크게+탭하면 닫힘(유니버스 복귀). */}
+          <div onClick={isPage ? () => onOpenChange(false) : undefined} className={`relative mb-3 ${heroClass} overflow-hidden rounded-2xl bg-cover bg-[center_22%]`} style={meeting.photoUrl ? { backgroundImage: `url(${meeting.photoUrl})` } : { background: photoBg(meeting.photoHue) }}>
             <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0d1621]/92 via-[#0d1621]/40 to-transparent" />
             <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#0d1621]/55 px-2.5 py-1 text-[10.5px] font-bold text-white backdrop-blur">
               {showDetail ? '✓ 이음 완료 · 실명' : (<><Lock className="h-3 w-3" /> 이음 전 · 익명</>)}
