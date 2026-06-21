@@ -1,15 +1,16 @@
-// ⚠️ TRANSITIONAL(전환기) — 아키텍처 의도: 온체인(Sui) = 신뢰/Wedding SSOT, DB(Go/Supabase)는 보조.
-// 상세: CLAUDE.md 상단 SSOT 배너 / _architecture/SUI_CONTRACT_DESIGN_DIRECTION §SSOT 선언.
-/**
- * 게스트 온체인 액션 훅 (RSVP 한정).
- *
- * cutover(2026-06-21): 새 컨트랙트의 부조(give)·방명록(write)은 하객 *Participation*(온체인 신원, 참가-먼저)을
- * 요구한다. guest-web은 §2(비로그인 익명 전환 퍼널)라 그 흐름이 없으므로 **온체인 give/write를 여기서 하지 않는다**
- * — 로그인 본체(dibang-wedding)에서 Participation을 갖고 수행한다. RSVP는 이벤트 발행만이라(participation 불요)
- * 여기 유지한다. (단 guest-web이 zkLogin/executeOnchain을 갖는 것 자체의 §2 정합은 별도 과제 — _audit/2026-06-21-sdk-contract-drift.)
- */
+// 게스트 온체인 액션 훅 (guest-web).
+// [변경 2026-06-21] guest-web도 zkLogin으로 서명해 온체인 트랜잭션을 직접 날린다(CLAUDE.md §2).
+// 게스트가 본인 zkLogin 지갑으로 participate/give/write/rsvp를 직접 서명.
 import { useCallback } from 'react'
-import { buildSubmitRsvpTx } from '@gorae/sui-sdk'
+import {
+  buildSubmitRsvpTx,
+  buildParticipateTx,
+  buildGiveTx,
+  buildWriteTx,
+  type ParticipateParams,
+  type GiveParams,
+  type WriteParams,
+} from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 
 export interface SubmitRsvpInput {
@@ -27,10 +28,24 @@ export function useOnchainActions() {
   const { executeOnchain } = useZkLogin()
 
   const submitRsvp = useCallback(
-    // RSVP는 이벤트만 발행(오브젝트·participation 불요).
     async (input: SubmitRsvpInput): Promise<string> => executeOnchain(buildSubmitRsvpTx(input)),
     [executeOnchain],
   )
 
-  return { submitRsvp }
+  const participate = useCallback(
+    async (params: ParticipateParams): Promise<string> => executeOnchain(buildParticipateTx(params)),
+    [executeOnchain],
+  )
+
+  const give = useCallback(
+    async (params: GiveParams): Promise<string> => executeOnchain(buildGiveTx(params)),
+    [executeOnchain],
+  )
+
+  const write = useCallback(
+    async (params: WriteParams): Promise<string> => executeOnchain(buildWriteTx(params)),
+    [executeOnchain],
+  )
+
+  return { submitRsvp, participate, give, write }
 }

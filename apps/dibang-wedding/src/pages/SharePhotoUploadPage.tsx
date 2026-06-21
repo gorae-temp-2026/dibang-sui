@@ -176,6 +176,8 @@ function SharePhotoUploadInner({
   // === 완료 화면 ===
   if (isDone) {
     const uploadedCount = state.context.uploadedPaths.length;
+    const attemptedCount = state.context.files.length;
+    const failedCount = attemptedCount - uploadedCount;
     const totalAfter = existingCount + uploadedCount;
     return (
       <div className="mx-auto flex min-h-screen max-w-[480px] flex-col bg-white">
@@ -186,9 +188,12 @@ function SharePhotoUploadInner({
               <polyline points="5 13 10 18 19 7" />
             </svg>
           </div>
-          <p className="text-2xl font-semibold text-lng-text-primary">사진이 공유됐어요</p>
+          <p className="text-2xl font-semibold text-lng-text-primary">
+            {failedCount > 0 ? '일부 사진만 공유됐어요' : '사진이 공유됐어요'}
+          </p>
           <p className="text-base text-lng-text-secondary">
             {uploadedCount}장의 사진이 공유됐습니다.
+            {failedCount > 0 && ` (${failedCount}장 실패)`}
           </p>
           <p className="text-sm text-lng-muted">
             총 {totalAfter}장 공유 완료 (최대 {SHARE_PHOTO_QUOTA_PER_GUEST}장)

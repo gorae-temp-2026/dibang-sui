@@ -16,13 +16,41 @@ export interface SaveInvitationPayload {
   invitationReq: UpdateInvitationRequest;
 }
 
+export interface SaveInvitationResult {
+  wedding: { id: string; invitations: { id: string }[] };
+  suiIds: WeddingObjectIds | null;
+  onchainError?: string;
+}
+
+const PENDING_KEY = (id: string) => `dibang.onchain-pending.${id}`;
+
+interface PendingOnchain {
+  weddingDigest: string;
+  vaultDigest?: string;
+}
+
+function loadPending(dbId: string): PendingOnchain | null {
+  try {
+    const raw = localStorage.getItem(PENDING_KEY(dbId));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function savePending(dbId: string, data: PendingOnchain) {
+  localStorage.setItem(PENDING_KEY(dbId), JSON.stringify(data));
+}
+
+function clearPending(dbId: string) {
+  localStorage.removeItem(PENDING_KEY(dbId));
+}
+
 export function useSaveInvitation() {
   const queryClient = useQueryClient();
   const { createWedding: createWeddingOnchain, createVault: createVaultOnchain } = useOnchainHostActions();
   const { isAuthenticated } = useZkLogin();
 
   return useMutation({
-    mutationFn: async ({ weddingReq, invitationReq }: SaveInvitationPayload) => {
+    mutationFn: async ({ weddingReq, invitationReq }: SaveInvitationPayload): Promise<SaveInvitationResult> => {
       // Step 1: Supabase createWedding → weddingId 확보 (D0-1: Supabase 먼저)
       const { data: wedding } = await createWedding({
         body: weddingReq,
@@ -46,23 +74,28 @@ export function useSaveInvitation() {
       }
 
       // Step 3: 온체인 createWedding (D0-1: dual-write).
-      // 온체인이 실패해도 Supabase 생성은 유지하고 sui_id는 null로 두어 추후 재시도한다
-      // — 결혼식 생성 자체를 막지 않는다.
       let suiIds: WeddingObjectIds | null = null;
+      let onchainError: string | undefined;
       if (isAuthenticated) {
         try {
           const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
-          const digest = await createWeddingOnchain();
+          const pending = loadPending(wedding.id);
+
+          const digest = pending?.weddingDigest ?? await createWeddingOnchain();
+          savePending(wedding.id, { weddingDigest: digest });
+
           const ids = await extractWeddingObjectIds(digest, network);
-          // C10-1: 축의 Vault 생성(capId로) → vaultId 추출. 실패해도 wedding/lounge는 저장(흐름 유지).
+
           let vaultId = '';
           try {
-            const vaultDigest = await createVaultOnchain({ weddingId: ids.weddingId, capId: ids.capId });
-            vaultId = (await extractWeddingObjectIds(vaultDigest, network)).vaultId;
+            const vDigest = pending?.vaultDigest
+              ?? await createVaultOnchain({ weddingId: ids.weddingId, capId: ids.capId });
+            savePending(wedding.id, { weddingDigest: digest, vaultDigest: vDigest });
+            vaultId = (await extractWeddingObjectIds(vDigest, network)).vaultId;
           } catch (e) {
             console.error('[온체인] createVault 실패 — vault 없이 저장:', e);
           }
-          // C7-4·C10-1: 발행된 Sui ID(wedding/lounge/vault)를 Supabase row에 dual-write 저장.
+
           await updateWeddingSuiIds({
             path: { weddingId: wedding.id },
             body: {
@@ -73,12 +106,14 @@ export function useSaveInvitation() {
             throwOnError: true,
           });
           suiIds = { ...ids, vaultId };
+          clearPending(wedding.id);
         } catch (e) {
-          console.error('[온체인] createWedding 실패 — Supabase 유지, sui_id=null(재시도 가능):', e);
+          onchainError = e instanceof Error ? e.message : '온체인 기록에 실패했습니다.';
+          console.error('[온체인] dual-write 실패 — Supabase 유지, 복구용 digest localStorage 보존:', e);
         }
       }
 
-      return { wedding, suiIds };
+      return { wedding, suiIds, onchainError };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: getMyWeddingsQueryKey() });

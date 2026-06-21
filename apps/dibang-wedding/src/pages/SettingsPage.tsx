@@ -62,7 +62,10 @@ export function SettingsPage() {
       send({ type: 'SAVE_DONE' });
       send({ type: 'SHOW_TOAST', msg: t('settings.saved') });
     },
-    onError: () => send({ type: 'SAVE_ERROR' }),
+    onError: () => {
+      setUserOverride(null);
+      send({ type: 'SAVE_ERROR' });
+    },
   });
 
   const handleMarketingToggle = () => {

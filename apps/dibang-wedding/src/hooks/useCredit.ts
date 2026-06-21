@@ -6,7 +6,7 @@
 // 상세: _architecture/SUI_CONTRACT_DESIGN_DIRECTION §10-B / CLAUDE.md 상단 SSOT 배너.
 import { useQuery } from '@tanstack/react-query';
 import { createJsonRpcClient, getSignalEvents, type SuiNetwork } from '@gorae/sui-sdk';
-import { creditFromSignals, type CreditResult } from '../lib/credit';
+import { creditFromSignals, signalBreakdownFor, SOURCE, type CreditResult } from '../lib/credit';
 import { env } from '../env';
 
 const network = (): SuiNetwork => (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
@@ -32,4 +32,52 @@ export function useWalletCredit(address?: string) {
   const credit = address ? (query.data?.credit[address] ?? 0) : undefined;
   const components = address ? query.data?.components[address] : undefined;
   return { ...query, credit, components };
+}
+
+/** 내 프로필 표시용 통계 — 온체인 신호에서 신용 점수·이음 수·참여 수·중심성 백분위를 한 번에 계산. */
+export interface MyCreditStats {
+  /** 신뢰 점수(표시 스케일 0~1000 = 신용 0~1 × 1000 반올림). */
+  score: number;
+  /** 받은 이음(매칭) 수. */
+  ieum: number;
+  /** 함께한 이벤트(참석) 수. */
+  events: number;
+  /** 네트워크 중심성 백분위("상위 N%"). 신호 있는 노드 중 내 신용 순위. 없으면 null. */
+  topPercent: number | null;
+  /** 표시할 실데이터가 있나(신호 0이면 false → 데모/플레이스홀더 처리). */
+  hasData: boolean;
+}
+
+/**
+ * 내 온체인 신용 통계(읽기 전용, 게이트/배포 무관 — SignalEmitted만 읽음).
+ * address 없으면 비활성. 신호가 아직 없으면 hasData=false(0 표시).
+ */
+export function useMyCreditStats(address?: string) {
+  const net = network();
+  return useQuery({
+    queryKey: ['onchain-credit-stats', net, address ?? ''],
+    enabled: !!address,
+    staleTime: 60_000,
+    queryFn: async (): Promise<MyCreditStats> => {
+      const client = createJsonRpcClient(net);
+      const signals = await getSignalEvents(client);
+      const result = creditFromSignals(signals);
+      const breakdown = signalBreakdownFor(signals, address!);
+      // "함께한 이벤트" = 내가 *보낸* 참석(ATTEND) 신호 수. breakdown.참석은 *받은* 것(혼주 기준)이라 부적합.
+      const events = signals.filter((s) => s.from === address && s.source === SOURCE.ATTEND).length;
+      const credit = result.credit[address!] ?? 0;
+      // 중심성 = 신용 내림차순 순위의 백분위(1위 = 상위 0~, 꼴찌 = 상위 100%).
+      const ranked = Object.values(result.credit).sort((a, b) => b - a);
+      const total = ranked.length;
+      const rank = ranked.findIndex((v) => v <= credit); // credit 이상인 노드 수 = 내 위치
+      const topPercent = total > 0 && credit > 0 ? Math.max(1, Math.round(((rank + 1) / total) * 100)) : null;
+      return {
+        score: Math.round(credit * 1000),
+        ieum: breakdown.매칭,
+        events,
+        topPercent,
+        hasData: breakdown.total > 0 || credit > 0 || events > 0,
+      };
+    },
+  });
 }

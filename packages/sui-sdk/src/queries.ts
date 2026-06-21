@@ -202,6 +202,36 @@ export async function getWeddingCapForWedding(
   return null;
 }
 
+/** 주소가 소유한 Participation(이벤트 참가 증명) 중 특정 eventId에 대한 것을 조회. */
+export interface ParticipationOnChain {
+  id: string;
+  eventId: string;
+  eventType: number;
+  participant: string;
+  roleId: number;
+}
+
+export async function getParticipationForEvent(
+  client: SuiJsonRpcClient,
+  owner: string,
+  eventId: string,
+): Promise<ParticipationOnChain | null> {
+  const objs = await listOwnedByType(client, owner, moveTarget('event', 'Participation'));
+  for (const res of objs) {
+    const f = objectFields(res);
+    if (f && res.data && asString(f.event_id) === eventId) {
+      return {
+        id: res.data.objectId,
+        eventId: asString(f.event_id),
+        eventType: asNumber(f.event_type),
+        participant: asString(f.participant),
+        roleId: asNumber(f.role_id),
+      };
+    }
+  }
+  return null;
+}
+
 // === 이벤트 조회 타입 ===
 
 export interface RsvpEvent {

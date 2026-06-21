@@ -152,6 +152,8 @@ export const sharePhotoUploadMachine = setup({
         ...context.uploadedPaths,
         ...params.paths,
       ],
+      existingCount: ({ context }, params: { paths: string[] }) =>
+        context.existingCount + params.paths.length,
     }),
     setError: assign({
       error: (_, params: { error: string }) => params.error,

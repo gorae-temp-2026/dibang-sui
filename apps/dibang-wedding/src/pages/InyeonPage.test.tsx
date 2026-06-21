@@ -10,12 +10,30 @@
  */
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { createQueryWrapper } from '../test-utils'
+
+vi.mock('../providers/ZkLoginProvider', () => ({
+  useZkLogin: () => ({ address: null, isAuthenticated: false }),
+}))
+
+vi.mock('../hooks/useCredit', () => ({
+  useMyCreditStats: () => ({ data: undefined, isLoading: false }),
+}))
+
+vi.mock('../hooks/useOnchainHostActions', () => ({
+  useOnchainHostActions: () => ({ createMoi: vi.fn() }),
+}))
+
+vi.mock('../env', () => ({
+  env: { VITE_SUI_NETWORK: 'testnet' },
+}))
+
 import { InyeonPage } from './InyeonPage'
 
 describe('InyeonPage 디방인연', () => {
   it('브랜드 · 요네 지갑 · 익명 카드 hook을 노출한다', () => {
-    render(<InyeonPage />)
+    render(<InyeonPage />, { wrapper: createQueryWrapper() })
     expect(screen.getByText('디방인연')).toBeInTheDocument()
     expect(screen.getByText(/1,250/)).toBeInTheDocument()
     // 이음 전이라 이름 대신 generic hook (구체 식장명 없음)
@@ -27,7 +45,7 @@ describe('InyeonPage 디방인연', () => {
 
   it('이음 신청 버튼 → 한마디 입력 시트가 열린다', async () => {
     const user = userEvent.setup()
-    render(<InyeonPage />)
+    render(<InyeonPage />, { wrapper: createQueryWrapper() })
     await user.click(screen.getByRole('button', { name: '이음 신청' }))
     expect(await screen.findByPlaceholderText(/같은 결혼식에서/)).toBeInTheDocument()
   })

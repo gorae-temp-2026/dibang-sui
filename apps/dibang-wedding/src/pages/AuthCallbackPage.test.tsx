@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const navigate = vi.fn()
 const useAuth = vi.fn()
+const completeLoginFromUrl = vi.fn().mockResolvedValue(false)
 
 vi.mock('react-router', async () => {
   const actual = await vi.importActual<typeof import('react-router')>('react-router')
@@ -25,6 +26,9 @@ vi.mock('react-router', async () => {
 })
 vi.mock('../providers/AuthContext', () => ({
   useAuth: () => useAuth(),
+}))
+vi.mock('../providers/ZkLoginProvider', () => ({
+  useZkLogin: () => ({ completeLoginFromUrl, isAuthenticated: false, address: null }),
 }))
 
 import { AuthCallbackPage } from './AuthCallbackPage'
@@ -41,7 +45,9 @@ beforeEach(() => {
 afterEach(() => {
   navigate.mockReset()
   useAuth.mockReset()
+  completeLoginFromUrl.mockReset().mockResolvedValue(false)
   vi.useRealTimers()
+  window.location.hash = ''
 })
 
 describe('AuthCallbackPage', () => {

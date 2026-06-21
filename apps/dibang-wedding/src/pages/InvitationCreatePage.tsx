@@ -137,7 +137,15 @@ export function InvitationCreatePage() {
           weddingReq: toCreateWeddingRequest(state, me?.id),
           invitationReq: toUpdateInvitationRequest(state),
         },
-        { onSuccess: () => send({ type: 'SAVE_SUCCESS' }), onError },
+        {
+          onSuccess: (result) => {
+            if (result.onchainError) {
+              console.warn('[온체인] 결혼식 저장됨, 온체인 기록 실패(복구용 digest localStorage 보존):', result.onchainError);
+            }
+            send({ type: 'SAVE_SUCCESS' });
+          },
+          onError,
+        },
       );
     }
   };

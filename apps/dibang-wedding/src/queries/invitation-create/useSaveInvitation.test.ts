@@ -58,6 +58,7 @@ afterEach(() => {
   extractWeddingObjectIds.mockReset()
   updateWeddingSuiIds.mockReset()
   authState.isAuthenticated = false
+  localStorage.clear()
 })
 
 const weddingReq = {
@@ -128,7 +129,7 @@ describe('useSaveInvitation', () => {
     expect(res.suiIds).toEqual({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '0xV' })
   })
 
-  it('인증이어도 온체인 실패 시 throw하지 않고 Supabase 유지, suiIds null', async () => {
+  it('인증이어도 온체인 실패 시 throw하지 않고 Supabase 유지, suiIds null + onchainError 반환', async () => {
     authState.isAuthenticated = true
     vi.spyOn(console, 'error').mockImplementation(() => {})
     createWedding.mockResolvedValue({ data: { id: 'w-6', invitations: [{ id: 'i' }] } })
@@ -137,6 +138,38 @@ describe('useSaveInvitation', () => {
     const res = await result.current.mutateAsync({ weddingReq, invitationReq: {} })
     expect(res.wedding).toEqual({ id: 'w-6', invitations: [{ id: 'i' }] })
     expect(res.suiIds).toBeNull()
+    expect(res.onchainError).toBe('onchain fail')
+  })
+
+  it('온체인 성공+DB기록 실패 시 digest를 localStorage에 보존, 재호출 시 재사용(중복발행 방지)', async () => {
+    authState.isAuthenticated = true
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    createWedding.mockResolvedValue({ data: { id: 'w-7', invitations: [{ id: 'i' }] } })
+    createWeddingOnchain.mockResolvedValue('digest-1')
+    createVaultOnchain.mockResolvedValue('vault-digest-1')
+    extractWeddingObjectIds
+      .mockResolvedValueOnce({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '' })
+      .mockResolvedValueOnce({ weddingId: '', loungeId: '', capId: '', vaultId: '0xV' })
+    updateWeddingSuiIds.mockRejectedValueOnce(new Error('db write failed'))
+    const { result } = renderHook(() => useSaveInvitation(), { wrapper: createQueryWrapper() })
+    const res1 = await result.current.mutateAsync({ weddingReq, invitationReq: {} })
+    expect(res1.suiIds).toBeNull()
+    expect(res1.onchainError).toBe('db write failed')
+    expect(localStorage.getItem('dibang.onchain-pending.w-7')).not.toBeNull()
+
+    // 2회차: 같은 weddingId로 재호출 시 createWeddingOnchain을 다시 호출하면 안 됨
+    createWeddingOnchain.mockClear()
+    createVaultOnchain.mockClear()
+    createWedding.mockResolvedValue({ data: { id: 'w-7', invitations: [{ id: 'i' }] } })
+    extractWeddingObjectIds
+      .mockResolvedValueOnce({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '' })
+      .mockResolvedValueOnce({ weddingId: '', loungeId: '', capId: '', vaultId: '0xV' })
+    updateWeddingSuiIds.mockResolvedValueOnce({ data: null })
+    const res2 = await result.current.mutateAsync({ weddingReq, invitationReq: {} })
+    expect(createWeddingOnchain).not.toHaveBeenCalled()
+    expect(createVaultOnchain).not.toHaveBeenCalled()
+    expect(res2.suiIds).toEqual({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '0xV' })
+    expect(localStorage.getItem('dibang.onchain-pending.w-7')).toBeNull()
   })
 
   it('성공 후 myWeddings invalidate', async () => {

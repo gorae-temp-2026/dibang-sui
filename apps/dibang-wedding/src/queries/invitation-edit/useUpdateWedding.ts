@@ -22,7 +22,9 @@ export function useUpdateWedding(weddingId: string, invitationId: string) {
       const hasInvitationData = invitationReq.gallery_photos
         || invitationReq.cover_image
         || invitationReq.custom_message
-        || invitationReq.design_template_id;
+        || invitationReq.design_template_id
+        || invitationReq.design_config
+        || invitationReq.cover_text_config;
 
       if (hasInvitationData && invitationId) {
         await updateInvitation({

@@ -7,7 +7,7 @@
  * 주의: 실제 로그인 완료(OAuth → ZK prover → 서명)는 실 Google OAuth client id와
  * 실행 중인 ZK prover가 있어야 동작한다. 미설정 시 login()은 안내만 한다.
  */
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import type { Transaction } from '@mysten/sui/transactions'
 import {
@@ -88,6 +88,22 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     sessionStorage.setItem(DEV_KEY, sk)
     setDevKeypair(Ed25519Keypair.fromSecretKey(sk))
   }, [])
+
+  // 세션 만료 검증 — maxEpoch가 현재 에포크 이하면 자동 로그아웃.
+  useEffect(() => {
+    if (!session) return
+    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+    let cancelled = false
+    fetchCurrentEpoch(network).then((epoch) => {
+      if (cancelled) return
+      if (epoch >= session.maxEpoch) {
+        console.warn('[zkLogin] 세션 만료 — maxEpoch', session.maxEpoch, '현재', epoch)
+        clearSession()
+        setSession(null)
+      }
+    }).catch(() => { /* 네트워크 실패 시 기존 세션 유지 */ })
+    return () => { cancelled = true }
+  }, [session])
 
   const login = useCallback(async (redirectUri: string) => {
     const clientId = env.VITE_GOOGLE_CLIENT_ID

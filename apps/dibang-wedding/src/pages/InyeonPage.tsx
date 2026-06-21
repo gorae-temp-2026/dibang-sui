@@ -19,6 +19,8 @@ import { chulsooProfile } from '../components/profile/fixture'
 import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
 import { ChatScreen } from '../components/inyeon/ChatScreen'
 import { MoiGateModal } from '../components/MoiGateModal'
+import { useZkLogin } from '../providers/ZkLoginProvider'
+import { useMyCreditStats } from '../hooks/useCredit'
 
 const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.id === id) ?? null)
 
@@ -173,9 +175,11 @@ export function InyeonPage() {
   )
 }
 
-// 내 프로필 — 신뢰잔액(Moi Credit 재료)이 데모 핵심이라 정적으로 표시. 편집/업로드는 TODO.
-// "내 전체 프로필" → 공유 ProfileSheet(⑤): ① 연결 그래프 + ② signal sunburst + Moi Credit raw→층→공식.
+// 내 프로필 — 신뢰잔액·이음·중심성을 온체인 신호(useMyCreditStats)로 라이브 표시(#68 배선).
+// 신호 없으면 0/—(온체인 액션 연결되어 신호가 흐르면 채워짐). "내 전체 프로필" → 공유 ProfileSheet(⑤).
 function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
+  const { address } = useZkLogin()
+  const { data: stats, isLoading } = useMyCreditStats(address ?? undefined)
   return (
     <div className="h-full overflow-y-auto px-5 pb-6 pt-5">
       <div className="text-center">
@@ -190,14 +194,14 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
           <span className="ml-auto text-[10.5px] font-medium text-white/45">Moi Credit 재료</span>
         </div>
         <div className="mt-2.5 flex items-baseline gap-1.5">
-          <b className="text-[32px] font-black tracking-tight text-white">724</b>
+          <b className="text-[32px] font-black tracking-tight text-white">{isLoading ? '—' : (stats?.score ?? 0)}</b>
           <span className="text-xs text-white/50">/ 신뢰 점수</span>
         </div>
         <div className="mt-3.5 flex gap-2.5">
           {[
-            ['38', '이음'],
-            ['12', '함께한 이벤트'],
-            ['상위 9%', '네트워크 중심성'],
+            [isLoading ? '—' : String(stats?.ieum ?? 0), '이음'],
+            [isLoading ? '—' : String(stats?.events ?? 0), '함께한 이벤트'],
+            [isLoading ? '—' : stats?.topPercent != null ? `상위 ${stats.topPercent}%` : '—', '네트워크 중심성'],
           ].map(([v, l]) => (
             <div key={l} className="flex-1 rounded-xl bg-white/[0.05] py-2.5 text-center">
               <b className="block text-[17px] font-extrabold text-white">{v}</b>
