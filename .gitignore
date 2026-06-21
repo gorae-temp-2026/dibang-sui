@@ -24,6 +24,7 @@ contracts/*/build/
 **/.test-keypair
 **/.signals-host-key
 **/.signals-guest-key
+**/.shop-admin-key
 
 # E2E 실행 기록의 스크린샷은 용량 큼·재생성 가능 → 커밋 제외 (SUMMARY/steps는 커밋)
 _e2e_test/runs/*/screenshots/

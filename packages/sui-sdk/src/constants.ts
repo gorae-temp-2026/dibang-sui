@@ -21,12 +21,20 @@ export interface SuiContractConfig {
   emMoneyMatrixId?: string;
   /** CS(유대) TrustMatrix shared object ID. write/invite/gift/participate/accept_ium이 갱신. */
   csMatrixId?: string;
+  /**
+   * dibang 샵 Payment Kit PaymentRegistry shared object ID(결제·중복방지·treasury 적립).
+   * payment_kit 패키지(0x7e06…)에 1회 생성·설정(managed_funds=true)된 registry — dibang 패키지 재배포와 무관하게 유지.
+   * buildPurchaseItemTx가 이 registry로 moi::purchase_item을 호출. 생성: scripts/create-shop-registry.ts.
+   */
+  shopRegistryId?: string;
 }
 
 /** testnet 배포 기본값 (2026-06-21 cutover — 신뢰그래프+신호+add_host primary 게이트, digest CEhq5tz1...). 구 0x6bb8 대체. */
 export const TESTNET_CONFIG: SuiContractConfig = {
   network: 'testnet',
   packageId: '0x258e9a29572e4a3729257299a85cda52f8415c25b92d7576b863fb3d9b0731ee',
+  // dibang 샵 PaymentRegistry(managed_funds=true) — create-shop-registry.ts로 생성(2026-06-21).
+  shopRegistryId: '0x06cd52b59efdc3e0c4807204be0b3d449842dc591c57cf2cb6704a2b8c4d482c',
 };
 
 let activeConfig: SuiContractConfig = { ...TESTNET_CONFIG };
