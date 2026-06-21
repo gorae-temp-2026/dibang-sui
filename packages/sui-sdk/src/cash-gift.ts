@@ -1,11 +1,11 @@
 /**
  * cash_gift 모듈 PTB 빌더.
  *
- * give 는 가스 코인에서 금액을 분리해 모금함에 입금하고 GIVE_MONEY → BUSU 신호를 발행한다(PII 없음, 참가-먼저).
+ * give 는 유저 본인 SUI에서 부조액을 모금함에 입금하고 GIVE_MONEY → BUSU 신호를 발행한다(PII 없음, 참가-먼저).
  * withdraw 는 인출 Coin을 호스트에게 전송한다.
  */
 
-import { Transaction } from '@mysten/sui/transactions';
+import { Transaction, coinWithBalance } from '@mysten/sui/transactions';
 import { moveTarget, requireMatrixId } from './constants';
 
 export interface CreateVaultParams {
@@ -56,12 +56,13 @@ export interface GiveParams {
 }
 
 /**
- * 부조(현행) — 가스에서 금액 분리 → `give(vault, wedding, participation, coin, clock)`. PII 없음(결정#2).
+ * 부조(현행) — 유저 본인 SUI에서 부조액 소싱 → `give(vault, wedding, participation, coin, matrix, clock)`. PII 없음(결정#2).
  * give가 방향·역할을 participation에서 파생해 GIVE_MONEY → BUSU 신호를 온체인 분류·발행한다.
+ * 결제 코인 = coinWithBalance(sponsor-safe). splitCoins(tx.gas) 금지 — sponsored tx에서 sponsor가 거부(SUI_SDK.md §Sponsored CRITICAL).
  */
 export function buildGiveTx(params: GiveParams): Transaction {
   const tx = new Transaction();
-  const coin = tx.splitCoins(tx.gas, [tx.pure.u64(params.amount)]);
+  const coin = coinWithBalance({ balance: params.amount });
   tx.moveCall({
     target: moveTarget('cash_gift', 'give'),
     arguments: [
