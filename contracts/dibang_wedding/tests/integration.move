@@ -18,6 +18,7 @@ use dibang_wedding::event as gathering;
 use dibang_wedding::ledger::{Self, ActionRecord};
 use dibang_wedding::cash_gift::{Self, CashGiftVault};
 use dibang_wedding::guestbook;
+use dibang_wedding::signal;
 
 const HOST: address = @0xA;
 const GUEST: address = @0xB;
@@ -79,6 +80,16 @@ fun wedding_signals_share_one_event_and_roles() {
     assert_eq!(ledger::actor(&g), GUEST);
     assert_eq!(ledger::record_role_id(&g), gathering::role_guest()); // 방향=하객(파생)
     assert_eq!(ledger::amount(&g), 100_000);
+    // 온체인 분류(SSOT): 부조 → ActionRecord.signals = [BUSU(하객→혼주, amount)], 방명록 → [CS]. DeFi가 직접 읽음.
+    let gsig = ledger::record_signals(&g);
+    assert_eq!(gsig.length(), 1);
+    assert_eq!(signal::kind(gsig.borrow(0)), signal::kind_busu());
+    assert_eq!(signal::from(gsig.borrow(0)), GUEST);
+    assert_eq!(signal::to(gsig.borrow(0)), HOST);
+    assert_eq!(signal::magnitude(gsig.borrow(0)), 100_000);
+    let wsig = ledger::record_signals(&w);
+    assert_eq!(wsig.length(), 1);
+    assert_eq!(signal::kind(wsig.borrow(0)), signal::kind_cs());
     scenario.return_to_sender(g);
     scenario.return_to_sender(w);
 
