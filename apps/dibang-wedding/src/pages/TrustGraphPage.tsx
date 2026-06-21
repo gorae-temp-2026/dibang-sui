@@ -1,5 +1,5 @@
 /**
- * 전체 신뢰 네트워크 그래프 — 로그인 불필요.
+ * 전체 Trust Network Graph — 로그인 불필요.
  * 온체인 이벤트(SignalEmitted + Participated + IumAccepted)로 구성.
  * 우측 세로 타임라인 슬라이더 + 노드 클릭 프로필 패널.
  */
@@ -170,7 +170,7 @@ export function TrustGraphPage() {
       .sort((a, b) => b.ts - a.ts)
       .slice(0, 50)
       .map((e) => ({
-        time: new Date(e.ts).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        time: new Date(e.ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
         from: addr(e.from),
         to: addr(e.to),
         kind: e.kind,
@@ -181,36 +181,36 @@ export function TrustGraphPage() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0A1626]">
-        <p className="text-white/60">온체인 신뢰 그래프 로딩 중...</p>
+        <p className="text-white/60">Loading trust graph from on-chain...</p>
       </div>
     )
   }
 
-  const tsLabel = new Date(currentMaxTs).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const tsLabel = new Date(currentMaxTs).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#0A1626]">
       {/* 좌상단 통계 */}
       <div className="absolute left-4 top-4 z-10 rounded-xl bg-black/50 px-4 py-3 backdrop-blur">
-        <h1 className="text-lg font-bold text-white">신뢰 네트워크 그래프</h1>
-        <p className="mt-1 text-xs text-white/50">{nodes.length}명 · {links.length}개 연결</p>
-        <p className="mt-0.5 text-[10px] text-white/40">{tsLabel} 기준</p>
+        <h1 className="text-lg font-bold text-white">Trust Network Graph</h1>
+        <p className="mt-1 text-xs text-white/50">{nodes.length} nodes · {links.length} edges</p>
+        <p className="mt-0.5 text-[10px] text-white/40">as of {tsLabel}</p>
         <div className="mt-2 flex gap-3 text-[10px]">
-          <span className="text-[#D4687A]">● EM(부조)</span>
-          <span className="text-[#5B89B3]">● CS(유대)</span>
-          <span className="text-white/40">● 참가</span>
+          <span className="text-[#D4687A]">● EM (gift)</span>
+          <span className="text-[#5B89B3]">● CS (bond)</span>
+          <span className="text-white/40">● event</span>
         </div>
       </div>
 
-      {/* 상단 이벤트 로그 */}
+      {/* 상단 Event Log */}
       <div className="absolute left-1/2 top-4 z-10 w-[520px] -translate-x-1/2 rounded-xl bg-black/60 backdrop-blur">
         <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
-          <span className="text-[11px] font-bold text-white/70">이벤트 로그</span>
-          <span className="text-[9px] text-white/40">{eventLog.length}건 (최근 50)</span>
+          <span className="text-[11px] font-bold text-white/70">Event Log</span>
+          <span className="text-[9px] text-white/40">{eventLog.length} entries (latest 50)</span>
         </div>
         <div className="max-h-[200px] overflow-y-auto px-2 py-1">
           {eventLog.length === 0 ? (
-            <p className="py-2 text-center text-[10px] text-white/30">이벤트 없음</p>
+            <p className="py-2 text-center text-[10px] text-white/30">No events</p>
           ) : (
             eventLog.map((e, i) => (
               <div key={i} className="flex items-center gap-1.5 py-0.5 text-[9px]">
@@ -229,7 +229,7 @@ export function TrustGraphPage() {
 
       {/* 우측 세로 타임라인 슬라이더 */}
       <div className="absolute right-4 top-1/2 z-10 flex -translate-y-1/2 flex-col items-center gap-2">
-        <span className="text-[9px] text-white/40">최신</span>
+        <span className="text-[9px] text-white/40">Latest</span>
         <input
           type="range"
           min={0}
@@ -240,7 +240,7 @@ export function TrustGraphPage() {
           className="h-[200px] cursor-pointer accent-[#F8C57A]"
           style={{ writingMode: 'vertical-lr', direction: 'rtl' }}
         />
-        <span className="text-[9px] text-white/40">초기</span>
+        <span className="text-[9px] text-white/40">Start</span>
       </div>
 
       {/* 바깥 클릭 닫기 오버레이 */}
@@ -263,7 +263,7 @@ export function TrustGraphPage() {
               <div className="h-8 w-8 rounded-full" style={{ background: `hsl(${selectedNode.hue}, 60%, 55%)` }} />
               <div>
                 <p className="text-sm font-bold text-white">{selectedNode.label}</p>
-                <p className="text-[10px] text-white/40">신호 {selectedNode.signalCount}건 · 이음 {selectedNode.iumCount}명</p>
+                <p className="text-[10px] text-white/40">{selectedNode.signalCount} signals · {selectedNode.iumCount} connections</p>
               </div>
             </div>
             <button type="button" onClick={() => setSelectedNode(null)} className="text-white/50 text-xs">✕</button>
@@ -271,7 +271,7 @@ export function TrustGraphPage() {
 
           {iumPartners.length > 0 && (
             <div className="mt-3">
-              <p className="text-[10px] font-bold text-[#F8C57A]">🔗 이음 상대</p>
+              <p className="text-[10px] font-bold text-[#F8C57A]">🔗 Connected partners</p>
               <div className="mt-1 flex flex-wrap gap-1">
                 {iumPartners.map((addr) => (
                   <span key={addr} className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/70">{addr.slice(0, 6)}…{addr.slice(-4)}</span>
@@ -282,7 +282,7 @@ export function TrustGraphPage() {
 
           {selectedConnections.length > 0 && (
             <div className="mt-3 max-h-32 overflow-y-auto">
-              <p className="text-[10px] font-bold text-white/60">연결</p>
+              <p className="text-[10px] font-bold text-white/60">Edges</p>
               {selectedConnections.map((c) => (
                 <div key={c.address} className="mt-1 flex items-center justify-between text-[10px]">
                   <span className="text-white/70">{c.label}</span>
