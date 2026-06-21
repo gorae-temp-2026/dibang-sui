@@ -128,6 +128,7 @@ export function TrustGraphPage() {
 
   const currentMaxTs = timeSteps[sliderValue] ?? (timeSteps[timeSteps.length - 1] ?? Date.now())
   const { nodes, links } = useMemo(() => buildGraph(rawEdges, allAddresses, iumMap, currentMaxTs), [rawEdges, allAddresses, iumMap, currentMaxTs])
+  const graphData = useMemo(() => ({ nodes, links }), [nodes, links])
 
   const selectedConnections = useMemo(() => {
     if (!selectedNode) return []
@@ -293,10 +294,13 @@ export function TrustGraphPage() {
       {/* 그래프 */}
       <ForceGraph2D
         ref={graphRef}
-        graphData={{ nodes, links }}
+        graphData={graphData}
         width={typeof window !== 'undefined' ? window.innerWidth : 800}
         height={typeof window !== 'undefined' ? window.innerHeight : 600}
         backgroundColor="#0A1626"
+        cooldownTicks={30}
+        warmupTicks={10}
+        d3AlphaMin={0.05}
         onNodeClick={handleNodeClick}
         nodeColor={(n: GNode) => selectedNode?.id === n.id ? '#F8C57A' : `hsl(${n.hue}, 60%, 55%)`}
         nodeVal={(n: GNode) => Math.max(2, n.signalCount + 1)}
