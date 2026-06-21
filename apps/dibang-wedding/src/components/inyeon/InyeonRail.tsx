@@ -3,22 +3,25 @@
 // 기능정의 §0: 유니버스(피드)·받은이음·채팅·프로필. (라운지 레일과 달리 네비라 상시 노출 — 접지 않음)
 import { Globe, Inbox, MessageCircle, User } from 'lucide-react'
 import type { InyeonScreen } from '../../machines/inyeon.machine'
+import { useT } from '../../lib/i18n'
 import { cn } from '../../lib/utils'
 
-const ITEMS: { key: InyeonScreen; label: string; Icon: typeof Globe }[] = [
-  { key: 'universe', label: '유니버스', Icon: Globe },
-  { key: 'received', label: '받은이음', Icon: Inbox },
-  { key: 'chat', label: '채팅', Icon: MessageCircle },
-  { key: 'me', label: '프로필', Icon: User },
+const ITEMS: { key: InyeonScreen; tkey: string; Icon: typeof Globe }[] = [
+  { key: 'universe', tkey: 'inyeon.rail.universe', Icon: Globe },
+  { key: 'received', tkey: 'inyeon.rail.received', Icon: Inbox },
+  { key: 'chat', tkey: 'inyeon.rail.chat', Icon: MessageCircle },
+  { key: 'me', tkey: 'inyeon.rail.me', Icon: User },
 ]
 
 export function InyeonRail({ active, onNav }: { active: InyeonScreen; onNav: (s: InyeonScreen) => void }) {
+  const t = useT()
   return (
     <nav className="pointer-events-none fixed inset-x-0 top-1/2 z-40 -translate-y-1/2">
       <div className="relative mx-auto h-0 max-w-[420px]">
         <div className="absolute right-2.5 top-0 flex -translate-y-1/2 flex-col items-center gap-2 rounded-[19px] border border-white/10 bg-[#0c1a2e]/80 p-1.5 backdrop-blur-md">
-          {ITEMS.map(({ key, label, Icon }) => {
+          {ITEMS.map(({ key, tkey, Icon }) => {
             const on = active === key
+            const label = t(tkey)
             return (
               <button
                 key={key}

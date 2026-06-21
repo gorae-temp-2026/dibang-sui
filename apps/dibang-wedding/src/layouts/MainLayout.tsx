@@ -1,9 +1,10 @@
 import { Outlet, NavLink } from 'react-router';
+import { useT } from '../lib/i18n';
 
 // 하단 네비 4탭 — Inyeon · Event list · My event · Setting (디방 통합 목업 260620 SSOT).
 // 2026-06-20 통합: 기존 3탭(나의 결혼식·참여한 결혼식·설정)에 Inyeon(유니버스) 신규 추가.
 // QR·DM 탭은 nav에서 제외(핸드오프 §2-1) — /qr·/dm 라우트 자체는 App.tsx에 유지, DM은 Inyeon으로 흡수.
-// 라벨은 통합 목업 기준 영문 표기.
+// 라벨 = i18n(ko 인연/이벤트 리스트/나의 이벤트/설정 · en Inyeon/Event list/My event/Setting).
 
 function InyeonIcon({ className }: { className?: string }) {
   return (
@@ -46,6 +47,7 @@ const navLinkClass = (isActive: boolean) =>
   `flex flex-col items-center gap-1 text-[11px] font-medium transition-colors ${isActive ? 'text-navy' : 'text-gray-400'}`;
 
 export function MainLayout() {
+  const t = useT();
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-lg mx-auto">
       <div className="flex-1 overflow-y-auto pb-24">
@@ -60,7 +62,7 @@ export function MainLayout() {
                 {({ isActive }) => (
                   <>
                     <InyeonIcon className={isActive ? 'text-navy' : 'text-gray-400'} />
-                    <span>Inyeon</span>
+                    <span>{t('nav.inyeon')}</span>
                   </>
                 )}
               </NavLink>
@@ -69,7 +71,7 @@ export function MainLayout() {
                 {({ isActive }) => (
                   <>
                     <GridIcon className={isActive ? 'text-navy' : 'text-gray-400'} />
-                    <span>Event list</span>
+                    <span>{t('nav.eventList')}</span>
                   </>
                 )}
               </NavLink>
@@ -78,7 +80,7 @@ export function MainLayout() {
                 {({ isActive }) => (
                   <>
                     <HeartIcon className={isActive ? 'text-navy' : 'text-gray-400'} />
-                    <span>My event</span>
+                    <span>{t('nav.myEvent')}</span>
                   </>
                 )}
               </NavLink>
@@ -87,7 +89,7 @@ export function MainLayout() {
                 {({ isActive }) => (
                   <>
                     <SettingsIcon className={isActive ? 'text-navy' : 'text-gray-400'} />
-                    <span>Setting</span>
+                    <span>{t('nav.setting')}</span>
                   </>
                 )}
               </NavLink>

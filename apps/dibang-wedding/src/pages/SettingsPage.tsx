@@ -12,9 +12,13 @@ import { useAuth } from '../providers/AuthContext';
 import { useSignOut } from '../queries/auth/useSignOut';
 import { giftActor } from '../machines/gift.machine';
 import { YoneChargeSheet } from '../components/settings/YoneChargeSheet';
+import { useT, useLangStore, type Lang } from '../lib/i18n';
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const t = useT();
+  const lang = useLangStore((s) => s.lang);
+  const setLang = useLangStore((s) => s.setLang);
   const { session } = useAuth();
   const signOut = useSignOut();
   const queryClient = useQueryClient();
@@ -35,7 +39,7 @@ export function SettingsPage() {
     ...updateMarketingConsentMutation(),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: getMeQueryKey() });
-      setToast('변경되었습니다');
+      setToast(t('settings.saved'));
       setTimeout(() => setToast(null), 2000);
     },
   });
@@ -55,11 +59,30 @@ export function SettingsPage() {
 
   return (
     <div className="px-6 py-8">
-      <h1 className="text-[28px] font-semibold text-navy mb-6">설정</h1>
+      <h1 className="text-[28px] font-semibold text-navy mb-6">{t('settings.title')}</h1>
 
       <div className="rounded-xl border border-line bg-white p-5 mb-4">
-        <p className="text-sm text-muted mb-1">현재 로그인</p>
+        <p className="text-sm text-muted mb-1">{t('settings.currentLogin')}</p>
         <p className="text-lg font-semibold text-navy">{userName}</p>
+      </div>
+
+      {/* 언어 설정 — ko/en (데모 핵심 범위: 네비·인연·Setting) */}
+      <div className="rounded-xl border border-line bg-white p-5 mb-4">
+        <p className="text-base font-semibold text-navy mb-3">{t('settings.language')}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {(['ko', 'en'] as Lang[]).map((l) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => setLang(l)}
+              className={`rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors ${
+                lang === l ? 'border-navy bg-navy text-white' : 'border-line bg-white text-navy hover:bg-gray-50'
+              }`}
+            >
+              {l === 'ko' ? '한국어' : 'English'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 요네 지갑 — 잔액 + Sui 충전 진입 */}
@@ -67,28 +90,28 @@ export function SettingsPage() {
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F8C57A]/20 text-xl">🐚</div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-muted">내 요네</p>
+            <p className="text-sm text-muted">{t('settings.myYone')}</p>
             <p className="flex items-baseline gap-1">
               <span className="text-2xl font-bold text-navy tabular-nums">{yone.toLocaleString()}</span>
-              <span className="text-sm text-muted">요네</span>
+              <span className="text-sm text-muted">{t('settings.yoneUnit')}</span>
             </p>
           </div>
           <button
             onClick={() => setChargeOpen(true)}
             className="flex shrink-0 items-center gap-1.5 rounded-full bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           >
-            <Plus className="h-4 w-4" /> 요네 충전
+            <Plus className="h-4 w-4" /> {t('settings.charge')}
           </button>
         </div>
         <p className="mt-3 flex items-center gap-1.5 text-xs text-muted">
-          <Coins className="h-3.5 w-3.5 text-[#E8A865]" /> Sui로 충전하고 선물·꾸미기에 바로 쓰세요
+          <Coins className="h-3.5 w-3.5 text-[#E8A865]" /> {t('settings.chargeHint')}
         </p>
       </div>
 
       <div className="rounded-xl border border-line bg-white p-5 mb-4">
-        <p className="text-base font-semibold text-navy mb-3">약관·동의</p>
+        <p className="text-base font-semibold text-navy mb-3">{t('settings.terms')}</p>
         <label className="flex items-center justify-between cursor-pointer">
-          <span className="text-base text-navy">마케팅 정보 수신 동의</span>
+          <span className="text-base text-navy">{t('settings.marketing')}</span>
           <input
             type="checkbox"
             checked={marketing}
@@ -106,7 +129,7 @@ export function SettingsPage() {
         onClick={handleLogout}
         className="w-full rounded-xl border border-line bg-white px-5 py-3.5 text-base font-semibold text-red-500 hover:bg-red-50 transition-colors"
       >
-        로그아웃
+        {t('settings.logout')}
       </button>
 
       <YoneChargeSheet open={chargeOpen} onOpenChange={setChargeOpen} />

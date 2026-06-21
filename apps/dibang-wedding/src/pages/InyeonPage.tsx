@@ -17,12 +17,14 @@ import { MatchOverlay } from '../components/inyeon/MatchOverlay'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { profileForPersona, chulsooPlazaProfile } from '../components/profile/personaProfiles'
+import { useT } from '../lib/i18n'
 import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
 import { ChatScreen } from '../components/inyeon/ChatScreen'
 
 const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.id === id) ?? null)
 
 export function InyeonPage() {
+  const t = useT()
   const [state, send] = useMachine(inyeonMachine)
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
   const [filterOpen, setFilterOpen] = useState(false)
@@ -44,7 +46,7 @@ export function InyeonPage() {
         photoHue: profileMoiForSheet.photos[0]?.hue ?? 210,
         photoUrl: profileMoiForSheet.photos[0]?.url,
         hook: profileMoiForSheet.hook,
-        prov: profileMoiForSheet.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: TIER_META[p.tier].label })),
+        prov: profileMoiForSheet.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: t(`inyeon.tier.${p.tier}.label`) })),
         mutualCount: profileMoiForSheet.mutualCount,
         balLabel: profileMoiForSheet.balLabel,
       }
@@ -62,7 +64,7 @@ export function InyeonPage() {
         >
           <SlidersHorizontal className="h-[18px] w-[18px]" />
         </button>
-        <div className="flex-1 text-[19px] font-extrabold tracking-tight text-white">디방인연</div>
+        <div className="flex-1 text-[19px] font-extrabold tracking-tight text-white">{t('inyeon.brand')}</div>
         <div className="rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
           🪙 {yone.toLocaleString()}
         </div>

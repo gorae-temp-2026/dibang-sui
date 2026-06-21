@@ -5,6 +5,7 @@ import { motion, useAnimationControls, type PanInfo } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
 import { POOL } from './data'
 import { InyeonCard } from './InyeonCard'
+import { useT } from '../../lib/i18n'
 
 function TopCard({ cardKey, onSwipeNext, children }: { cardKey: number; onSwipeNext: () => void; children: ReactNode }) {
   const controls = useAnimationControls()
@@ -53,24 +54,21 @@ export function SwipeDeck({
   onOpenDetail,
   onReset,
 }: SwipeDeckProps) {
+  const t = useT()
   const visible = queue.slice(0, 3)
 
   if (visible.length === 0) {
     return (
       <div className="relative mx-4 my-3.5 flex min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-3xl border border-white/10 bg-white/[0.03] px-8 text-center">
         <Sparkles className="h-11 w-11 text-[#87CEEB]" />
-        <div className="text-base font-extrabold text-white">오늘의 인연을 다 봤어요</div>
-        <div className="text-[12.5px] leading-relaxed text-white/55">
-          잠시 후 새로운 모이들이 다시 모여요.
-          <br />
-          지금까지 본 모이들을 다시 볼 수도 있어요.
-        </div>
+        <div className="text-base font-extrabold text-white">{t('inyeon.deckEmptyTitle')}</div>
+        <div className="text-[12.5px] leading-relaxed text-white/55">{t('inyeon.deckEmptyDesc')}</div>
         <button
           type="button"
           onClick={onReset}
           className="mt-1 rounded-2xl bg-[#152a44] px-5 py-2.5 text-[13px] font-extrabold text-[#cfe0ee]"
         >
-          처음부터 다시 보기
+          {t('inyeon.deckReset')}
         </button>
       </div>
     )

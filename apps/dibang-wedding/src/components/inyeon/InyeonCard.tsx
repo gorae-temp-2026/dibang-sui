@@ -3,7 +3,8 @@
 // 이름은 미노출(이음 후 공개). 액션(넘기기/이음)·"프로필 보기 ▾"는 맨 위 카드에서만.
 import { ChevronDown, Lock, Share2, Users, X } from 'lucide-react'
 import type { Moi, Tier } from './types'
-import { FREE_PHOTOS, PHOTO_COST, TIER_META } from './data'
+import { FREE_PHOTOS, PHOTO_COST } from './data'
+import { useT } from '../../lib/i18n'
 import { cn } from '../../lib/utils'
 
 const TIER_BADGE: Record<Tier, string> = {
@@ -41,9 +42,9 @@ export function InyeonCard({
   onPass,
   onOpenDetail,
 }: InyeonCardProps) {
+  const t = useT()
   const locked = photoIdx >= FREE_PHOTOS && !unlocked
   const photo = moi.photos[photoIdx] ?? moi.photos[0]
-  const tier = TIER_META[moi.tier]
 
   return (
     <div
@@ -89,11 +90,11 @@ export function InyeonCard({
       {moi.online && (
         <div className="absolute left-3.5 top-5 z-[4] flex items-center gap-1.5 rounded-full bg-[#0d1621]/45 px-2.5 py-1.5 text-[11px] font-bold text-white backdrop-blur">
           <span className="h-2 w-2 rounded-full bg-[#46d77f] shadow-[0_0_0_3px_rgba(70,215,127,0.25)]" />
-          접속 중
+          {t('inyeon.online')}
         </div>
       )}
       <div className={cn('absolute right-3.5 top-5 z-[4] rounded-full px-2.5 py-1.5 text-[10px] font-extrabold backdrop-blur', TIER_BADGE[moi.tier])}>
-        {tier.label}
+        {t(`inyeon.tier.${moi.tier}.label`)}
       </div>
 
       {/* 잠금 오버레이 (3장째부터) */}
@@ -104,7 +105,7 @@ export function InyeonCard({
           className="absolute left-1/2 top-1/2 z-[5] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 rounded-2xl border border-white/25 bg-[#0d1621]/55 px-5 py-4 text-white backdrop-blur"
         >
           <Lock className="h-5 w-5" />
-          <span className="text-sm font-bold">사진 더보기</span>
+          <span className="text-sm font-bold">{t('inyeon.morePhotos')}</span>
           <span className="text-xs font-extrabold text-[#F8C57A]">🪙 {PHOTO_COST}</span>
         </button>
       )}
@@ -113,11 +114,11 @@ export function InyeonCard({
       <div className="absolute inset-x-0 bottom-0 z-[4] p-5 pb-7 text-white">
         <div className="flex items-center gap-2 text-[15px] font-bold">
           <span className="text-lg">{moi.prov[0]?.emoji}</span>
-          {moi.hook}
+          {t(`inyeon.tier.${moi.tier}.hook`)}
         </div>
         {moi.mutualCount > 0 && (
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold backdrop-blur">
-            <Users className="h-3 w-3" /> 공통 친구 {moi.mutualCount}명
+            <Users className="h-3 w-3" /> {t('inyeon.mutual', { n: moi.mutualCount })}
           </div>
         )}
         {/* 익명 신뢰범위 막대 */}
@@ -131,7 +132,7 @@ export function InyeonCard({
           <span className="ml-auto text-[11px] font-extrabold text-[#F8C57A]">{moi.balLabel}</span>
         </div>
         <div className="mt-2 flex items-center gap-1 text-[10px] font-bold text-white/75">
-          <Lock className="h-3 w-3" /> 이음하면 이름이 공개돼요
+          <Lock className="h-3 w-3" /> {t('inyeon.revealName')}
         </div>
       </div>
 
@@ -141,7 +142,7 @@ export function InyeonCard({
           <div className="absolute inset-x-0 bottom-11 z-[6] flex items-center justify-center gap-5">
             <button
               type="button"
-              aria-label="넘기기"
+              aria-label={t('inyeon.pass')}
               onClick={onPass}
               className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-white/35 bg-[#141e2d]/50 text-white shadow-lg backdrop-blur transition active:scale-90"
             >
@@ -149,7 +150,7 @@ export function InyeonCard({
             </button>
             <button
               type="button"
-              aria-label="이음 신청"
+              aria-label={t('inyeon.ieum')}
               onClick={onIeum}
               className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] text-white shadow-lg transition active:scale-90"
             >
@@ -161,7 +162,7 @@ export function InyeonCard({
             onClick={onOpenDetail}
             className="absolute bottom-0 left-1/2 z-[6] flex -translate-x-1/2 items-center gap-1 rounded-t-2xl border border-b-0 border-white/20 bg-[#0d1621]/60 px-5 py-2 text-[11px] font-bold text-white backdrop-blur"
           >
-            프로필 보기 <ChevronDown className="h-3.5 w-3.5" />
+            {t('inyeon.viewProfile')} <ChevronDown className="h-3.5 w-3.5" />
           </button>
         </>
       )}
