@@ -19,7 +19,7 @@ import { IeumSheet } from '../components/inyeon/IeumSheet'
 import { MatchOverlay } from '../components/inyeon/MatchOverlay'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
-import { chulsooProfile } from '../components/profile/fixture'
+import { buildProfileFromMoi } from '../hooks/useOnchainProfile'
 import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
 import { ChatScreen } from '../components/inyeon/ChatScreen'
 import { MoiGateModal } from '../components/MoiGateModal'
@@ -28,7 +28,7 @@ import { useMyCreditStats } from '../hooks/useCredit'
 
 export function InyeonPage() {
   const { requestIum, acceptIum } = useOnchainHostActions()
-  const { users: discoveredUsers, loading: discoverLoading } = useDiscoverUsers()
+  const { users: discoveredUsers, incoming: discoveredIncoming, sentMoiIds, matchedAddresses, loading: discoverLoading, refetch: refetchDiscover } = useDiscoverUsers()
   const pool = discoveredUsers
   const moiById = (id: number | null) => (id == null ? null : pool.find((m) => m.id === id) ?? null)
 
@@ -50,12 +50,24 @@ export function InyeonPage() {
   )
   const [state, send] = useMachine(machine)
 
-  // 온체인 발견 유저가 로드되면 머신의 pool을 교체(queue도 재빌드).
   useEffect(() => {
     if (discoveredUsers.length > 0) {
       send({ type: 'SET_POOL', pool: discoveredUsers })
     }
   }, [discoveredUsers, send])
+  useEffect(() => {
+    if (discoveredIncoming.length > 0) {
+      send({ type: 'SET_INCOMING', incoming: discoveredIncoming })
+    }
+  }, [discoveredIncoming, send])
+  useEffect(() => {
+    if (matchedAddresses.length > 0 && pool.length > 0) {
+      const moiIds = matchedAddresses
+        .map((addr) => pool.find((m) => (m as Moi & { suiAddress?: string }).suiAddress === addr)?.id)
+        .filter((id): id is number => id != null)
+      if (moiIds.length > 0) send({ type: 'SET_MATCHED', moiIds })
+    }
+  }, [matchedAddresses, pool, send])
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
 
   const {
@@ -102,7 +114,7 @@ export function InyeonPage() {
       </header>
 
       {/* 본문 스크린 */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative flex-1 overflow-x-hidden overflow-y-visible">
         {screen === 'universe' && discoverLoading && (
           <div className="flex h-full items-center justify-center">
             <p className="text-sm text-white/50">인연을 찾는 중...</p>
@@ -117,7 +129,6 @@ export function InyeonPage() {
               unlocked={unlocked}
               onPhotoNav={(id, dir) => send({ type: 'PHOTO_NAV', id, dir })}
               onUnlock={(id) => send({ type: 'UNLOCK_PHOTOS', id })}
-              onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
               onSwipeNext={() => send({ type: 'SWIPE_NEXT' })}
               onOpenProfile={(id) => send({ type: 'OPEN_DETAIL', id })}
               onReset={() => send({ type: 'RESET_DECK' })}
@@ -127,16 +138,17 @@ export function InyeonPage() {
 
         {screen === 'received' && (
           <ReceivedScreen
+            pool={pool}
             incoming={incoming}
-            sentIds={sentIds}
+            sentIds={[...new Set([...sentIds, ...sentMoiIds])]}
             unlockedIds={unlockedIds}
             onAccept={(moiId) => {
               send({ type: 'ACCEPT_REQ', moiId })
-              // 온체인 accept_ium fire-and-forget. 데모 데이터엔 eventId·requestId가 없어 skip.
-              // 실유저 데이터 연결 시 incoming에 eventId·requestId 추가 → 아래 guard 통과.
               const req = incoming.find((r) => r.moiId === moiId)
-              if (req && 'eventId' in req && 'requestId' in req) {
-                acceptIum({ eventId: req.eventId as string, requestId: req.requestId as string }).catch(() => {})
+              if (req && req.eventId && req.requestId) {
+                acceptIum({ eventId: req.eventId as string, requestId: req.requestId as string })
+                  .then(() => refetchDiscover())
+                  .catch(() => {})
               }
             }}
             onDecline={(moiId) => send({ type: 'DECLINE_REQ', moiId })}
@@ -185,6 +197,13 @@ export function InyeonPage() {
         onCancel={() => send({ type: 'CANCEL_IEUM' })}
       />
       <MatchOverlay
+        open={state.matches('sentPending')}
+        moi={activeMoi}
+        pending
+        onDismiss={() => send({ type: 'DISMISS_MATCH' })}
+        onOpenChat={() => send({ type: 'DISMISS_MATCH' })}
+      />
+      <MatchOverlay
         open={state.matches('matched')}
         moi={activeMoi}
         onDismiss={() => send({ type: 'DISMISS_MATCH' })}
@@ -202,14 +221,14 @@ export function InyeonPage() {
       <ProfileSheet
         open={myProfileOpen}
         onOpenChange={(o) => send({ type: o ? 'OPEN_MY_PROFILE' : 'CLOSE_MY_PROFILE' })}
-        data={chulsooProfile}
+        data={buildProfileFromMoi(null)}
         context="inyeon"
       />
       {/* 다른 모이 프로필(카드 상세·받은이음·채팅에서 진입) — 이음 전 익명 + 이음 CTA. */}
       <ProfileSheet
         open={profileMoiId != null}
         onOpenChange={(o) => !o && send({ type: 'CLOSE_PROFILE' })}
-        data={chulsooProfile}
+        data={buildProfileFromMoi(profileMoiForSheet)}
         context="inyeon"
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}

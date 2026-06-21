@@ -2,15 +2,14 @@
 // 이음: 받은 이음 신청(수락/거절) + 내가 보낸 이음. 관심: 나를 본 모이 + 내가 추가사진 연 모이.
 // 이음 전 익명 규칙(기능정의 §5): 받은 신청은 상대가 이름·관계 먼저 공개 / 관심은 이름 잠금.
 import { useState, type ReactNode } from 'react'
-import { Eye, Inbox, Lock, Send } from 'lucide-react'
-import type { IncomingReq } from './types'
-import { POOL } from './data'
+import { Eye, Inbox, Send } from 'lucide-react'
+import type { IncomingReq, Moi } from './types'
 import { cn } from '../../lib/utils'
 
-const moiById = (id: number) => POOL.find((m) => m.id === id)
 const photoBg = (hue: number) => `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
 
 interface ReceivedScreenProps {
+  pool: Moi[]
   incoming: IncomingReq[]
   sentIds: number[]
   unlockedIds: number[]
@@ -19,7 +18,8 @@ interface ReceivedScreenProps {
   onOpenProfile: (id: number) => void
 }
 
-export function ReceivedScreen({ incoming, sentIds, unlockedIds, onAccept, onDecline, onOpenProfile }: ReceivedScreenProps) {
+export function ReceivedScreen({ pool, incoming, sentIds, unlockedIds, onAccept, onDecline, onOpenProfile }: ReceivedScreenProps) {
+  const moiById = (id: number) => pool.find((m) => m.id === id)
   const [seg, setSeg] = useState<'ieum' | 'gwansim'>('ieum')
   const seen = unlockedIds.map(moiById).filter((m): m is NonNullable<typeof m> => !!m)
 
@@ -30,7 +30,7 @@ export function ReceivedScreen({ incoming, sentIds, unlockedIds, onAccept, onDec
       {/* 세그 */}
       <div className="mb-4 flex gap-1.5">
         <SegBtn active={seg === 'ieum'} onClick={() => setSeg('ieum')} icon={<Inbox className="h-3.5 w-3.5" />} label="이음" n={incoming.length + sentIds.length} />
-        <SegBtn active={seg === 'gwansim'} onClick={() => setSeg('gwansim')} icon={<Eye className="h-3.5 w-3.5" />} label="관심" n={1 + seen.length} />
+        <SegBtn active={seg === 'gwansim'} onClick={() => setSeg('gwansim')} icon={<Eye className="h-3.5 w-3.5" />} label="관심" n={seen.length} />
       </div>
 
       {seg === 'ieum' ? (
@@ -72,10 +72,10 @@ export function ReceivedScreen({ incoming, sentIds, unlockedIds, onAccept, onDec
                   <div key={id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-3">
                     <div className="h-12 w-12 flex-shrink-0 rounded-xl bg-cover bg-center blur-[6px]" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-bold text-white/80">익명의 모이</div>
+                      <div className="text-[13px] font-bold text-white/80">{m.name}</div>
                       <div className="text-[11px] text-white/45">{m.prov[0]?.emoji} {m.prov[0]?.text}</div>
                     </div>
-                    <span className="rounded-full bg-[#46d77f]/15 px-2.5 py-1 text-[10.5px] font-bold text-[#7fe0a3]">이음 성사</span>
+                    <span className="rounded-full bg-[#F8C57A]/15 px-2.5 py-1 text-[10.5px] font-bold text-[#F8C57A]">수락 대기중</span>
                   </div>
                 )
               })}
@@ -87,16 +87,7 @@ export function ReceivedScreen({ incoming, sentIds, unlockedIds, onAccept, onDec
       ) : (
         <>
           <SecHead label="나를 본 모이" sub="내 사진을 본 관심 · 이름은 이음 후" />
-          <div className="grid grid-cols-3 gap-2">
-            <div className="relative aspect-square overflow-hidden rounded-xl">
-              <div className="absolute inset-0 bg-cover bg-center blur-lg" style={{ background: photoBg(280) }} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[#0d1621]/35 text-white">
-                <Lock className="h-5 w-5" />
-                <span className="text-[9.5px] font-bold">이름은 이음 후</span>
-              </div>
-              <span className="absolute inset-x-0 bottom-0 bg-[#0d1621]/70 py-1 text-center text-[9px] font-bold text-white">📷 내 사진을 봤어요</span>
-            </div>
-          </div>
+          <Blank>아직 나를 본 모이가 없어요.</Blank>
 
           <SecHead label="내가 본 모이" sub="요네로 추가 사진을 연 모이" className="mt-5" />
           {seen.length ? (

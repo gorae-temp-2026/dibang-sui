@@ -8,6 +8,7 @@
  * 실행 중인 ZK prover가 있어야 동작한다. 미설정 시 login()은 안내만 한다.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { toast, Toaster } from 'sonner'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import type { Transaction } from '@mysten/sui/transactions'
 import {
@@ -180,12 +181,22 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     setDevKeypair(null)
   }, [])
 
+  const showTxToast = useCallback((digest: string, network: string) => {
+    const url = `https://suiscan.xyz/${network}/tx/${digest}`
+    toast.success('TX 성공', {
+      description: digest.slice(0, 16) + '…',
+      action: { label: '보기 →', onClick: () => window.open(url, '_blank') },
+      duration: 6000,
+    })
+  }, [])
+
   const executeOnchain = useCallback(
     async (tx: Transaction): Promise<string> => {
-      // [DEV] dev keypair 세션이면 zkLogin proof·sponsor 없이 keypair로 직접 서명·실행.
+      const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
       if (devKeypair) {
-        const devClient = createJsonRpcClient((env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet')
+        const devClient = createJsonRpcClient(net)
         const res = await executeAndAssert(devClient, { transaction: tx, signer: devKeypair })
+        showTxToast(res.digest, net)
         return res.digest
       }
       if (!session) throw new Error('zkLogin 세션 없음 — 먼저 로그인하세요')
@@ -212,9 +223,10 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       })
       const status = res.effects?.status?.status
       if (status !== 'success') throw new Error(`트랜잭션 실패: ${res.effects?.status?.error ?? status}`)
+      showTxToast(res.digest, net)
       return res.digest
     },
-    [session, devKeypair],
+    [session, devKeypair, showTxToast],
   )
 
   const value = useMemo<ZkLoginContextValue>(
@@ -232,7 +244,12 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     [session, devKeypair, login, devLogin, completeLoginFromUrl, logout, executeOnchain],
   )
 
-  return <ZkLoginContext.Provider value={value}>{children}</ZkLoginContext.Provider>
+  return (
+    <ZkLoginContext.Provider value={value}>
+      {children}
+      <Toaster position="bottom-center" richColors />
+    </ZkLoginContext.Provider>
+  )
 }
 
 // eslint-disable-next-line react-refresh/only-export-components -- provider 파일에 훅 동거(관용)

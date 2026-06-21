@@ -416,20 +416,75 @@ export interface DiscoveredUser {
   degree: number;
 }
 
+/**
+ * SignalEmitted(from→to) + Participated(같은 이벤트 참가) 간선으로
+ * 양방향 인접 리스트를 만들고, myAddress에서 BFS로 최단 거리(다리 수)를 계산한다.
+ */
+function buildDegreeMap(
+  signals: SignalQuery[],
+  participations: ParticipatedQuery[],
+  myAddress: string,
+): Map<string, number> {
+  const adj = new Map<string, Set<string>>();
+  const addEdge = (a: string, b: string) => {
+    if (a === b) return;
+    if (!adj.has(a)) adj.set(a, new Set());
+    if (!adj.has(b)) adj.set(b, new Set());
+    adj.get(a)!.add(b);
+    adj.get(b)!.add(a);
+  };
+  for (const s of signals) addEdge(s.from, s.to);
+  // 같은 이벤트에 참가한 사람끼리도 1다리
+  const byEvent = new Map<string, string[]>();
+  for (const p of participations) {
+    if (!byEvent.has(p.eventId)) byEvent.set(p.eventId, []);
+    byEvent.get(p.eventId)!.push(p.participant);
+  }
+  for (const members of byEvent.values()) {
+    for (let i = 0; i < members.length; i++) {
+      for (let j = i + 1; j < members.length; j++) {
+        addEdge(members[i]!, members[j]!);
+      }
+    }
+  }
+  const dist = new Map<string, number>();
+  dist.set(myAddress, 0);
+  const bfsQueue: string[] = [myAddress];
+  let head = 0;
+  while (head < bfsQueue.length) {
+    const cur = bfsQueue[head++]!;
+    const d = dist.get(cur)!;
+    for (const neighbor of adj.get(cur) ?? []) {
+      if (!dist.has(neighbor)) {
+        dist.set(neighbor, d + 1);
+        bfsQueue.push(neighbor);
+      }
+    }
+  }
+  return dist;
+}
+
 export async function discoverUsers(
   client: SuiJsonRpcClient,
   myAddress: string,
 ): Promise<DiscoveredUser[]> {
-  const [moiEvents, participations] = await Promise.all([
+  const [moiEvents, participations, signals] = await Promise.all([
     getMoiCreatedEvents(client),
     getParticipatedEvents(client),
+    getSignalEvents(client),
   ]);
-  const others = moiEvents.filter((m) => m.owner !== myAddress);
+  const degreeMap = buildDegreeMap(signals, participations, myAddress);
+  const seen = new Set<string>();
+  const others = moiEvents.filter((m) => {
+    if (m.owner === myAddress || seen.has(m.owner)) return false;
+    seen.add(m.owner);
+    return true;
+  });
   const myEventIds = new Set(participations.filter((p) => p.participant === myAddress).map((p) => p.eventId));
   return others.map((m) => {
     const theirEventIds = participations.filter((p) => p.participant === m.owner).map((p) => p.eventId);
     const shared = theirEventIds.filter((eid) => myEventIds.has(eid));
-    const degree = shared.length > 0 ? 1 : theirEventIds.length > 0 ? 3 : 5;
+    const degree = degreeMap.get(m.owner) ?? 6;
     return {
       address: m.owner,
       moiId: m.moiId,
@@ -438,4 +493,63 @@ export async function discoverUsers(
       degree,
     };
   });
+}
+
+// === 이음 신청 이벤트 (받은이음 소스) ===
+
+export interface IumRequestedQuery {
+  eventId: string;
+  initiator: string;
+  toUser: string;
+}
+
+export async function getIumRequestedEvents(client: SuiJsonRpcClient): Promise<IumRequestedQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('ium', 'IumRequested'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return { eventId: asString(p.event_id), initiator: asString(p.initiator), toUser: asString(p.to_user) };
+  });
+}
+
+// === 이음 수락 이벤트 ===
+
+export interface IumAcceptedQuery {
+  eventId: string;
+  initiator: string;
+  receiver: string;
+}
+
+export async function getIumAcceptedEvents(client: SuiJsonRpcClient): Promise<IumAcceptedQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('ium', 'IumAccepted'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return { eventId: asString(p.event_id), initiator: asString(p.initiator), receiver: asString(p.receiver) };
+  });
+}
+
+// === 소유한 IumRequest 조회 (받은 이음 신청의 requestId 확보) ===
+
+export interface OwnedIumRequest {
+  requestId: string;
+  eventId: string;
+  initiator: string;
+}
+
+export async function getOwnedIumRequests(
+  client: SuiJsonRpcClient,
+  owner: string,
+): Promise<OwnedIumRequest[]> {
+  const objs = await listOwnedByType(client, owner, moveTarget('ium', 'IumRequest'));
+  const out: OwnedIumRequest[] = [];
+  for (const res of objs) {
+    const f = objectFields(res);
+    if (f && res.data) {
+      out.push({
+        requestId: res.data.objectId,
+        eventId: asString(f.event_id),
+        initiator: asString(f.initiator),
+      });
+    }
+  }
+  return out;
 }

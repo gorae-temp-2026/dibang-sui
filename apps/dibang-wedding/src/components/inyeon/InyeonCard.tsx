@@ -2,7 +2,7 @@
 // 사진 갤러리(좌우 탭) + 대표포함 2장 무료/3장째 요네 게이트 + 티어/접속/hook/공통친구/익명 신뢰막대.
 // 이름은 미노출(이음 후 공개). 프로필 진입 = 하단 "프로필 보기 ▾" 버튼(사진 탭=다음 사진과 충돌 방지).
 // 액션(넘기기/이음)·프로필 보기는 맨 위 카드만. 아이콘=목업 심볼(이음=i-nodes).
-import { ChevronDown, Lock, Users, X } from 'lucide-react'
+import { Lock, Users, X } from 'lucide-react'
 import type { Moi } from './types'
 import { FREE_PHOTOS, PHOTO_COST } from './data'
 import { IeumIcon } from './icons'
@@ -21,7 +21,6 @@ interface InyeonCardProps {
   depth: number // 0 = top, 1/2 = behind
   onPhotoNav: (dir: 1 | -1) => void
   onUnlock: () => void
-  onIeum: () => void
   onPass: () => void
   onOpenProfile: () => void
 }
@@ -34,7 +33,6 @@ export function InyeonCard({
   depth,
   onPhotoNav,
   onUnlock,
-  onIeum,
   onPass,
   onOpenProfile,
 }: InyeonCardProps) {
@@ -46,15 +44,22 @@ export function InyeonCard({
     <div
       className={cn(
         'absolute inset-0 overflow-hidden rounded-3xl bg-[#222] shadow-[0_20px_48px_rgba(0,0,0,0.5)] select-none',
-        depth === 1 && 'scale-[0.94] translate-y-4',
-        depth === 2 && 'scale-[0.88] translate-y-8 opacity-60',
+        depth === 0 && 'top-8',
+        depth === 1 && 'top-2 scale-[0.96]',
+        depth === 2 && '-top-4 scale-[0.92] opacity-60',
       )}
     >
-      {/* 사진 레이어 (실제 url 없으면 hue 그라데이션) */}
+      {/* 사진 레이어 (실제 url 없으면 hue 그라데이션 + 주소 아바타) */}
       <div
         className={cn('absolute inset-0 bg-cover bg-[center_18%] transition', locked && 'blur-xl')}
         style={photo?.url ? { backgroundImage: `url(${photo.url})` } : { background: photoBg(photo?.hue ?? 210) }}
       />
+      {!photo?.url && (
+        <div className="absolute inset-0 z-[3] flex flex-col items-center justify-center gap-2">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/15 text-3xl backdrop-blur">🧑</div>
+          <span className="rounded-full bg-black/30 px-3 py-1 font-mono text-xs text-white/70">{moi.name}</span>
+        </div>
+      )}
       <div className="absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-[#0d1621]/90 via-[#0d1621]/55 to-transparent" />
 
       {/* 사진 세그먼트 점 */}
@@ -138,21 +143,13 @@ export function InyeonCard({
             </button>
             <button
               type="button"
-              aria-label={t('inyeon.ieum')}
-              onClick={(e) => { e.stopPropagation(); onIeum() }}
+              aria-label={t('inyeon.viewProfile')}
+              onClick={(e) => { e.stopPropagation(); onOpenProfile() }}
               className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] text-white shadow-lg transition active:scale-90"
             >
               <IeumIcon className="h-[22px] w-[22px]" />
             </button>
           </div>
-          {/* 프로필 보기 ▾ — 사진 탭 대신 명시적 진입(목업 sw-grip). 풀페이지 프로필(T5). */}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onOpenProfile() }}
-            className="absolute bottom-0 left-1/2 z-[6] flex -translate-x-1/2 items-center gap-1 rounded-t-2xl border border-b-0 border-white/20 bg-[#0d1621]/60 px-5 py-2 text-[11px] font-bold text-white backdrop-blur"
-          >
-            {t('inyeon.viewProfile')} <ChevronDown className="h-3.5 w-3.5" />
-          </button>
         </>
       )}
     </div>

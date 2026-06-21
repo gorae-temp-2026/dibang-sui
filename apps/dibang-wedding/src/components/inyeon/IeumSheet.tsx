@@ -6,9 +6,8 @@ import type { Moi } from './types'
 import { IeumIcon } from './icons'
 import { useT } from '../../lib/i18n'
 import { useInyeonProfile } from '../../stores/inyeonProfile'
-
-// 데모용 내 표시 이름(실서비스: 구글 로그인 프로필).
-const MY_NAME = '유상'
+import { useZkLogin } from '../../providers/ZkLoginProvider'
+import { useAuth } from '../../providers/AuthContext'
 
 interface IeumSheetProps {
   open: boolean
@@ -23,6 +22,9 @@ interface IeumSheetProps {
 
 export function IeumSheet({ open, message, sending, error, onMessage, onSend, onCancel }: IeumSheetProps) {
   const t = useT()
+  const { session } = useAuth()
+  const zk = useZkLogin()
+  const myName = session?.user?.user_metadata?.name ?? (zk.address ? `${zk.address.slice(0, 6)}…${zk.address.slice(-4)}` : '')
   const photoUrl = useInyeonProfile((s) => s.photoUrl)
   return (
     <Sheet
@@ -54,7 +56,7 @@ export function IeumSheet({ open, message, sending, error, onMessage, onSend, on
         <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <div className="h-11 w-11 flex-shrink-0 rounded-full bg-cover bg-center" style={{ backgroundImage: `url(${photoUrl})` }} />
           <div className="min-w-0 text-[11.5px] leading-relaxed text-white/60">
-            <b className="block text-[13.5px] text-white">{MY_NAME}</b>
+            <b className="block text-[13.5px] text-white">{myName}</b>
             {message.trim() ? message : t('ieum.previewHint')}
           </div>
         </div>

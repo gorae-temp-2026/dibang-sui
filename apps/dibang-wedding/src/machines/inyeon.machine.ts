@@ -3,7 +3,7 @@
 // 백엔드 연결 시 sendIeum actor를 실제 attestation/수락 폴링으로 교체(나머지 구조 유지).
 import { setup, assign, fromPromise, raise } from 'xstate'
 import type { Moi, IncomingReq, DmMsg } from '../components/inyeon/types'
-import { POOL, PHOTO_COST, START_YONE, DM_COST, INCOMING, seedDm, DM_AUTO_REPLY } from '../components/inyeon/data'
+import { POOL, PHOTO_COST, START_YONE, DM_COST, seedDm, DM_AUTO_REPLY } from '../components/inyeon/data'
 
 export type InyeonScreen = 'universe' | 'received' | 'chat' | 'me'
 
@@ -46,7 +46,10 @@ export interface InyeonContext {
 const moiById = (pool: Moi[], id: number): Moi | undefined => pool.find((m) => m.id === id)
 const seedIfAbsent = (dms: Record<number, DmMsg[]>, id: number): Record<number, DmMsg[]> =>
   dms[id] ? dms : { ...dms, [id]: seedDm() }
-const buildQueue = (pool: Moi[], lo: number, hi: number) => pool.filter((m) => m.deg >= lo && m.deg <= hi).map((m) => m.id)
+const buildQueue = (pool: Moi[], lo: number, hi: number, sentIds: number[] = []) => {
+  const sent = new Set(sentIds)
+  return pool.filter((m) => m.deg >= lo && m.deg <= hi && !sent.has(m.id)).map((m) => m.id)
+}
 
 export const inyeonMachine = setup({
   types: {} as {
@@ -64,6 +67,8 @@ export const inyeonMachine = setup({
       | { type: 'SET_FILTER'; degMin: number; degMax: number }
       | { type: 'RESET_DECK' }
       | { type: 'SET_POOL'; pool: Moi[] }
+      | { type: 'SET_INCOMING'; incoming: IncomingReq[] }
+      | { type: 'SET_MATCHED'; moiIds: number[] }
       | { type: 'ACCEPT_REQ'; moiId: number }
       | { type: 'DECLINE_REQ'; moiId: number }
       // 오버레이/시트 네비
@@ -99,7 +104,7 @@ export const inyeonMachine = setup({
   id: 'inyeon',
   context: {
     pool: POOL,
-    queue: buildQueue(POOL, 1, 6),
+    queue: buildQueue(POOL, 1, 6, []),
     photoIdx: {},
     unlocked: {},
     yone: START_YONE,
@@ -110,7 +115,7 @@ export const inyeonMachine = setup({
     message: '',
     sentIds: [],
     matchedIds: [],
-    incoming: INCOMING,
+    incoming: [],
     chatOpen: {},
     error: null,
     detailId: null,
@@ -137,22 +142,28 @@ export const inyeonMachine = setup({
       actions: assign({
         degMin: ({ event }) => event.degMin,
         degMax: ({ event }) => event.degMax,
-        queue: ({ context, event }) => buildQueue(context.pool, event.degMin, event.degMax),
+        queue: ({ context, event }) => buildQueue(context.pool, event.degMin, event.degMax, context.sentIds),
         photoIdx: () => ({}),
       }),
     },
     RESET_DECK: {
       actions: assign({
-        queue: ({ context }) => buildQueue(context.pool, context.degMin, context.degMax),
+        queue: ({ context }) => buildQueue(context.pool, context.degMin, context.degMax, context.sentIds),
         photoIdx: () => ({}),
       }),
     },
     SET_POOL: {
       actions: assign({
         pool: ({ event }) => event.pool,
-        queue: ({ event, context }) => buildQueue(event.pool, context.degMin, context.degMax),
+        queue: ({ event, context }) => buildQueue(event.pool, context.degMin, context.degMax, context.sentIds),
         photoIdx: () => ({}),
       }),
+    },
+    SET_INCOMING: {
+      actions: assign({ incoming: ({ event }) => event.incoming }),
+    },
+    SET_MATCHED: {
+      actions: assign({ matchedIds: ({ event }) => event.moiIds }),
     },
     PHOTO_NAV: {
       actions: assign({
@@ -291,12 +302,10 @@ export const inyeonMachine = setup({
         src: 'sendIeum',
         input: ({ context }) => ({ targetId: context.activeId }),
         onDone: {
-          target: 'matched',
+          target: 'sentPending',
           actions: assign({
             sentIds: ({ context }) =>
               context.activeId ? [...context.sentIds, context.activeId] : context.sentIds,
-            matchedIds: ({ context }) =>
-              context.activeId ? [...context.matchedIds, context.activeId] : context.matchedIds,
           }),
         },
         onError: {
@@ -305,11 +314,25 @@ export const inyeonMachine = setup({
         },
       },
     },
+    sentPending: {
+      on: {
+        DISMISS_MATCH: {
+          target: 'browsing',
+          actions: assign({
+            queue: ({ context }) => context.queue.filter((id) => id !== context.activeId),
+            activeId: null,
+            message: '',
+          }),
+        },
+      },
+    },
     matched: {
       on: {
         DISMISS_MATCH: {
           target: 'browsing',
           actions: assign({
+            matchedIds: ({ context }) =>
+              context.activeId ? [...context.matchedIds, context.activeId] : context.matchedIds,
             queue: ({ context }) => context.queue.filter((id) => id !== context.activeId),
             activeId: null,
             message: '',
