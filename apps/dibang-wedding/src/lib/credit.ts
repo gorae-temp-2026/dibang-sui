@@ -169,7 +169,7 @@ export function creditFromSignals(signals: SignalEvent[]): CreditResult {
   for (const n of nodeList) {
     const b = busuN[n] ?? 0
     const c = csN[n] ?? 0
-    const p = PERF_NO_RECORD // 이행 데이터(대여 상환/default) 미수집 → 무기록 기본치
+    const p = PERF_NO_RECORD // ⚠️ SCOPE: 이행(perf)=대여-상환=DeFi 다운스트림 영역(이 substrate scope 밖, #12) → 무기록 0.7 고정(미완 아님)
     credit[n] = W_BUSU * b + W_CS * c + W_PERF * p
     components[n] = { busu: b, cs: c, perf: p }
   }

@@ -63,6 +63,8 @@ public struct ActionRecord has key {
     role_id: u8,
     amount: u64,
     /// 이 액션이 청산하는 이전 의무(대여 상환 등). 없으면 none.
+    /// ⚠️ SCOPE: settles·이행축(perf)은 DeFi(대여-상환) = 신용을 *소비하는* 다운스트림 미래 층(#12) 대비 *예비*다.
+    /// 이 컨트랙트(신뢰 신호+신용 substrate)의 미구현/결함이 아님 — scope 밖. (현재 모든 호출이 none.)
     settles: Option<ID>,
     created_at_ms: u64,
     /// 이 액션에서 *온체인 분류*된 신호들(부조/유대, fan-out 0~N). 분류=SSOT — DeFi가 직접 읽고, 인덱서는 SignalEmitted로.
