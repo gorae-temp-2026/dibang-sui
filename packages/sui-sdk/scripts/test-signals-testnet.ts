@@ -128,24 +128,41 @@ async function main() {
   await executeAndAssert(client, { transaction: t5, signer: guest });
   console.log('  ✓ write (CS)');
 
-  // 6) read: 온체인 SignalEmitted 조회 (인덱싱 대기 후).
+  // 6) 인연 매칭: HOST(=initiator A) request_ium(GUEST=receiver B) → INYEON Event + IumRequest(→B).
+  const t6 = new Transaction();
+  t6.moveCall({ target: `${PKG}::ium::request_ium`, arguments: [t6.pure.address(G), t6.object(CLOCK)] });
+  const r6 = await executeAndAssert(client, { transaction: t6, signer: host });
+  const inyeonEventId = created(r6, '::event::Event');
+  const reqId = created(r6, '::ium::IumRequest');
+  console.log('  ✓ request_ium', { inyeonEventId });
+
+  // 7) GUEST(B) accept_ium → 매칭 확정 = 양방향 CS(initiator↔receiver) 신호.
+  const t7 = new Transaction();
+  t7.moveCall({ target: `${PKG}::ium::accept_ium`, arguments: [t7.object(inyeonEventId), t7.object(reqId), t7.object(CLOCK)] });
+  await executeAndAssert(client, { transaction: t7, signer: guest });
+  console.log('  ✓ accept_ium (match CS 양방향)');
+
+  // 8) read: 온체인 SignalEmitted 조회 (인덱싱 대기 후).
   configureSui({ network: 'testnet', packageId: PKG });
   let sigs: SignalEvent[] = [];
   for (let i = 0; i < 20; i++) {
     await new Promise((r) => setTimeout(r, 2000));
     sigs = await getSignalEvents(client);
-    if (sigs.length >= 3) break;
+    if (sigs.length >= 5) break;
   }
   console.log('\n온체인 SignalEmitted 조회:', sigs.length, '건');
   for (const s of sigs) console.log('  ', { kind: s.kind, source: s.source, from: s.from.slice(0, 8), to: s.to.slice(0, 8), mag: s.magnitude });
 
-  const BUSU = 1, CS = 2, A_WRITE = 4, A_ATTEND = 5;
+  const BUSU = 1, CS = 2, A_ACCEPT = 2, A_WRITE = 4, A_ATTEND = 5;
   const busu = sigs.filter((s) => s.kind === BUSU && s.from === G && s.to === H && s.magnitude === 1000);
   const attend = sigs.filter((s) => s.kind === CS && s.source === A_ATTEND && s.from === G && s.to === H);
   const write = sigs.filter((s) => s.kind === CS && s.source === A_WRITE && s.from === G && s.to === H);
   assert(busu.length >= 1, '부조 BUSU 신호(하객→혼주, 1000) 발행·조회');
   assert(attend.length >= 1, '참석 CS 신호(source=ATTEND, 하객→혼주) 발행·조회');
   assert(write.length >= 1, '방명록 CS 신호(source=WRITE_MESSAGE, 하객→혼주) 발행·조회');
+  const matchHG = sigs.filter((s) => s.kind === CS && s.source === A_ACCEPT && s.from === H && s.to === G);
+  const matchGH = sigs.filter((s) => s.kind === CS && s.source === A_ACCEPT && s.from === G && s.to === H);
+  assert(matchHG.length >= 1 && matchGH.length >= 1, '인연 매칭 양방향 CS 신호(source=ACCEPT_IUM, A↔B) 발행·조회');
 
   // 7) 오프체인 집계: 온체인 분류 신호 → 신용.
   const { credit, components } = creditFromSignals(sigs);

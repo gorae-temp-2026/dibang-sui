@@ -262,7 +262,7 @@ utils.move     유지
 
 **검증:** signal 단위(fan-out 0~N·방향·source·자기엣지·비-GUEST give) + e2e(give→stored BUSU, write→CS) + credit e2e(부조 서열·wash net·CS authority·매칭 양방향) + 미러상수 안티-드리프트 핀 + SDK↔credit 드리프트 가드. **sui move 50/50 · vitest 10/10 · 앱·SDK tsc 0.** opus 2차 적대 리뷰 7건: 미러상수·fan-out·자기엣지·순환의존 **무결**; source 보존·주석드리프트 **즉시 수정**; 드리프트 위험 2개 **테스트로 전환**.
 
-**testnet 실호출 실증(2026-06-21):** 신규 배포 pkg `0x32654d9d…7d97cc`(digest `8sRmqdTP…`)에 HOST/GUEST 2지갑으로 create_wedding→create_vault→participate→give→write 실행 → 온체인 `SignalEmitted` **3건 실조회**: 참석 `CS(source=ATTEND, 하객→혼주)` · 부조 `BUSU(source=GIVE_MONEY, 1000)` · 방명록 `CS(source=WRITE_MESSAGE)` — 방향·source·magnitude·fan-out 전부 정확. `creditFromSignals` → 하객 busu=1·혼주 cs=1(신용 0.64/0.44). **분류=온체인 → 집계=오프체인 전 파이프라인 실증.** 스크립트: `packages/sui-sdk/scripts/test-signals-testnet.ts`.
+**testnet 실호출 실증(2026-06-21):** 신규 배포 pkg `0x32654d9d…7d97cc`(digest `8sRmqdTP…`)에 HOST/GUEST 2지갑으로 create_wedding→create_vault→participate→give→write + request_ium→accept_ium 실행 → 온체인 `SignalEmitted` 실조회 **4종 전부**: 참석 `CS(source=ATTEND)` · 부조 `BUSU(source=GIVE_MONEY, 1000)` · 방명록 `CS(source=WRITE_MESSAGE)` · 인연 매칭 **양방향** `CS(source=ACCEPT_IUM, A→B·B→A)` — 방향·source·magnitude·fan-out 전부 정확(두 신호 소스 ActionLogged·Participated 모두 실증). `creditFromSignals` → 하객 busu=1·혼주 cs=1(신용 0.64/0.44). **분류=온체인 → 집계=오프체인 전 파이프라인 실증.** 스크립트: `packages/sui-sdk/scripts/test-signals-testnet.ts`.
 
 **남은 후속(적대 리뷰 — 정직 기록):**
 1. **참석·매칭 신호 stored 미보존(emit-only)** — 현재는 classify 함수 재현으로 trustless 충족. DeFi *직접* 읽기 완전 대칭 원하면 `Participation.signals` 또는 매칭 SBT 보존(후속).
