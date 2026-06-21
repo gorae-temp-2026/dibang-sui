@@ -227,19 +227,47 @@ utils.move     유지
 ## 10-A. 구현 상태 (2026-06-21 갱신 — 척추 + 전 신호 + 신뢰→신용 파이프라인 완성·검증)
 > 진척 상세 로그는 `MASTER_DIRECTIVE.md` 하단. 여기는 as-built 스냅샷.
 
-**컨트랙트(`contracts/dibang_wedding/sources`, `sui move test` 43/43, opus 적대 검증):**
+**컨트랙트(`contracts/dibang_wedding/sources`, `sui move test` 49/49, opus 적대 검증):**
 - `event.move`(`gathering` alias) + `ledger.move`(ActionRecord soulbound key-only, action_type 0~6, `log`=public(package), event_id·role_id를 actor 소유 Participation에서 **파생**=방향 위조 차단[C1], settles 링크). `participate`=GUEST만 self-claimable·권위역할(혼주·주례·INITIATOR·RECEIVER)은 creator/package 게이트[C3].
 - **웨딩 신호셋:** 초대 `wedding::invite`(INVITE, 혼주 HOST→하객, CS★) · 부조 `cash_gift::give`(GIVE_MONEY, **실제 SUI** vault 입금) · 방명록 `guestbook::write`(WRITE_MESSAGE) · 참석 `event::participate`(Participation/Participated emit).
 - **인연 신호셋:** 매칭 `ium::request_ium`→`accept_ium`(전역 IumRegistry 제거, 매칭=Event(INYEON)+양측 Participation, RECEIVER는 IumRequest 게이트 package mint=방향위조 차단[C-IUM1]) · 선물 `gift::gift`(MoiItem public_transfer + GIFT, 한 PTB).
 - **온체인 PII 0(결정#2):** 이름·연락처·관계라벨·메시지 본문·RSVP 이름 전부 제거(cash_gift/guestbook/ium/rsvp). key-only SBT 일관(활동기록 transfer 불가), 거래의도 자산만 key+store(MoiItem). ⚑[잔여 플래그] Wedding 구조체가 신랑/신부/부모 이름·예식장 평문 보유 = **사용자 결정 대기**(온체인 유지 vs 오프체인 이전).
 
-**신뢰→신용(오프체인, `apps/dibang-wedding/src/lib/credit.ts`, vitest 9/9, 결정#12):**
-- 온체인 raw(`ActionLogged`+`EventCreated`+`Participated`) → project(부조 EM=GIVE_MONEY@WEDDING 하객→혼주 / CS=초대·방명록·매칭(양방향)·선물·참석) → fold → Φ(부조=reversed-giving PageRank[09 PHI-5] / CS=authority PageRank) → 가중합 0.5/0.3/0.2(이행 무기록 0.7) → 지갑별 신용. 자기엣지 필터·비-기여자=0.
-- **SDK(`packages/sui-sdk/src/queries.ts`):** getActionLoggedEvents/getEventCreatedEvents/getParticipatedEvents가 credit.ts 동형 shape로 온체인→신용 읽기 경로 제공. 죽은 PII 리더(guestbook/cashgift/ium) 제거[C-Q1], SDK typecheck 0.
+**신뢰→신용(`apps/dibang-wedding/src/lib/credit.ts`, vitest 9/9, 결정#12):**
+- **[2026-06-21: 분류 온체인 이관 — §10-B]** "어떤 신호인가"(분류)는 이제 온체인(signal.move). credit.ts는 온체인 분류된 `SignalEvent[]`만 입력받아 fold(kind별)→Φ(부조=reversed-giving PageRank[09 PHI-5] / CS=authority PageRank, net wash 상쇄)→가중합 0.5/0.3/0.2(이행 무기록 0.7) = **집계 전담**. 자기엣지·비-기여자=0.
+- **SDK(`packages/sui-sdk/src/queries.ts`):** `getSignalEvents`(signal::SignalEmitted)가 credit 입력 경로. 죽은 PII 리더 제거[C-Q1], SDK typecheck 0.
 
 **검증 누적:** opus 적대 리뷰 — 실결함 6(C1·C3·C-IUM1·rsvp PII·C-Q1 등) + 모델보강 4(I1 참석·I3 자기엣지·CS authority·I-CS1 매칭양방향) 발견·반영.
 
 **남음(후순위/결정대기):** ①Wedding 이름 온체인 보유(사용자 결정) ②온체인 DeFi 재진입(오라클/ZK, 결정#12) = 토이 대출 끝단 ③SDK write 빌더 정렬 + guest-web 온체인 경계 위반(§2) ④test-testnet.ts 신규 API 재작성 ⑤가중치 실데이터 튜닝 ⑥**이행축(perf)**: 대여 상환=이행 raw인데 대여가 #12(온체인 DeFi 재진입) 영역이라, 그전까지 perf 0.7 고정(변별력 0)·settles는 log에 예비 인자로만(전부 none). **답례는 부조 양방향(give A→B, give B→A)으로 이미 도출되어 settles 불요** — settles는 대여 상환 1:1 링크(default 판정) 전용. DeFi 도입 시 lend/repay 진입함수가 settles를 some으로 활성.
+
+## 10-B. 온체인 신호 분류 (2026-06-21 — 분류=온체인 SSOT 이관, 적대 리뷰 반영)
+> 사용자 결정: "이 액션이 부조/유대다"라는 *분류*는 온체인 SSOT여야 한다(DeFi가 신용을 trustless하게 쓰려면 신호 소스가 온체인). 단 가중치·전파(PageRank)·wash net 상쇄 등 튜닝성/그래프-단위 계산은 오프체인(credit.ts) 잔류 = **분류=온체인 / 집계=오프체인**.
+
+**`signal.move`(신규):** `Signal{kind, source, from, to, magnitude}`(copy/drop/store) + 순수 분류기 — 한 액션 → **0~N 신호(fan-out)**.
+- `project_action(action×event×role×actor×target×amount)→vector<Signal>`: GIVE_MONEY@WEDDING@GUEST→[BUSU] / WRITE_MESSAGE·INVITE·GIFT→[CS] / 자기엣지·target無·그외→[].
+- `match_signals(init,recv)`→양방향 CS 2개(source=ACCEPT_IUM) · `attendance_signals(part,creator)`→단방향 CS 1개(source=ATTEND).
+- 신호는 **source(원천 action) 보존** → 오프체인 행위별 CS 차등 가중 가능(분류가 가중 재료를 안 버림 = "가중=오프체인" 원칙 충족).
+
+**발행 계약(신호 소스 2개 — credit 소비와 1:1, dead/누락 0):**
+
+| 신호 | 발행 지점 | kind(source) | 저장 | emit |
+|---|---|---|---|---|
+| 부조 | `cash_gift::give`→`ledger::log` | BUSU(GIVE_MONEY) | ActionRecord.signals | SignalEmitted |
+| 방명록·초대·선물 | guestbook/wedding/gift→`ledger::log` | CS(WRITE_MESSAGE/INVITE/GIFT) | ActionRecord.signals | SignalEmitted |
+| 참석 | `event::participate`(웨딩만) | CS(ATTEND) | (emit-only) | SignalEmitted |
+| 매칭 | `ium::accept_ium` | CS(ACCEPT_IUM)×2 | (emit-only) | SignalEmitted |
+
+**온체인 읽기 모델(DeFi trustless):** 분류 SSOT = signal.move *순수 함수*. 온체인 소비자는 stored 소스 객체(ActionRecord·Event·Participation)로 분류 함수를 호출해 분류를 trustless 재현. ledger는 결과를 ActionRecord.signals에 캐시(편의·DeFi 직접읽기). 인덱서/credit.ts는 SignalEmitted로 읽음(오프체인 경로). `Participation.event_type` 추가로 `ledger::log`이 추가 조회 없이 event_type 파생.
+
+**검증:** signal 단위(fan-out 0~N·방향·source·자기엣지·비-GUEST give) + e2e(give→stored BUSU, write→CS) + credit e2e(부조 서열·wash net·CS authority·매칭 양방향). sui move 49/49 · vitest 9/9 · 앱·SDK tsc 0. opus 2차 적대 리뷰 7건: 미러상수·fan-out·자기엣지·순환의존 **무결**; source 보존·주석드리프트 **즉시 수정**.
+
+**남은 후속(적대 리뷰 — 정직 기록):**
+1. **참석·매칭 신호 stored 미보존(emit-only)** — 현재는 classify 함수 재현으로 trustless 충족. DeFi *직접* 읽기 완전 대칭 원하면 `Participation.signals` 또는 매칭 SBT 보존(후속).
+2. **신용 파이프라인 앱 미배선** — `getSignalEvents→creditFromSignals`가 화면/훅에 아직 안 붙음(테스트만 소비). = §10-A 온체인-읽기 이관 과제와 동일.
+3. **행위별 CS 차등 가중**(source 활용) = 모델 07/08 확정 후. 현재 CS 평탄(magnitude=1).
+4. **vestigial** ACTION_ATTEND/REQUEST_IUM/ACCEPT_IUM 상수 정리 + `log`의 ATTEND 모호성 제거.
+5. **amount=number** — 부조 MIST는 이 도메인서 2^53 아래라 정확. 초대형 부조 도입 시 bigint 재검토.
 
 ## 11. 사용자 결정 대기 (06 §F + 리뷰)
 1. ~~부조 amount 공개형태~~ **[결정완료 06-20]** 평문 노출 OK. 프라이버시 1순위 = 신원 비식별(온체인 PII 0 + 가명주소). amount는 나중 일.
