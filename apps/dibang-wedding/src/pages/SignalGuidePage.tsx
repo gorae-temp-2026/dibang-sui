@@ -4,7 +4,18 @@ import { useNavigate } from 'react-router'
 import { ArrowLeft } from 'lucide-react'
 import { useLang, useT } from '../lib/i18n'
 import { SignalSunburst } from '../components/profile/SignalSunburst'
-import { chulsooPlazaProfile } from '../components/profile/personaProfiles'
+import type { SignalNode } from '../components/profile/types'
+
+// 예시 시그널 — Fiske 관계모델(EM·CS·AR·MP) 소분류까지 드릴다운(프로필 sunburst와 동일 구조).
+const EXAMPLE_SIGNAL: SignalNode = {
+  name: '시그널',
+  children: [
+    { name: 'EM', children: [{ name: '부조', value: 20 }, { name: '답례', value: 9 }, { name: '선물', value: 6 }] },
+    { name: 'CS', children: [{ name: '함께한 자리', value: 12 }, { name: '나눔', value: 7 }, { name: '대화', value: 5 }] },
+    { name: 'AR', children: [{ name: '선후배', value: 6 }, { name: '멘토링', value: 4 }] },
+    { name: 'MP', children: [{ name: '거래', value: 2, stub: true }] },
+  ],
+}
 
 function Row({ tag, color, title, body }: { tag: string; color: string; title: string; body: string }) {
   return (
@@ -45,17 +56,18 @@ export function SignalGuidePage() {
         </p>
 
         <div className="my-5 flex flex-col items-center gap-2">
-          <SignalSunburst data={chulsooPlazaProfile.signal} size={200} />
+          <SignalSunburst data={EXAMPLE_SIGNAL} size={200} />
           <span className="text-[11px] text-white/45">
-            {ko ? '안쪽 = 큰 갈래 · 바깥 = 세부 (예시)' : 'Inner = main branches · Outer = details (example)'}
+            {ko ? '안쪽 = 관계 갈래(EM·CS·AR) · 바깥 = 세부 (예시)' : 'Inner = relation models (EM·CS·AR) · Outer = details (example)'}
           </span>
         </div>
 
+        {/* Fiske 관계모델(Relational Models Theory) — 관계를 운영하는 4가지 방식. */}
         <div className="space-y-2.5">
-          <Row tag="EM" color="#D4687A" title={ko ? '경제 — 마음을 담아 건넨 것' : 'Economy — given with heart'} body={ko ? '부조·선물처럼 실제로 건넨 호의.' : 'Real generosity such as gifts and cash gifts.'} />
-          <Row tag="CS" color="#5B89B3" title={ko ? '사회 — 함께한 것' : 'Social — shared moments'} body={ko ? '같은 자리에 참석하고, 이음하고, 대화한 흐름.' : 'Attending together, making ieum, and talking.'} />
-          <Row tag="AR" color="#B8884A" title={ko ? '관계 — 어떤 사이인지' : 'Relation — how you relate'} body={ko ? '관계의 종류와 맥락(표시).' : 'The kind and context of the relationship (shown).'} />
-          <Row tag="MP" color="#9999AD" title={ko ? '거래 — 준비 중' : 'Market — coming soon'} body={ko ? '거래 기반 신호(스텁).' : 'Trade-based signals (stub).'} />
+          <Row tag="CS" color="#5B89B3" title={ko ? '유대 — 공동 공유 (Communal Sharing)' : 'Communal Sharing — bond'} body={ko ? '가족·부부·가까운 공동체처럼 네것내것 없이 나누는 사이.' : 'Family, partners, close community — sharing with no “mine vs yours”.'} />
+          <Row tag="AR" color="#B8884A" title={ko ? '위계 — 서열·권위 (Authority Ranking)' : 'Authority Ranking — hierarchy'} body={ko ? '사제·선후배·상하처럼 지위에 기반한 사이.' : 'Mentor–mentee, senior–junior — based on standing.'} />
+          <Row tag="EM" color="#D4687A" title={ko ? '호혜 — 동등 맞춤 (Equality Matching)' : 'Equality Matching — reciprocity'} body={ko ? '친구·동창·동료처럼 주고받기 균형을 맞추는 사이. 부조·답례가 여기.' : 'Friends, classmates, peers — balanced give-and-take. Gifts & returns live here.'} />
+          <Row tag="MP" color="#9999AD" title={ko ? '거래 — 시장 가격 (Market Pricing)' : 'Market Pricing — trade'} body={ko ? '값을 매겨 교환하는 사이. 상거래·임대·전문가.' : 'Priced exchange — trade, rent, professionals.'} />
         </div>
 
         <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.03] p-3.5 text-[12px] leading-relaxed text-white/60">

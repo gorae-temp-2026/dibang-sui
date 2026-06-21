@@ -6,6 +6,21 @@ import { useLang, useT } from '../lib/i18n'
 import { MoiCreditPanel } from '../components/profile/MoiCreditPanel'
 import { chulsooPlazaProfile } from '../components/profile/personaProfiles'
 
+// 1층 raw 튜플 — [Event_type, Action_type, Role1 → Role2] 한 줄.
+function TupleRow({ tag, action, from, to }: { tag: string; action: string; from: string; to: string }) {
+  return (
+    <div className="rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        <span className="rounded bg-[#F8C57A]/15 px-1.5 py-0.5 text-[10.5px] font-extrabold text-[#F8C57A]">{tag}</span>
+        <span className="text-[12.5px] font-bold text-white">{action}</span>
+      </div>
+      <div className="mt-1 text-[11.5px] text-white/55">
+        {from} <span className="text-white/30">→</span> {to}
+      </div>
+    </div>
+  )
+}
+
 function Layer({ n, title, body }: { n: string; title: string; body: string }) {
   return (
     <div className="flex gap-3">
@@ -42,9 +57,17 @@ export function MoiCreditGuidePage() {
             : '“We may not know who you are, but we know how you’ve lived.” Signals add up into one score.'}
         </p>
 
-        <div className="my-5 space-y-3.5">
-          <Layer n="1" title={ko ? 'raw — 행동 기록' : 'raw — behavior log'} body={ko ? '부조·이음·대화·선물 같은 행동이 1층 신호로 기록돼요.' : 'Actions like gifts, ieum, talk, and presents are recorded as layer-1 signals.'} />
-          <Layer n="2" title={ko ? 'fold — 원장으로 접기' : 'fold — into ledgers'} body={ko ? '행동을 경제(EM)·사회(CS) 원장으로 모아요.' : 'Actions are folded into economy (EM) and social (CS) ledgers.'} />
+        {/* 1층 raw — 행동 한 줄(튜플)이 출발점 */}
+        <div className="mb-2 mt-5 text-[12.5px] font-bold text-white/80">{ko ? '1층 raw — 행동 한 줄 [이벤트·행동·역할→역할]' : 'Layer 1 raw — one action [event · action · role → role]'}</div>
+        <div className="space-y-2">
+          <TupleRow tag={ko ? '결혼식' : 'Wedding'} action={ko ? '부조 · 축의 20만원' : 'Gift · ₩200,000'} from={ko ? '하객 민수' : 'Guest Minsu'} to={ko ? '혼주 철수' : 'Host Chulsoo'} />
+          <TupleRow tag={ko ? '디방인연' : 'dibang inyeon'} action={ko ? '선물 · 샵' : 'Present · shop'} from={ko ? '보낸이 철수' : 'From Chulsoo'} to={ko ? '받는이 영희' : 'To Younghee'} />
+        </div>
+        <p className="my-2 text-center text-[16px] text-white/30">↓</p>
+
+        <div className="mb-5 space-y-3.5">
+          <Layer n="1" title={ko ? 'raw — 행동 기록' : 'raw — behavior log'} body={ko ? '위 같은 행동 한 줄들이 1층 신호로 기록돼요(부조·이음·대화·선물).' : 'Action rows like the above are recorded as layer-1 signals (gifts, ieum, talk, presents).'} />
+          <Layer n="2" title={ko ? 'fold — 원장으로 접기' : 'fold — into ledgers'} body={ko ? '행동을 호혜(EM)·유대(CS) 원장으로 모아요(부조·답례=EM, 함께함·나눔=CS).' : 'Actions fold into reciprocity (EM) and communal (CS) ledgers.'} />
           <Layer n="3" title={ko ? 'Φ — 관계망 위치' : 'Φ — position in the network'} body={ko ? '받은 마음이 다시 흐르는 구조로 관계망 위치를 정규화해요(reversed-giving PageRank · EigenTrust 계보).' : 'Your position is normalized by how given trust flows back (reversed-giving PageRank, in the EigenTrust lineage).'} />
           <Layer n="4" title={ko ? '통합 — 한 점수' : 'integrate — one score'} body={ko ? '0.5·부조 + 0.3·CS + 0.2·이행으로 합쳐 모이크레딧이 됩니다.' : '0.5·gift + 0.3·CS + 0.2·fulfillment combine into Moi Credit.'} />
         </div>
