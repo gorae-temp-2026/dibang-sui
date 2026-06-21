@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { SignalQuery } from '@gorae/sui-sdk'
 import { creditFromSignals, KIND, type SignalEvent } from './credit'
 
 // 온체인에서 분류된 신호(signal::SignalEmitted)를 흉내. 분류는 온체인 몫이므로 테스트는 신호를 직접 준다.
@@ -74,5 +75,21 @@ describe('creditFromSignals (신뢰→신용 · 온체인 분류 신호 집계)'
 
   it('빈 입력 → 빈 신용', () => {
     expect(Object.keys(creditFromSignals([]).credit).length).toBe(0)
+  })
+
+  it('SDK SignalQuery shape를 그대로 집계 (SDK↔credit 드리프트 가드)', () => {
+    // getSignalEvents 반환(SignalQuery: eventId·ts 포함)이 creditFromSignals에 그대로 들어가야 한다.
+    // SignalQuery가 SignalEvent 필드를 잃으면 여기서 tsc가 깨진다(런타임 C-Q1류 드리프트를 컴파일타임 차단).
+    const fromSdk: SignalQuery[] = [
+      { eventId: '0x1', kind: KIND.BUSU, source: 0, from: 'g1', to: 'host', magnitude: 100_000, ts: 1 },
+      { eventId: '0x1', kind: KIND.CS, source: 4, from: 'g1', to: 'host', magnitude: 1, ts: 2 },
+    ]
+    const { credit, components } = creditFromSignals(fromSdk)
+    expect(components['g1']!.busu).toBeGreaterThan(0)
+    expect(components['host']!.cs).toBeGreaterThan(0)
+    for (const v of Object.values(credit)) {
+      expect(v).toBeGreaterThanOrEqual(0)
+      expect(v).toBeLessThanOrEqual(1)
+    }
   })
 })
