@@ -206,7 +206,7 @@ function suiGo(i){
     if(c.phase)suiPhase=c.phase; if(c.oid)suiOID=c.oid; if(c.cap)suiCap=c.cap;
   }
   if(i>=2) suiNodes.add('철수');
-  soid.textContent = suiCap ? (suiCap+'   '+suiOID) : '—';
+  if(soid) soid.textContent = suiCap ? (suiCap+'   '+suiOID) : '—';
 }
 function suiPos(){ const cx=SW/2, cy=SH/2, r1=Math.min(SW,SH)*0.30, r2=Math.min(SW,SH)*0.47; const P={'철수':[cx,cy]};
   CAST.forEach((n,i)=>{ const a=-1.5708 + i*(6.2832/CAST.length); P[n]=[cx+Math.cos(a)*r1, cy+Math.sin(a)*r1]; });
@@ -278,7 +278,7 @@ function suiDraw(){
 function go(i){ if(i<0)i=0; if(i>=scenes.length){ finish(); return; } idx=i; const sc=scenes[i];
   paused=false; holding=false; document.getElementById('pausedTag').style.display='none';
   label.textContent=(i+1)+' / '+scenes.length;
-  const pn=panels[i]; document.getElementById('txbox').textContent=pn?pn.tx:'—'; document.getElementById('objbox').textContent=pn?pn.obj:'—';
+  const pn=panels[i]; const txEl=document.getElementById('txbox'); if(txEl)txEl.textContent=pn?pn.tx:'—'; const objEl=document.getElementById('objbox'); if(objEl)objEl.textContent=pn?pn.obj:'—';
   suiGo(i);
   // reset hook paras
   hook.querySelectorAll('p').forEach(p=>p.classList.remove('show'));
