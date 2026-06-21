@@ -104,16 +104,6 @@ export function ShopSheet(props: ShopSheetProps) {
           </div>
         )}
 
-        {/* 사용 규칙 */}
-        <div className="mt-3 rounded-2xl border border-white/8 bg-white/[0.03] p-3.5">
-          <div className="text-[10.5px] font-bold uppercase tracking-wide text-white/40">Item Rules</div>
-          <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-white/55">
-            <li>· <b className="text-white/75">요네 차감</b>은 구매 시 1회 — 배치·장착 토글은 무료예요.</li>
-            <li>· <b className="text-white/75">헤어·옷</b>은 기본(무료) 제공 — 사서 갈아입고 자유롭게 전환.</li>
-            <li>· <b className="text-white/75">인테리어</b>는 광장에 배치 — 끌어서 위치를 옮길 수 있어요.</li>
-            <li>· 실제 요네 충전(SUI·USDC)·결제는 백엔드 연결 단계에서 활성화돼요.</li>
-          </ul>
-        </div>
       </SheetContent>
     </Sheet>
   )

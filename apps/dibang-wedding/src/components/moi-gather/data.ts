@@ -25,12 +25,14 @@ export interface ShopItem {
   slot?: EquipSlot
   /** 무료 기본 제공. */
   isDefault?: boolean
+  /** 액세서리 착용 부위(top 머리위·forehead 이마·eyes 눈·neck 목·chest 가슴·back 등). */
+  anchor?: string
 }
 
 const heads: ShopItem[] = manifest.heads.map((h) => ({ id: idFromFile(h.file), name: h.ko, category: 'hair', yone: h.yone, url: `${ASSET_BASE}/${h.file}`, char: h.char, slot: 'head', isDefault: h.default }))
 const bodies: ShopItem[] = manifest.bodies.map((b) => ({ id: idFromFile(b.file), name: b.ko, category: 'clothes', yone: b.yone, url: `${ASSET_BASE}/${b.file}`, slot: 'body', isDefault: b.default }))
 const items: ShopItem[] = manifest.items.map((it) => ({ id: idFromFile(it.file), name: it.ko, category: 'interior', yone: it.yone, url: `${ASSET_BASE}/${it.file}` }))
-const accessories: ShopItem[] = manifest.accessories.map((ac) => ({ id: idFromFile(ac.file), name: ac.ko, category: 'accessory', yone: ac.yone, url: `${ASSET_BASE}/${ac.file}`, slot: 'acc' }))
+const accessories: ShopItem[] = manifest.accessories.map((ac) => ({ id: idFromFile(ac.file), name: ac.ko, category: 'accessory', yone: ac.yone, url: `${ASSET_BASE}/${ac.file}`, slot: 'acc', anchor: (ac as { anchor?: string }).anchor }))
 
 export const SHOP: ShopItem[] = [...heads, ...bodies, ...items, ...accessories]
 export const ITEM_BY_ID: Record<string, ShopItem> = Object.fromEntries(SHOP.map((it) => [it.id, it]))

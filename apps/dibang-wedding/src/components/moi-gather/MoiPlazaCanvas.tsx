@@ -313,8 +313,24 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
           if (accTex) {
             const ac = new Sprite(accTex)
             ac.anchor.set(0.5, 0.5)
-            ac.position.set(0, headTopY + headTex.height / 2)
-            bob.addChild(ac)
+            // 부위별 앵커 — 머리위/이마/눈/목/가슴/등(어색하지 않게 head 높이 비율로 보정).
+            const accAnchor = accId ? ITEM_BY_ID[accId]?.anchor : undefined
+            const hh = headTex.height
+            const ay =
+              accAnchor === 'top' ? headTopY + hh * 0.06
+              : accAnchor === 'forehead' ? headTopY + hh * 0.30
+              : accAnchor === 'eyes' ? headTopY + hh * 0.46
+              : accAnchor === 'neck' ? headTopY + hh * 0.95
+              : accAnchor === 'chest' ? headTopY + hh * 1.12
+              : accAnchor === 'back' ? headTopY + hh * 0.7
+              : headTopY + hh * 0.5
+            ac.position.set(0, ay)
+            if (accAnchor === 'back') {
+              ac.scale.set(1.15)
+              bob.addChildAt(ac, 0) // 등 = 몸 뒤로(날개)
+            } else {
+              bob.addChild(ac)
+            }
           }
         }
         if (m.me) {
