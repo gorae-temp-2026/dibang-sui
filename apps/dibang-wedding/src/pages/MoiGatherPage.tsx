@@ -14,8 +14,7 @@ import { PLAZA_CROWD, CROWD_BY_ID } from '../components/moi-gather/data'
 import { POOL } from '../components/inyeon/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import type { ProfileData } from '../components/profile/types'
-import { chulsooProfile } from '../components/profile/fixture'
-import { profileForPersonaId, makeGuestProfile } from '../components/profile/personaProfiles'
+import { profileForPersonaId, makeGuestProfile, plazaPartnerIds, chulsooPlazaProfile } from '../components/profile/personaProfiles'
 
 // 모이 색 → 사진 placeholder hue (실사진 전).
 function colorToHue(hex: number): number {
@@ -57,9 +56,9 @@ export function MoiGatherPage() {
   // 인물별 실제 프로필: 나=철수 sim 산출 / 만난 사람(personaId)=인연과 동일 프로필 / 익명 하객=생성.
   const persona = profileMoi?.personaId != null ? POOL.find((p) => p.id === profileMoi.personaId) ?? null : null
   const profileData: ProfileData = !profileMoi
-    ? chulsooProfile
+    ? chulsooPlazaProfile
     : profileMoi.me
-      ? chulsooProfile
+      ? chulsooPlazaProfile
       : profileMoi.personaId != null
         ? profileForPersonaId(profileMoi.personaId)
         : makeGuestProfile(profileMoi.id, profileMoi.name, colorToHue(profileMoi.color))
@@ -118,12 +117,13 @@ export function MoiGatherPage() {
           crowd={PLAZA_CROWD}
           onMoiClick={setProfileMoiId}
           onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
+          partnersOf={plazaPartnerIds}
         />
 
         {/* 조작 힌트 */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
           <span className="rounded-full border border-white/12 bg-[#0c1a2e]/70 px-3.5 py-1.5 text-[11px] font-medium text-white/60 backdrop-blur">
-            모이를 누르면 프로필 · 드래그/핀치로 광장 둘러보기 · 데코는 끌어서 배치
+            모이를 누르면 이음망이 보여요 · ⓘ로 프로필 · 드래그·핀치로 둘러보기
           </span>
         </div>
       </div>

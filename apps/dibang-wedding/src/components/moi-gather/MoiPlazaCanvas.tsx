@@ -40,10 +40,15 @@ function radialTex(size: number, inner: string, outer: string): Texture {
 }
 
 interface AnimMoi {
+  id: string
   node: Container
   bob: Container
   bx: number
   by: number
+  /** 현재 노드 scale (ⓘ 버튼 위치 계산용). */
+  scale: number
+  /** ego 디밍 alpha 보간 현재값. */
+  alpha: number
   bobAmp: number
   swayAmp: number
   phase: number
@@ -63,12 +68,15 @@ interface Props {
   crowd: PlazaMoi[]
   onMoiClick: (id: string) => void
   onMovePlaced: (itemId: string, x: number, y: number) => void
+  /** 광장 ego — 모이 id → 광장에서 이어진 상대 스프라이트 id 목록(하이라이트·이음 선). */
+  partnersOf: (id: string) => string[]
 }
 
-export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlaced }: Props) {
+export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlaced, partnersOf }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const onMoiClickRef = useRef(onMoiClick)
   const onMoveRef = useRef(onMovePlaced)
+  const partnersOfRef = useRef(partnersOf)
   const placedRef = useRef(placed)
   const equippedRef = useRef(equipped)
   const crowdRef = useRef(crowd)
@@ -76,6 +84,7 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
   useEffect(() => {
     onMoiClickRef.current = onMoiClick
     onMoveRef.current = onMovePlaced
+    partnersOfRef.current = partnersOf
     placedRef.current = placed
     equippedRef.current = equipped
     crowdRef.current = crowd
@@ -117,12 +126,35 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
       glow.height = PLAZA_H * 1.05
       glow.eventMode = 'none'
       world.addChild(glow)
+      // ego 하이라이트 FX(모이 아래) — 이음 선 + 상대 glow. 레이어 alpha로 페이드.
+      const fxLayer = new Container()
+      fxLayer.eventMode = 'none'
+      fxLayer.alpha = 0
+      world.addChild(fxLayer)
+      const glowC = new Container()
+      fxLayer.addChild(glowC)
+      const linkG = new Graphics()
+      fxLayer.addChild(linkG)
+      const glowTex = radialTex(256, 'rgba(242,200,121,0.78)', 'rgba(242,200,121,0)')
       const dynamic = new Container()
       dynamic.sortableChildren = true
       world.addChild(dynamic)
       const particles = new Container()
       particles.eventMode = 'none' // 모이 위에 떠도 클릭 막지 않게
       world.addChild(particles)
+      // ⓘ 프로필 버튼(모이 위) — 포커스 모이 얼굴 옆. 탭 → ProfileSheet.
+      const iBtn = new Container()
+      const iBg = new Graphics()
+      iBg.circle(0, 0, 66).fill({ color: 0xffffff }).stroke({ color: 0x1e3a5f, width: 6, alpha: 0.92 })
+      iBtn.addChild(iBg)
+      const iTxt = new Text({ text: 'i', style: { fontSize: 80, fill: 0x1e3a5f, fontWeight: '900', fontStyle: 'italic' } })
+      iTxt.anchor.set(0.5)
+      iTxt.position.set(0, 2)
+      iBtn.addChild(iTxt)
+      iBtn.eventMode = 'static'
+      iBtn.cursor = 'pointer'
+      iBtn.visible = false
+      world.addChild(iBtn)
       // 화면 비네팅 (정적, 모서리 어둡게).
       const vignette = new Sprite(radialTex(512, 'rgba(28,26,38,0)', 'rgba(24,22,34,0.42)'))
       vignette.eventMode = 'none'
@@ -236,6 +268,10 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
       }
       a.stage.on('pointerup', endPointer)
       a.stage.on('pointerupoutside', endPointer)
+      // 빈 곳 탭(드래그 아님) = 포커스 해제. 모이·ⓘ 탭은 stopPropagation으로 여기 안 옴.
+      a.stage.on('pointertap', (e: FederatedPointerEvent) => {
+        if (e.target === a.stage || e.target === floor || e.target === glow || e.target === vignette) setFocus(null)
+      })
 
       // 모이 합성 — shadow(고정) + bob(캐릭터, 좌우 flip·idle 흔들림).
       const makeMoi = (m: PlazaMoi, headId: string, bodyId: string, accId: string | undefined, color: number, flipSign: number): { node: Container; bob: Container } => {
@@ -298,9 +334,62 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
       }
 
       let animMois: AnimMoi[] = []
+      const basePos = new Map<string, { x: number; y: number }>() // id → 발밑 월드좌표(선·glow·ⓘ).
+      let focusId: string | null = null
+      let partnerSet = new Set<string>()
+      let lineFade = 0
+      const FOCUS_DIM = 0.4
+      const LINE_COLOR = 0xf2c879
+
+      // 포커스 모이 → 상대로 이음 선 + 상대 glow 다시 그림(위치 정적이라 포커스 변경 시 1회).
+      const redrawFx = () => {
+        linkG.clear()
+        glowC.removeChildren().forEach((c) => c.destroy())
+        if (!focusId) return
+        const from = basePos.get(focusId)
+        if (!from) return
+        const fg = new Sprite(glowTex)
+        fg.anchor.set(0.5)
+        fg.width = fg.height = 540
+        fg.position.set(from.x, from.y - 40)
+        glowC.addChild(fg)
+        for (const pid of partnerSet) {
+          const to = basePos.get(pid)
+          if (!to) continue
+          const gs = new Sprite(glowTex)
+          gs.anchor.set(0.5)
+          gs.width = gs.height = 430
+          gs.position.set(to.x, to.y - 40)
+          glowC.addChild(gs)
+          linkG.moveTo(from.x, from.y - 30).lineTo(to.x, to.y - 30)
+        }
+        linkG.stroke({ color: LINE_COLOR, width: 9, alpha: 0.92 })
+      }
+      const positionIBtn = () => {
+        if (!focusId) return
+        const base = basePos.get(focusId)
+        const am = animMois.find((m) => m.id === focusId)
+        if (!base) return
+        const s = am?.scale ?? MOI_SCALE
+        iBtn.position.set(base.x + 230 * s, base.y - 840 * s)
+      }
+      const setFocus = (id: string | null) => {
+        focusId = id
+        partnerSet = new Set(id ? partnersOfRef.current(id) : [])
+        redrawFx()
+        positionIBtn()
+        if (id) lineFade = 0 // 새 선택 = 페이드 인
+      }
+      iBtn.on('pointerdown', (e: FederatedPointerEvent) => e.stopPropagation())
+      iBtn.on('pointertap', (e: FederatedPointerEvent) => {
+        e.stopPropagation()
+        if (focusId) onMoiClickRef.current(focusId)
+      })
+
       const sync = () => {
         dynamic.removeChildren().forEach((c) => c.destroy({ children: true }))
         animMois = []
+        basePos.clear()
         for (const p of placedRef.current) {
           if (!ITEM_BY_ID[p.itemId]) continue
           const r = toPlaza(p.x, p.y)
@@ -322,21 +411,30 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
           const bodyId = m.me ? eq.body ?? m.body : m.body
           const accId = m.me ? eq.acc : undefined
           const r = toPlaza(m.x, m.y)
+          const sc = MOI_SCALE * depthScale(m.y)
           const flipSign = m.x < 0.5 ? 1 : -1 // 광장 안쪽을 바라보게
           const { node, bob } = makeMoi(m, headId, bodyId, accId, m.color, flipSign)
-          node.scale.set(MOI_SCALE * depthScale(m.y))
+          node.scale.set(sc)
           node.position.set(r.x, r.y)
           node.zIndex = r.y + 0.5
           node.eventMode = 'static'
           node.cursor = 'pointer'
           node.on('pointerdown', (e: FederatedPointerEvent) => e.stopPropagation())
+          // 탭 = ego 포커스(프로필 즉시열기 폐지 → ⓘ 버튼 경유).
           node.on('pointertap', (e: FederatedPointerEvent) => {
             e.stopPropagation()
-            onMoiClickRef.current(m.id)
+            setFocus(m.id)
           })
           dynamic.addChild(node)
-          animMois.push({ node, bob, bx: r.x, by: r.y, bobAmp: 26 + (i % 3) * 9, swayAmp: 9 + (i % 4) * 3, phase: (i * 1.7) % 6.283, speed: 1.0 + (i % 5) * 0.16 })
+          basePos.set(m.id, { x: r.x, y: r.y })
+          animMois.push({ id: m.id, node, bob, bx: r.x, by: r.y, scale: sc, alpha: 1, bobAmp: 26 + (i % 3) * 9, swayAmp: 9 + (i % 4) * 3, phase: (i * 1.7) % 6.283, speed: 1.0 + (i % 5) * 0.16 })
         })
+        // 군중 재빌드 후 포커스 FX·ⓘ 위치 갱신(포커스 유지 시).
+        if (focusId && !basePos.has(focusId)) setFocus(null)
+        else {
+          redrawFx()
+          positionIBtn()
+        }
       }
       syncRef.current = sync
       sync()
@@ -345,15 +443,30 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
       let elapsed = 0
       a.ticker.add((t) => {
         elapsed += t.deltaMS / 1000
+        const k = Math.min(1, t.deltaMS / 120) // 페이드 보간 계수.
+        // ego 선·glow·ⓘ 페이드.
+        lineFade += ((focusId ? 1 : 0) - lineFade) * k
+        fxLayer.alpha = lineFade
+        iBtn.alpha = lineFade
+        iBtn.visible = !!focusId && lineFade > 0.02
+        if (!focusId && lineFade < 0.02) {
+          linkG.clear()
+          glowC.removeChildren().forEach((c) => c.destroy())
+        }
         const { width: w, height: h } = a.screen
         const x0 = -world.position.x / world.scale.x
         const x1 = (w - world.position.x) / world.scale.x
         const y0 = -world.position.y / world.scale.y
         const y1 = (h - world.position.y) / world.scale.y
         for (const m of animMois) {
-          const vis = m.bx > x0 - 240 && m.bx < x1 + 240 && m.by > y0 - 360 && m.by < y1 + 120
+          const keep = !!focusId && (m.id === focusId || partnerSet.has(m.id))
+          const vis = keep || (m.bx > x0 - 240 && m.bx < x1 + 240 && m.by > y0 - 360 && m.by < y1 + 120)
           m.node.visible = vis
           if (!vis) continue
+          // ego 디밍 — 포커스/상대는 밝게, 나머지 40%로 페이드.
+          const target = !focusId ? 1 : keep ? 1 : FOCUS_DIM
+          m.alpha += (target - m.alpha) * k
+          m.node.alpha = m.alpha
           m.bob.position.y = Math.sin(elapsed * m.speed + m.phase) * m.bobAmp
           m.bob.position.x = Math.sin(elapsed * m.speed * 0.6 + m.phase) * m.swayAmp
         }

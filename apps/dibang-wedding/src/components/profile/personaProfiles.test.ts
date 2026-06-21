@@ -6,9 +6,9 @@
  * 금지(TESTING.md): snapshot, implementation detail.
  */
 import { describe, expect, it } from 'vitest'
-import { profileForPersona, profileForPersonaId, makeGuestProfile } from './personaProfiles'
+import { profileForPersona, profileForPersonaId, makeGuestProfile, plazaPartnerIds, chulsooPlazaProfile } from './personaProfiles'
 import { POOL } from '../inyeon/data'
-import { PLAZA_CROWD } from '../moi-gather/data'
+import { PLAZA_CROWD, CROWD_BY_ID } from '../moi-gather/data'
 
 const TIERS = ['B', 'BB', 'BBB', 'A', 'AA', 'AAA']
 
@@ -65,5 +65,56 @@ describe('광장 등장 규칙(대표 지침 260621)', () => {
 
   it('hero 모이는 실사진 url을 가진다', () => {
     heroes.forEach((h) => expect(h.photoUrl).toMatch(/\.jpg$/))
+  })
+})
+
+describe('광장 ego 네트워크(하이라이트 인터랙션)', () => {
+  it('철수(me) = 만난 사람(tier0 hero)만 연결', () => {
+    const ids = plazaPartnerIds('me')
+    expect(ids.length).toBeGreaterThan(0)
+    ids.forEach((id) => {
+      const m = CROWD_BY_ID[id]
+      expect(m).toBeTruthy()
+      expect(POOL.find((p) => p.id === m.personaId)?.tier).toBe(0)
+    })
+  })
+
+  it('연결 상대는 광장 실재 스프라이트만 · 자기·me 제외 · 2~5 · 결정적', () => {
+    const a = plazaPartnerIds('c0')
+    expect(a).toEqual(plazaPartnerIds('c0')) // 결정적
+    expect(a.length).toBeGreaterThanOrEqual(2)
+    expect(a.length).toBeLessThanOrEqual(5)
+    expect(new Set(a).size).toBe(a.length) // 중복 없음
+    a.forEach((id) => {
+      expect(CROWD_BY_ID[id]).toBeTruthy()
+      expect(id).not.toBe('c0')
+      expect(id).not.toBe('me')
+    })
+  })
+
+  it('광장 선 = 프로필 ① 인연-연결 ∩ 광장 (모순 없음)', () => {
+    for (const sprite of ['c0', 'c7', 'persona-201', 'persona-203']) {
+      const partners = plazaPartnerIds(sprite)
+      const m = CROWD_BY_ID[sprite]!
+      const profile = m.personaId != null ? profileForPersonaId(m.personaId) : makeGuestProfile(sprite, m.name, 210)
+      const graphIds = new Set(profile.graph.nodes.map((n) => n.id))
+      // 광장 선 ⊆ 프로필 그래프 노드
+      partners.forEach((pid) => expect(graphIds.has(pid)).toBe(true))
+      // 프로필 그래프 중 광장 실재 노드 = 광장 선과 정확히 일치
+      const inPlaza = profile.graph.nodes.filter((n) => !n.self && CROWD_BY_ID[n.id]).map((n) => n.id).sort()
+      expect(inPlaza).toEqual([...partners].sort())
+    }
+  })
+
+  it('서로 다른 모이 = 다른 연결 세트', () => {
+    expect(plazaPartnerIds('c0')).not.toEqual(plazaPartnerIds('c1'))
+  })
+
+  it('철수 augmented 프로필 그래프에 광장 hero 포함(광장과 일치)', () => {
+    const ids = plazaPartnerIds('me')
+    const gids = new Set(chulsooPlazaProfile.graph.nodes.map((n) => n.id))
+    ids.forEach((id) => expect(gids.has(id)).toBe(true))
+    // 실데이터 점수 불변
+    expect(chulsooPlazaProfile.moiCredit.score).toBe(834)
   })
 })
