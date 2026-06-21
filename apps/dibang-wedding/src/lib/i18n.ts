@@ -69,13 +69,28 @@ const KO: Dict = {
   'inyeon.deckEmptyTitle': '오늘의 인연을 다 봤어요',
   'inyeon.deckEmptyDesc': '잠시 후 새로운 모이들이 다시 모여요. 지금까지 본 모이들을 다시 볼 수도 있어요.',
   'inyeon.deckReset': '처음부터 다시 보기',
-  // 관계 거리(티어) — 카드/프로필 공통
+  // 관계 거리(티어) — 카드/프로필 공통 (정성 표현, '몇 다리' 숫자 노출 금지)
   'inyeon.tier.0.label': '함께 참여한 결혼식',
-  'inyeon.tier.1.label': '두 다리 건너',
+  'inyeon.tier.1.label': '조금 떨어진 인연',
   'inyeon.tier.2.label': '새 인연',
   'inyeon.tier.0.hook': '함께 참여한 결혼식이 있어요',
-  'inyeon.tier.1.hook': '두 다리 건너 아는 사이예요',
+  'inyeon.tier.1.hook': '아는 사람을 통해 닿은 인연이에요',
   'inyeon.tier.2.hook': '아직 마주친 적 없는 새 인연이에요',
+  // 관계 closeness(정성) — 프로필 hook
+  'inyeon.closeness.0': '가까운 인연',
+  'inyeon.closeness.1': '조금 떨어진 인연',
+  'inyeon.closeness.2': '새 인연',
+  // 프로필 섹션·크레딧
+  'profile.whereMet': '📍 어디서 마주쳤나',
+  'profile.bio': '소개글',
+  'profile.network': '인연 망',
+  'profile.signal': '나와의 시그널',
+  'profile.credit': '크레딧',
+  'profile.ieumCount': '이음 {n}명',
+  'profile.afterIeum': '나와의 시그널·인연 망 상세는 이음 후 공개돼요',
+  'profile.creditOnchain': '정확한 모이크레딧은 온체인에서만 확인돼요',
+  'profile.creditGood': '좋음',
+  'profile.creditFair': '보통',
 }
 const EN: Dict = {
   'nav.inyeon': 'Inyeon',
@@ -128,11 +143,24 @@ const EN: Dict = {
   'inyeon.deckEmptyDesc': 'New moi will gather again soon. You can also look back through the ones you’ve seen.',
   'inyeon.deckReset': 'Start over',
   'inyeon.tier.0.label': 'Same wedding',
-  'inyeon.tier.1.label': 'Friend of a friend',
+  'inyeon.tier.1.label': 'A bit distant',
   'inyeon.tier.2.label': 'New connection',
   'inyeon.tier.0.hook': 'You were at the same wedding',
-  'inyeon.tier.1.hook': 'Connected through a mutual',
+  'inyeon.tier.1.hook': 'Connected through someone you know',
   'inyeon.tier.2.hook': 'A new connection you haven’t met yet',
+  'inyeon.closeness.0': 'Close connection',
+  'inyeon.closeness.1': 'A bit distant',
+  'inyeon.closeness.2': 'New connection',
+  'profile.whereMet': '📍 Where you crossed paths',
+  'profile.bio': 'About',
+  'profile.network': 'Connection web',
+  'profile.signal': 'Signal with me',
+  'profile.credit': 'Credit',
+  'profile.ieumCount': '{n} ieum',
+  'profile.afterIeum': 'Signal and connection web are revealed after ieum',
+  'profile.creditOnchain': 'Exact Moi Credit is read on-chain only',
+  'profile.creditGood': 'Good',
+  'profile.creditFair': 'Fair',
 }
 const DICT: Record<Lang, Dict> = { ko: KO, en: EN }
 

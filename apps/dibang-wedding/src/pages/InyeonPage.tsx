@@ -7,7 +7,7 @@ import { useMachine, useSelector } from '@xstate/react'
 import { giftActor } from '../machines/gift.machine'
 import { SlidersHorizontal } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
-import { POOL } from '../components/inyeon/data'
+import { POOL, MOI_INTRO } from '../components/inyeon/data'
 import { SwipeDeck } from '../components/inyeon/SwipeDeck'
 import { InyeonRail } from '../components/inyeon/InyeonRail'
 import { FilterSheet } from '../components/inyeon/FilterSheet'
@@ -38,11 +38,13 @@ export function InyeonPage() {
   const ieumOpen = state.matches('composing') || state.matches('sending')
   const activeMoi = moiById(activeId)
   const profileMoiForSheet = moiById(profileMoiId)
+  const profileRevealed = profileMoiId != null && matchedIds.includes(profileMoiId)
   const profileMeeting = profileMoiForSheet
     ? {
         photoHue: profileMoiForSheet.photos[0]?.hue ?? 210,
         photoUrl: profileMoiForSheet.photos[0]?.url,
-        hook: profileMoiForSheet.hook,
+        hook: t(`inyeon.closeness.${profileMoiForSheet.tier}`), // 정성(가까운/조금 떨어진/새 인연)
+        intro: MOI_INTRO[profileMoiForSheet.id],
         prov: profileMoiForSheet.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: t(`inyeon.tier.${p.tier}.label`) })),
         mutualCount: profileMoiForSheet.mutualCount,
         balLabel: profileMoiForSheet.balLabel,
@@ -139,19 +141,20 @@ export function InyeonPage() {
           send({ type: 'NAV', screen: 'chat' })
         }}
       />
-      {/* 내 전체 프로필 — 풀페이지 확장(T5) */}
-      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} data={chulsooPlazaProfile} context="inyeon" presentation="page" />
-      {/* 다른 모이 프로필(카드 사진 탭·받은이음·채팅에서 진입) — 풀페이지 확장 + 이음 CTA. */}
+      {/* 내 전체 프로필 — 풀페이지 확장(T5). 내 프로필이라 상세 공개. */}
+      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} data={chulsooPlazaProfile} context="inyeon" presentation="page" revealed />
+      {/* 다른 모이 프로필(카드 사진 탭·받은이음·채팅에서 진입) — 풀페이지. 이음 전=수+크레딧만, 이음 후=상세. */}
       <ProfileSheet
         open={profileMoiId != null}
         onOpenChange={(o) => !o && setProfileMoiId(null)}
         data={profileMoiForSheet ? profileForPersona(profileMoiForSheet) : chulsooPlazaProfile}
         context="inyeon"
         presentation="page"
+        revealed={profileRevealed}
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
         onIeum={
-          profileMoiId != null
+          profileMoiId != null && !profileRevealed
             ? () => {
                 const id = profileMoiId
                 setProfileMoiId(null)
