@@ -130,16 +130,12 @@ public fun invite(
 
 // === Recipient slot 검증 (cash_gift, rsvp 가 재사용) ===
 
-/// 혼주 슬롯이 정해진 6종(신랑/신부/양가 부모) 중 하나인지 검사한다. (슬롯=어느 측 카테고리, PII 아님.)
-public fun is_valid_recipient_slot(slot: &String): bool {
-    let b = *slot.as_bytes();
-    b == b"groom" || b == b"bride"
-        || b == b"groom_father" || b == b"groom_mother"
-        || b == b"bride_father" || b == b"bride_mother"
-}
+/// 혼주 슬롯 u8 코드(§1-6 u8 enum): groom=0·bride=1·groom_father=2·groom_mother=3·bride_father=4·bride_mother=5.
+/// 라벨↔코드 매핑은 오프체인(표시). 슬롯=어느 측 카테고리(PII 아님).
+public fun is_valid_recipient_slot(slot: u8): bool { slot <= 5 }
 
 /// 혼주 슬롯이 유효하지 않으면 abort 한다.
-public fun assert_valid_recipient_slot(slot: &String) {
+public fun assert_valid_recipient_slot(slot: u8) {
     assert!(is_valid_recipient_slot(slot), EInvalidRecipientSlot);
 }
 
@@ -304,14 +300,14 @@ fun add_host_issues_cap() {
 
 #[test]
 fun recipient_slot_validation() {
-    assert!(is_valid_recipient_slot(&b"groom".to_string()));
-    assert!(is_valid_recipient_slot(&b"bride_mother".to_string()));
-    assert!(!is_valid_recipient_slot(&b"uncle".to_string()));
+    assert!(is_valid_recipient_slot(0)); // groom
+    assert!(is_valid_recipient_slot(5)); // bride_mother
+    assert!(!is_valid_recipient_slot(6)); // 범위 밖
 }
 
 #[test, expected_failure(abort_code = EInvalidRecipientSlot)]
 fun invalid_recipient_slot_aborts() {
-    assert_valid_recipient_slot(&b"uncle".to_string());
+    assert_valid_recipient_slot(6);
 }
 
 #[test, expected_failure(abort_code = EWrongCap)]
