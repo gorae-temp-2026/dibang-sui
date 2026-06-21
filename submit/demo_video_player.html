@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Dibang — Demo Video (auto-play, ~4:30)</title>
+<style>
+  :root{ --navy:#1E3A5F; --navydk:#0A1828; --sky:#87CEEB; --ivory:#FDFBF7; --gold:#E0A93C; --muted:#7E93AB; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;background:#000;font-family:'Pretendard Variable',-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;}
+  #app{position:relative;width:100vw;height:100vh;background:#000;overflow:hidden;}
+  #left{position:absolute;left:0;top:0;width:62%;height:100%;background:#000;}
+  video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity .5s ease;}
+  video.on{opacity:1;}
+  #right{position:absolute;right:0;top:0;width:38%;height:100%;background:#0c1a2c;border-left:1px solid #1d3350;
+         display:flex;flex-direction:column;padding:18px;gap:16px;z-index:2;}
+  .rpanel{flex:1;background:rgba(255,255,255,.03);border:1px solid #1d3350;border-radius:14px;padding:18px;display:flex;flex-direction:column;}
+  .rpanel .rh{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--sky);display:flex;justify-content:space-between;align-items:center;}
+  .rpanel .wip{font-size:9.5px;color:var(--gold);border:1px solid rgba(224,169,60,.4);border-radius:99px;padding:2px 8px;letter-spacing:.5px;}
+  .rpanel .tuple{margin-top:16px;font-family:Consolas,monospace;font-size:14px;color:#bcd6ef;background:rgba(135,206,235,.07);border-radius:8px;padding:12px 13px;line-height:1.5;}
+  .rpanel .obj{margin-top:auto;font-size:12.5px;color:var(--muted);line-height:1.6;}
+  .rpanel .ph{flex:1;display:flex;align-items:center;justify-content:center;color:#3a567a;font-size:13px;text-align:center;border:1px dashed #25405f;border-radius:10px;margin-top:14px;}
+  #suiviz{flex:1;width:100%;min-height:120px;margin-top:10px;}
+  .suioid{font-family:Consolas,monospace;font-size:10.5px;color:#5e7da3;margin-top:6px;word-break:break-all;min-height:14px;}
+  /* intro brand card */
+  #intro{position:absolute;inset:0;z-index:8;background:radial-gradient(120% 120% at 50% 32%,#14304e,#0A1828 72%);
+         display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .6s;}
+  #intro.on{opacity:1;}
+  #intro canvas{position:absolute;inset:0;width:100%;height:100%;}
+  #intro .brand{position:relative;z-index:2;text-align:center;}
+  #intro .wm{font-family:Georgia,serif;font-size:66px;font-weight:700;color:#FDFBF7;letter-spacing:1px;
+             text-shadow:0 2px 30px rgba(10,24,40,.8);}
+  #intro .tg{font-size:13px;letter-spacing:5px;text-transform:uppercase;color:#87CEEB;margin-top:12px;}
+  /* hook */
+  #hook{position:absolute;inset:0;z-index:8;background:radial-gradient(120% 120% at 50% 15%,#14304e,#0A1828 65%);
+        display:flex;align-items:center;justify-content:center;text-align:center;color:#FDFBF7;opacity:0;transition:opacity .6s;}
+  #hook.on{opacity:1;}
+  #hook .inner{max-width:880px;padding:0 28px;}
+  #hook p{opacity:0;transform:translateY(10px);transition:opacity .7s,transform .7s;margin:0 0 16px;}
+  #hook p.show{opacity:1;transform:none;}
+  #hook .prob{font-size:21px;color:#cdddec;line-height:1.6;}
+  #hook .prob b{color:#fff;} #hook .prob .kr{color:var(--gold);}
+  #hook .q{font-size:25px;color:var(--sky);font-family:Georgia,serif;margin-top:8px;}
+  #hook .thesis{font-family:Georgia,serif;font-size:30px;font-weight:700;line-height:1.2;}
+  #hook .yo{font-family:Georgia,serif;font-size:17px;color:var(--sky);font-style:italic;}
+  /* subtitle */
+  #sub{position:absolute;left:0;right:0;bottom:6%;display:flex;justify-content:center;pointer-events:none;z-index:5;padding:0 5%;}
+  #sub span{background:rgba(8,16,28,.72);color:#fff;font-size:23px;line-height:1.45;padding:9px 18px;border-radius:10px;
+            max-width:1000px;text-align:center;opacity:0;transition:opacity .35s;backdrop-filter:blur(3px);}
+  #sub span.on{opacity:1;}
+  /* progress + controls */
+  #bar{position:absolute;left:0;bottom:0;height:4px;background:var(--sky);width:0;z-index:6;transition:width .25s linear;}
+  #ctl{position:absolute;right:18px;bottom:16px;z-index:9;display:flex;gap:8px;opacity:.7;transition:opacity .25s;}
+  #app:hover #ctl{opacity:1;}
+  #ctl button{background:rgba(30,58,95,.92);color:#fff;border:1px solid #4b6f96;border-radius:8px;padding:9px 14px;font-size:15px;cursor:pointer;}
+  #ctl button:hover{filter:brightness(1.2);}
+  #pausedTag{position:absolute;left:31%;top:24px;transform:translateX(-50%);z-index:9;display:none;
+             background:rgba(8,16,28,.85);color:#fff;border:1px solid #4b6f96;border-radius:99px;padding:8px 18px;font-size:14px;}
+  #scenelabel{position:absolute;left:18px;top:14px;z-index:7;font-size:12px;color:var(--muted);opacity:.6;}
+  /* start */
+  #start{position:absolute;inset:0;z-index:20;background:radial-gradient(120% 120% at 50% 30%,#16314f,#0A1828 70%);
+         display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;gap:20px;}
+  #start h1{font-family:Georgia,serif;font-size:38px;}
+  #start p{color:var(--muted);font-size:15px;max-width:520px;line-height:1.6;}
+  #start .pbtn{background:var(--sky);color:#0A1828;font-weight:800;font-size:18px;border:none;border-radius:14px;padding:15px 34px;cursor:pointer;}
+  #start label{font-size:13px;color:#cdddec;display:flex;gap:8px;align-items:center;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="left" style="width:100%"><video id="vid" muted playsinline></video></div>
+  <!-- RIGHT PANEL (주석 처리 — trust-graph 페이지에서 대체)
+  <div id="right">
+    <div class="rpanel"><div class="rh">Transaction<span class="wip">contract · WIP</span></div><div class="tuple" id="txbox">—</div></div>
+    <div class="rpanel"><div class="rh">Sui · on-chain<span class="wip">representative</span></div><div class="obj" id="objbox">—</div><canvas id="suiviz"></canvas><div class="suioid" id="suioid">—</div></div>
+  </div>
+  -->
+  <div id="intro"><canvas id="introcv"></canvas><div class="brand"><div class="wm">dibang</div><div class="tg">Social Transaction Intelligence</div></div></div>
+  <div id="hook"><div class="inner">
+    <p class="prob">In Korea, people move <b>tens of trillions of won (~$25B)</b> in "relationship money" every year — across <b>222K weddings and 358K funerals</b> — almost all cash, untracked.</p>
+    <p class="prob"><b>Every culture has these gift economies.</b></p>
+    <p class="q">What if those relationships became your credit?</p>
+    <p class="thesis">We don't store who you are.<br/>We store who you've been related to.</p>
+    <p class="yo">By Yoneda's lemma, that's the same thing — but only the latter is privacy-preserving.</p>
+  </div></div>
+  <div id="sub"><span id="subtxt"></span></div>
+  <div id="bar"></div>
+  <div id="scenelabel"></div>
+  <div id="pausedTag">⏸ PAUSED — Space to resume</div>
+  <div id="ctl">
+    <button onclick="togglePlay()">⏯</button>
+    <button onclick="go(idx-1)">⏮</button>
+    <button onclick="go(idx+1)">⏭</button>
+    <button id="vbtn" onclick="toggleVoice()">🔊 Voice</button>
+    <button onclick="go(0)">↺</button>
+  </div>
+  <div id="start">
+    <h1>Dibang — Demo</h1>
+    <p>Auto-plays start to finish (~4:30). Press Play, then full-screen (F11) and screen-record. Clips are muted; narration is voice + subtitles.</p>
+    <button class="pbtn" onclick="begin()">▶ Play (~4:30)</button>
+    <label><input type="checkbox" id="voiceChk" checked/> English voice (TTS) on</label>
+  </div>
+</div>
+<script>
+// ===== scene config (tweak cap / sub freely) =====  build:260622-sync
+const HOOK_DUR=21;
+const scenes=[
+  {kind:'intro', dur:3.6, sub:'', vo:''},
+  {kind:'hook', dur:HOOK_DUR, sub:'', vo:"In Korea, people move tens of trillions of won in relationship money every year, across 222 thousand weddings and 358 thousand funerals. Almost all cash, untracked. Every culture has these gift economies. What if those relationships became your credit? We don't store who you are. We store who you've been related to. By Yoneda's lemma, that's the same thing, but only the latter is privacy-preserving."},
+  {kind:'video', src:'p3_invitationstart.mp4', cap:18, sub:"A real product — a digital wedding invitation. Creating one spins up your event and a day-of guest QR.", vo:"It starts as a real product people already use: a digital wedding invitation. Making one creates your wedding event, and auto-generates a day-of Q R for interacting with your guests."},
+  {kind:'video', src:'p3_invitation.mp4', cap:8, sub:"Create it, send it to your friends,", vo:"Create it, send it to your friends,"},
+  {kind:'video', src:'p4_myevent_eventlist.mp4', cap:10, sub:"Your event goes live — alongside every wedding, meetup, and party you've attended.", vo:"Your event goes live, next to every wedding, hiking-club meetup, and birthday party you've ever attended."},
+  {kind:'video', src:'p5_guestweb.mp4', cap:26, sub:"On the wedding day, guests scan a QR — signing the guestbook and gifting in one tap.", vo:"On the wedding day, real guests scan the Q R, signing the guestbook and sending their gift in a single tap."},
+  {kind:'video', src:'p5_real.mp4', cap:30, sub:"Pick how you know the host — one of six relationship types — add your name, send the gift and a message. No ATM lines; the ledger records itself.", vo:"Scanning it, a guest picks how they know the host — family, friend, alumni, or colleague — one of six categories, adds an optional note and their name, then sends the gift with a message. No more lining up at an A T M for cash, and the wedding ledger records itself at the same time."},
+  {kind:'video', src:'p6_weddinglounge.mp4', cap:24, sub:"It all flows into the couple's Lounge — every gift, message and check-in, logged.", vo:"It all flows into the couple's Lounge: every gift, message and check-in, logged."},
+  {kind:'video', src:'p7_moigathering.mp4', cap:32, sub:"And into Moi-ga-Moin-Got, the gathering. The more people contribute, the warmer the space glows. Tap anyone — see your relationship.", vo:"And into Moi ga Moin Got, the gathering. The more people contribute, the warmer and wider the space glows. Tap anyone, and see your relationship."},
+  {kind:'video', src:'p9_Inyeon.mp4', cap:42, sub:"On Dibang Inyeon you connect, chat, and exchange gifts — each action another trust signal.", vo:"On Dibang Inyeon you connect, chat, and exchange gifts. Each action is another trust signal."},
+  {kind:'video', src:'p10_setting.mp4', cap:19, hold:4000, sub:"Four layers: relational taxonomy → trust ledgers → PageRank-style propagation → one score. (Category theory: the pattern, not your identity, is trust.)", vo:"Behind it, a four-layer model: each signal is typed by a relational taxonomy, folded into trust ledgers, propagated like PageRank into one score. And category theory shows why: the relationship pattern, not your identity, is what trust really is."},
+  {kind:'video', src:'p10_Moicredit.mp4', cap:7, sub:"Moi Credit — it isn't fixed. It moves like a stock, and the exact value lives on-chain.", vo:"Moi Credit. It isn't fixed. It moves like a stock, and the exact value lives on chain."},
+  {kind:'video', src:'P11_defi.mp4', cap:7, sub:"Backed by his Moi Credit — an uncollateralized loan, read on-chain, without knowing who he is.", vo:"Backed by his Moi Credit, an uncollateralized loan, read on chain, without ever knowing who he is."},
+  {kind:'video', src:'P12_ontology.mp4', cap:9, sub:"Today, Chulsoo. Tomorrow — seven billion. Relationships are everything.", vo:"Today, Chulsoo. Tomorrow, seven billion. Relationships are everything."},
+];
+const TOTAL=scenes.reduce((s,x)=>s+(x.kind==='video'?x.cap:x.dur),0);
+// right-panel content per scene (placeholder until 박태원 contract viz) — index aligns with scenes[]
+const panels=[ null, null,
+  {tx:'[ invitation · create · Chulsoo ]', obj:'Owned object — your own event card'},
+  {tx:'[ invitation · send · Chulsoo → friend ]', obj:'Shared object — a relationship begins'},
+  {tx:'[ event-list · join · Chulsoo ]', obj:'Owned (my event) vs Shared (relations)'},
+  {tx:'[ wedding · gift(부조) · guest → host ]', obj:'Shared object — recorded on Sui'},
+  {tx:'[ wedding · guestbook / message ]', obj:'Shared object — a relationship signal'},
+  {tx:'[ lounge · event-log accumulates ]', obj:'Shared — every interaction logged'},
+  {tx:'[ gathering · ieum · Chulsoo ↔ moi ]', obj:'Shared object — who you have met'},
+  {tx:'[ inyeon · ieum / chat / gift ]', obj:'Shared object — a trust edge'},
+  {tx:'[ fold → EM·CS ledgers → Φ ]', obj:'derived — normalize · matrix · PageRank'},
+  {tx:'[ Moi Credit = 824 / AAA ]', obj:'composable Move object · on-chain'},
+  {tx:'[ Navi · read( Moi Credit ) ]', obj:'object read — without identity'},
+  {tx:'[ global trust network · 7B ]', obj:'composable Move objects'},
+];
+
+const vid=document.getElementById('vid'), hook=document.getElementById('hook'), subtxt=document.getElementById('subtxt'), intro=document.getElementById('intro');
+const bar=document.getElementById('bar'), label=document.getElementById('scenelabel');
+let idx=-1, paused=false, sceneStart=0, elapsedBefore=0, hookTimer=null, voiceOn=true, rafId=null, pauseAt=0, revealTimers=[], holding=false;
+let enVoice=null;
+function pickVoice(){ const vs=speechSynthesis.getVoices(); enVoice=vs.find(v=>/en-US/i.test(v.lang)&&/(natural|google|samantha|aria|jenny|zira)/i.test(v.name))||vs.find(v=>/^en/i.test(v.lang))||vs[0]; }
+speechSynthesis.onvoiceschanged=pickVoice; pickVoice();
+function speak(t){ if(!voiceOn||!t)return; try{speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); if(enVoice)u.voice=enVoice; u.rate=1.0; u.pitch=1.0; speechSynthesis.speak(u);}catch(e){} }
+
+function showSub(t){ subtxt.textContent=t; subtxt.classList.toggle('on', !!t); }
+function hookReveal(){ const ps=hook.querySelectorAll('p'); ps.forEach((p,i)=>revealTimers.push(setTimeout(()=>p.classList.add('show'), 300+i*3500))); }
+
+// ===== intro brand card — seed network sphere =====
+const introcv=document.getElementById('introcv'); let ictx,IW,IH,IDPR,introRaf=null,introT0=0;
+const IN=72, IP=[], IE=[];
+for(let i=0;i<IN;i++){ const y=1-(i/(IN-1))*2, r=Math.sqrt(1-y*y), th=i*2.399963; IP.push({x:Math.cos(th)*r,y,z:Math.sin(th)*r,born:i/IN}); }
+for(let i=0;i<IN;i++){ const d=[]; for(let j=0;j<IN;j++){ if(i===j)continue; const dx=IP[i].x-IP[j].x,dy=IP[i].y-IP[j].y,dz=IP[i].z-IP[j].z; d.push([dx*dx+dy*dy+dz*dz,j]); }
+  d.sort((a,b)=>a[0]-b[0]); for(let n=0;n<2;n++) if(d[n][1]>i) IE.push([i,d[n][1]]); }
+function isize(){ IDPR=window.devicePixelRatio||1; IW=introcv.clientWidth; IH=introcv.clientHeight; introcv.width=IW*IDPR; introcv.height=IH*IDPR; ictx=introcv.getContext('2d'); ictx.setTransform(IDPR,0,0,IDPR,0,0); }
+function startIntroAnim(){ isize(); introT0=performance.now(); if(!introRaf) introRaf=requestAnimationFrame(introDraw); }
+function introDraw(ts){
+  if(!intro.classList.contains('on')){ introRaf=null; return; }
+  if(paused){ introRaf=requestAnimationFrame(introDraw); return; }
+  const t=(ts-introT0)/1000, grow=Math.min(1,t/2.0);
+  ictx.clearRect(0,0,IW,IH);
+  const cx=IW/2, cy=IH*0.44, R=Math.min(IW,IH)*0.19, ang=t*0.28, ca=Math.cos(ang), sa=Math.sin(ang);
+  const proj=p=>{ const x=p.x*ca-p.z*sa, z=p.x*sa+p.z*ca, persp=1/(1.9-z*0.5); return {x:cx+x*R*persp, y:cy+p.y*R*persp, z}; };
+  const born=i=>IP[i].born<=grow*1.05;
+  ictx.lineWidth=1;
+  for(const [a,b] of IE){ if(!born(a)||!born(b))continue; const pa=proj(IP[a]),pb=proj(IP[b]),zz=(pa.z+pb.z)/2;
+    ictx.strokeStyle='rgba(95,176,230,'+(0.04+0.10*(zz+1)/2)+')'; ictx.beginPath(); ictx.moveTo(pa.x,pa.y); ictx.lineTo(pb.x,pb.y); ictx.stroke(); }
+  for(let i=0;i<IN;i++){ if(!born(i))continue; const p=proj(IP[i]), s=0.9+1.5*(p.z+1)/2, o=0.30+0.5*(p.z+1)/2;
+    if(i===0){ ictx.fillStyle='rgba(224,169,60,1)'; ictx.beginPath(); ictx.arc(p.x,p.y,2.8,0,7); ictx.fill(); }
+    else { ictx.fillStyle='rgba(150,200,235,'+o+')'; ictx.beginPath(); ictx.arc(p.x,p.y,s,0,7); ictx.fill(); } }
+  introRaf=requestAnimationFrame(introDraw);
+}
+
+// ===== right-bottom: Sui object graph (scene-synced, representative) =====
+const sviz=document.getElementById('suiviz'), soid=document.getElementById('suioid');
+let sctx,SW,SH,SDPR,suiRaf=null,suiW=0,suiH=0;
+const NODE={ 철수:{en:'Chulsoo'}, 서아:{en:'Seoa'}, 하늘:{en:'Haneul'}, 강병주:{en:'Gang B.'},
+ 송민정:{en:'Song M.'}, 하린:{en:'Harin'}, 도윤:{en:'Doyun'}, 예준:{en:'Yejun'} };
+const CAST=['서아','하늘','강병주','송민정','하린','도윤','예준'];
+const ANON=[ {id:'a1',p:'서아',off:0.34},{id:'a2',p:'하늘',off:-0.32},{id:'a3',p:'강병주',off:0.30},
+ {id:'a4',p:'하린',off:-0.30},{id:'a5',p:'도윤',off:0.32},{id:'a6',p:'예준',off:-0.30},{id:'a7',p:'서아',off:-0.36} ];
+const ETYPE={이음:'ieum',부조:'gift',방명록:'guestbook',결혼:'wedding',구매:'purchase'};
+const suiScenes={
+ 2:{nodes:['철수'], owned:'event', oid:'0x7a3f…1c2', cap:'Owned object · my event'},
+ 3:{edges:[['철수','서아','이음']], oid:'0x91b2…84e', cap:'Shared object · ieum (interaction)'},
+ 4:{edges:[['철수','하늘','이음'],['서아','a1','이음']], oid:'0x4dc0…7af', cap:'relations beget relations'},
+ 5:{edges:[['철수','강병주','부조'],['강병주','송민정','결혼']], oid:'0x2e88…b13', cap:'Shared object · gift'},
+ 6:{edges:[['철수','송민정','방명록'],['하늘','a2','이음']], oid:'0x6f51…09d', cap:'Shared object · guestbook'},
+ 7:{edges:[['철수','하린','이음'],['서아','도윤','이음'],['강병주','a3','이음']], oid:'0xa17c…3e2', cap:'edges propagate through the network'},
+ 8:{edges:[['철수','도윤','이음'],['하린','a4','이음']], owned:'item', oid:'0x9b2e…7c4', cap:'shop · purchase (MP) → Owned object'},
+ 9:{edges:[['철수','예준','이음'],['도윤','a5','이음'],['예준','a6','이음'],['서아','a7','이음']], oid:'0xc40a…7b8', cap:'trust edge · ieum / chat / gift'},
+ 10:{phase:'fold', oid:'derived (off-chain)', cap:'fold → EM·CS → Φ'},
+ 11:{phase:'credit', oid:'0x824a…aaa', cap:'Move object · Moi Credit 824 / AAA'},
+ 12:{phase:'defi', oid:'Navi.read( 0x824a…aaa )', cap:'read() — never who you are'},
+ 13:{phase:'expand', oid:'composable · ×7B', cap:'one ontology · everyone'},
+};
+let suiNodes=new Set(), suiEdges=[], suiPhase='', suiOID='', suiCap='', suiOwned=0, suiOwnedBorn=0;
+const EXTRA=[]; for(let i=0;i<26;i++) EXTRA.push({a:Math.random()*6.28, r:0.62+Math.random()*0.34});
+function suiGo(i){
+  suiNodes=new Set(); suiEdges=[]; suiPhase=''; suiOID=''; suiCap=''; suiOwned=0;
+  for(let k=2;k<=i;k++){ const c=suiScenes[k]; if(!c)continue;
+    if(c.nodes)c.nodes.forEach(n=>suiNodes.add(n));
+    if(c.edges)c.edges.forEach(([a,b,t])=>{ suiNodes.add(a);suiNodes.add(b); suiEdges.push({a,b,t,born:(k===i?performance.now():0)}); });
+    if(c.owned){ suiOwned++; if(k===i)suiOwnedBorn=performance.now(); }
+    if(c.phase)suiPhase=c.phase; if(c.oid)suiOID=c.oid; if(c.cap)suiCap=c.cap;
+  }
+  if(i>=2) suiNodes.add('철수');
+  soid.textContent = suiCap ? (suiCap+'   '+suiOID) : '—';
+}
+function suiPos(){ const cx=SW/2, cy=SH/2, r1=Math.min(SW,SH)*0.30, r2=Math.min(SW,SH)*0.47; const P={'철수':[cx,cy]};
+  CAST.forEach((n,i)=>{ const a=-1.5708 + i*(6.2832/CAST.length); P[n]=[cx+Math.cos(a)*r1, cy+Math.sin(a)*r1]; });
+  ANON.forEach(o=>{ const pi=CAST.indexOf(o.p); const a=-1.5708 + pi*(6.2832/CAST.length) + o.off; P[o.id]=[cx+Math.cos(a)*r2, cy+Math.sin(a)*r2]; });
+  return {P,cx,cy,r1,r2}; }
+function suiDraw(){
+  if(!sviz)return;
+  const w=sviz.clientWidth, h=sviz.clientHeight;
+  if(w!==suiW||h!==suiH){ SDPR=window.devicePixelRatio||1; suiW=SW=w; suiH=SH=h; sviz.width=w*SDPR; sviz.height=h*SDPR; sctx=sviz.getContext('2d'); sctx.setTransform(SDPR,0,0,SDPR,0,0); }
+  if(paused){ suiRaf=requestAnimationFrame(suiDraw); return; }
+  const now=performance.now(); sctx.clearRect(0,0,SW,SH);
+  sctx.textAlign='center'; sctx.textBaseline='middle';
+  const {P,cx,cy,r1,r2}=suiPos();
+  // expand: faint outer field
+  if(suiPhase==='expand'){ for(const e of EXTRA){ const x=cx+Math.cos(e.a)*r2*1.45*e.r, y=cy+Math.sin(e.a)*r2*1.45*e.r;
+    sctx.strokeStyle='rgba(95,176,230,.10)'; sctx.beginPath(); sctx.moveTo(cx,cy); sctx.lineTo(x,y); sctx.stroke();
+    sctx.fillStyle='rgba(150,200,235,.30)'; sctx.beginPath(); sctx.arc(x,y,2.4,0,7); sctx.fill(); } }
+  const foldP = suiPhase==='fold' ? (0.5+0.5*Math.sin(now/220)) : 0;
+  // edges
+  for(const e of suiEdges){ const a=P[e.a],b=P[e.b]; if(!a||!b)continue;
+    const fr = e.born? Math.min(1,(now-e.born)/520):1; const ex=a[0]+(b[0]-a[0])*fr, ey=a[1]+(b[1]-a[1])*fr;
+    const anon = !NODE[e.a]||!NODE[e.b];
+    sctx.strokeStyle = suiPhase==='fold'? `rgba(135,206,235,${0.25+0.5*foldP})` : (anon?'rgba(95,176,230,.26)':'rgba(95,176,230,.5)');
+    sctx.lineWidth = (e.t==='부조'||e.t==='결혼')?2.6:(anon?1:1.7); sctx.beginPath(); sctx.moveTo(a[0],a[1]); sctx.lineTo(ex,ey); sctx.stroke();
+    if(e.born && fr>0.55 && !anon){ const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2; sctx.fillStyle='rgba(196,218,240,.95)'; sctx.font="bold 11px 'Pretendard Variable',sans-serif"; sctx.fillText(ETYPE[e.t]||e.t,mx,my-7); } }
+  // anonymous object nodes (network beyond the cast)
+  for(const n of suiNodes){ if(NODE[n]||n==='철수')continue; const p=P[n]; if(!p)continue;
+    sctx.fillStyle='rgba(120,160,200,.55)'; sctx.beginPath(); sctx.arc(p[0],p[1],4,0,7); sctx.fill();
+    sctx.fillStyle='rgba(125,155,190,.7)'; sctx.font="8px Consolas,monospace"; sctx.fillText('0x…',p[0],p[1]+12); }
+  // named cast nodes (English + Korean)
+  for(const n of suiNodes){ if(!NODE[n]||n==='철수')continue; const p=P[n]; if(!p)continue;
+    sctx.beginPath(); sctx.arc(p[0],p[1],15,0,7); sctx.fillStyle='#1d3a59'; sctx.fill();
+    sctx.lineWidth=1.2; sctx.strokeStyle='#3f648c'; sctx.stroke();
+    sctx.fillStyle='#dcebf8'; sctx.font="bold 11px 'Pretendard Variable',sans-serif"; sctx.fillText(NODE[n].en,p[0],p[1]-2);
+    sctx.fillStyle='#8fb0d2'; sctx.font="9px 'Noto Sans KR',sans-serif"; sctx.fillText(n,p[0],p[1]+9); }
+  // owned object box (MP / my event → inventory)
+  if(suiOwned>0){ const bx=8,by=8,bw=74,bh=24, fresh=now-suiOwnedBorn<1600;
+    sctx.fillStyle='rgba(20,40,66,.6)';
+    sctx.strokeStyle = fresh? `rgba(135,206,235,${0.5+0.5*Math.sin(now/170)})` : 'rgba(63,100,140,.7)'; sctx.lineWidth=1.3;
+    sctx.beginPath(); sctx.roundRect? sctx.roundRect(bx,by,bw,bh,6):sctx.rect(bx,by,bw,bh); sctx.fill(); sctx.stroke();
+    sctx.textAlign='left'; sctx.fillStyle='#9fc2e0'; sctx.font="8px 'Pretendard Variable',sans-serif"; sctx.fillText('Owned object',bx+7,by+8);
+    for(let c=0;c<suiOwned;c++){ sctx.fillStyle=c===0?'#5FB0E6':'#E0A93C'; sctx.beginPath(); sctx.arc(bx+13+c*15,by+16,4.5,0,7); sctx.fill(); }
+    sctx.textAlign='center'; }
+  // center node (Chulsoo → Moi Credit)
+  const isCredit = suiPhase==='credit'||suiPhase==='defi'||suiPhase==='expand';
+  const pulse=2+Math.sin(now/240)*2.5;
+  if(isCredit){
+    sctx.strokeStyle='rgba(224,169,60,.45)'; sctx.lineWidth=2.4; sctx.beginPath(); sctx.arc(cx,cy,24+pulse,0,7); sctx.stroke();
+    const g=sctx.createLinearGradient(cx-22,cy-22,cx+22,cy+22); g.addColorStop(0,'#E0A93C'); g.addColorStop(1,'#f3cf7e');
+    sctx.fillStyle=g; sctx.beginPath(); sctx.arc(cx,cy,22,0,7); sctx.fill();
+    sctx.fillStyle='#3a2a06'; sctx.font="bold 16px 'Pretendard Variable',sans-serif"; sctx.fillText(suiPhase==='defi'?'?':'824',cx,cy-3);
+    sctx.font="bold 9px 'Pretendard Variable',sans-serif"; sctx.fillText(suiPhase==='defi'?'identity hidden':'AAA',cx,cy+11);
+  } else {
+    sctx.fillStyle='#2f5681'; sctx.beginPath(); sctx.arc(cx,cy,17,0,7); sctx.fill();
+    sctx.lineWidth=2.4; sctx.strokeStyle='#5FB0E6'; sctx.stroke();
+    sctx.fillStyle='#fff'; sctx.font="bold 11px 'Pretendard Variable',sans-serif"; sctx.fillText('Chulsoo',cx,cy-1);
+    sctx.fillStyle='#cfe0f0'; sctx.font="9px 'Noto Sans KR',sans-serif"; sctx.fillText('철수',cx,cy+10);
+  }
+  // defi: Navi reader
+  if(suiPhase==='defi'){ const nx=SW-42, ny=30;
+    sctx.fillStyle='rgba(61,190,139,.18)'; sctx.strokeStyle='#3DBE8B'; sctx.lineWidth=1.2;
+    sctx.beginPath(); sctx.roundRect? sctx.roundRect(nx-34,ny-13,68,26,7):sctx.rect(nx-34,ny-13,68,26); sctx.fill(); sctx.stroke();
+    sctx.fillStyle='#bdf0d8'; sctx.font="bold 11px 'Pretendard Variable',sans-serif"; sctx.fillText('Navi',nx,ny);
+    sctx.strokeStyle='rgba(61,190,139,.6)'; sctx.setLineDash([4,3]); sctx.beginPath(); sctx.moveTo(nx,ny+13); sctx.lineTo(cx+16,cy-22); sctx.stroke(); sctx.setLineDash([]);
+  }
+  suiRaf=requestAnimationFrame(suiDraw);
+}
+
+function go(i){ if(i<0)i=0; if(i>=scenes.length){ finish(); return; } idx=i; const sc=scenes[i];
+  paused=false; holding=false; document.getElementById('pausedTag').style.display='none';
+  label.textContent=(i+1)+' / '+scenes.length;
+  const pn=panels[i]; document.getElementById('txbox').textContent=pn?pn.tx:'—'; document.getElementById('objbox').textContent=pn?pn.obj:'—';
+  suiGo(i);
+  // reset hook paras
+  hook.querySelectorAll('p').forEach(p=>p.classList.remove('show'));
+  clearTimeout(hookTimer); revealTimers.forEach(clearTimeout); revealTimers=[]; speechSynthesis.cancel();
+  elapsedBefore=scenes.slice(0,i).reduce((s,x)=>s+(x.kind==='video'?x.cap:x.dur),0);
+  sceneStart=performance.now();
+  if(sc.kind==='intro'){ vid.classList.remove('on'); vid.pause(); hook.classList.remove('on'); intro.classList.add('on'); showSub(''); startIntroAnim(); speak(sc.vo);
+    hookTimer=setTimeout(()=>go(i+1), sc.dur*1000);
+  } else if(sc.kind==='hook'){ intro.classList.remove('on'); vid.classList.remove('on'); vid.pause(); hook.classList.add('on'); showSub(''); hookReveal(); speak(sc.vo);
+    hookTimer=setTimeout(()=>go(i+1), sc.dur*1000);
+  } else { intro.classList.remove('on'); hook.classList.remove('on'); vid.classList.remove('on');
+    vid.src=sc.src; vid.currentTime=0; vid.play().catch(()=>{}); setTimeout(()=>vid.classList.add('on'),60);
+    showSub(sc.sub); speak(sc.vo);
+  }
+}
+vid.addEventListener('timeupdate',()=>{ const sc=scenes[idx]; if(!sc||sc.kind!=='video')return; if(vid.currentTime>=sc.cap) go(idx+1); });
+vid.addEventListener('ended',()=>{ const sc=scenes[idx];
+  if(idx>=scenes.length-1){ hookTimer=setTimeout(()=>{ if(idx>=scenes.length-1)finish(); },1400); return; }
+  if(sc && sc.hold){ holding=true; hookTimer=setTimeout(()=>{ holding=false; go(idx+1); }, sc.hold); }
+  else go(idx+1); });
+
+function tick(){ if(!paused){ const sc=scenes[idx]; let cur=elapsedBefore;
+  if(sc){ const el=(performance.now()-sceneStart)/1000; cur+=Math.min(el, sc.kind==='video'?sc.cap:sc.dur); }
+  bar.style.width=(100*cur/TOTAL)+'%'; }
+  rafId=requestAnimationFrame(tick); }
+
+function togglePlay(){
+  if(idx<0)return;
+  paused=!paused;
+  const sc=scenes[idx], tag=document.getElementById('pausedTag');
+  if(paused){
+    pauseAt=performance.now();
+    vid.pause(); speechSynthesis.cancel();
+    clearTimeout(hookTimer); revealTimers.forEach(clearTimeout); revealTimers=[];
+    tag.style.display='block';
+  } else {
+    tag.style.display='none';
+    const pausedDur=performance.now()-pauseAt;
+    const elapsed=pauseAt-sceneStart;     // time already spent in this scene
+    sceneStart+=pausedDur;                 // keep progress bar continuous
+    if(holding){
+      hookTimer=setTimeout(()=>{ holding=false; go(idx+1); }, sc.hold||800);
+    } else if(sc && sc.kind!=='video'){
+      const remain=Math.max(200, sc.dur*1000 - elapsed);
+      hookTimer=setTimeout(()=>go(idx+1), remain);
+    } else {
+      vid.play().catch(()=>{});
+    }
+  }
+}
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('start').style.display!=='none')return;
+  if(e.code==='Space'){ e.preventDefault(); togglePlay(); }
+  else if(e.code==='ArrowRight'){ e.preventDefault(); go(idx+1); }
+  else if(e.code==='ArrowLeft'){ e.preventDefault(); go(idx-1); }
+});
+function toggleVoice(){ voiceOn=!voiceOn; document.getElementById('vbtn').style.opacity=voiceOn?1:.5; if(!voiceOn)speechSynthesis.cancel(); }
+function finish(){ showSub(''); hook.classList.remove('on'); intro.classList.remove('on'); vid.classList.remove('on'); label.textContent='end'; bar.style.width='100%'; }
+function begin(){ voiceOn=document.getElementById('voiceChk').checked; document.getElementById('start').style.display='none'; tick(); if(!suiRaf)suiDraw(); go(0); }
+</script>
+</body>
+</html>
