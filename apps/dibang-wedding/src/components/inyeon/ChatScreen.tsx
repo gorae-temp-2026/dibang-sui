@@ -13,6 +13,9 @@ import { cn } from '../../lib/utils'
 
 const moiById = (id: number) => POOL.find((m) => m.id === id)
 const photoBg = (hue: number) => `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
+// 채팅 아바타 = 실사진(대표사진) 우선, 없으면 hue 그라데이션.
+const avatarStyle = (photo?: { url?: string; hue: number }) =>
+  photo?.url ? { backgroundImage: `url(${photo.url})` } : { background: photoBg(photo?.hue ?? 210) }
 
 interface DmMsg {
   sys?: string
@@ -42,7 +45,6 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
   const [dms, setDms] = useState<Record<number, DmMsg[]>>({})
   const giftLog = useSelector(giftActor, (s) => s.context.log)
   const giftYone = useSelector(giftActor, (s) => s.context.yone)
-  const giftReceived = useSelector(giftActor, (s) => s.context.received)
   const giftPending = useSelector(giftActor, (s) => s.context.pending?.itemId ?? null)
   const giftError = useSelector(giftActor, (s) => s.context.error)
 
@@ -97,7 +99,7 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
         {matched.map((m) => (
           <button key={m.id} type="button" onClick={() => setMemoryId(m.id)} className="flex flex-shrink-0 flex-col items-center gap-1">
             <span className="relative grid h-[58px] w-[58px] place-items-center rounded-full bg-gradient-to-br from-[#F8C57A] to-[#5AA3D6] p-[2.5px]">
-              <span className="h-full w-full rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
+              <span className="h-full w-full rounded-full bg-cover bg-center" style={avatarStyle(m.photos[0])} />
               <Play className="absolute h-4 w-4 fill-white text-white drop-shadow" />
             </span>
             <span className="text-[10px] font-bold text-white/80">{m.name}</span>
@@ -113,7 +115,7 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
           const cost = DM_COST[m.tier]
           return (
             <div key={m.id} className={cn('flex items-center gap-3 rounded-2xl border p-3', open ? 'border-white/8 bg-white/[0.04]' : 'border-white/8 bg-white/[0.02]')}>
-              <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }}>
+              <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-cover bg-center" style={avatarStyle(m.photos[0])}>
                 {m.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0A1626] bg-[#46d77f]" />}
               </div>
               <div className="min-w-0 flex-1">
@@ -152,7 +154,7 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
           onOpenChange={setGiftOpen}
           toName={moiById(dmRoomId)?.name ?? '상대'}
           yone={giftYone}
-          received={giftReceived}
+          received={giftLog.filter((g) => g.counterpartId === String(dmRoomId) && !g.fromMe).map((g) => g.itemId)}
           pendingItemId={giftPending}
           error={giftError}
           onGift={(itemId) => sendGift(dmRoomId, itemId)}
@@ -184,7 +186,7 @@ function DmRoom({ moiId, msgs, giftLog, onSend, onClose, onOpenProfile, onOpenGi
           <ArrowLeft className="h-5 w-5" />
         </button>
         <button type="button" onClick={onOpenProfile} className="flex min-w-0 flex-1 items-center gap-2.5">
-          <span className="h-9 w-9 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
+          <span className="h-9 w-9 flex-shrink-0 rounded-full bg-cover bg-center" style={avatarStyle(m.photos[0])} />
           <span className="min-w-0 text-left">
             <span className="block truncate text-[14px] font-bold text-white">{m.name}</span>
             <span className="block text-[10.5px] text-white/45">{m.online ? '접속 중' : '오프라인'} · 탭하여 프로필</span>
@@ -246,7 +248,7 @@ function MemoryViewer({ moiId, onClose }: { moiId: number; onClose: () => void }
           <X className="h-5 w-5" />
         </button>
         <div className="absolute inset-x-0 top-0 flex items-center gap-2.5 bg-gradient-to-b from-black/55 to-transparent p-4">
-          <span className="h-10 w-10 rounded-full border-2 border-white/70 bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
+          <span className="h-10 w-10 rounded-full border-2 border-white/70 bg-cover bg-center" style={avatarStyle(m.photos[0])} />
           <div className="leading-tight">
             <div className="text-[14px] font-extrabold text-white">{m.name}</div>
             <div className="text-[11px] text-white/70">▶ 2초 메모리 · {views}명이 봤어요</div>
