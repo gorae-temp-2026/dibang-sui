@@ -4,7 +4,11 @@
 /// **결정#2(신원-불가지): 온체인 Wedding은 이름·예식장 등 표시 콘텐츠를 담지 않는다.**
 /// 신랑·신부·부모 이름, 날짜·시간·예식장, 라운지 이름 등 *사람/표시 정보는 전부 오프체인*(Supabase)에
 /// `wedding_id`/`event_id`로 키잉해 보관한다. 온체인엔 신뢰 그래프 앵커만 남긴다:
-/// event_id(이 결혼식을 관통하는 gathering::Event), 혼주 지갑 주소들, status, 모금함 ID.
+/// event_id(이 결혼식을 관통하는 gathering::Event), primary_host(부조 target), status, 모금함 ID.
+///
+/// **§1-5(주소 allowlist 제거): 공동 혼주의 *권위*는 `WeddingCap` 소지로 표현한다(possession=권한).**
+/// 온체인에 혼주 주소 목록(allowlist)을 두지 않는다 — `add_host`는 새 Cap을 발행할 뿐이고, 공동혼주는
+/// 곧 Cap 보유자다. `primary_host`(생성자)만 부조/방명록의 target 기본값으로 저장한다.
 ///
 /// 다른 모듈(guestbook, cash_gift, rsvp)이 이 모듈의 타입과 혼주 슬롯 검증을 재사용한다.
 module dibang_wedding::wedding;
@@ -20,10 +24,6 @@ use dibang_wedding::ledger;
 
 /// Cap이 가리키는 결혼식과 대상 결혼식이 일치하지 않음.
 const EWrongCap: u64 = 0;
-/// 호스트 슬롯이 가득 참 (최대 6명).
-const EMaxHostsReached: u64 = 1;
-/// 이미 등록된 호스트 주소를 다시 추가하려 함.
-const EHostAlreadyExists: u64 = 2;
 /// 혼주 슬롯 값이 정해진 6종 중 하나가 아님.
 const EInvalidRecipientSlot: u64 = 3;
 /// 이미 모금함이 연결된 결혼식에 또 연결하려 함.
@@ -32,11 +32,6 @@ const EVaultAlreadySet: u64 = 4;
 const EWrongEvent: u64 = 5;
 /// 초대는 혼주(HOST 역할)만 가능.
 const ENotHost: u64 = 6;
-
-// === Constants ===
-
-/// 호스트(혼주) 최대 인원: 신랑·신부·양가 부모 6명.
-const MAX_HOSTS: u64 = 6;
 
 // === Structs ===
 
@@ -47,12 +42,14 @@ public struct Wedding has key {
     // 이 결혼식을 관통하는 신뢰 그래프 이벤트(gathering::Event, EVENT_WEDDING). 부조 등 액션의 event_id.
     event_id: ID,
     status: String,
-    host_addresses: vector<address>,
+    /// 첫 혼주(생성자) = 부조·방명록의 target. 공동 혼주의 *권위*는 WeddingCap 소지로(§1-5) —
+    /// 주소 allowlist를 온체인에 두지 않는다(공동혼주 = Cap 보유자).
+    primary_host: address,
     // 이 결혼식의 축의금 모금함(CashGiftVault) ID. cash_gift::create_vault 가 1회 채운다.
     vault_id: Option<ID>,
 }
 
-/// 결혼식 수정 권한 증명. 생성자(첫 호스트)에게 전달된다.
+/// 결혼식 수정 권한 증명. 생성자(첫 호스트)에게 전달되고, add_host가 공동혼주에게 추가 발행한다.
 public struct WeddingCap has key, store {
     id: UID,
     wedding_id: ID,
@@ -79,7 +76,7 @@ public struct HostAdded has copy, drop {
 
 // === Public functions ===
 
-/// 결혼식을 생성한다(익명 앵커). 호출자가 첫 호스트가 되며, `Wedding`과 `WeddingLounge`는
+/// 결혼식을 생성한다(익명 앵커). 호출자가 첫 호스트(primary_host)가 되며, `Wedding`과 `WeddingLounge`는
 /// 공유 오브젝트로 등록된다. 표시 정보(이름·예식장 등)는 *온체인에 받지 않는다* — 오프체인에서
 /// 반환된 wedding_id/event_id로 키잉해 저장한다. 생성된 `WeddingCap`은 반환(PTB가 transfer).
 public fun create_wedding(clock: &Clock, ctx: &mut TxContext): WeddingCap {
@@ -89,7 +86,7 @@ public fun create_wedding(clock: &Clock, ctx: &mut TxContext): WeddingCap {
         id: object::new(ctx),
         event_id,
         status: b"active".to_string(),
-        host_addresses: vector[ctx.sender()],
+        primary_host: ctx.sender(),
         vault_id: option::none(),
     };
     let wedding_id = object::id(&wedding);
@@ -106,13 +103,13 @@ public fun create_wedding(clock: &Clock, ctx: &mut TxContext): WeddingCap {
     cap
 }
 
-/// 호스트(혼주)를 추가한다. 최대 6명, 중복 불가.
-public fun add_host(wedding: &mut Wedding, cap: &WeddingCap, new_host: address) {
+/// 공동 혼주 추가 = 새 `WeddingCap`을 발행해 `new_host`에게 전달한다(§1-5: 권위 = Cap 소지).
+/// 주소 allowlist를 저장하지 않는다 — 공동혼주는 곧 Cap 보유자다. 호출자는 이 결혼식의 유효한 Cap 소지자여야 한다.
+/// (시빌: 누구나 자기 alts에 Cap을 늘려도 raw일 뿐 — 신뢰는 Φ가 거른다. §8.)
+public fun add_host(wedding: &Wedding, cap: &WeddingCap, new_host: address, ctx: &mut TxContext) {
     assert!(cap.wedding_id == object::id(wedding), EWrongCap);
-    assert!(wedding.host_addresses.length() < MAX_HOSTS, EMaxHostsReached);
-    assert!(!wedding.host_addresses.contains(&new_host), EHostAlreadyExists);
-
-    wedding.host_addresses.push_back(new_host);
+    let new_cap = WeddingCap { id: object::new(ctx), wedding_id: object::id(wedding) };
+    transfer::public_transfer(new_cap, new_host);
     event::emit(HostAdded { wedding_id: object::id(wedding), host: new_host });
 }
 
@@ -162,8 +159,9 @@ public fun wedding_id(cap: &WeddingCap): ID { cap.wedding_id }
 /// 라운지가 속한 결혼식 ID.
 public fun lounge_wedding_id(lounge: &WeddingLounge): ID { lounge.wedding_id }
 
-/// 현재 호스트 주소 목록(복사본).
-public fun hosts(wedding: &Wedding): vector<address> { wedding.host_addresses }
+/// 호스트 목록(복사본) — 온체인엔 primary_host만 저장하므로 `[primary_host]` 단일 반환.
+/// 공동혼주(Cap 보유자) 전체 목록은 온체인에 없다(Cap 소유자 조회 또는 오프체인).
+public fun hosts(wedding: &Wedding): vector<address> { vector[wedding.primary_host] }
 
 /// 결혼식 상태.
 public fun status(wedding: &Wedding): String { wedding.status }
@@ -174,8 +172,8 @@ public fun vault_id(wedding: &Wedding): Option<ID> { wedding.vault_id }
 /// 이 결혼식을 관통하는 신뢰 그래프 이벤트 ID(gathering::Event). 부조 등 액션의 event_id.
 public fun event_id(wedding: &Wedding): ID { wedding.event_id }
 
-/// 첫 호스트(생성자=혼주). 부조의 대상(target) 기본값. host_addresses는 생성 시 [sender]로 ≥1 보장.
-public fun primary_host(wedding: &Wedding): address { *wedding.host_addresses.borrow(0) }
+/// 첫 호스트(생성자=혼주). 부조의 대상(target) 기본값.
+public fun primary_host(wedding: &Wedding): address { wedding.primary_host }
 
 // === Tests ===
 
@@ -221,11 +219,9 @@ fun create_shares_wedding_lounge_and_cap() {
     let lounge = scenario.take_shared<WeddingLounge>();
     let cap = scenario.take_from_sender<WeddingCap>();
 
-    // 앵커: status·혼주 주소만(표시 콘텐츠는 온체인에 없음).
+    // 앵커: status·primary_host만(표시 콘텐츠는 온체인에 없음).
     assert_eq!(wedding.status, b"active".to_string());
-    assert_eq!(wedding.host_addresses.length(), 1);
-    let host = HOST;
-    assert!(wedding.host_addresses.contains(&host));
+    assert_eq!(wedding.primary_host, HOST);
     // Cap·Lounge 모두 같은 결혼식을 가리켜야 한다.
     assert_eq!(cap.wedding_id, object::id(&wedding));
     assert_eq!(lounge.wedding_id, object::id(&wedding));
@@ -284,20 +280,25 @@ fun invite_logs_host_to_guest() {
 }
 
 #[test]
-fun add_host_appends() {
+fun add_host_issues_cap() {
     let mut scenario = ts::begin(HOST);
     new_wedding_for_test(&mut scenario);
 
     scenario.next_tx(HOST);
-    let mut wedding = scenario.take_shared<Wedding>();
+    let wedding = scenario.take_shared<Wedding>();
+    let wid = object::id(&wedding);
     let cap = scenario.take_from_sender<WeddingCap>();
 
-    add_host(&mut wedding, &cap, @0xB);
-    assert_eq!(wedding.host_addresses.length(), 2);
-    assert!(wedding.host_addresses.contains(&@0xB));
-
+    // 공동혼주 추가 = @0xB에게 새 WeddingCap 발행(권위=Cap 소지).
+    add_host(&wedding, &cap, @0xB, scenario.ctx());
     ts::return_shared(wedding);
     scenario.return_to_sender(cap);
+
+    // @0xB가 같은 결혼식의 WeddingCap을 받았다.
+    scenario.next_tx(@0xB);
+    let cap_b = scenario.take_from_sender<WeddingCap>();
+    assert_eq!(cap_b.wedding_id, wid);
+    scenario.return_to_sender(cap_b);
     scenario.end();
 }
 
@@ -319,41 +320,19 @@ fun add_host_with_wrong_cap_fails() {
     new_wedding_for_test(&mut scenario);
 
     scenario.next_tx(HOST);
-    let mut wedding = scenario.take_shared<Wedding>();
+    let wedding = scenario.take_shared<Wedding>();
     // 다른 결혼식을 가리키는 가짜 Cap (같은 모듈이라 직접 생성 가능).
     let fake_cap = WeddingCap {
         id: object::new(scenario.ctx()),
         wedding_id: object::id_from_address(@0xBEEF),
     };
 
-    add_host(&mut wedding, &fake_cap, @0xB); // EWrongCap 으로 abort
+    add_host(&wedding, &fake_cap, @0xB, scenario.ctx()); // EWrongCap 으로 abort
 
     // 아래는 컴파일 위한 소비 — 런타임엔 위에서 abort되어 도달하지 않음.
     let WeddingCap { id, wedding_id: _ } = fake_cap;
     id.delete();
     ts::return_shared(wedding);
-    scenario.end();
-}
-
-#[test, expected_failure(abort_code = EMaxHostsReached)]
-fun add_host_beyond_max_fails() {
-    let mut scenario = ts::begin(HOST);
-    new_wedding_for_test(&mut scenario);
-
-    scenario.next_tx(HOST);
-    let mut wedding = scenario.take_shared<Wedding>();
-    let cap = scenario.take_from_sender<WeddingCap>();
-
-    // 시작 1명 + 5명 = 6명(최대). 6번째 추가에서 abort.
-    add_host(&mut wedding, &cap, @0x1);
-    add_host(&mut wedding, &cap, @0x2);
-    add_host(&mut wedding, &cap, @0x3);
-    add_host(&mut wedding, &cap, @0x4);
-    add_host(&mut wedding, &cap, @0x5);
-    add_host(&mut wedding, &cap, @0x6); // EMaxHostsReached
-
-    ts::return_shared(wedding);
-    scenario.return_to_sender(cap);
     scenario.end();
 }
 
@@ -368,21 +347,5 @@ fun set_vault_twice_fails() {
     set_vault(&mut wedding, object::id_from_address(@0x2)); // EVaultAlreadySet
 
     ts::return_shared(wedding);
-    scenario.end();
-}
-
-#[test, expected_failure(abort_code = EHostAlreadyExists)]
-fun add_duplicate_host_fails() {
-    let mut scenario = ts::begin(HOST);
-    new_wedding_for_test(&mut scenario);
-
-    scenario.next_tx(HOST);
-    let mut wedding = scenario.take_shared<Wedding>();
-    let cap = scenario.take_from_sender<WeddingCap>();
-
-    add_host(&mut wedding, &cap, HOST); // 이미 호스트 → EHostAlreadyExists
-
-    ts::return_shared(wedding);
-    scenario.return_to_sender(cap);
     scenario.end();
 }
