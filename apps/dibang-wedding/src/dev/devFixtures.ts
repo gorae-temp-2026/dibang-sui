@@ -1,6 +1,7 @@
 // ★ DEV 전용 — 철수 1인칭 데모 fixture(데모_시나리오_260620.md). 프로덕션 미사용(dev 시더만 참조).
 // prod 쓰기 0 · 철수·영희·예정결혼식·참여결혼식 = fixture. 날짜 기준 = 2026-06-20.
 import type { User, WeddingSummary, ParticipatedWedding, Wedding, Lounge, FeedItem, Announcement } from '@gorae/contracts'
+import { PLAZA_WEDDING } from '../components/moi-gather/data'
 
 // 로그인 사용자 = 철수.
 export const CHULSOO_ME: User = {
@@ -118,12 +119,16 @@ const fi = (type: string, id: string, created_at: string, data: Record<string, u
   ({ type, id, created_at, data, ...(heart != null ? { heart_count: heart, comment_count: 0, my_heart: false } : {}) } as unknown as FeedItem)
 
 export const CHULSOO_FEED: FeedItem[] = [
+  // 라운지 이벤트 알림(들러리 선정) — v2.0 feed 탭 형태. 축가 자리(GiftSheet)와 연결.
+  fi('lounge_event', 'ev1', '2026-06-19T11:00:00Z', { event_text: '축가 들러리(Bestman)로 선정되었어요 🎤', guest_name: '하린', recipient_slot: 'groom', relation_category: '친구/지인' }),
   fi('memory', 'm1', '2026-06-18T10:00:00Z', { text: '영희랑 첫 데이트 장소 다시 와봤어 🥰', photo_url: '/assets/inyeon-photos/a2.jpg', author_name: '김철수' }),
   fi('guestbook_message', 'gm1', '2026-06-17T21:00:00Z', { message: '철수야 영희야 결혼 진심으로 축하해!! 🎉', guest_name: '박준영', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '대학 동기', view_count: 42 }),
   fi('guestbook_message', 'gm2', '2026-06-17T20:10:00Z', { message: '두 사람 너무 잘 어울려요 행복하세요 💕', guest_name: '한소희', recipient_slot: 'bride', relation_category: '직장동료', view_count: 31 }),
   fi('guestbook_entry', 'ge1', '2026-06-16T18:00:00Z', { guest_name: '정우성', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '고향 친구' }, 12),
   fi('memory', 'm2', '2026-06-15T12:00:00Z', { text: '상견례 무사히 마쳤습니다 🙏', photo_url: '/assets/inyeon-photos/b1.jpg', author_name: '이영희' }),
   fi('guestbook_message', 'gm3', '2026-06-14T09:30:00Z', { message: '청첩장 너무 예뻐요! 그날 봬요 😊', guest_name: '김지원', recipient_slot: 'bride', relation_category: '동문/동창', view_count: 18 }),
+  // 라운지 이벤트 알림(디방화환 선물) — v2.0 feed 탭 형태.
+  fi('lounge_event', 'ev2', '2026-06-13T15:00:00Z', { event_text: '100인치 디방화환을 선물했어요 📺', guest_name: '문재호', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '깐부' }),
 ]
 
 export const CHULSOO_ANNOUNCEMENTS = [
@@ -145,7 +150,7 @@ export const BYEONGJU_LOUNGE = {
 export const BYEONGJU_WEDDING_FULL = {
   id: BYEONGJU_WEDDING_ID,
   status: 'completed',
-  info: { groom_name: '강병주', bride_name: '송민정', date: '2026-05-16', time: '13:30', venue_name: '소노펠리체 라비에벨', venue_hall: '채플' },
+  info: { groom_name: PLAZA_WEDDING.groom, bride_name: PLAZA_WEDDING.bride, groom_father_name: PLAZA_WEDDING.groomFather, groom_mother_name: PLAZA_WEDDING.groomMother, bride_father_name: PLAZA_WEDDING.brideFather, bride_mother_name: PLAZA_WEDDING.brideMother, date: '2026-05-16', time: '13:30', venue_name: '소노펠리체 라비에벨', venue_hall: '채플' },
   hosts: { host_groom_id: 'byeongju-host', host_bride_id: 'minjeong-host' },
   lounge: { id: BYEONGJU_LOUNGE_ID, name: '강병주 · 송민정의 라운지' },
   invitations: [],

@@ -151,11 +151,11 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
       // ⓘ 프로필 버튼(모이 위) — 포커스 모이 얼굴 옆. 탭 → ProfileSheet.
       const iBtn = new Container()
       const iBg = new Graphics()
-      iBg.circle(0, 0, 66).fill({ color: 0xffffff }).stroke({ color: 0x1e3a5f, width: 6, alpha: 0.92 })
+      iBg.circle(0, 0, 44).fill({ color: 0xffffff }).stroke({ color: 0x1e3a5f, width: 4, alpha: 0.92 })
       iBtn.addChild(iBg)
-      const iTxt = new Text({ text: 'i', style: { fontSize: 80, fill: 0x1e3a5f, fontWeight: '900', fontStyle: 'italic' } })
+      const iTxt = new Text({ text: 'i', style: { fontSize: 52, fill: 0x1e3a5f, fontWeight: '900', fontStyle: 'italic' } })
       iTxt.anchor.set(0.5)
-      iTxt.position.set(0, 2)
+      iTxt.position.set(0, 1)
       iBtn.addChild(iTxt)
       iBtn.eventMode = 'static'
       iBtn.cursor = 'pointer'
@@ -283,7 +283,8 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
       const makeMoi = (m: PlazaMoi, headId: string, bodyId: string, accId: string | undefined, color: number, flipSign: number): { node: Container; bob: Container } => {
         const node = new Container()
         const shadow = new Graphics()
-        shadow.ellipse(0, 0, 84, 26).fill({ color: 0x2a1f18, alpha: 0.14 })
+        shadow.ellipse(0, 0, 84, 24).fill({ color: 0x2a1f18, alpha: 0.16 })
+        shadow.rotation = -0.12 // 45° 부감 — 발밑에 살짝 기울어진 타원(접지)
         node.addChild(shadow)
         if (m.me) {
           const ring = new Graphics()
@@ -312,8 +313,24 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
           if (accTex) {
             const ac = new Sprite(accTex)
             ac.anchor.set(0.5, 0.5)
-            ac.position.set(0, headTopY + headTex.height / 2)
-            bob.addChild(ac)
+            // 부위별 앵커 — 머리위/이마/눈/목/가슴/등(어색하지 않게 head 높이 비율로 보정).
+            const accAnchor = accId ? ITEM_BY_ID[accId]?.anchor : undefined
+            const hh = headTex.height
+            const ay =
+              accAnchor === 'top' ? headTopY + hh * 0.06
+              : accAnchor === 'forehead' ? headTopY + hh * 0.30
+              : accAnchor === 'eyes' ? headTopY + hh * 0.46
+              : accAnchor === 'neck' ? headTopY + hh * 0.95
+              : accAnchor === 'chest' ? headTopY + hh * 1.12
+              : accAnchor === 'back' ? headTopY + hh * 0.7
+              : headTopY + hh * 0.5
+            ac.position.set(0, ay)
+            if (accAnchor === 'back') {
+              ac.scale.set(1.15)
+              bob.addChildAt(ac, 0) // 등 = 몸 뒤로(날개)
+            } else {
+              bob.addChild(ac)
+            }
           }
         }
         if (m.me) {
@@ -406,7 +423,7 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
           node.cursor = 'grab'
           node.on('pointerdown', (e: FederatedPointerEvent) => {
             e.stopPropagation()
-            dragId = p.itemId
+            dragId = p.uid
             dragNode = node
           })
           dynamic.addChild(node)
@@ -473,8 +490,11 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
           const target = !focusId ? 1 : keep ? 1 : FOCUS_DIM
           m.alpha += (target - m.alpha) * k
           m.node.alpha = m.alpha
-          m.bob.position.y = Math.sin(elapsed * m.speed + m.phase) * m.bobAmp
-          m.bob.position.x = Math.sin(elapsed * m.speed * 0.6 + m.phase) * m.swayAmp
+          // 차분한 idle — bob 진폭 ~35%로 축소 + 호흡(세로 스케일 펄스, 발 고정이라 안 뜸).
+          // blink/리액션은 정적 손그림 PNG 한계로 은은한 호흡 펄스로 대체.
+          m.bob.scale.y = 1 + Math.sin(elapsed * m.speed * 0.9 + m.phase) * 0.02
+          m.bob.position.y = Math.sin(elapsed * m.speed + m.phase) * m.bobAmp * 0.35
+          m.bob.position.x = Math.sin(elapsed * m.speed * 0.6 + m.phase) * m.swayAmp * 0.5
         }
         for (const p of pData) {
           p.g.alpha = p.baseAlpha * (0.5 + 0.5 * Math.sin(elapsed * p.speed + p.phase))

@@ -25,12 +25,14 @@ export interface ShopItem {
   slot?: EquipSlot
   /** 무료 기본 제공. */
   isDefault?: boolean
+  /** 액세서리 착용 부위(top 머리위·forehead 이마·eyes 눈·neck 목·chest 가슴·back 등). */
+  anchor?: string
 }
 
 const heads: ShopItem[] = manifest.heads.map((h) => ({ id: idFromFile(h.file), name: h.ko, category: 'hair', yone: h.yone, url: `${ASSET_BASE}/${h.file}`, char: h.char, slot: 'head', isDefault: h.default }))
 const bodies: ShopItem[] = manifest.bodies.map((b) => ({ id: idFromFile(b.file), name: b.ko, category: 'clothes', yone: b.yone, url: `${ASSET_BASE}/${b.file}`, slot: 'body', isDefault: b.default }))
 const items: ShopItem[] = manifest.items.map((it) => ({ id: idFromFile(it.file), name: it.ko, category: 'interior', yone: it.yone, url: `${ASSET_BASE}/${it.file}` }))
-const accessories: ShopItem[] = manifest.accessories.map((ac) => ({ id: idFromFile(ac.file), name: ac.ko, category: 'accessory', yone: ac.yone, url: `${ASSET_BASE}/${ac.file}`, slot: 'acc' }))
+const accessories: ShopItem[] = manifest.accessories.map((ac) => ({ id: idFromFile(ac.file), name: ac.ko, category: 'accessory', yone: ac.yone, url: `${ASSET_BASE}/${ac.file}`, slot: 'acc', anchor: (ac as { anchor?: string }).anchor }))
 
 export const SHOP: ShopItem[] = [...heads, ...bodies, ...items, ...accessories]
 export const ITEM_BY_ID: Record<string, ShopItem> = Object.fromEntries(SHOP.map((it) => [it.id, it]))
@@ -69,6 +71,10 @@ export interface PlazaMoi {
   personaId?: number
   /** 실사진 url(hero 모이만 — 프로필 시트 헤더용). */
   photoUrl?: string
+  /** 호스트(신랑·신부·양가 혼주) — 상단 고정 위치 + 들러리 제외. */
+  host?: boolean
+  /** 이음 엣지로 묶을 가족·배우자 모이 id(부모↔자식·부부). 프로필 인연망에 반영. */
+  family?: string[]
 }
 
 const NAMES = ['서연', '준호', '민지', '태윤', '하은', '도현', '지우', '수아', '예진', '시우', '하준', '지호', '민서', '서윤', '지안', '하린', '은우', '유진', '다은', '준우']
@@ -88,9 +94,33 @@ const PLAZA_PERSONAS = POOL.filter((p) => p.tier === 0)
 // hero 앞줄 배치(나 주변, 클릭하기 쉬운 전경).
 const HERO_SPOTS = [{ x: 0.31, y: 0.8 }, { x: 0.69, y: 0.8 }, { x: 0.5, y: 0.72 }, { x: 0.4, y: 0.66 }, { x: 0.6, y: 0.66 }]
 
+// ── 데모 결혼식 = 강병주 · 송민정(지난 이벤트 lng-1). 광장·헤더·fixture 공통 소스. ──
+export const PLAZA_WEDDING = {
+  groom: '강병주',
+  bride: '송민정',
+  groomFather: '강대호',
+  groomMother: '정미숙',
+  brideFather: '송영식',
+  brideMother: '한경자',
+}
+
+// 호스트 6인 = 광장 상단 고정 위치 모이(들러리 제외). 부모↔자식·부부는 family로 이음 엣지.
+// 위치: 신랑=상단 좌 / 신랑측 부모=한 줄 아래 나란히 / 신부=상단 우 / 신부측 부모=한 줄 아래.
+export const HOST_MOIS: PlazaMoi[] = [
+  { id: 'host-groom', name: PLAZA_WEDDING.groom, role: '신랑', x: 0.30, y: 0.10, head: 'chu_default', body: 'suit', color: 0x88b0d8, host: true, family: ['host-groom-father', 'host-groom-mother', 'host-bride'] },
+  { id: 'host-groom-father', name: PLAZA_WEDDING.groomFather, role: '신랑 아버지', x: 0.20, y: 0.21, head: 'chu_buzz', body: 'suit', color: 0x9ec8e8, host: true, family: ['host-groom'] },
+  { id: 'host-groom-mother', name: PLAZA_WEDDING.groomMother, role: '신랑 어머니', x: 0.40, y: 0.21, head: 'yh_bob', body: 'hanbok_f', color: 0xe0b48a, host: true, family: ['host-groom'] },
+  { id: 'host-bride', name: PLAZA_WEDDING.bride, role: '신부', x: 0.70, y: 0.10, head: 'yh_pigtail', body: 'bride_bouquet', color: 0xe6a3b6, host: true, family: ['host-bride-father', 'host-bride-mother', 'host-groom'] },
+  { id: 'host-bride-father', name: PLAZA_WEDDING.brideFather, role: '신부 아버지', x: 0.60, y: 0.21, head: 'chu_sport', body: 'suit', color: 0x9ad0b0, host: true, family: ['host-bride'] },
+  { id: 'host-bride-mother', name: PLAZA_WEDDING.brideMother, role: '신부 어머니', x: 0.80, y: 0.21, head: 'yh_bob', body: 'hanbok_f', color: 0xc8a6e0, host: true, family: ['host-bride'] },
+]
+
 function genCrowd(n: number): PlazaMoi[] {
   const rng = makeRng(42)
-  const out: PlazaMoi[] = [{ id: 'me', name: '나 (유상)', role: '나의 모이', x: 0.5, y: 0.9, head: DEFAULT_HEAD, body: DEFAULT_BODY, color: 0x9ec8e8, me: true }]
+  // 철수 = 이 결혼식(강병주·송민정) 하객 모이 = '광장의 나'(클릭 → 광장의 나 프로필).
+  const out: PlazaMoi[] = [{ id: 'me', name: '나 (유상)', role: '하객 · 광장의 나', x: 0.5, y: 0.92, head: DEFAULT_HEAD, body: DEFAULT_BODY, color: 0x9ec8e8, me: true }]
+  // 호스트 6인 = 상단 고정 위치(신랑·신부·양가 혼주).
+  out.push(...HOST_MOIS)
   // 만난 사람(인연 페르소나) — 실사진 + 인연과 동일 프로필.
   PLAZA_PERSONAS.forEach((p, i) => {
     const spot = HERO_SPOTS[i % HERO_SPOTS.length]

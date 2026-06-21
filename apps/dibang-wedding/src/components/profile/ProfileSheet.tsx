@@ -161,7 +161,7 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
           onClick={onIeum}
           className="mt-1 w-full rounded-2xl bg-gradient-to-br from-[#1E3A5F] to-[#2d6a9e] py-3.5 text-[14.5px] font-extrabold text-white"
         >
-          {offline ? '이음 신청 · 대화는 디방인연에서' : t('inyeon.ieum')}
+          {offline ? '이음 신청' : t('inyeon.ieum')}
         </button>
       )}
     </>
@@ -191,7 +191,7 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
   // ── 바텀시트(라운지/기본) ──
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[92vh]">
+      <SheetContent side="bottom" className="max-h-[92vh] scrollbar-hide">
         <SheetHeader>
           <SheetTitle>{showDetail ? `${name} · 프로필` : '프로필'}</SheetTitle>
         </SheetHeader>

@@ -1,7 +1,7 @@
-// 모이가모인곳(④) 광장 상태 머신 — 샵 경제(요네 차감) + 데코 배치/옷 장착 + 테마 스왑.
-// xState 근거(CLAUDE.md): 구매 = 요네 차감→(백엔드 시 결제/attestation)→소유 비동기 분기.
-//   데모는 mock 차감, 백엔드 연결 시 buyItem actor 교체(구조 유지). 토글(배치·장착)은 무료(에셋스펙 §2).
-// theme = 광장 데코 세트 스왑(결혼식 기본 / 파티·클럽 구조). placed = 샵에서 산 추가 데코.
+// 모이가모인곳(④) 광장 상태 머신 — 샵 경제(요네 차감) + 인벤토리(내 아이템) + 데코 배치/옷 장착.
+// xState 근거(CLAUDE.md): 구매 = 요네 차감 → (백엔드 시 결제/attestation) → 소유 비동기 분기.
+// ★구매 = '내 아이템'(owned)으로만 이동(즉시 착용/배치 안 함) — 착용/배치는 내 아이템에서 확정.
+//   인테리어·소품 = 다중 구매·다중 배치(placed 인스턴스 uid, 보유 수 한도). 헤어·옷·액세서리 = 1개(전환·착용).
 import { setup, assign, fromPromise, raise, cancel } from 'xstate'
 import { ITEM_BY_ID, SHOP, START_YONE_PLAZA, CHARGE_AMOUNT, DEFAULT_HEAD, DEFAULT_BODY, type EquipSlot } from '../components/moi-gather/data'
 
@@ -12,6 +12,8 @@ const DEFAULT_OWNED = SHOP.filter((s) => s.isDefault).map((s) => s.id)
 const TOAST_MS = 2600
 
 export interface PlacedItem {
+  /** 배치 인스턴스 고유 id — 같은 아이템 다중 배치(버진로드 여러 개 등). */
+  uid: string
   itemId: string
   /** 광장 정규화 좌표 0~1. */
   x: number
@@ -20,14 +22,16 @@ export interface PlacedItem {
 
 export interface MoiPlazaContext {
   yone: number
-  /** 구매한 아이템 id. */
+  /** 구매한 아이템 id — 인테리어는 중복 허용(= 수량). */
   owned: string[]
-  /** 광장에 추가 배치한 데코(아이템당 1개). */
+  /** 광장에 배치한 데코 인스턴스(다중). */
   placed: PlacedItem[]
   /** 내 모이 장착 옷(슬롯별). */
   equipped: Partial<Record<EquipSlot, string>>
   /** 구매 진행 중 아이템. */
   pendingItemId: string | null
+  /** 배치 인스턴스 uid 카운터(재현 가능, 랜덤 미사용). */
+  placeSeq: number
   error: string | null
   /** 전역 토스트(예: 이음 신청 완료) — null이면 미표시. 표시 후 TOAST_MS 뒤 자동 소멸. */
   toast: string | null
@@ -44,8 +48,8 @@ export const moiPlazaMachine = setup({
     events:
       | { type: 'PURCHASE'; itemId: string }
       | { type: 'PLACE'; itemId: string; x?: number; y?: number }
-      | { type: 'MOVE'; itemId: string; x: number; y: number }
-      | { type: 'REMOVE'; itemId: string }
+      | { type: 'MOVE'; uid: string; x: number; y: number }
+      | { type: 'REMOVE'; uid: string }
       | { type: 'EQUIP'; itemId: string }
       | { type: 'UNEQUIP'; slot: EquipSlot }
       | { type: 'GRANT_OWNED'; ids: string[] }
@@ -58,7 +62,10 @@ export const moiPlazaMachine = setup({
     canPurchase: ({ context, event }) => {
       if (event.type !== 'PURCHASE') return false
       const item = ITEM_BY_ID[event.itemId]
-      return !!item && !context.owned.includes(event.itemId) && context.yone >= item.yone
+      if (!item || context.yone < item.yone) return false
+      // 인테리어·소품 = 다중 구매 허용. 헤어·옷·액세서리 = 보유 시 구매 불가(전환·착용).
+      if (item.category === 'interior') return true
+      return !context.owned.includes(event.itemId)
     },
   },
   actors: {
@@ -77,35 +84,36 @@ export const moiPlazaMachine = setup({
     placed: [],
     equipped: { head: DEFAULT_HEAD, body: DEFAULT_BODY },
     pendingItemId: null,
+    placeSeq: 0,
     error: null,
     toast: null,
   },
   on: {
-    // 데코 배치/옷 장착 = 무료 토글 (소유한 아이템만). 어느 상태에서나 가능.
+    // 배치(인테리어) = 내 아이템에서 확정 → 광장에 인스턴스 추가(다중, 보유 수 한도). 소유한 것만.
     PLACE: {
-      actions: assign({
-        placed: ({ context, event }) => {
-          if (event.type !== 'PLACE') return context.placed
-          const item = ITEM_BY_ID[event.itemId]
-          if (!item || item.category !== 'interior' || !context.owned.includes(event.itemId)) return context.placed
-          if (context.placed.some((p) => p.itemId === event.itemId)) return context.placed
-          const at = event.x != null && event.y != null ? { x: event.x, y: event.y } : spawnFor(context.placed.length)
-          return [...context.placed, { itemId: event.itemId, ...at }]
-        },
+      actions: assign(({ context, event }) => {
+        if (event.type !== 'PLACE') return {}
+        const item = ITEM_BY_ID[event.itemId]
+        if (!item || item.category !== 'interior' || !context.owned.includes(event.itemId)) return {}
+        const ownedCount = context.owned.filter((i) => i === event.itemId).length
+        const placedCount = context.placed.filter((p) => p.itemId === event.itemId).length
+        if (placedCount >= ownedCount) return {} // 보유 수만큼만 배치.
+        const at = event.x != null && event.y != null ? { x: event.x, y: event.y } : spawnFor(context.placed.length)
+        return {
+          placed: [...context.placed, { uid: `pl${context.placeSeq}`, itemId: event.itemId, ...at }],
+          placeSeq: context.placeSeq + 1,
+        }
       }),
     },
     MOVE: {
       actions: assign({
         placed: ({ context, event }) =>
-          event.type === 'MOVE'
-            ? context.placed.map((p) => (p.itemId === event.itemId ? { ...p, x: event.x, y: event.y } : p))
-            : context.placed,
+          event.type === 'MOVE' ? context.placed.map((p) => (p.uid === event.uid ? { ...p, x: event.x, y: event.y } : p)) : context.placed,
       }),
     },
     REMOVE: {
       actions: assign({
-        placed: ({ context, event }) =>
-          event.type === 'REMOVE' ? context.placed.filter((p) => p.itemId !== event.itemId) : context.placed,
+        placed: ({ context, event }) => (event.type === 'REMOVE' ? context.placed.filter((p) => p.uid !== event.uid) : context.placed),
       }),
     },
     EQUIP: {
@@ -131,14 +139,12 @@ export const moiPlazaMachine = setup({
     // 선물로 받은 아이템을 무료 보유로 부여(꾸미기 장착·배치 가능). gift actor → MoiGatherPage 브리지.
     GRANT_OWNED: {
       actions: assign({
-        owned: ({ context, event }) =>
-          event.type === 'GRANT_OWNED' ? [...new Set([...context.owned, ...event.ids])] : context.owned,
+        owned: ({ context, event }) => (event.type === 'GRANT_OWNED' ? [...new Set([...context.owned, ...event.ids])] : context.owned),
       }),
     },
     CHARGE: { actions: assign({ yone: ({ context }) => context.yone + CHARGE_AMOUNT }) },
     DISMISS_ERROR: { actions: assign({ error: () => null }) },
-    // 토스트 표시 + TOAST_MS 뒤 자동 소멸. 새 토스트가 오면 이전 예약을 cancel하고 다시 걸어
-    // 타이머를 재시작한다(원본 useEffect의 clearTimeout 재현).
+    // 토스트 표시 + TOAST_MS 뒤 자동 소멸. 새 토스트가 오면 이전 예약을 cancel하고 다시 걸어 재시작.
     SHOW_TOAST: {
       actions: [
         cancel('plazaToastClear'),
@@ -168,16 +174,9 @@ export const moiPlazaMachine = setup({
             const id = context.pendingItemId
             const item = id ? ITEM_BY_ID[id] : undefined
             if (!id || !item) return { pendingItemId: null }
-            const owned = context.owned.includes(id) ? context.owned : [...context.owned, id]
-            // 구매 즉시 자동 배치(데코)/장착(옷) — 데모 즉각 피드백.
-            let placed = context.placed
-            let equipped = context.equipped
-            if (item.category === 'interior' && !placed.some((p) => p.itemId === id)) {
-              placed = [...placed, { itemId: id, ...spawnFor(placed.length) }]
-            } else if (item.slot) {
-              equipped = { ...equipped, [item.slot]: id }
-            }
-            return { yone: context.yone - item.yone, owned, placed, equipped, pendingItemId: null }
+            // 구매 = '내 아이템'(owned)으로만 이동. 인테리어=다중(중복 push) / 나머지=1개. 착용·배치는 확정에서.
+            const owned = item.category === 'interior' ? [...context.owned, id] : context.owned.includes(id) ? context.owned : [...context.owned, id]
+            return { yone: context.yone - item.yone, owned, pendingItemId: null }
           }),
         },
         onError: {
