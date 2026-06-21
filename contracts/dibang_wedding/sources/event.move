@@ -29,11 +29,12 @@ const EVENT_INYEON: u8 = 1;
 const EVENT_TYPE_MAX: u8 = 1;
 
 // === Constants: role_id (방향의 원천) ===
-const ROLE_HOST: u8 = 0; // 혼주 (권위 — assign만)
-const ROLE_GUEST: u8 = 1; // 하객 (self)
-const ROLE_OFFICIANT: u8 = 2; // 주례 (권위 — assign만)
-const ROLE_INITIATOR: u8 = 3; // 인연 신청자 (self)
-const ROLE_RECEIVER: u8 = 4; // 인연 수신자 (self)
+// 발행 경로(is_self_claimable = GUEST만 true — 권위·인연 역할은 self-claim 불가, 방향 위조 차단 C1·C-IUM1):
+const ROLE_HOST: u8 = 0; // 혼주 (권위 — new_event creator-mint 또는 assign_role; self-claim 불가)
+const ROLE_GUEST: u8 = 1; // 하객 (참가자 — participate로 self-claim 가능 = is_self_claimable)
+const ROLE_OFFICIANT: u8 = 2; // 주례 (권위 — assign_role; self-claim 불가)
+const ROLE_INITIATOR: u8 = 3; // 인연 신청자 (request_ium의 new_event creator-mint; self-claim 불가)
+const ROLE_RECEIVER: u8 = 4; // 인연 수신자 (accept_ium의 mint_participation_for, IumRequest 게이트; self-claim 불가)
 /// 정의된 role 최댓값(경계 검증용).
 const ROLE_MAX: u8 = 4;
 

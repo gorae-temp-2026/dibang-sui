@@ -1,3 +1,6 @@
+// ⚠️ TRANSITIONAL(전환기) — 아키텍처 의도: 온체인(Sui) = 신뢰/Wedding 데이터의 SSOT, DB(Go/Supabase)는 보조.
+// 이 파일이 DB(Supabase) 먼저 저장 후 온체인을 dual-write로 얹는 건 *전환기*일 뿐 "DB 우선"이 아니다.
+// 목표(미완): 앱을 온체인(RPC/indexer) 읽기로 이관. 트러스트 진실은 온체인에서 확인. 상세: CLAUDE.md 상단 SSOT 배너.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createWedding, updateInvitation, updateWeddingSuiIds } from '@gorae/contracts/sdk.gen';
 import { getMyWeddingsQueryKey } from '@gorae/contracts/@tanstack/react-query.gen';

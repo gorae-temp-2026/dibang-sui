@@ -1,3 +1,6 @@
+// ⚠️ TRANSITIONAL(전환기) — 아키텍처 의도: 온체인(Sui) = 신뢰/Wedding SSOT, DB(Go/Supabase)는 보조.
+// 게스트 온체인 쓰기를 DB 흐름과 dual-write하는 건 *전환기*일 뿐 "DB 우선" 아님. 목표(미완): 앱 온체인-읽기 이관.
+// 상세: CLAUDE.md 상단 SSOT 배너 / _architecture/SUI_CONTRACT_DESIGN_DIRECTION §SSOT 선언.
 /**
  * 게스트 온체인 액션 훅.
  *

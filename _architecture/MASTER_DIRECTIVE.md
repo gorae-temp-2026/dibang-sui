@@ -2,6 +2,8 @@
 
 > **이 파일은 매 작업·매 태스크 시작 때마다 새로 읽는다. 한 번 읽고 끝이 아니다.**
 > compaction을 두려워하지 않는다. 길을 잃으면 이 파일 + `SUI_CONTRACT_DESIGN_DIRECTION.md` + `AGENT_BRIEFING_PROTOCOL.md` + 메모리를 다시 읽고 복귀한다.
+>
+> ⚠️ **SSOT: 온체인(Sui)이 신뢰·Wedding 데이터의 단일 진실원천.** DB(Supabase/Go API)는 표시콘텐츠·캐시 **보조**. 현재 앱 DB-first는 **전환기** — 코드 보고 "이 프로젝트 DB 우선"이라 오해 금지(이전 세션이 그렇게 틀림). **앱 온체인-읽기 이관이 명시 목표(미완, Task #43).**
 
 ---
 

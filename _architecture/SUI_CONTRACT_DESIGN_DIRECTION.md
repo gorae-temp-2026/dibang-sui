@@ -4,6 +4,11 @@
 > SSOT: `_architecture/DOMAIN_MODEL_SUMMARY.md` · 모델: `_onboarding/08-...`, `_research/gathering-taxonomy-trust-balance/` · 비전: `_onboarding/VISION-AND-INTENT.md`.
 > 이 문서는 **방향 제시**(구현 아님). v2는 opus 4.8 리뷰 3건(Sui/Move 정합성, 범주론 충실도, 보안·프라이버시·스케일) 반영. 결정 대기 = §11.
 
+> # ⚠️ SSOT 선언 (이 문서·코드 어디서 읽든 이게 기준)
+> - **신뢰·Wedding 데이터의 단일 진실원천(SSOT) = 온체인(Sui).** raw 신호·Event·Participation·ActionRecord·신용은 전부 온체인 원천. DB(Supabase/Go API)는 표시콘텐츠(이름·사진, 결정A)·캐시 **보조**.
+> - 현재 앱이 Wedding 등을 DB에서 읽는 건 **전환기(TRANSITIONAL)** — "DB 우선" 설계가 아니다(앱이 온체인화 이전에 DB-first로 지어졌고 온체인을 dual-write로 얹은 상태).
+> - **명시적 목표(미완): 앱을 온체인(Sui RPC/indexer) 읽기로 이관.** 이게 끝나야 코드=의도가 되어 오해가 원천 차단된다.
+
 ---
 
 ## 0. 한 줄 요약

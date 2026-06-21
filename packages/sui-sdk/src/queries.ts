@@ -1,3 +1,5 @@
+// ✅ 이 파일 = 온체인(Sui) 읽기 = 트러스트/Wedding 데이터의 SSOT 경로. 앱이 DB 대신 *이 쿼리들*로 읽도록 이관하는 게 목표(미완).
+//    현재 앱이 전환기로 DB(Go/Supabase)에서 읽는 건 "DB 우선"이 아니라 미완 이관. 상세: _architecture/SUI_CONTRACT_DESIGN_DIRECTION §SSOT 선언.
 /**
  * 온체인 데이터 조회 함수.
  *
