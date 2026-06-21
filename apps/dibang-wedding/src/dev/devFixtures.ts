@@ -1,6 +1,7 @@
 // ★ DEV 전용 — 철수 1인칭 데모 fixture(데모_시나리오_260620.md). 프로덕션 미사용(dev 시더만 참조).
 // prod 쓰기 0 · 철수·영희·예정결혼식·참여결혼식 = fixture. 날짜 기준 = 2026-06-20.
 import type { User, WeddingSummary, ParticipatedWedding, Wedding, Lounge, FeedItem, Announcement } from '@gorae/contracts'
+import { PLAZA_WEDDING } from '../components/moi-gather/data'
 
 // 로그인 사용자 = 철수.
 export const CHULSOO_ME: User = {
@@ -149,7 +150,7 @@ export const BYEONGJU_LOUNGE = {
 export const BYEONGJU_WEDDING_FULL = {
   id: BYEONGJU_WEDDING_ID,
   status: 'completed',
-  info: { groom_name: '강병주', bride_name: '송민정', date: '2026-05-16', time: '13:30', venue_name: '소노펠리체 라비에벨', venue_hall: '채플' },
+  info: { groom_name: PLAZA_WEDDING.groom, bride_name: PLAZA_WEDDING.bride, groom_father_name: PLAZA_WEDDING.groomFather, groom_mother_name: PLAZA_WEDDING.groomMother, bride_father_name: PLAZA_WEDDING.brideFather, bride_mother_name: PLAZA_WEDDING.brideMother, date: '2026-05-16', time: '13:30', venue_name: '소노펠리체 라비에벨', venue_hall: '채플' },
   hosts: { host_groom_id: 'byeongju-host', host_bride_id: 'minjeong-host' },
   lounge: { id: BYEONGJU_LOUNGE_ID, name: '강병주 · 송민정의 라운지' },
   invitations: [],

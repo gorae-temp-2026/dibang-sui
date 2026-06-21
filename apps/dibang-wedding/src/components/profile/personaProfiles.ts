@@ -87,6 +87,9 @@ function seedFor(spriteId: string): number {
 /** 광장 ego — spriteId가 광장에서 이어진 상대 스프라이트 id 목록(선·그래프 공통 소스). */
 export function plazaPartnerIds(spriteId: string): string[] {
   if (spriteId === 'me') return heroIds()
+  // 호스트(혼주)·가족 = 부모↔자식·부부 이음 엣지(고정 — 프로필 인연망에 가족 연결).
+  const fam = CROWD_BY_ID[spriteId]?.family
+  if (fam?.length) return fam
   const seed = seedFor(spriteId)
   const count = 2 + (seed % 4) // 2~5
   return pickFromCrowd(seed ^ 0x5bd1e995, spriteId, count)
@@ -239,6 +242,17 @@ function buildChulsooPlaza(): ProfileData {
     if (!cm || have.has(hid)) return
     addNodes.push({ id: hid, label: cm.name, hue: hueOf(cm.color), here: true }) // 이 결혼식에서 만난 사람 = 광장 ego
     addLinks.push({ source: selfNodeId, target: hid, type: '승급', value: 3 }) // 오프라인 이음(승급)
+  })
+  // 철수 가족(배우자·부모) = 부모↔자식 이음 엣지(데모 통일: 두 결혼식 모두 부모-자식 연결).
+  const family = [
+    { id: 'fam-younghee', label: '이영희', hue: 330 },
+    { id: 'fam-chulsoo-father', label: '김영호', hue: 210 },
+    { id: 'fam-chulsoo-mother', label: '박순자', hue: 20 },
+  ]
+  family.forEach((f) => {
+    if (have.has(f.id)) return
+    addNodes.push({ id: f.id, label: f.label, hue: f.hue, here: true })
+    addLinks.push({ source: selfNodeId, target: f.id, type: '이음', value: 3 })
   })
   return { ...base, graph: { nodes: [...base.graph.nodes, ...addNodes], links: [...base.graph.links, ...addLinks] } }
 }
