@@ -188,6 +188,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       action: { label: '보기 →', onClick: () => window.open(url, '_blank') },
       duration: 6000,
     })
+    window.dispatchEvent(new CustomEvent('sui:tx-success', { detail: { digest } }))
   }, [])
 
   const executeOnchain = useCallback(

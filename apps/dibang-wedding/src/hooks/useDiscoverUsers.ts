@@ -48,6 +48,12 @@ export function useDiscoverUsers() {
   const refetch = () => setRefreshKey((k) => k + 1)
 
   useEffect(() => {
+    const handler = () => setTimeout(refetch, 2000)
+    window.addEventListener('sui:tx-success', handler)
+    return () => window.removeEventListener('sui:tx-success', handler)
+  }, [])
+
+  useEffect(() => {
     if (!address) return
     setLoading(true)
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'

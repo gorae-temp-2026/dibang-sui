@@ -56,6 +56,12 @@ export function useNotes() {
 
   useEffect(() => { fetchNotes() }, [fetchNotes])
 
+  useEffect(() => {
+    const handler = () => setTimeout(fetchNotes, 2000)
+    window.addEventListener('sui:tx-success', handler)
+    return () => window.removeEventListener('sui:tx-success', handler)
+  }, [fetchNotes])
+
   // 상대별 NoteBox ID 캐시(한 번 만들면 계속 사용)
   const noteBoxCache = useRef<Record<string, string>>({})
 
