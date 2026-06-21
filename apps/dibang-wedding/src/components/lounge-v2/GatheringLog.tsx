@@ -16,6 +16,7 @@ const LABEL_COLOR: Record<LogKind, string> = {
   post: 'text-lng-amber',
   feed: 'text-lng-green',
   memory: 'text-lng-coral',
+  event: 'text-lng-pink-ink',
 };
 
 interface GatheringLogProps {

@@ -118,12 +118,16 @@ const fi = (type: string, id: string, created_at: string, data: Record<string, u
   ({ type, id, created_at, data, ...(heart != null ? { heart_count: heart, comment_count: 0, my_heart: false } : {}) } as unknown as FeedItem)
 
 export const CHULSOO_FEED: FeedItem[] = [
+  // 라운지 이벤트 알림(들러리 선정) — v2.0 feed 탭 형태. 축가 자리(GiftSheet)와 연결.
+  fi('lounge_event', 'ev1', '2026-06-19T11:00:00Z', { event_text: '축가 들러리(Bestman)로 선정되었어요 🎤', guest_name: '하린', recipient_slot: 'groom', relation_category: '친구/지인' }),
   fi('memory', 'm1', '2026-06-18T10:00:00Z', { text: '영희랑 첫 데이트 장소 다시 와봤어 🥰', photo_url: '/assets/inyeon-photos/a2.jpg', author_name: '김철수' }),
   fi('guestbook_message', 'gm1', '2026-06-17T21:00:00Z', { message: '철수야 영희야 결혼 진심으로 축하해!! 🎉', guest_name: '박준영', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '대학 동기', view_count: 42 }),
   fi('guestbook_message', 'gm2', '2026-06-17T20:10:00Z', { message: '두 사람 너무 잘 어울려요 행복하세요 💕', guest_name: '한소희', recipient_slot: 'bride', relation_category: '직장동료', view_count: 31 }),
   fi('guestbook_entry', 'ge1', '2026-06-16T18:00:00Z', { guest_name: '정우성', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '고향 친구' }, 12),
   fi('memory', 'm2', '2026-06-15T12:00:00Z', { text: '상견례 무사히 마쳤습니다 🙏', photo_url: '/assets/inyeon-photos/b1.jpg', author_name: '이영희' }),
   fi('guestbook_message', 'gm3', '2026-06-14T09:30:00Z', { message: '청첩장 너무 예뻐요! 그날 봬요 😊', guest_name: '김지원', recipient_slot: 'bride', relation_category: '동문/동창', view_count: 18 }),
+  // 라운지 이벤트 알림(디방화환 선물) — v2.0 feed 탭 형태.
+  fi('lounge_event', 'ev2', '2026-06-13T15:00:00Z', { event_text: '100인치 디방화환을 선물했어요 📺', guest_name: '문재호', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '깐부' }),
 ]
 
 export const CHULSOO_ANNOUNCEMENTS = [
