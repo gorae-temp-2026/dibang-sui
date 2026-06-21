@@ -224,7 +224,7 @@ interface InvitationPageProps {
 export function InvitationPage({ data: dataProp }: InvitationPageProps) {
   const { slug } = useParams<{ slug: string }>();
   const { submitRsvp } = useOnchainActions();
-  const { isAuthenticated } = useZkLogin();
+  const { isAuthenticated, login } = useZkLogin();
 
   const { data: invitation, isLoading, isError } = useQuery({
     ...getInvitationOptions({ path: { slug: slug! } }),
@@ -340,7 +340,8 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
       send({ type: 'RSVP_ERROR', error: '제출 실패' });
       return;
     }
-    // C10-3: Supabase RSVP 저장 후 온체인 submitRsvp(dev 서명, D0-1). sui_lounge_id 있을 때만, 실패해도 진행.
+    // C10-3 + #18(2026-06-21): Supabase 저장 후 온체인 submitRsvp를 게스트 *본인 zkLogin* 서명으로 제출(헤드리스는 dev keypair).
+    // sui_lounge_id 있고 인증됐을 때만(미인증이면 위 로그인 배너로 유도) — 익명/대리서명 폐기. 실패해도 Supabase는 유지.
     const suiLoungeId = invitation?.lounge_preview?.sui_lounge_id;
     if (isAuthenticated && suiLoungeId) {
       try {
@@ -437,6 +438,24 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
         onSubmit={handleRsvpSubmit}
         hostOptions={rsvpHostOptions}
       />
+      {/* #18(결정 2026-06-21): 익명/대리서명 폐기 — 게스트도 본인 zkLogin으로 서명한다.
+          온체인 라운지가 있고 아직 미인증이면 로그인 진입점을 띄운다. 건너뛰면 Supabase 저장만(온체인 skip). */}
+      {rsvpOpen && !isAuthenticated && invitation?.lounge_preview?.sui_lounge_id && (
+        <div className="fixed top-4 left-4 right-4 z-[60] flex justify-center">
+          <div className="rounded-xl bg-navy/95 px-4 py-3 text-white shadow-lg max-w-sm w-full">
+            <p className="text-xs leading-relaxed">
+              온체인에 <b>본인 지갑</b>으로 RSVP를 기록하려면 로그인하세요. (건너뛰면 저장만 됩니다)
+            </p>
+            <button
+              type="button"
+              onClick={() => login(window.location.href)}
+              className="mt-2 w-full rounded-lg bg-white px-3 py-2 text-sm font-semibold text-navy hover:bg-white/90 transition-colors"
+            >
+              Google로 로그인하고 서명
+            </button>
+          </div>
+        </div>
+      )}
       {rsvpResult && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"

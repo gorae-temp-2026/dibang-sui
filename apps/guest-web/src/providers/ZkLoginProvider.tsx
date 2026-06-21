@@ -7,7 +7,7 @@
  * 주의: 실제 로그인 완료(OAuth → ZK prover → 서명)는 실 Google OAuth client id와
  * 실행 중인 ZK prover가 있어야 동작한다. 미설정 시 login()은 안내만 한다.
  */
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import type { Transaction } from '@mysten/sui/transactions'
 import {
@@ -71,8 +71,8 @@ async function fetchCurrentEpoch(network: SuiNetwork): Promise<number> {
 export function ZkLoginProvider({ children }: { children: ReactNode }) {
   // sessionStorage의 기존 세션으로 초기화(브라우저 전용 SPA — effect 내 setState 불필요).
   const [session, setSession] = useState<ZkLoginSession | null>(() => loadSession())
-  // [DEV] guest-web은 로그인 UI 없는 익명 퍼널 — dev 모드 시 고정 keypair를 자동 주입해
-  // 게스트 온체인 서명(방명록/축의/RSVP)을 헤드리스로 검증한다. VITE_DEV_PRIVATE_KEY 미설정 시 null.
+  // [DEV] 헤드리스 검증용 고정 keypair(VITE_DEV_PRIVATE_KEY). 실 게스트는 login()→OAuth 콜백으로
+  // *본인 zkLogin* 서명한다(#18, 결정 2026-06-21: 익명/대리서명 폐기). dev key 미설정 시 null.
   const [devKeypair] = useState<Ed25519Keypair | null>(() => {
     const sk = env.VITE_DEV_PRIVATE_KEY
     return sk ? Ed25519Keypair.fromSecretKey(sk) : null
@@ -139,6 +139,20 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     setSession(next)
     return true
   }, [])
+
+  // OAuth 콜백 처리: Google에서 #id_token 프래그먼트로 돌아오면 세션을 완성하고 프래그먼트를 지운다.
+  // 이게 없으면 login()으로 Google에 다녀와도 세션이 안 만들어져 zkLogin이 결코 완성되지 않는다
+  // (게스트 본인 서명 배선의 핵심 — 결정 2026-06-21: 익명/claim 폐기, 게스트도 본인 지갑 서명).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!window.location.hash.includes('id_token=')) return
+    completeLoginFromUrl()
+      .then((ok) => {
+        // 토큰 노출·재처리 방지: 성공 시 프래그먼트 제거.
+        if (ok) window.history.replaceState(null, '', window.location.pathname + window.location.search)
+      })
+      .catch((e) => console.error('[zkLogin] 콜백 처리 실패:', e))
+  }, [completeLoginFromUrl])
 
   const logout = useCallback(() => {
     clearSession()
