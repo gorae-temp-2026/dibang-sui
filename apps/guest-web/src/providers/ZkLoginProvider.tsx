@@ -103,27 +103,32 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     if (!jwt || !pendingRaw) return false
 
     const pending = JSON.parse(pendingRaw) as PendingLogin
-    const saltServerUrl = env.VITE_SALT_SERVER_URL
-    if (!saltServerUrl) throw new Error('VITE_SALT_SERVER_URL 미설정')
-
-    const salt = await fetchSalt(jwt, saltServerUrl)
-    const address = zkLoginAddress(jwt, salt)
-
-    // ZK 증명 조회 (prover 설정 시). 없으면 주소까지만 — 트랜잭션 서명은 prover 필요.
-    let proofInputs: ZkProofInputs | undefined
     const proverUrl = env.VITE_ZK_PROVER_URL
-    if (proverUrl) {
-      const kp = Ed25519Keypair.fromSecretKey(pending.ephemeralSecretKey)
-      proofInputs = await fetchZkProof({
-        jwt,
-        salt,
-        ephemeralPublicKey: kp.getPublicKey(),
-        maxEpoch: pending.maxEpoch,
-        randomness: pending.randomness,
-        proverUrl,
-        enokiApiKey: env.VITE_ENOKI_API_KEY,
-        network: env.VITE_SUI_NETWORK ?? 'testnet',
-      })
+    if (!proverUrl) throw new Error('VITE_ZK_PROVER_URL 미설정')
+
+    const kp = Ed25519Keypair.fromSecretKey(pending.ephemeralSecretKey)
+    const proofResult = await fetchZkProof({
+      jwt,
+      salt: '',
+      ephemeralPublicKey: kp.getPublicKey(),
+      maxEpoch: pending.maxEpoch,
+      randomness: pending.randomness,
+      proverUrl,
+      enokiApiKey: env.VITE_ENOKI_API_KEY,
+      network: env.VITE_SUI_NETWORK ?? 'testnet',
+    })
+
+    const addressSeed = (proofResult as { addressSeed?: string }).addressSeed
+    let address: string
+    if (addressSeed) {
+      const { computeZkLoginAddressFromSeed, decodeJwt: decodeJwtDynamic } = await import('@mysten/sui/zklogin')
+      const claims = decodeJwtDynamic(jwt)
+      address = computeZkLoginAddressFromSeed(BigInt(addressSeed), claims.iss!, false)
+    } else {
+      const saltServerUrl = env.VITE_SALT_SERVER_URL
+      if (!saltServerUrl) throw new Error('VITE_SALT_SERVER_URL 미설정')
+      const salt = await fetchSalt(jwt, saltServerUrl)
+      address = zkLoginAddress(jwt, salt)
     }
 
     const next: ZkLoginSession = {
@@ -131,9 +136,9 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       maxEpoch: pending.maxEpoch,
       randomness: pending.randomness,
       jwt,
-      salt,
+      salt: '',
       address,
-      proofInputs,
+      proofInputs: proofResult,
     }
     saveSession(next)
     sessionStorage.removeItem(PENDING_KEY)
