@@ -29,6 +29,7 @@ export function InyeonPage() {
   const [filterOpen, setFilterOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileMoiId, setProfileMoiId] = useState<number | null>(null)
+  const [dmRoomId, setDmRoomId] = useState<number | null>(null) // 열린 대화창(받은이음 수락 → 바로 대화창)
 
   const { queue, photoIdx, unlocked, yone, screen, degMin, degMax, activeId, message, error, incoming, chatOpen, sentIds, matchedIds } =
     state.context
@@ -92,7 +93,12 @@ export function InyeonPage() {
             incoming={incoming}
             sentIds={sentIds}
             unlockedIds={unlockedIds}
-            onAccept={(moiId) => send({ type: 'ACCEPT_REQ', moiId })}
+            onAccept={(moiId) => {
+              // 수락 = 상대가 먼저 다가옴 → 대화 무료 열림 + 바로 대화창으로 이동.
+              send({ type: 'ACCEPT_REQ', moiId })
+              send({ type: 'NAV', screen: 'chat' })
+              setDmRoomId(moiId)
+            }}
             onDecline={(moiId) => send({ type: 'DECLINE_REQ', moiId })}
             onOpenProfile={(id) => setProfileMoiId(id)}
           />
@@ -105,6 +111,8 @@ export function InyeonPage() {
             yone={yone}
             onOpenDm={(id) => send({ type: 'OPEN_DM', id })}
             onOpenProfile={(id) => setProfileMoiId(id)}
+            dmRoomId={dmRoomId}
+            onDmRoom={setDmRoomId}
           />
         )}
 

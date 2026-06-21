@@ -77,6 +77,17 @@ export const MOI_INTRO: Record<number, string> = {
   207: '잔잔하게 오래 가는 인연을 만들고 싶어요.',
 }
 
+/** 함께 아는 사람(mutual) 실명 — 이음 후 공개(정보공개테이블 ②: 공통 이름 공개). 수=mutualCount. */
+export const MOI_MUTUALS: Record<number, string[]> = {
+  201: ['지현', '수아', '민준'],
+  202: ['수아', '지현'],
+  203: ['지우', '민서', '서윤', '수아', '지현'],
+  204: [],
+  205: ['지현'],
+  206: [],
+  207: ['지우', '수아', '민준', '서윤'],
+}
+
 /** 채팅 메모리 스트립 캡션 — 이음된 모이의 짧은 영상 느낌(데모). */
 export const MOI_MEM: Record<number, string> = {
   201: '성수 팝업 구경 중 🛍️',

@@ -4,7 +4,8 @@
 import { useState } from 'react'
 import { useSelector } from '@xstate/react'
 import { ArrowLeft, Gift, Lock, Play, Send, X } from 'lucide-react'
-import { POOL, DM_COST, MOI_MEM } from './data'
+import { POOL, DM_COST, MOI_MEM, MOI_MUTUALS } from './data'
+import { useT } from '../../lib/i18n'
 import { giftActor, type GiftEvent } from '../../machines/gift.machine'
 import { GiftPicker } from '../moi-gather/GiftPicker'
 import { ITEM_BY_ID } from '../moi-gather/data'
@@ -30,10 +31,12 @@ interface ChatScreenProps {
   yone: number
   onOpenDm: (id: number) => void
   onOpenProfile: (id: number) => void
+  /** 열린 대화창 모이 id(InyeonPage 소유) — 받은이음 수락 직후 바로 그 상대 대화창. */
+  dmRoomId: number | null
+  onDmRoom: (id: number | null) => void
 }
 
-export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile }: ChatScreenProps) {
-  const [dmRoomId, setDmRoomId] = useState<number | null>(null)
+export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile, dmRoomId, onDmRoom }: ChatScreenProps) {
   const [memoryId, setMemoryId] = useState<number | null>(null)
   const [giftOpen, setGiftOpen] = useState(false)
   const [dms, setDms] = useState<Record<number, DmMsg[]>>({})
@@ -54,13 +57,13 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
   // 대화 열기 = 관계 거리별 요네 게이트(머신 OPEN_DM 차감). 통과하면 대화방 입장.
   const enter = (id: number) => {
     if (chatOpen[id]) {
-      setDmRoomId(id)
+      onDmRoom(id)
       return
     }
     const m = moiById(id)
     if (!m) return
     onOpenDm(id) // 머신: 차감 또는 요네 부족 에러
-    if (yone >= DM_COST[m.tier]) setDmRoomId(id)
+    if (yone >= DM_COST[m.tier]) onDmRoom(id)
   }
 
   const send = (id: number, text: string) => {
@@ -138,7 +141,7 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
           msgs={dms[dmRoomId] ?? seedDm()}
           giftLog={giftLog.filter((g) => g.counterpartId === String(dmRoomId))}
           onSend={(t) => send(dmRoomId, t)}
-          onClose={() => setDmRoomId(null)}
+          onClose={() => onDmRoom(null)}
           onOpenProfile={() => onOpenProfile(dmRoomId)}
           onOpenGift={() => setGiftOpen(true)}
         />
@@ -164,8 +167,10 @@ export function ChatScreen({ matchedIds, chatOpen, yone, onOpenDm, onOpenProfile
 
 function DmRoom({ moiId, msgs, giftLog, onSend, onClose, onOpenProfile, onOpenGift }: { moiId: number; msgs: DmMsg[]; giftLog: GiftEvent[]; onSend: (t: string) => void; onClose: () => void; onOpenProfile: () => void; onOpenGift: () => void }) {
   const [text, setText] = useState('')
+  const t = useT()
   const m = moiById(moiId)
   if (!m) return null
+  const mutuals = MOI_MUTUALS[moiId] ?? []
   const submit = () => {
     const v = text.trim()
     if (!v) return
@@ -187,6 +192,11 @@ function DmRoom({ moiId, msgs, giftLog, onSend, onClose, onOpenProfile, onOpenGi
         </button>
       </header>
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
+        {mutuals.length > 0 && (
+          <div className="mx-auto max-w-[88%] rounded-xl border border-[#87CEEB]/25 bg-[#87CEEB]/10 px-3 py-2 text-center text-[11px] leading-relaxed text-white/80">
+            🤝 {t('profile.mutualKnown')} · {mutuals.slice(0, 3).join(', ')}
+          </div>
+        )}
         {msgs.map((msg, i) =>
           msg.sys ? (
             <div key={i} className="mx-auto max-w-[85%] rounded-xl bg-white/[0.04] px-3 py-2 text-center text-[10.5px] leading-relaxed text-white/45">{msg.sys}</div>

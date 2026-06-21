@@ -2,6 +2,8 @@
 // 목업 .matchov 이식. 대화(DM)는 인연 채팅 탭에서.
 import { MessageCircle, Share2 } from 'lucide-react'
 import type { Moi } from './types'
+import { MOI_MUTUALS } from './data'
+import { useT } from '../../lib/i18n'
 
 interface MatchOverlayProps {
   open: boolean
@@ -11,7 +13,9 @@ interface MatchOverlayProps {
 }
 
 export function MatchOverlay({ open, moi, onDismiss, onOpenChat }: MatchOverlayProps) {
+  const t = useT()
   if (!open || !moi) return null
+  const mutuals = MOI_MUTUALS[moi.id] ?? []
   return (
     <div className="fixed inset-0 z-[70] mx-auto flex max-w-[420px] flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_36%,rgba(30,58,95,0.95),rgba(11,23,34,0.97))] px-8 text-center">
       <div className="text-[12px] font-extrabold tracking-[0.24em] text-[#F8C57A]">이음 성사</div>
@@ -30,6 +34,18 @@ export function MatchOverlay({ open, moi, onDismiss, onOpenChat }: MatchOverlayP
           style={{ background: `linear-gradient(150deg, hsl(${moi.photos[0]?.hue ?? 210} 52% 34%), hsl(${((moi.photos[0]?.hue ?? 210) + 36) % 360} 48% 16%))` }}
         />
       </div>
+
+      {/* 함께 아는 사람 — 이음 후 실명 공개(정보공개테이블 ②) */}
+      {mutuals.length > 0 && (
+        <div className="mb-4 max-w-[300px]">
+          <div className="text-[11px] font-bold text-white/55">🤝 {t('profile.mutualKnown')}</div>
+          <div className="mt-1.5 flex flex-wrap justify-center gap-1.5">
+            {mutuals.slice(0, 4).map((n) => (
+              <span key={n} className="rounded-full bg-white/12 px-2.5 py-1 text-[11.5px] font-bold text-white">{n}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Moi Credit 티저 — 데모 심장 */}
       <div className="max-w-[310px] rounded-2xl border border-[#F8C57A]/40 bg-white/[0.07] px-4 py-3">

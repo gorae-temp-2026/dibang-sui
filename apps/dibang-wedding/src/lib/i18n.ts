@@ -97,6 +97,7 @@ const KO: Dict = {
   'profile.creditOnchain': '정확한 모이크레딧은 온체인에서만 확인돼요',
   'profile.creditGood': '좋음',
   'profile.creditFair': '보통',
+  'profile.mutualKnown': '함께 아는 사람',
 }
 const EN: Dict = {
   'nav.inyeon': 'Inyeon',
@@ -173,6 +174,7 @@ const EN: Dict = {
   'profile.creditOnchain': 'Exact Moi Credit is read on-chain only',
   'profile.creditGood': 'Good',
   'profile.creditFair': 'Fair',
+  'profile.mutualKnown': 'People you both know',
 }
 const DICT: Record<Lang, Dict> = { ko: KO, en: EN }
 
