@@ -47,7 +47,6 @@ export function MoiGatherPage() {
   }, [])
 
   const { yone, owned, placed, equipped, pendingItemId, error, toast } = state.context
-  const placedIds = placed.map((p) => p.itemId)
   const giftReceived = useSelector(giftActor, (s) => s.context.received)
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
   // 받은 선물 → 광장 보유로 부여(꾸미기 장착·배치 가능). gift actor 브리지.
@@ -124,7 +123,7 @@ export function MoiGatherPage() {
           equipped={equipped}
           crowd={PLAZA_CROWD}
           onMoiClick={setProfileMoiId}
-          onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
+          onMovePlaced={(uid, x, y) => send({ type: 'MOVE', uid, x, y })}
           partnersOf={plazaPartnerIds}
           warmthStep={PLAZA_WARMTH_STEP}
         />
@@ -155,13 +154,13 @@ export function MoiGatherPage() {
         onOpenChange={setShopOpen}
         yone={yone}
         owned={owned}
-        placedIds={placedIds}
+        placed={placed}
         equipped={equipped}
         pendingItemId={pendingItemId}
         error={error}
         onPurchase={(id) => send({ type: 'PURCHASE', itemId: id })}
         onPlace={(id) => send({ type: 'PLACE', itemId: id })}
-        onRemove={(id) => send({ type: 'REMOVE', itemId: id })}
+        onRemove={(uid) => send({ type: 'REMOVE', uid })}
         onEquip={(id) => send({ type: 'EQUIP', itemId: id })}
         onUnequip={(slot) => send({ type: 'UNEQUIP', slot })}
         onCharge={() => send({ type: 'CHARGE' })}

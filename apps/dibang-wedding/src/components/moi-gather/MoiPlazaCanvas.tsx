@@ -423,7 +423,7 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
           node.cursor = 'grab'
           node.on('pointerdown', (e: FederatedPointerEvent) => {
             e.stopPropagation()
-            dragId = p.itemId
+            dragId = p.uid
             dragNode = node
           })
           dynamic.addChild(node)
