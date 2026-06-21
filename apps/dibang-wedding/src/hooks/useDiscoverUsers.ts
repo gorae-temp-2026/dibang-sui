@@ -45,7 +45,7 @@ export function useDiscoverUsers() {
     const client = createJsonRpcClient(network)
     discoverUsers(client, address)
       .then((discovered) => setUsers(discovered.map(toMoi)))
-      .catch((e) => console.error('[discoverUsers]', e))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [address])
 

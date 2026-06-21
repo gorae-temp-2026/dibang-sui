@@ -18,7 +18,7 @@ export function MoiGateModal() {
   const { createMoi } = useOnchainHostActions()
   const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
 
-  const { data: moiIds, refetch, isLoading } = useQuery({
+  const { data: moiIds, refetch } = useQuery({
     queryKey: ['ownedMoi', address],
     queryFn: () => getOwnedMoiIds(createJsonRpcClient(network), address!),
     enabled: isAuthenticated && !!address,
@@ -40,12 +40,12 @@ export function MoiGateModal() {
   const [state, send] = useMachine(machine)
 
   const hasMoi = (moiIds?.length ?? 0) > 0
-  // 게이트: 인증 + 조회 완료 + 미보유면 강제 모달 요청(hidden에서만 1회).
+  const queryDone = moiIds !== undefined
   useEffect(() => {
-    if (isAuthenticated && !isLoading && !hasMoi && state.matches('hidden')) {
+    if (isAuthenticated && queryDone && !hasMoi && state.matches('hidden')) {
       send({ type: 'REQUIRE' })
     }
-  }, [isAuthenticated, isLoading, hasMoi, state, send])
+  }, [isAuthenticated, queryDone, hasMoi, state, send])
 
   if (!state.matches('visible') && !state.matches('submitting')) return null
   const busy = state.matches('submitting')

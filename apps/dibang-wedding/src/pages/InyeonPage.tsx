@@ -10,7 +10,7 @@ import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
 import { useDiscoverUsers } from '../hooks/useDiscoverUsers'
-import { POOL, TIER_META } from '../components/inyeon/data'
+import { TIER_META } from '../components/inyeon/data'
 import type { Moi } from '../components/inyeon/types'
 import { SwipeDeck } from '../components/inyeon/SwipeDeck'
 import { InyeonRail } from '../components/inyeon/InyeonRail'
@@ -28,9 +28,8 @@ import { useMyCreditStats } from '../hooks/useCredit'
 
 export function InyeonPage() {
   const { requestIum, acceptIum } = useOnchainHostActions()
-  const { users: discoveredUsers } = useDiscoverUsers()
-  // 온체인 발견 유저가 있으면 실 데이터, 없으면 POOL mock fallback.
-  const pool = discoveredUsers.length > 0 ? discoveredUsers : POOL
+  const { users: discoveredUsers, loading: discoverLoading } = useDiscoverUsers()
+  const pool = discoveredUsers
   const moiById = (id: number | null) => (id == null ? null : pool.find((m) => m.id === id) ?? null)
 
   const machine = useMemo(
@@ -104,9 +103,15 @@ export function InyeonPage() {
 
       {/* 본문 스크린 */}
       <div className="relative flex-1 overflow-hidden">
-        {screen === 'universe' && (
+        {screen === 'universe' && discoverLoading && (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-sm text-white/50">인연을 찾는 중...</p>
+          </div>
+        )}
+        {screen === 'universe' && !discoverLoading && (
           <div className="flex h-full flex-col">
             <SwipeDeck
+              pool={pool}
               queue={queue}
               photoIdx={photoIdx}
               unlocked={unlocked}

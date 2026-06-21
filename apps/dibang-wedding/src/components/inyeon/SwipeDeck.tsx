@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { motion, useAnimationControls, type PanInfo } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
-import { POOL } from './data'
+import type { Moi } from './types'
 import { InyeonCard } from './InyeonCard'
 import { useT } from '../../lib/i18n'
 
@@ -32,6 +32,7 @@ function TopCard({ cardKey, onSwipeNext, children }: { cardKey: number; onSwipeN
 }
 
 interface SwipeDeckProps {
+  pool: Moi[]
   queue: number[]
   photoIdx: Record<number, number>
   unlocked: Record<number, boolean>
@@ -44,6 +45,7 @@ interface SwipeDeckProps {
 }
 
 export function SwipeDeck({
+  pool,
   queue,
   photoIdx,
   unlocked,
@@ -78,7 +80,7 @@ export function SwipeDeck({
     <div className="relative mx-4 my-3.5 min-h-0 flex-1">
       {[...visible].reverse().map((id) => {
         const depth = visible.indexOf(id)
-        const moi = POOL.find((m) => m.id === id)
+        const moi = pool.find((m) => m.id === id)
         if (!moi) return null
         const card = (
           <InyeonCard
