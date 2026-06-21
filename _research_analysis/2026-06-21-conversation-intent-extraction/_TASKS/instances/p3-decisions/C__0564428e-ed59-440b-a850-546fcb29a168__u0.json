@@ -1,0 +1,30 @@
+{
+  "code": "C",
+  "base": "0564428e-ed59-440b-a850-546fcb29a168",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 395,
+  "drop_local": [
+    37,
+    38,
+    40,
+    238,
+    239,
+    262,
+    263,
+    327,
+    328,
+    329,
+    330,
+    332,
+    333,
+    334,
+    335,
+    336,
+    337,
+    338,
+    349,
+    350
+  ],
+  "note": "전체 세션이 레거시 digital-guestbook-v3 작업(admin 호스트슬롯 이동, prod /weddings 500 디버깅, 계좌 jsonb 바인딩)으로 현재 dibang-sui(Sui 온체인 신뢰네트워크) 방향과 단절돼 있음. 다만 charter 원칙대로 USER 의도 블록은 보수적으로 거의 전부 KEEP하고, DROP은 확신 가능한 기계 잡음·"
+}

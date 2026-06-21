@@ -1,0 +1,18 @@
+{
+  "code": "C",
+  "base": "6d498666-029d-4a0f-acec-87545c72ad7e",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 442,
+  "drop_local": [
+    3,
+    4,
+    84,
+    85,
+    185,
+    241,
+    250,
+    380
+  ],
+  "note": "대상 슬라이스는 digital-guestbook-v3(레거시 dibang-wedding) 청첩장 하트 쓰기 배선 작업 세션(443블록 전부 읽음). dibang-sui 온체인과는 단절된 레거시지만, 워크트리를 dev에서 분기하기로 한 규칙 결정 흐름, 누적 vs 토글 시맨틱 결정(AskUserQuestion 응답), burst 애니메이션 버그 원인·수정 등"
+}

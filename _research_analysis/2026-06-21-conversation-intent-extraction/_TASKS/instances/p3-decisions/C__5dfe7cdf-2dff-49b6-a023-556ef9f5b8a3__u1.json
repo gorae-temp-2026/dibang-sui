@@ -1,0 +1,20 @@
+{
+  "code": "C",
+  "base": "5dfe7cdf-2dff-49b6-a023-556ef9f5b8a3",
+  "unit_idx": 1,
+  "block_start": 605,
+  "n_blocks": 719,
+  "drop_local": [
+    3,
+    52,
+    124,
+    150,
+    189,
+    200,
+    574,
+    600,
+    609,
+    610
+  ],
+  "note": "대상은 프로젝트 C(digital-guestbook-v3)의 guest-web/invitation-ui UI 구현 세션. dibang-sui(Sui 온체인)와는 단절된 오프체인 레거시지만, USER 발화에 담긴 제품 도메인 의도(하객 플로우 문구, 계좌 유무 기반 오프라인 축의대 토글, 커버 텍스트 드래그/회전 편집)는 웨딩 도메인 이해에 닿아 있어 보수적"
+}

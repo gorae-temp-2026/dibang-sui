@@ -1,0 +1,31 @@
+{
+  "code": "A",
+  "base": "28ba2a9b-a348-4fa1-b8ff-e1d15dd74105",
+  "unit_idx": 3,
+  "block_start": 1592,
+  "n_blocks": 718,
+  "drop_local": [
+    31,
+    32,
+    33,
+    34,
+    40,
+    41,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    192,
+    254,
+    359,
+    390,
+    462,
+    565,
+    664
+  ],
+  "note": "Single coherent current-direction session (dibang-sui = Sui onchain): zkLogin/Sui 키 env 세팅(C1) → prover self-host 시도→arm64 미지원으로 hosted 전환 → dev 지갑 로그인 인프라(C4D) → testnet 온체인 7종(웨딩/방명록/Moi/Ium/Vault/축"
+}

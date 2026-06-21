@@ -1,0 +1,22 @@
+{
+  "code": "A",
+  "base": "25c842ba-8c2f-49c7-8a9c-b4882f5c11f5",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 15,
+  "drop_local": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "note": "태스크#1 완료 적대검증→FAIL"
+}

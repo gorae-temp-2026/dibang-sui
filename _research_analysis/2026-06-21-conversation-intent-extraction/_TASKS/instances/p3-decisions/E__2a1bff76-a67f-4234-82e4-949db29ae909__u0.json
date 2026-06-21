@@ -1,0 +1,12 @@
+{
+  "code": "E",
+  "base": "2a1bff76-a67f-4234-82e4-949db29ae909",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "Slice contains only mechanical noise: idx0 USERMETA local-command caveat, idx1 a /clear command (pure plumbing, no intent). idx2 is an empty line (no real block). Dropped 0,1 as 무연결 (one-off machine n"
+}

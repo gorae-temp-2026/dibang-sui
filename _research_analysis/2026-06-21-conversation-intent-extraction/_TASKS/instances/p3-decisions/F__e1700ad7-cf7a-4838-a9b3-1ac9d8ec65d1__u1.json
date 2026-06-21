@@ -1,0 +1,17 @@
+{
+  "code": "F",
+  "base": "e1700ad7-cf7a-4838-a9b3-1ac9d8ec65d1",
+  "unit_idx": 1,
+  "block_start": 638,
+  "n_blocks": 41,
+  "drop_local": [
+    5,
+    7,
+    11,
+    14,
+    15,
+    17,
+    22
+  ],
+  "note": "F-session (digital-guestbook-v3 lounge e2e + 이슈 생성). 보수적 cut-only. DROP=순수 기계 잡음만: 5/7 'File modified since read' tool_use_error 재시도 노이즈; 11/14/15 'Updated task #N status' RESULT 확인 노이즈; 17 Read 결과(파일"
+}

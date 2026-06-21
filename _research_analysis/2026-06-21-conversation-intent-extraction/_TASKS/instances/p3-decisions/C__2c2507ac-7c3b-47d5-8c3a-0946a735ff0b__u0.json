@@ -1,0 +1,9 @@
+{
+  "code": "C",
+  "base": "2c2507ac-7c3b-47d5-8c3a-0946a735ff0b",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 4,
+  "drop_local": [],
+  "note": "4개 블록 모두 KEEP. USER 2건(★)은 agent 폭증 환경에서의 인간 병목/방향성 유지/기획 가속 의도의 핵심이며, ASSISTANT 2건은 그에 직접 연결된 전략·구축 로드맵 답변. 모순·레거시·무연결 잡음 없음. 보수적 판단으로 drop 없음."
+}

@@ -1,0 +1,18 @@
+{
+  "code": "E",
+  "base": "5b5cf62a-1156-47f4-b5eb-79f73cfc4dbb",
+  "unit_idx": 4,
+  "block_start": 1659,
+  "n_blocks": 562,
+  "drop_local": [
+    114,
+    115,
+    122,
+    198,
+    201,
+    202,
+    204,
+    205
+  ],
+  "note": "Slice E__5b5cf62a u4, 562 blocks, single coherent session: implementing invitation canvas editor (T33/T34) + lettering timed-ink-replay with 10s draw cap (T35-T39) + canvas-drawing bbox/settings-zone "
+}

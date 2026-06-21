@@ -1,0 +1,16 @@
+{
+  "code": "C",
+  "base": "7dde3f08-0f78-4eeb-b9b8-1741f7e3bd73",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 535,
+  "drop_local": [
+    0,
+    4,
+    40,
+    124,
+    125,
+    467
+  ],
+  "note": "슬라이스는 digital-guestbook-v3(Sui 전환 이전 레거시 프로젝트)의 단일 연속 세션이다: 바텀네비 QR탭→스캐너 자리 정정, 지난 결혼식 '완료' 배지 제거, 핵심으로 '불참(attended)' 데이터 버그 진단·수정(guest_id claim 기준→guestbook_entry_id 링크 기준 전환, TDD, supabase-dev 백필)"
+}

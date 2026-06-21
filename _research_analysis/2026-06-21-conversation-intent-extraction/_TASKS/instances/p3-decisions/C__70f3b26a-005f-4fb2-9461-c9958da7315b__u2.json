@@ -1,0 +1,18 @@
+{
+  "code": "C",
+  "base": "70f3b26a-005f-4fb2-9461-c9958da7315b",
+  "unit_idx": 2,
+  "block_start": 1600,
+  "n_blocks": 15,
+  "drop_local": [
+    1,
+    2,
+    3,
+    4,
+    9,
+    10,
+    11,
+    14
+  ],
+  "note": "digital-guestbook-v3 legacy session. Kept USER★ blocks (0,8,13) and meaningful assistant summaries (7,12) and the gitignore Edit (6, conservative). Dropped: 1-4 pure gitignore-read plumbing (무연결); 9,1"
+}

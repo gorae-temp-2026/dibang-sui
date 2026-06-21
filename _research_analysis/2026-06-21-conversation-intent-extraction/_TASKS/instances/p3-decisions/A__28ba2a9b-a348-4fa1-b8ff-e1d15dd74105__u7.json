@@ -1,0 +1,14 @@
+{
+  "code": "A",
+  "base": "28ba2a9b-a348-4fa1-b8ff-e1d15dd74105",
+  "unit_idx": 7,
+  "block_start": 4053,
+  "n_blocks": 384,
+  "drop_local": [
+    32,
+    41,
+    98,
+    187
+  ],
+  "note": "슬라이스는 xState 머신화 /run-tasks 세션(XS-D0~XS-7c)으로, 전 구간이 dibang-wedding 현행 코드 작업이라 레거시 없음. 일관된 단일 intent 흐름(매 태스크마다 opus 검증 PASS 게이트, hook 충돌→무력화 결정)이라 보수적으로 거의 전부 KEEP.\\n\\nDROP 4건(순수 기계 잡음, 사용자 의도 무관):\\n"
+}

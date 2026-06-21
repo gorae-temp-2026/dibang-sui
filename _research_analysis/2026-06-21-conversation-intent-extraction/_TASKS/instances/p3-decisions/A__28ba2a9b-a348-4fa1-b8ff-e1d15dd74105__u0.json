@@ -1,0 +1,21 @@
+{
+  "code": "A",
+  "base": "28ba2a9b-a348-4fa1-b8ff-e1d15dd74105",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 605,
+  "drop_local": [
+    2,
+    37,
+    50,
+    52,
+    54,
+    98,
+    244,
+    250,
+    375,
+    501,
+    504
+  ],
+  "note": "v3→dibang-sui 이관·zkLogin 온체인 방명록"
+}

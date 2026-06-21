@@ -1,0 +1,13 @@
+{
+  "code": "A",
+  "base": "20448e1f-de7f-4577-b03e-55c2ce0ba764",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 516,
+  "drop_local": [
+    0,
+    229,
+    236
+  ],
+  "note": "dibang-inyeon 온체인 통합: 워크트리→머지→빌드→UI→상태머신→e2e"
+}

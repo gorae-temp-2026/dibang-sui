@@ -1,0 +1,19 @@
+{
+  "code": "C",
+  "base": "3169106b-5a63-42e7-9997-f7c57a05550b",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 134,
+  "drop_local": [
+    0,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133
+  ],
+  "note": "세션 전체가 dibang-sui 핵심 방향(Sui 온체인 신뢰네트워크: gathering-taxonomy 1층→2층, project/fold/signal, Fiske 4모델, 신뢰잔액→신용)을 다루는 의도 밀집 대화라 거의 전부 KEEP. USER★ 전량 보존. drop은 순수 기계 잡음만 확신 제거: idx0=/clear 명령, idx126~133=ope"
+}

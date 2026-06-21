@@ -1,0 +1,25 @@
+{
+  "code": "C",
+  "base": "da78509b-70a6-4779-8d40-9d0eb7fa31d7",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 367,
+  "drop_local": [
+    3,
+    4,
+    9,
+    10,
+    11,
+    19,
+    21,
+    26,
+    27,
+    32,
+    34,
+    35,
+    51,
+    87,
+    232
+  ],
+  "note": "Conservative cut-only on a legacy digital-guestbook-v3 debugging session (off-chain Supabase/Render wedding service, disconnected from current Sui direction). Per charter, kept ALL USER(★) intent bloc"
+}

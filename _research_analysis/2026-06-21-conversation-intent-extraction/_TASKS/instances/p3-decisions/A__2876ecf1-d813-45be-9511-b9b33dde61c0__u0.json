@@ -1,0 +1,12 @@
+{
+  "code": "A",
+  "base": "2876ecf1-d813-45be-9511-b9b33dde61c0",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 3,
+  "drop_local": [
+    0,
+    2
+  ],
+  "note": "세션 종료 신호"
+}

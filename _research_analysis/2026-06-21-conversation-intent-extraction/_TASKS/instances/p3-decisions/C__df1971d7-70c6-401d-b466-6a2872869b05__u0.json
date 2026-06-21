@@ -1,0 +1,14 @@
+{
+  "code": "C",
+  "base": "df1971d7-70c6-401d-b466-6a2872869b05",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 121,
+  "drop_local": [
+    1,
+    5,
+    7,
+    41
+  ],
+  "note": "슬라이스 전체(122블록)는 레거시 digital-guestbook-v3(오프체인 Supabase/Go API)의 401 'user not found' 디버깅 세션이다. 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과는 단절된 레거시지만, 잘라내기 보수 원칙에 따라 확신할 수 있는 순수 기계 잡음만 제거했다.\\n\\nDROP 한 것(4건, 전부 무"
+}

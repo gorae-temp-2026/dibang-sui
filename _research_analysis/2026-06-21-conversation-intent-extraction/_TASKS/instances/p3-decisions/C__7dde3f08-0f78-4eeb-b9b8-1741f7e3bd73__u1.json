@@ -1,0 +1,30 @@
+{
+  "code": "C",
+  "base": "7dde3f08-0f78-4eeb-b9b8-1741f7e3bd73",
+  "unit_idx": 1,
+  "block_start": 535,
+  "n_blocks": 92,
+  "drop_local": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    12,
+    13,
+    14,
+    30,
+    31,
+    36,
+    37,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57
+  ],
+  "note": "Chunk is entirely legacy digital-guestbook-v3 work (cash-gift ledger 'attended' fix, guestbook-message tab wiring, heart removal, Supabase feed 500). Disconnected from current dibang-sui Sui onchain d"
+}

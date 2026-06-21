@@ -1,0 +1,20 @@
+{
+  "code": "C",
+  "base": "27bfc299-c0dc-4351-9e1a-d8111b297ebd",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 25,
+  "drop_local": [
+    1,
+    7,
+    8,
+    9,
+    15,
+    16,
+    17,
+    18,
+    21,
+    22
+  ],
+  "note": "25-block session: merging 4 PRs into dev (legacy dibang-wedding work — lounge/landing/DM/jsonb — unrelated to Sui direction, but kept per conservative KEEP since it shows user intent flow of PR triage"
+}

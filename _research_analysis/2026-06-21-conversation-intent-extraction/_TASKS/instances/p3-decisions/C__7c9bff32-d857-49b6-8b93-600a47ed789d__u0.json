@@ -1,0 +1,12 @@
+{
+  "code": "C",
+  "base": "7c9bff32-d857-49b6-8b93-600a47ed789d",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "2-block slice only. idx0=USERMETA local-command caveat boilerplate (machine noise). idx1=USER but content is just a /clear command marker with zero intent — pure plumbing (criterion ③ 무연결). No real us"
+}

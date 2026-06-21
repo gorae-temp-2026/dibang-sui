@@ -1,0 +1,16 @@
+{
+  "code": "C",
+  "base": "6fd3b9fd-5e5a-433b-9c3e-640eecab34ff",
+  "unit_idx": 4,
+  "block_start": 2673,
+  "n_blocks": 10,
+  "drop_local": [
+    0,
+    1,
+    2,
+    7,
+    8,
+    9
+  ],
+  "note": "0-base. DROP 0,7 = \"Prompt is too long\" assistant machine noise (무연결). DROP 1,2 = /model command + stdout plumbing, no intent. DROP 8,9 = /compact session housekeeping commands, pure plumbing no domai"
+}

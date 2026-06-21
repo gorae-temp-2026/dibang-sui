@@ -1,0 +1,21 @@
+{
+  "code": "C",
+  "base": "a9c72dd6-da55-4bc8-a2dc-b796f8861d03",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 37,
+  "drop_local": [
+    0,
+    4,
+    5,
+    24,
+    25,
+    27,
+    31,
+    32,
+    33,
+    34,
+    36
+  ],
+  "note": "Session = guest-web origin env hardcoding fix (lineage of worktree D fix-guest-web-origin-env), coherent intent flow: bug discovery -> analysis report -> decision to use env+localhost fallback -> requ"
+}

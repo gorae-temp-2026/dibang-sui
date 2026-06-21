@@ -1,0 +1,15 @@
+{
+  "code": "C",
+  "base": "fa5f14a2-134a-4e64-96f5-f948db323bf5",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 397,
+  "drop_local": [
+    221,
+    222,
+    393,
+    394,
+    395
+  ],
+  "note": "0-base local indices. This entire chunk is a legacy session on digital-guestbook-v3 (offchain Supabase/Postgres/Go wedding service) — debugging a prod 500 and applying 11 Postgres migrations. It is fu"
+}

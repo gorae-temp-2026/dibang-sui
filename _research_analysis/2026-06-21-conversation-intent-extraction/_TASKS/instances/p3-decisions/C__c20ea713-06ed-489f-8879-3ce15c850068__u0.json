@@ -1,0 +1,13 @@
+{
+  "code": "C",
+  "base": "c20ea713-06ed-489f-8879-3ce15c850068",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 769,
+  "drop_local": [
+    0,
+    8,
+    9
+  ],
+  "note": "Session = digital-guestbook-v3 (code C, in-scope per charter) RSVP modal blue→green redesign. Fully coherent single intent flow with clear, consistent USER directives (initial redesign request with im"
+}

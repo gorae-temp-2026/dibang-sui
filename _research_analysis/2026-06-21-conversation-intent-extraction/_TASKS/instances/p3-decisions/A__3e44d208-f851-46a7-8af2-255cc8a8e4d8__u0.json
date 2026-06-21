@@ -1,0 +1,14 @@
+{
+  "code": "A",
+  "base": "3e44d208-f851-46a7-8af2-255cc8a8e4d8",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 146,
+  "drop_local": [
+    0,
+    1,
+    35,
+    37
+  ],
+  "note": "프로토타입 파일명 정리+move-analyzer LSP 환경구성"
+}

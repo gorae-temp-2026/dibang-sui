@@ -1,0 +1,14 @@
+{
+  "code": "C",
+  "base": "24a5d05a-47a0-489a-a23d-d54529016eed",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 4,
+  "drop_local": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "note": "All 4 blocks are local-command noise with zero intent: USERMETA caveat (0), /clear (1), /exit (2), and \"Goodbye!\" stdout (3). No real USER intent present. Pure machine plumbing per DROP criterion ③ (무"
+}

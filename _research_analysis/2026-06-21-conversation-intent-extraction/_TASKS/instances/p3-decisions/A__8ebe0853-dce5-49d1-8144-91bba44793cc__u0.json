@@ -1,0 +1,15 @@
+{
+  "code": "A",
+  "base": "8ebe0853-dce5-49d1-8144-91bba44793cc",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 5,
+  "drop_local": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "note": "5개 블록 전부 세션 제어 잡음(③ 무연결). 0=resume 마커, 1=user interrupt 통지, 2=local-command caveat 메타, 3=/exit 명령, 4=exit stdout 'See ya!'. 실제 의도를 담은 USER 발화 없음 — 모두 명령 아티팩트라 KEEP 대상 ★발화로 보지 않음. 전량 drop."
+}

@@ -1,0 +1,16 @@
+{
+  "code": "C",
+  "base": "f6166956-ab00-4854-9bd2-04a8fba7d460",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 128,
+  "drop_local": [
+    0,
+    78,
+    79,
+    125,
+    126,
+    127
+  ],
+  "note": "Session is entirely about legacy digital-guestbook-v3 (Render TS2322 build error on AnnouncementForm Props mismatch, codegraph reindex noise, worktree cleanup, cross-session peeking) — context disconn"
+}

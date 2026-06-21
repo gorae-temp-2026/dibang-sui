@@ -1,0 +1,9 @@
+{
+  "code": "C",
+  "base": "97c5121b-8f28-4157-ae48-6815a4432205",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 13,
+  "drop_local": [],
+  "note": "14개 블록 모두 KEEP. 단일 연속 Q&A 스레드로 \"UI 와이어프레임/의도를 Claude Code에 어떻게 가장 정확히 전달할지\"라는 일관된 의도 흐름. USER(★) 6개(idx 0,3,5,7,9,11)는 전부 의도 핵심이라 보존. ASSISTANT 답변들도 각 USER 의도에 직결(포맷 비교→excalidraw SVG 모순 해소→frame JSON"
+}

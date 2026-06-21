@@ -1,0 +1,12 @@
+{
+  "code": "B",
+  "base": "08c0fcfc-af31-4315-b63f-2a9bc979f660",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 14,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "Sui creator 신뢰보장→UpgradeCap→immutability"
+}

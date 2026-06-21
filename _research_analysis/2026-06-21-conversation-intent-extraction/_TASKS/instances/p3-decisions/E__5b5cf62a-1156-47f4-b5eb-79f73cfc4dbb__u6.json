@@ -1,0 +1,12 @@
+{
+  "code": "E",
+  "base": "5b5cf62a-1156-47f4-b5eb-79f73cfc4dbb",
+  "unit_idx": 6,
+  "block_start": 2760,
+  "n_blocks": 3,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "3 blocks total. IDX0, IDX1: pure /model command plumbing (model switch stdout) — no intent content, machine noise → DROP. IDX2: USER(★) block, 321KB excalidraw clipboard JSON dump with trailing one-li"
+}

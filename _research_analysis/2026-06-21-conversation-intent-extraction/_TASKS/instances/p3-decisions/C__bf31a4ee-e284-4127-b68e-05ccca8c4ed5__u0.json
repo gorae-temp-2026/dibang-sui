@@ -1,0 +1,14 @@
+{
+  "code": "C",
+  "base": "bf31a4ee-e284-4127-b68e-05ccca8c4ed5",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 4,
+  "drop_local": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "note": "슬라이스는 4블록(로컬 0~3) 전부 기계성 잡음. 0=/clear 명령 마커, 1=/exit 명령 마커, 2=\"Goodbye!\" stdout, 3=백그라운드 명령(local API 8080) killed task-notification. 모두 USER-kind지만 실제 사람 의도 발화가 아닌 세션 제어/도구 plumbing이라 DROP 기준 ③(무연결)에"
+}

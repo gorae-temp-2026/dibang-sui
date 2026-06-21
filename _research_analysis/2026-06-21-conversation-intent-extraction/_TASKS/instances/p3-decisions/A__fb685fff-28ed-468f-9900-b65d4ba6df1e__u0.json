@@ -1,0 +1,9 @@
+{
+  "code": "A",
+  "base": "fb685fff-28ed-468f-9900-b65d4ba6df1e",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 29,
+  "drop_local": [],
+  "note": "Single coherent adversarial task-completion verification session (XS-N xstate machine coverage). Block 0 = USER(★) core intent (independent verifier role + steps), kept. Blocks 1-28 are the investigat"
+}

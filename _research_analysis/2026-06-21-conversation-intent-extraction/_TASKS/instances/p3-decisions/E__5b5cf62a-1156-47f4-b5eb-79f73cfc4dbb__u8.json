@@ -1,0 +1,11 @@
+{
+  "code": "E",
+  "base": "5b5cf62a-1156-47f4-b5eb-79f73cfc4dbb",
+  "unit_idx": 8,
+  "block_start": 2767,
+  "n_blocks": 9,
+  "drop_local": [
+    8
+  ],
+  "note": "9 blocks total (0-8). Blocks 0-7 are USER clipboard image pastes (no text). Per KEEP-USER and \"의심되면 KEEP\" — images may carry intent I cannot read — all 8 USER blocks preserved conservatively. Block 8 "
+}

@@ -1,0 +1,33 @@
+{
+  "code": "C",
+  "base": "9bacaa19-5b50-4f48-b584-e5f2a5f2ce70",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 25,
+  "drop_local": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "note": "All blocks belong to legacy digital-guestbook-v3 project, disconnected from current dibang-sui Sui onchain direction; no \"why this direction\" intent flow present. Dropped: (0-7) codegraph sync — pure "
+}

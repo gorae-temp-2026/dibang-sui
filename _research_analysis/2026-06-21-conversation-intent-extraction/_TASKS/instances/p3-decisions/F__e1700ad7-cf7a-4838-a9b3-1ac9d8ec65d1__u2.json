@@ -1,0 +1,13 @@
+{
+  "code": "F",
+  "base": "e1700ad7-cf7a-4838-a9b3-1ac9d8ec65d1",
+  "unit_idx": 2,
+  "block_start": 679,
+  "n_blocks": 35,
+  "drop_local": [
+    9,
+    33,
+    34
+  ],
+  "note": "F slice u2: DB rename(v3_lounge_entries→check_ins) 잔존 버그 디버깅 + 재발방지 설계(sqlc 확대/통합테스트/CI게이트) 토론. 전 USER(2,14,16,21,23,25,32)는 의도 핵심—전부 KEEP. 레거시(guestbook-v3) 맥락이나 '왜 이 방향(스키마=진실원천으로 rename 사고 차단)'의 의도"
+}

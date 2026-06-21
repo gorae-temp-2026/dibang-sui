@@ -1,0 +1,22 @@
+{
+  "code": "C",
+  "base": "9c86f9e5-ff73-468b-8473-daa867f42443",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 437,
+  "drop_local": [
+    0,
+    1,
+    2,
+    56,
+    248,
+    423,
+    424,
+    425,
+    433,
+    434,
+    435,
+    436
+  ],
+  "note": "C/digital-guestbook-v3 메인 세션 437블록. 드롭은 순수 기계 plumbing 12개만(보수적): (0,1,2) /clear·/effort 슬래시 명령과 local-command-stdout; (56,248,423) /commit 스킬 본문 덤프(매번 동일한 스킬 base-directory 설명, 일회성 plumbing); (424,42"
+}

@@ -1,0 +1,21 @@
+{
+  "code": "C",
+  "base": "b09e38f3-f448-4b3a-afb3-9067fff8cb75",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 27,
+  "drop_local": [
+    3,
+    4,
+    6,
+    7,
+    9,
+    11,
+    12,
+    13,
+    14,
+    15,
+    21
+  ],
+  "note": "Self-contained QR-PNG generation task for guest-web-v3 (off-topic from dibang-sui but USER intent is clean, so kept conservatively). Dropped pure tool plumbing/machine-noise: tool-availability probe ("
+}

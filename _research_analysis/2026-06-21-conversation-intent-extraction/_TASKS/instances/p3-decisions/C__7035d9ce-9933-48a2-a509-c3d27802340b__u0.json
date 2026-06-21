@@ -1,0 +1,17 @@
+{
+  "code": "C",
+  "base": "7035d9ce-9933-48a2-a509-c3d27802340b",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 8,
+  "drop_local": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "note": "Block 0 (USER: MyWedding 링크 복사 base url 확인 요청) is the sole intent — KEEP. Blocks 1,3,5,7 are ASSISTANT API 500 error noise (무연결 machine plumbing). Blocks 2,4,6 are exact verbatim retry duplicates of b"
+}

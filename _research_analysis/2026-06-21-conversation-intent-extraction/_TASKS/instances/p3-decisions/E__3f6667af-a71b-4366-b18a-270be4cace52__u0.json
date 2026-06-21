@@ -1,0 +1,11 @@
+{
+  "code": "E",
+  "base": "3f6667af-a71b-4366-b18a-270be4cace52",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [
+    0
+  ],
+  "note": "2 blocks total (each JSONL line = 1 block). Block 0 = USER but pure '/clear' command marker (session-control plumbing, zero intent) -> DROP confidently. Block 1 = USER message carrying real intent: an"
+}

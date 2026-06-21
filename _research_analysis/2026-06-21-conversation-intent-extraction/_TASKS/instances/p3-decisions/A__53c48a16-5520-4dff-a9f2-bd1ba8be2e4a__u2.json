@@ -1,0 +1,13 @@
+{
+  "code": "A",
+  "base": "53c48a16-5520-4dff-a9f2-bd1ba8be2e4a",
+  "unit_idx": 2,
+  "block_start": 794,
+  "n_blocks": 460,
+  "drop_local": [
+    100,
+    281,
+    447
+  ],
+  "note": "Slice is one continuous autonomous \"10h improvement loop\" building the current dibang-sui Sui on-chain trust→credit pipeline (signal expansion INVITE/부조/방명록/참석, credit.ts PHI-5 PageRank, PII removal f"
+}

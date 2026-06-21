@@ -1,0 +1,22 @@
+{
+  "code": "C",
+  "base": "94aba610-3d8d-44e6-a2f1-851adf205f85",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 231,
+  "drop_local": [
+    40,
+    43,
+    45,
+    46,
+    47,
+    48,
+    80,
+    85,
+    89,
+    105,
+    216,
+    223
+  ],
+  "note": "Conservative cut-only on a fully-legacy session (digital-guestbook-v3: Supabase/Go/React dev-server ops + session-log forensics) — none of it touches the current dibang-sui Sui on-chain direction. But"
+}

@@ -1,0 +1,13 @@
+{
+  "code": "C",
+  "base": "d27f3264-bde5-4b5d-b23e-1d52f01b67df",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 3,
+  "drop_local": [
+    0,
+    1,
+    2
+  ],
+  "note": "슬라이스 전체가 기계 잡음. 0=local-command caveat 메타, 1=/exit 슬래시 커맨드(의도 아님), 2=stdout \"Goodbye!\". 셋 다 의도와 무관한 일회성 plumbing(무연결 기준). 실제 사람 발화 의도 없음. 모순/레거시 해당 없음."
+}

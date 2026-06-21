@@ -1,0 +1,14 @@
+{
+  "code": "C",
+  "base": "53ad0a8d-1559-452d-ae71-f62621215c5b",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 170,
+  "drop_local": [
+    10,
+    60,
+    104,
+    107
+  ],
+  "note": "Session is digital-guestbook-v3 legacy work (guest-web 축의 플로우 A/B 테스트 v2 생성 → prod 연결). Per charter, legacy is droppable only when disconnected from dibang-sui AND showing no intent flow; here the USE"
+}

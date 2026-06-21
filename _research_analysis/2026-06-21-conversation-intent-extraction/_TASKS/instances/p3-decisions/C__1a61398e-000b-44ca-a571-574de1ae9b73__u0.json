@@ -1,0 +1,18 @@
+{
+  "code": "C",
+  "base": "1a61398e-000b-44ca-a571-574de1ae9b73",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 532,
+  "drop_local": [
+    0,
+    61,
+    82,
+    83,
+    121,
+    158,
+    406,
+    462
+  ],
+  "note": "532 blocks (0-531), single coherent session in folder C (digital-guestbook-v3). Entire arc = one connected intent chain: diagnose PATCH /weddings 500 -> TDD fix (jsonb COALESCE under simple_protocol, "
+}

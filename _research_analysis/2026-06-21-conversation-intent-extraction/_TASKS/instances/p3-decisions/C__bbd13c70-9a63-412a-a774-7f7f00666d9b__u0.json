@@ -1,0 +1,11 @@
+{
+  "code": "C",
+  "base": "bbd13c70-9a63-412a-a774-7f7f00666d9b",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 5,
+  "drop_local": [
+    4
+  ],
+  "note": "6 blocks total. Kept all USER blocks (0,2) — core intent: fix MyWedding 링크 복사 wrong base URL, decision to use env var with localhost fallback, request to create detailed tasks. Kept assistant blocks 1"
+}

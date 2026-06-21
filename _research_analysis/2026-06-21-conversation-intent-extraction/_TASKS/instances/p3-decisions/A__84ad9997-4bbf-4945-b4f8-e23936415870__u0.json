@@ -1,0 +1,9 @@
+{
+  "code": "A",
+  "base": "84ad9997-4bbf-4945-b4f8-e23936415870",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 19,
+  "drop_local": [],
+  "note": "Self-contained adversarial verification session (independent judge checking task #35 false-completion). USER block 0 is the core intent. The tool/result chain (Read reflection, TaskGet/TaskList not-fo"
+}

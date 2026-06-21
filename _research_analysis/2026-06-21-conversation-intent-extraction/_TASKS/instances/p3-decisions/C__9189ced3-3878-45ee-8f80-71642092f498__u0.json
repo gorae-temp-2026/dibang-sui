@@ -1,0 +1,13 @@
+{
+  "code": "C",
+  "base": "9189ced3-3878-45ee-8f80-71642092f498",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 48,
+  "drop_local": [
+    12,
+    13,
+    15
+  ],
+  "note": "Slice is all local-environment tooling chatter (zsh-syntax-highlighting, ECC plugin hook errors, yazi keymap sort), none tied to dibang-sui Sui direction — but these are genuine USER environment inten"
+}

@@ -1,0 +1,13 @@
+{
+  "code": "C",
+  "base": "6ef2d4ca-13a0-4884-b32f-d64eda1c0f31",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 3,
+  "drop_local": [
+    0,
+    1,
+    2
+  ],
+  "note": "3-block slice, all pure plumbing with zero intent. idx0=USERMETA local-command caveat boilerplate. idx1=/exit slash command (mechanical, not a real intent-bearing utterance). idx2=local-command-stdout"
+}

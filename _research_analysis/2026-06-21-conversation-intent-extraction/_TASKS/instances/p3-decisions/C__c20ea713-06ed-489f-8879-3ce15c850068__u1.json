@@ -1,0 +1,12 @@
+{
+  "code": "C",
+  "base": "c20ea713-06ed-489f-8879-3ce15c850068",
+  "unit_idx": 1,
+  "block_start": 769,
+  "n_blocks": 36,
+  "drop_local": [
+    16,
+    17
+  ],
+  "note": "Slice is a /reflect+/commit session in legacy digital-guestbook-v3 (pre-Sui) repo recording a root wildcard-rm accident and a false-attribution report, then committing the LESSON/CLAUDE.md safety rule"
+}

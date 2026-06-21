@@ -1,0 +1,24 @@
+{
+  "code": "C",
+  "base": "23c2898e-e996-4090-ae8b-188917f20f27",
+  "unit_idx": 3,
+  "block_start": 1930,
+  "n_blocks": 14,
+  "drop_local": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "note": "Slice is a /commit skill workflow + screenshot-delete request on legacy dibang-wedding frontend (청첩장 카드/폼 UI), disconnected from Sui on-chain trust-network direction with no intent-flow rationale. Dro"
+}

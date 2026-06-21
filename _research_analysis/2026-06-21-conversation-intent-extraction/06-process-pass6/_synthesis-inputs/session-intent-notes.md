@@ -1,0 +1,307 @@
+- [A/20448e1f#0] dibang-inyeon 온체인 통합: 워크트리→머지→빌드→UI→상태머신→e2e
+- [A/20448e1f#1] e2e 시나리오 생성·실행·커밋
+- [A/25c842ba#0] 태스크#1 완료 적대검증→FAIL
+- [A/2876ecf1#0] 세션 종료 신호
+- [A/28ba2a9b#0] v3→dibang-sui 이관·zkLogin 온체인 방명록
+- [A/28ba2a9b#1] SDK 완료→zkLogin 백엔드→도메인모델 단일원천→온보딩문서 최우선
+- [A/28ba2a9b#2] 온보딩문서 12개+컨벤션 구축·검증라운드
+- [A/28ba2a9b#3] Single coherent current-direction session (dibang-sui = Sui onchain): zkLogin/Sui 키 env 세팅(C1) → prover self-host 시도→arm64 미지원으로 hosted 전환 → dev 지갑 로그인 인프라(C4D) → testnet 온체인 7종(웨딩/방명록/Moi/Ium/Vault/축
+- [A/28ba2a9b#4] 슬라이스는 한 세션의 일관된 흐름이라 거의 전부 KEEP했다: (거짓 완료) 반성 → TaskUpdate 완료 게이트 hook 신설 → run-tasks/create-tasks 스킬 보강 → D0 결정 후 실제 온체인 배선(C6) E2E. 이 흐름은 현재 dibang-sui 방향(온체인 신뢰네트워크 + 정직한 완료 검증)의 의도 원천이라 모순/레거시 없음.
+- [A/28ba2a9b#5] A__28ba2a9b u5 슬라이스(647블록, 로컬 0-645)는 단일 연속 세션으로 전부 현재 방향(dibang-sui = Sui 온체인) 작업이다: 호스트 웨딩 /invitation/create 폼 → 온체인 createWedding 실증(V-C6), dev 인증 우회(C6X-1·2·3), Supabase↔온체인 Sui ID 브릿지(C7-1~4·V-C
+- [A/28ba2a9b#6] 760 blocks, single session A/u6 — entirely on current dibang-sui Sui-onchain direction (Sui contract wiring for guestbook/vault/cashgift/rsvp/Moi/Ium + xState machine survey & task generation). No con
+- [A/28ba2a9b#7] 슬라이스는 xState 머신화 /run-tasks 세션(XS-D0~XS-7c)으로, 전 구간이 dibang-wedding 현행 코드 작업이라 레거시 없음. 일관된 단일 intent 흐름(매 태스크마다 opus 검증 PASS 게이트, hook 충돌→무력화 결정)이라 보수적으로 거의 전부 KEEP.\n\nDROP 4건(순수 기계 잡음, 사용자 의도 무관):\n
+- [A/28ba2a9b#8] Chunk is one continuous, coherent dibang-sui XState-migration thread (XS-7~XS-13: optimistic locking + page-by-page machine wiring), driven by the /loop directive and the user's "멈추지 말고 끝까지" intent. N
+- [A/28ba2a9b#9] 단일 세션 = xState 전면 머신화 TDD 루프(XS-13~22 + 최종 게이트 + /commit). 전부 현재 방향(dibang-wedding 프론트 상태관리 머신화)과 연결된 일관 작업이라 레거시·모순 DROP 없음. USER 블록(312 /commit 호출, 313 스킬 본문) 전부 KEEP. 드롭은 무연결 기계 잡음만: (1) 빈 TaskUpda
+- [A/3e44d208#0] 프로토타입 파일명 정리+move-analyzer LSP 환경구성
+- [A/53c48a16#0] 452 blocks total. Session = coherent Sui contract design in the current dibang-sui onchain direction (worktree entry, deep study of trust-balance/category-theory research, design-direction doc, 4 user
+- [A/53c48a16#1] 세션 전체가 현재 dibang-sui 방향(Sui Move 온체인 신뢰네트워크 컨트랙트)의 자가구동 개선 루프 — 척추(event/ledger) TDD→opus 적대검증→커밋, 부조 give·guestbook·ium·gift·invite 신호확장, credit.ts 신뢰→신용 리더, SDK 쿼리까지. 레거시 아님, 의도 흐름 핵심이라 거의 전부 KEEP.\
+- [A/53c48a16#2] Slice is one continuous autonomous "10h improvement loop" building the current dibang-sui Sui on-chain trust→credit pipeline (signal expansion INVITE/부조/방명록/참석, credit.ts PHI-5 PageRank, PII removal f
+- [A/53c48a16#3] 615 blocks (local 0-614). Two drop sets, both pass3-safe (cut-only, conservative):
+
+1) Mass task-deletion plumbing (local 384-434): the 26 near-identical TaskUpdate{status:deleted} calls + their "Upda
+- [A/53c48a16#4] Highly intent-rich session in the CURRENT dibang-sui direction (on-chain signal classification = trust signals on-chain SSOT, aggregation off-chain). NOT legacy — this is the active Sui trust-network
+- [A/84ad9997#0] Self-contained adversarial verification session (independent judge checking task #35 false-completion). USER block 0 is the core intent. The tool/result chain (Read reflection, TaskGet/TaskList not-fo
+- [A/84d7981e#0] Conservative cut-only selection on local indices.
+
+KEPT (almost everything): All USER (★) turns are preserved as the core intent — including the entire /team-onboarding episode (blocks 9-26). Although
+- [A/8ebe0853#0] 5개 블록 전부 세션 제어 잡음(③ 무연결). 0=resume 마커, 1=user interrupt 통지, 2=local-command caveat 메타, 3=/exit 명령, 4=exit stdout 'See ya!'. 실제 의도를 담은 USER 발화 없음 — 모두 명령 아티팩트라 KEEP 대상 ★발화로 보지 않음. 전량 drop.
+- [A/fb685fff#0] Single coherent adversarial task-completion verification session (XS-N xstate machine coverage). Block 0 = USER(★) core intent (independent verifier role + steps), kept. Blocks 1-28 are the investigat
+- [B/08c0fcfc#0] Sui creator 신뢰보장→UpgradeCap→immutability
+- [B/a3cba1c5#0] 빈 세션
+- [B/d1c3d2e6#0] Sui event 온체인 신뢰성·Move 사용
+- [C/00839156#0] Session is meta-workflow: Claude Code hook inventory + a "왜" scolding-pattern analysis over digital-guestbook-v3 transcripts. Carries USER intent about self-verification tooling (Stop hook -> Opus 4.8
+- [C/01ec31ad#0] 2-block slice. idx0 USER asks whether a given session id can be spawned/controlled as a sub-agent (core intent, KEEP). idx1 ASSISTANT gives substantive on-topic answer (Agent tool can't take external
+- [C/0264e996#0] Slice = project C (digital-guestbook-v3), the legacy OFF-CHAIN wedding app predating dibang-sui's Sui on-chain pivot. 545 blocks (local 0-544). Cut-only; kept every USER(★) block and all substantive A
+- [C/0264e996#1] Chunk is one continuous legacy digital-guestbook-v3 audit-remediation flow (R2→R3→R4→R5). It is the pre-Sui repo, but the domain reasoning (LoungeEntry user/lounge grain, visit_type·is_attended폐지, Hos
+- [C/0264e996#10] Session C chunk: photo-sharing feature build in digital-guestbook-v3 (legacy off-chain wedding service). Conservative cut-only. Dropped ONLY pure scaffolding plumbing (§3 무연결): all TaskCreate/TaskUpda
+- [C/0264e996#11] Slice C (digital-guestbook-v3 main convo): photo-sharing FAB layout, Supabase Storage bucket migration (migrate-photos --apply), and PR/CI/Claude-review system setup. Whole session is legacy vs dibang
+- [C/0264e996#12] Entire session is legacy (digital-guestbook-v3 = old Supabase/Postgres wedding guestbook + CI/PR-system debugging), fully disconnected from current dibang-sui = Sui on-chain trust direction, with no S
+- [C/0264e996#13] 슬라이스 전체(블록 0~59)가 digital-guestbook-v3 레포의 R7 감사 작업 — 엔드포인트 문서(API_ENDPOINT_MAP/INDEX/API_CONVENTIONS) 수치·명명 재동기화 실행 기록. 이는 dibang-sui의 Sui 온체인 신뢰네트워크 방향과 단절된 옛 오프체인 구현 맥락(레거시)이며, '왜 그 방향이 됐는지' 의도 흐름은
+- [C/0264e996#14] Chunk is entirely project C (digital-guestbook-v3) legacy pre-Sui UI work: lounge-v2 / guest-flow bug fixes (GBDUP/DUP2/FCM/FCM2/FCM3/SC2), font-size exceptions, ComposeFab/Modal, story-carousel 2D re
+- [C/0264e996#15] Legacy digital-guestbook-v3 session (off-chain, pre-Sui) on FEED feature + DOMAIN_MODEL audit. Per charter, kept because a strong intent flow is present (user deciding feed data model, then reversing
+- [C/0264e996#16] Chunk is entirely legacy digital-guestbook-v3 (pre-Sui) FEED feature work — photo+view_count on GuestbookMessage, /uploads routing fix, migration-track sync investigation, then /commit·/next-session·l
+- [C/0264e996#17] Project C = digital-guestbook-v3, the LEGACY off-chain wedding repo (pre-Sui). The whole session is operational/mechanical work with two distinct character zones.
+
+DROPPED (legacy ② + plumbing ③):
+- i
+- [C/0264e996#18] 전체 청크는 digital-guestbook-v3 레거시 세션(Supabase/psql, v3_memories 라운지 V2 '온기' 기능 구현)으로, 현재 dibang-sui Sui 온체인 방향과 단절돼 있다. 그러나 cut-only·보수 원칙에 따라 USER(★) 의도 블록은 레거시여도 전부 보존(e2e 지시 389, 메시지 미반영+LIVE 분리 의도 5
+- [C/0264e996#19] Legacy digital-guestbook-v3 session (React Query caching probe → image Cache-Control → apps/landing scaffold → prototype-to-React landing port → invitation-edit demo inquiry). Per charter, legacy is N
+- [C/0264e996#2] Chunk is project C (digital-guestbook-v3) = legacy off-chain wedding service, all R5/R6/R7/KIB audit-remediation work. Per charter, legacy is normally DROP, BUT this chain contains genuine user produc
+- [C/0264e996#20] C session (digital-guestbook-v3) landing-page work — entirely legacy vs current dibang-sui Sui direction, but applying cut-only conservatively I dropped only category-③ machine noise (pure tool plumbi
+- [C/0264e996#21] Entire chunk is legacy digital-guestbook-v3 work (off-chain wedding landing page CSS, screenshot recapture, GA4 analytics, prototype commits, PR to legacy repo) — disconnected from current dibang-sui
+- [C/0264e996#3] 전 블록(0~631)은 digital-guestbook-v3(레거시 오프체인 디방 웨딩)에서의 라운지 V2 작업이라 dibang-sui 온체인 방향과는 단절. 다만 USER(★)들은 실제 제품·버그·기능 의도(폰트 최소크기 규칙, GuestbookEntry 중복 방지, 인스타식 스토리 정렬, stale-by-one 버그 분석 등)를 담고 있어 전부 KEEP
+- [C/0264e996#4] Slice C__0264e996__u4, 533 blocks (local 0-532). This is digital-guestbook-v3 pre-Sui wedding-lounge-V2 work (FeedCardModal story bug, BottomNav removal, Compose UI, FEED entity design, consistency au
+- [C/0264e996#5] 슬라이스 전체가 digital-guestbook-v3(프로젝트 C) — Sui 전환 이전 옛 guestbook 코드베이스에서의 audit(AUD-0~V) + FEED 기능 구현 세션. 현재 dibang-sui=온체인 신뢰네트워크 방향과 단절된 레거시 구현 맥락이다.
+
+KEEP 원칙(USER 전부 보존 + 의도/결정/방향 흐름)에 따라 남긴 블록:
+- 모든
+- [C/0264e996#6] Chunk is entirely legacy digital-guestbook-v3 (pre-Sui wedding service): FEED 글-사진/조회수 기능, /uploads 라우팅 결함 수정, 로컬↔dev Supabase 마이그레이션 트랙 불일치 동기화, R5-F/R6(guest-web 축의 경계) 감사 태스크. Per charter ② this is
+- [C/0264e996#7] 슬라이스 전체(623블록, 0-622)는 dibang-sui 이전의 digital-guestbook-v3 레거시 세션이다: 계약-도메인 정합 감사 후속조치(R6/R7), 카톡 인앱→외부브라우저 리다이렉트(KIB), 라운지 V2 폰트·레이아웃·정렬 작업. 현재 Sui 온체인 방향과는 단절된 옛 오프체인 구현이지만, USER(★) 의도 블록과 '왜 그렇게 됐는
+- [C/0264e996#8] 597 blocks, all from legacy digital-guestbook-v3 off-chain frontend work (wedding lounge V2: story-strip ordering bug, guestbook-entry duplicate prevention via xstate machines, FeedCardModal stale-by-
+- [C/0264e996#9] 전 블록(0-471)은 프로젝트 C(digital-guestbook-v3) 오프체인 웨딩/라운지 작업이다. 현재 dibang-sui(Sui 온체인) 방향과는 다른 레거시 맥락이나, 헌장 기준 '레거시 단절 폐기'는 Sui 방향과 무관하고 의도 흐름도 없을 때만 적용된다. 여기 블록들은 사용자가 직접 말한 도메인 의도(피드=사진1장+글, 하트/댓글 제거 의사
+- [C/03ef17ea#0] Whole session is legacy off-chain digital-guestbook-v3 UI/UX work (lounge feed, guestbook entry/message split, heart/comment layout) — disconnected from current dibang-sui on-chain trust direction. Pe
+- [C/03ef17ea#1] Legacy session: 100% digital-guestbook-v3 (Supabase/Postgres, v3 lounge feed), disconnected from dibang-sui=Sui on-chain trust direction. No "why this direction" bridge to Sui, so the implementation m
+- [C/0564428e#0] 전체 세션이 레거시 digital-guestbook-v3 작업(admin 호스트슬롯 이동, prod /weddings 500 디버깅, 계좌 jsonb 바인딩)으로 현재 dibang-sui(Sui 온체인 신뢰네트워크) 방향과 단절돼 있음. 다만 charter 원칙대로 USER 의도 블록은 보수적으로 거의 전부 KEEP하고, DROP은 확신 가능한 기계 잡음·
+- [C/0564428e#1] This chunk is entirely a digital-guestbook-v3 (legacy off-chain wedding service) Go/pgx debugging session — diagnosing and fixing a simple_protocol jsonb INSERT bug — plus a QR-code errand and Claude
+- [C/0564428e#2] Dropped pure slash-command plumbing/stdout echoes: idx1-2 (/effort command invocation + local stdout echo) and idx5-6 (same /effort command + stdout echo, repeated). These are mechanical noise with no
+- [C/0b29d15c#0] 2 blocks only. idx0=USER core intent (웨딩리포트 공유사진 탭 UI를 web-mobile-application에서 이식). idx1=ASSISTANT intent-confirmation paraphrasing scope/source — carries intent flow, no contradiction/noise. Legacy
+- [C/0bca339d#0] 전체 세션이 pre-Sui 레거시 repo(digital-guestbook-v3)의 운영 plumbing(개발 서버 start/stop, 포트/프로세스 점검, cmux 알림 진단)으로, dibang-sui 온체인 신뢰네트워크 방향과 단절되고 설계 의도 흐름이 없음. cut-only 보수 원칙에 따라 사람이 직접 타이핑한 핵심 지시는 보존하되 순수 기계 잡음
+- [C/0c8b80bd#0] Project C = digital-guestbook-v3 (pre-Sui legacy), a /loop-driven autonomous full-stack build of the "Wedding Lounge 피드" feature. Per charter I did NOT mass-drop the whole legacy session (that's a hig
+- [C/0c8b80bd#1] 전체 608 블록이 단일 자율 에이전트 루프(루프#4~#11)로, digital-guestbook-v3 저장소의 오프체인 'lounge-feed' 기능 구현 그라인드(Go 핸들러/서비스, xState 머신, React 컴포넌트, 코드리뷰 CRITICAL/IMPORTANT 수정, host auth 등). 현재 dibang-sui=Sui 온체인 신뢰네트워크 방
+- [C/0c8b80bd#2] Slice C__0c8b80bd...__u2 (838 blocks). Entire chunk is ONE continuous autonomous "loop #11–#26" session in the LEGACY off-chain digital-guestbook-v3 project (Go API + React lounge-feed feature: guestb
+- [C/0c8b80bd#3] Entire 591-block slice is one autonomous self-looping agent grinding out the "wedding lounge feed" feature in the LEGACY digital-guestbook-v3 repo (pre-Sui, off-chain). There are ZERO USER (★) blocks
+- [C/0ec580cf#0] All 4 blocks are no-connection noise: block 0 is a meaningless typo'd one-off ("steup-tokne") with no intent; blocks 1-3 are /exit local-command plumbing ("Bye!"). No USER intent content to preserve.
+- [C/10aedc0c#0] 세션 전체가 digital-guestbook-v3(Sui 전환 이전 옛 웨딩 서비스)에서 스크린샷 QA 요구사항 ~30건을 적용한 순수 UI 텍스트/CSS/라벨 수정 작업이다. 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 단절된 레거시(②)에 해당하나, 차터의 보수 원칙('의심되면 KEEP, drop은 확신할 때만')을 따라 레거시 전체를 버
+- [C/10aedc0c#1] Chunk C = digital-guestbook-v3 (legacy offchain wedding app), entirely disconnected from dibang-sui's current Sui onchain trust-network direction. Whole session is legacy QA fixes (RSVP fullstack, QR
+- [C/110c1190#0] Entire session is legacy (digital-guestbook-v3 landing OG description fix; disconnected from dibang-sui Sui on-chain direction, shows no why-direction intent). Applied conservatively per charter: kept
+- [C/1535f738#0] 전체 슬라이스(로컬 0~613)는 pivot 이전 digital-guestbook-v3(웹 청첩장/라운지) 세션으로, 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 단절된 레거시다. 다만 charter의 보수 원칙(USER★ 의도 거의 전부 보존, 확신할 때만 drop)에 따라 레거시 전체를 뭉텅이로 버리지 않고, 의도와 무관한 ③무연결(순수
+- [C/15655181#0] Session is a one-off legacy debug of a 500 error in digital-guestbook-v3 admin activities endpoint — off-chain, disconnected from dibang-sui Sui direction (legacy ②). Kept conservatively per charter:
+- [C/1a61398e#0] 532 blocks (0-531), single coherent session in folder C (digital-guestbook-v3). Entire arc = one connected intent chain: diagnose PATCH /weddings 500 -> TDD fix (jsonb COALESCE under simple_protocol,
+- [C/1c3d2b50#0] Chunk = digital-guestbook-v3 (folder C, legacy pre-Sui) admin 수정·삭제 API 풀스택 구현 세션. 전체 463블록(local 0-462)이 하나의 일관된 의도 스레드(admin page 행 수정·삭제 + '삭제모드 ON' 게이팅 + 감사로그 + 안전결정)라 보수적으로 거의 전부 KEEP. USER(★) 블록
+- [C/1c3d2b50#1] Session is digital-guestbook-v3 (project C, in source scope) — admin write API full-stack + per-env multiport (8080/8081/8082) independent boot. Kept conservatively: ALL USER blocks (intent core: mult
+- [C/2243fda0#0] 3개 블록 모두 무연결(③) 기계 잡음: USERMETA 로컬 커맨드 caveat, /exit 슬래시 커맨드, "Goodbye!" stdout. 사람 의도 발화 없음. 전부 drop.
+- [C/23c2898e#0] 세션은 digital-guestbook-v3(Sui 전환 이전 레거시 구현)이지만, USER 발화 대부분이 의도 핵심(왜 schemas 플러그인 제거/왜 서비스 레이어/왜 TDD 강제 등 지속 가치 있는 결정 흐름)이라 전수 보존. drop은 순수 기계 잡음(③ 무연결)만 보수적으로 선정: (1) 서브에이전트 비동기 런치 확인 RESULT 203/205/2
+- [C/23c2898e#1] 이 슬라이스(0-141)는 전부 digital-guestbook-v3 레거시 작업(Go API host 엔드포인트, 403/404, useSlugCheck)이지만, 사용자 의도가 살아있는 설계 논쟁이 핵심이라 대부분 KEEP. 특히 403 vs 404 결정 흐름(5,7,13,15,16,17→리서치→20→21,33), '왜 404로 퉁치냐' 같은 사용자 판단
+- [C/23c2898e#2] Session is digital-guestbook-v3 (legacy pre-Sui) invitation-create UI iteration. Per charter: cut-only, conservative, keep nearly all USER(★) intent. Drops are limited to clear ③ machine-plumbing nois
+- [C/23c2898e#3] Slice is a /commit skill workflow + screenshot-delete request on legacy dibang-wedding frontend (청첩장 카드/폼 UI), disconnected from Sui on-chain trust-network direction with no intent-flow rationale. Dro
+- [C/24a5d05a#0] All 4 blocks are local-command noise with zero intent: USERMETA caveat (0), /clear (1), /exit (2), and "Goodbye!" stdout (3). No real USER intent present. Pure machine plumbing per DROP criterion ③ (무
+- [C/27bfc299#0] 25-block session: merging 4 PRs into dev (legacy dibang-wedding work — lounge/landing/DM/jsonb — unrelated to Sui direction, but kept per conservative KEEP since it shows user intent flow of PR triage
+- [C/29d361e9#0] Session is almost entirely an off-project category-theory tutorial (math Q&A), unrelated to dibang-sui's Sui trust-network intent — but per charter, USER-driven inquiry is intent-core and kept conserv
+- [C/2a59a100#0] 13블록(0-12) 단일 세션 슬라이스. 블록0(USER★)=핵심 의도: dibang-wedding 전체를 UI/API/local state까지 통합 state machine diagram으로 그리고 싶고 UML 문법으로 커버 가능한지 질의. 보존 필수. 블록1-12는 그 의도에 대한 분석 흐름: 컨벤션문서(STATE_MANAGEMENT.md)·머신 인벤토
+- [C/2c2507ac#0] 4개 블록 모두 KEEP. USER 2건(★)은 agent 폭증 환경에서의 인간 병목/방향성 유지/기획 가속 의도의 핵심이며, ASSISTANT 2건은 그에 직접 연결된 전략·구축 로드맵 답변. 모순·레거시·무연결 잡음 없음. 보수적 판단으로 drop 없음.
+- [C/2f6b56db#0] Project C (digital-guestbook-v3) — legacy relative to dibang-sui (Sui onchain). Conservative pass3: kept ALL USER(★) messages and ALL substantive ASSISTANT paraphrases/decisions/reports that carry int
+- [C/2f8eee46#0] Session is entirely about legacy digital-guestbook-v3 repo (off-chain wedding service: guest-web done page A/B → v2 promotion), disconnected from current dibang-sui Sui on-chain direction. Per charter
+- [C/3169106b#0] 세션 전체가 dibang-sui 핵심 방향(Sui 온체인 신뢰네트워크: gathering-taxonomy 1층→2층, project/fold/signal, Fiske 4모델, 신뢰잔액→신용)을 다루는 의도 밀집 대화라 거의 전부 KEEP. USER★ 전량 보존. drop은 순수 기계 잡음만 확신 제거: idx0=/clear 명령, idx126~133=ope
+- [C/3327ceb5#0] Entire session is digital-guestbook-v3 (pre-Sui legacy project) — wedding:invitation 1:N restructuring + UI fixes. Per charter rule ②, legacy is kept where it shows intent flow, so I preserved ALL USE
+- [C/3327ceb5#1] 전체가 digital-guestbook-v3(폴더 C, Sui 이전 레거시 프로젝트)의 MyWeddingPage UI 작업·공유 팝오버·토스트 디버깅·부모님 초대(host-invite) 플로우 세션. 모든 USER(★) 블록은 보존(의도 핵심). drop은 ③무연결 순수 plumbing에만 한정 보수적 적용: (a) `<task-notification>`
+- [C/3327ceb5#2] Entire session is legacy (digital-guestbook-v3 offchain Postgres/Go/React) building a 부모님 초대 (parent host-invite) feature — disconnected from current dibang-sui Sui-onchain direction, with no vision/i
+- [C/34fbfb2f#0] Entire chunk is legacy digital-guestbook-v3 work (dependency-graph generation, decorative QR-code iteration, and a QA-screenshot task list) with no connection to the current dibang-sui Sui on-chain tr
+- [C/373d8fec#0] 슬라이스 전체(496블록)를 읽음. 이 세션은 digital-guestbook-v3(프로젝트 C)의 '테스트 컨벤션 매뉴얼 + Go/Playwright/Vitest 인프라 도입' 단일 연속 아크다. dibang-sui의 Sui 온체인 방향 기준으로 보면 '레거시' 영역(Supabase/Playwright/웨딩 게스트북)이지만, 헌장의 DROP 기준은 보수적
+- [C/3a446d62#0] 슬라이스 전체가 로컬 커맨드 잡음. idx0=USERMETA caveat, idx1=/effort 커맨드 호출, idx2=Cancelled stdout, idx3=/exit 커맨드, idx4=See ya stdout. 의도 내용 전무, 순수 plumbing(기준 ③ 무연결). 실제 사람 발화 의도가 담긴 ★USER 블록 없음. 전부 drop.
+- [C/3a506496#0] 전체 슬라이스는 digital-guestbook-v3 랜딩 mock 컴포넌트 교체(A 감사카드→B 식장 디스플레이 미니어처) 작업으로, 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 단절된 오프체인 레거시 UI 구현이다(charter ②). 다만 USER(★) 블록은 의도 핵심이라 전부 KEEP(2,18,54,71,170,171,182). 분석
+- [C/44213247#0] Session is legacy off-chain context: adding Naver login to a Supabase Auth stack in digital-guestbook-v3, disconnected from current dibang-sui Sui onchain trust-network direction. Kept all USER blocks
+- [C/49e38849#0] Session is a coherent config-intent flow: user adds Opus 4.6 to /model picker, discovers it's not 1M, fixes to 1M. Kept conservatively. All USER blocks preserved (core intent + corrections). Dropped:
+- [C/49eecc56#0] Session = coherent /wiring skill-enhancement workflow on digital-guestbook-v3 (legacy pre-Sui project). Although the project itself is legacy relative to dibang-sui, the intent is about designing the
+- [C/4b73e14e#0] Slice contains only 3 blocks, all local-command plumbing with zero intent: idx0 USERMETA local-command caveat, idx1 /exit command invocation, idx2 "Goodbye!" stdout. None are real human-intent (★) utt
+- [C/4e229c07#0] 세션 전체가 Claude CLI 버전 업데이트라는 일회성 운영 작업으로, dibang-sui 도메인 의도(Sui 온체인 신뢰네트워크)와 무관한 순수 도구 잡음(③무연결). 다만 USER(★)는 의도 핵심이라 전부 KEEP(1,11,23,42,44,45,46). 명령 결과를 설명하는 실질 ASSISTANT 진단 블록(22,40,41,43)도 KEEP. dro
+- [C/4e8e244f#0] 2 blocks only. idx0 USER("랜딩페이지 작업하자") is intent core — KEEP. idx1 ASSISTANT("네") is a bare ack but trivially tied to the USER block; no contradiction/legacy/noise to confidently drop. Conservative: d
+- [C/4ebffa9c#0] USER★ block 0 (favicon production 질문) = core intent, KEEP. Block 1, 6 = assistant 추론 발화이지만 의도 흐름(어느 앱이 prod인지 추론) 일부 보존 위해 KEEP. Drop 대상: 2,3,4,5,7 = 순수 도구 plumbing(ls/find/cat 호출과 raw 결과, 의도 무관 기계 잡음
+- [C/507e1672#0] 전체 세션은 legacy digital-guestbook-v3(오프체인 웨딩 서비스)의 프론트/백엔드 아키텍처·codegen·queries 패턴 이해 대화로, dibang-sui=Sui 온체인 방향과 직접 연결은 없음. 그러나 charter의 보수 원칙(USER=의도 핵심, 의심되면 KEEP)에 따라 모든 USER 발화와 실질적 ASSISTANT 분석/추론
+- [C/5116a0c7#0] Entire session is feature work on the legacy digital-guestbook-v3 repo (design-template marketplace: react-moveable photo frames, lettering, presigned uploads), fully disconnected from dibang-sui's Su
+- [C/5116a0c7#1] Whole session = digital-guestbook-v3 'design-template-marketplace' work: the legacy OFF-CHAIN dibang-wedding mobile-invitation editor (cover canvas, react-moveable, sections, themes). Zero Sui / trust
+- [C/5116a0c7#2] Session is the legacy digital-guestbook-v3 project (all paths under digital-guestbook-v3, not dibang-sui), with three arcs.
+
+ARC 1 (blocks 0-405): design-template lettering-drawing + QA-layout feature
+- [C/5116a0c7#3] Whole chunk is from the legacy digital-guestbook-v3 repo (pre-Sui), but the verifier/external-gate intent thread (USER 41-68) is a coherent intent flow about how to make the agent say "I don't know" v
+- [C/53ad0a8d#0] Session is digital-guestbook-v3 legacy work (guest-web 축의 플로우 A/B 테스트 v2 생성 → prod 연결). Per charter, legacy is droppable only when disconnected from dibang-sui AND showing no intent flow; here the USE
+- [C/53ad0a8d#1] Slice is a single u1 chunk from session C (digital-guestbook-v3, legacy pre-Sui). Per charter, legacy is dropped only when disconnected AND not showing intent-flow; here the USER (★) utterances carry
+- [C/53ad0a8d#2] Project C (digital-guestbook-v3) — legacy off-chain wedding/guest-web work (v2 하객 수 동적화 + UI 피드백 반복), 현재 dibang-sui=Sui 온체인 방향과 단절. 그러나 charter상 pass3은 cut-only이고 USER(★)는 의도 핵심이라 전부 KEEP. DROP한 것은: ①
+- [C/53ad0a8d#3] Chunk is entirely digital-guestbook-v3 legacy work (guest-web A/B done page, lounge iframe preview, GA4 events) — disconnected from current dibang-sui Sui on-chain direction. Per conservative KEEP-USE
+- [C/5428381a#0] Chunk C = legacy digital-guestbook-v3 (pre-Sui) UI-catalogue build session. Per charter rule ② this is legacy, but the KEEP-conservative mandate and the strong intent-flow signal (user's intent-fideli
+- [C/5428381a#1] Chunk source = digital-guestbook-v3 (legacy pre-Sui codebase), a single session implementing the ui-catalogue "Page-first" rebuild: Service User Flow, Components Canvas (xyflow whiteboard), dibang rea
+- [C/5428381a#2] Legacy digital-guestbook-v3 UI-catalogue minimap-debug session, disconnected from dibang-sui Sui direction — but kept all USER(★) intent and the assistant reasoning that shows the user's working princ
+- [C/5706c400#0] Session = digital-guestbook-v3 UI/data-separation audit (pre-Sui legacy codebase). Per charter, legacy kept where USER intent flow is visible — so ALL USER(★) blocks kept (orchestration intent, worktr
+- [C/5c1ede59#0] Slice is project C (digital-guestbook-v3) — the legacy pre-Sui wedding service. Entire session = creating 4 GitHub issues (#28 DM tab hide, #29 footer logo link, #30 floating-button overflow, #31 V2 a
+- [C/5c7671d8#0] Slice contains only 3 lines, all pure machine plumbing with zero intent signal. Block 0 (idx 0) = local-command-caveat USERMETA boilerplate. Block 1 (idx 1) = a bare /clear slash command (not real use
+- [C/5dfe7cdf#0] Slice = project C (digital-guestbook-v3), the legacy OFF-CHAIN implementation predating the Sui pivot. Per charter, this whole slice is technically "legacy", but cut-only rule is conservative and USER
+- [C/5dfe7cdf#1] 대상은 프로젝트 C(digital-guestbook-v3)의 guest-web/invitation-ui UI 구현 세션. dibang-sui(Sui 온체인)와는 단절된 오프체인 레거시지만, USER 발화에 담긴 제품 도메인 의도(하객 플로우 문구, 계좌 유무 기반 오프라인 축의대 토글, 커버 텍스트 드래그/회전 편집)는 웨딩 도메인 이해에 닿아 있어 보수적
+- [C/5dfe7cdf#2] Chunk is legacy off-chain wedding-invitation editor work (digital-guestbook-v3: Moveable text handles, react-easy-crop gallery photo positioning) — disconnected from current dibang-sui Sui on-chain di
+- [C/5e2939ac#0] 대상 슬라이스는 digital-guestbook-v3(레거시, Sui 이전) 프로덕션 디버깅/마이그레이션 세션 한 덩어리다. 전체가 레거시 맥락이긴 하나, (1) 하나의 일관된 조사 흐름으로 연결돼 있고 (2) USER(★) 발화가 의도의 핵심(codegraph 강제 사용 지시, 마이그레이션 누락 데이터 백필, RLS 정책, 모델 단순화 결정, 환경 사고
+- [C/5e2939ac#1] Folder C = digital-guestbook-v3, a legacy v3 DB migration + data-backfill/recovery session (entries.message drop, hearts/relation_category recovery, dev↔prod migration-track sync). Entirely pre-Sui le
+- [C/5eb51ee1#0] Conservative cut-only over a 432-block legacy session (digital-guestbook-v3 / web-mobile-application repos: wedding lounge, display QR, mobile invitation, host-name display). The whole session is off-
+- [C/5fcf08a5#0] Entire session is legacy: a full design+implement arc for a 'user consent onboarding' feature in the pre-Sui digital-guestbook-v3 wedding repo (Go/Supabase/React), disconnected from the current dibang
+- [C/60db8048#0] 슬라이스 전체가 3블록뿐이며 모두 의도 없는 기계 잡음. 0=USERMETA local-command caveat(무연결 plumbing). 1=USER이지만 실제 발화가 아닌 /exit 슬래시 명령 메타. 2=USER 태그지만 '/exit'의 stdout 'Goodbye!' 출력물. 셋 다 의도와 무관한 일회성 명령 plumbing(무연결)이라 drop.
+- [C/60f1e6fd#0] Single coherent intent session: scenario interview for the cash-gift ledger (장부) feature followed by full-stack implementation and commit. Although the codebase is legacy digital-guestbook-v3 (not dib
+- [C/6341abe3#0] Slice is one continuous session entirely about the legacy digital-guestbook-v3 landing app (pricing-card visual states, select/cancel toggle, press-and-hold image preview, git branch/cherry-pick workf
+- [C/659b47bf#0] Whole session is legacy digital-guestbook-v3 (pre-Sui) bug fix — guest-web origin base-URL hardcoding → env-based unification. Per charter this is legacy relative to dibang-sui Sui direction, but it f
+- [C/68cc5929#0] 대상: 프로젝트 C(digital-guestbook-v3)의 "웨딩 라운지 v2" 오프체인 구현 세션 — dibang-sui의 Sui 온체인 신뢰네트워크 방향과는 단절된 레거시 맥락. 다만 헌장(pass3=cut-only, 보수적, USER는 의도 핵심이라 거의 전부 보존)을 따라, 레거시라는 이유만으로 사용자 발화·계획·의도 흐름은 자르지 않고 KEEP.
+- [C/68cc5929#1] 슬라이스 전체(0~92)는 digital-guestbook-v3(레거시 v3 웨딩앱)의 Supabase dev 전환 후 디버깅 한 세션이다. dibang-sui(Sui 온체인)와는 단절된 레거시지만, USER 블록(27/28/42/56/70/75/83/91)이 사용자의 운영 판단(1번 시드→2번 자동화 분리, '1번이 더 근본적이지?' 근본해결 선호)을 담
+- [C/68cc5929#2] Session = project C (digital-guestbook-v3) legacy off-chain wedding service: Supabase auth.users→v3_users JIT provisioning, Moi 동반 생성, visit_type 누락 마이그레이션. Per charter cut-only/conservative, I KEPT a
+- [C/694f2eb9#0] Session is a Supabase prod data-pull Q&A on v3 wedding tables (May weddings: message/login counts). Off the Sui on-chain direction but it's an active operational query, not abandoned legacy implementa
+- [C/6d498666#0] 대상 슬라이스는 digital-guestbook-v3(레거시 dibang-wedding) 청첩장 하트 쓰기 배선 작업 세션(443블록 전부 읽음). dibang-sui 온체인과는 단절된 레거시지만, 워크트리를 dev에서 분기하기로 한 규칙 결정 흐름, 누적 vs 토글 시맨틱 결정(AskUserQuestion 응답), burst 애니메이션 버그 원인·수정 등
+- [C/6dbf5aa0#0] Legacy session on digital-guestbook-v3 (pre-Sui) running /wiring skill, saving md/PDF, and committing. All disconnected from current dibang-sui=Sui onchain trust-network direction, but I preserved con
+- [C/6ef2d4ca#0] 3-block slice, all pure plumbing with zero intent. idx0=USERMETA local-command caveat boilerplate. idx1=/exit slash command (mechanical, not a real intent-bearing utterance). idx2=local-command-stdout
+- [C/6fd3b9fd#0] 대상 슬라이스는 프로젝트 C(digital-guestbook-v3) 메인 대화로, 전체가 dibang-sui의 Sui 온체인 신뢰네트워크 방향과 단절된 레거시 작업(디자인 템플릿의 레터링/폰트/색상/섹션 기능을 모청 생성 흐름에 통합)이다. 다만 3차 추출 규칙상 DROP은 보수적으로만 적용했다.
+
+KEEP 원칙 적용:
+- USER(★) 발화는 의도의 핵심
+- [C/6fd3b9fd#1] Legacy digital-guestbook-v3 invitation-editor UI session (no Sui/onchain). Conservative cut-only: dropped pure machine plumbing (③) — server kill/restart + port-check curl loops, repeated empty-result
+- [C/6fd3b9fd#2] Chunk is 793 blocks, entirely from the legacy digital-guestbook-v3 worktree (invitation-editor UI: design modal, lettering tabs, cover-image crop, card grouping). Disconnected from the dibang-sui onch
+- [C/6fd3b9fd#3] Entire chunk is legacy: all work occurs in the digital-guestbook-v3 worktree on the old dibang wedding invitation-design feature (lettering text mode, section toggles, font/color theming) — fully disc
+- [C/6fd3b9fd#4] 0-base. DROP 0,7 = "Prompt is too long" assistant machine noise (무연결). DROP 1,2 = /model command + stdout plumbing, no intent. DROP 8,9 = /compact session housekeeping commands, pure plumbing no domai
+- [C/7035d9ce#0] Block 0 (USER: MyWedding 링크 복사 base url 확인 요청) is the sole intent — KEEP. Blocks 1,3,5,7 are ASSISTANT API 500 error noise (무연결 machine plumbing). Blocks 2,4,6 are exact verbatim retry duplicates of b
+- [C/70f3b26a#0] 대상: 프로젝트 C(digital-guestbook-v3) — dibang-sui의 레거시 전신. 세션 전체가 모바일 청첩장 생성 기능(SWR→TanStack 전환, openapi-ts 코드젠, 라우팅, UI 폴리싱)의 옛 구현 작업. 헌장 원칙(USER★=의도 핵심, 의심 시 무조건 KEEP, 보수적)에 따라 USER 발화는 전부 보존했고, 레거시 구현이
+- [C/70f3b26a#1] Entire session is project C (digital-guestbook-v3) legacy off-chain wedding work (Go API + sqlc + oapi-codegen + 모청 생성). Kept conservatively per charter: all USER★ blocks retained (core intent — incl.
+- [C/70f3b26a#2] digital-guestbook-v3 legacy session. Kept USER★ blocks (0,8,13) and meaningful assistant summaries (7,12) and the gitignore Edit (6, conservative). Dropped: 1-4 pure gitignore-read plumbing (무연결); 9,1
+- [C/7408019a#0] Session has two threads. Thread A (blocks 1-24, 43) = the actual intent: studying gathering-taxonomy 1층 and summarizing it for the trust-network direction — fully kept including the long assistant 1층
+- [C/74587bb1#0] 슬라이스는 3블록 전부 의미 없는 기계 잡음: (0) local-command caveat 메타, (1) /clear 명령어(의도 없는 슬래시 커맨드), (2) 빈 result. 실제 사람 의도 발화(★USER) 없음. 전부 무연결 plumbing으로 DROP.
+- [C/75adee94#0] Single coherent session in the legacy digital-guestbook-v3 repo (pre-Sui Wedding Lounge feed). Charter says legacy is DROP-able only when disconnected from current Sui direction AND not carrying 'why
+- [C/75adee94#1] 전 세션은 legacy(digital-guestbook-v3 오프체인 웨딩라운지)지만 dibang-sui=Sui 전환의 '왜'를 설명하진 않음. 그러나 USER★ 블록(시나리오 설계 결정, "side를 recipient_slot으로 다 바꿔라", "apps/web이 정본" 등 피드백)은 사용자 의도 핵심이라 전부 KEEP. 보수적으로 무연결 기계잡음만 dr
+- [C/76327556#0] 2-block slice: USER asks a general-knowledge question about GitHub workflows/Actions, ASSISTANT explains. No project-domain intent (unrelated to dibang-sui Sui onchain direction), but per KEEP-USER pr
+- [C/7a154dcd#0] 대상: digital-guestbook-v3의 2026 블록체인 해커톤 5싸이클 멀티에이전트 리서치 세션(신뢰네트워크 기반 신용모델 = dibang-sui 방향의 개념적 기원). 옛 프로젝트지만 '왜 Sui 신뢰네트워크 방향이 됐나'의 의도 흐름 + 멀티에이전트가 단일 에이전트보다 못한 이유라는 핵심 교훈을 담고 있어 대부분 KEEP. cut-only·보수
+- [C/7c9bff32#0] 2-block slice only. idx0=USERMETA local-command caveat boilerplate (machine noise). idx1=USER but content is just a /clear command marker with zero intent — pure plumbing (criterion ③ 무연결). No real us
+- [C/7dde3f08#0] 슬라이스는 digital-guestbook-v3(Sui 전환 이전 레거시 프로젝트)의 단일 연속 세션이다: 바텀네비 QR탭→스캐너 자리 정정, 지난 결혼식 '완료' 배지 제거, 핵심으로 '불참(attended)' 데이터 버그 진단·수정(guest_id claim 기준→guestbook_entry_id 링크 기준 전환, TDD, supabase-dev 백필)
+- [C/7dde3f08#1] Chunk is entirely legacy digital-guestbook-v3 work (cash-gift ledger 'attended' fix, guestbook-message tab wiring, heart removal, Supabase feed 500). Disconnected from current dibang-sui Sui onchain d
+- [C/80d71c59#0] Session is legacy digital-guestbook-v3 (pre-Sui) UI/data-separation audit refactoring — disconnected from current dibang-sui=Sui onchain direction. Per charter pass3 I cut-only dropped legacy machine
+- [C/80d71c59#1] 640 blocks total. This is a single coherent session: a UI/data-separation refactor round executed ENTIRELY in the legacy digital-guestbook-v3 worktree (.claude/worktrees/ui-data-separation/). Every fi
+- [C/80d71c59#2] Chunk u2 is entirely from the digital-guestbook-v3 'ui-data-separation' worktree session — the legacy off-chain dibang-wedding/guest-web refactor, disconnected from the current dibang-sui on-chain tru
+- [C/80d71c59#3] Session C (digital-guestbook-v3) chunk u3 — entirely legacy UI/data-separation refactoring (pre-Sui). Per charter, legacy is dropped only when disconnected AND showing no intent flow; the USER(★) bloc
+- [C/80d71c59#4] Legacy session: this entire chunk is in the old digital-guestbook-v3 repo doing UI/data-separation audit work (contracts singleton, hey-api codegen, bootstrap cleanup, audit md edits) — disconnected f
+- [C/80d71c59#5] Chunk is entirely project C (digital-guestbook-v3) — the LEGACY offchain wedding app that dibang-sui explicitly moves away from (Sui on-chain trust network). Content = a "UI/data separation" refactori
+- [C/80d71c59#6] Chunk is entirely legacy: a git merge / conflict-resolution + PR workflow in the old digital-guestbook-v3 repo (UI/data-separation rounds, env schema, lounge_check_ins rename, marketing consent). Full
+- [C/858a8291#0] 세션 전체가 digital-guestbook-v3(현 dibang-sui Sui 피벗 이전 레거시 저장소)의 모바일 청첩장 UI 작업이다. 다만 USER(★) 블록들은 의도 흐름(앱 경계=guest-web 익명 퍼널, _code_convention 폴더 신설·hooks vs queries 분리·/:slug 라우팅·Tailwind 스택 준수 등 — 일부는 현
+- [C/858a8291#1] Entire chunk is legacy digital-guestbook-v3 work (React/Tailwind UI, UI Canvas catalog app, heart animations) — disconnected from current dibang-sui Sui on-chain direction. Per charter, kept conservat
+- [C/8b3685dc#0] Chunk is a /wiring skill run on the LEGACY digital-guestbook-v3 project (pre-Sui off-chain), followed by side tasks: wiring-PDF generation, eza install, QR image styling. Charter: cut-only, KEEP all U
+- [C/9189ced3#0] Slice is all local-environment tooling chatter (zsh-syntax-highlighting, ECC plugin hook errors, yazi keymap sort), none tied to dibang-sui Sui direction — but these are genuine USER environment inten
+- [C/92a2a5fc#0] Chunk is a single continuous debugging session in the legacy digital-guestbook-v3 codebase (project C, in SOURCE SCOPE) tracing a 500 on /users/me/weddings down to pgx simple_protocol + standard_confo
+- [C/92a2a5fc#1] Chunk is a single legacy debugging session in digital-guestbook-v3 (admin /activities 500 → dropped entries.message column → sqlc regen → commit). Entirely off-chain old implementation, disconnected f
+- [C/94aba610#0] Conservative cut-only on a fully-legacy session (digital-guestbook-v3: Supabase/Go/React dev-server ops + session-log forensics) — none of it touches the current dibang-sui Sui on-chain direction. But
+- [C/95606158#0] Legacy session: entirely digital-guestbook-v3 (offchain wedding app) UI work — tab-label rename, lounge V2 FAB rework, deceased-host display handling. Disconnected from dibang-sui Sui onchain trust-ne
+- [C/96e42b6e#0] 4 blocks total. Idx0/idx2 are identical USER intent ("My Wedding 링크 복사 시 base url 오류 확인·보고") — KEEP both per USER-preserve principle. Idx1 (529 Overloaded) and idx3 (500 Internal server error) are pur
+- [C/97706886#0] 2개 블록 모두 의도와 무관한 기계 잡음. idx0=/model 슬래시 커맨드 호출, idx1=모델을 Opus 4.6으로 설정했다는 stdout 확인. 실질 사용자 의도 발화 없음(무연결 기준). 둘 다 DROP.
+- [C/97c5121b#0] 14개 블록 모두 KEEP. 단일 연속 Q&A 스레드로 "UI 와이어프레임/의도를 Claude Code에 어떻게 가장 정확히 전달할지"라는 일관된 의도 흐름. USER(★) 6개(idx 0,3,5,7,9,11)는 전부 의도 핵심이라 보존. ASSISTANT 답변들도 각 USER 의도에 직결(포맷 비교→excalidraw SVG 모순 해소→frame JSON
+- [C/9a8ab1d4#0] 세션 전체가 프로젝트 C(digital-guestbook-v3, 레거시 오프체인 웨딩 서비스) 맥락. 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 단절(②레거시). 그러나 헌장 §3 KEEP 원칙(USER★는 의도 핵심, 의심시 KEEP, drop은 확신할 때만)에 따라 보수적으로 처리: USER 발화와 그에 직접 답한 ASSISTANT 추론
+- [C/9a8ab1d4#1] Slice is entirely from the legacy digital-guestbook-v3 repo (pre-Sui Supabase/env-schema + lint-enforcement work), disconnected from current dibang-sui Sui onchain trust-network direction and carrying
+- [C/9bacaa19#0] All blocks belong to legacy digital-guestbook-v3 project, disconnected from current dibang-sui Sui onchain direction; no "why this direction" intent flow present. Dropped: (0-7) codegraph sync — pure
+- [C/9c86f9e5#0] C/digital-guestbook-v3 메인 세션 437블록. 드롭은 순수 기계 plumbing 12개만(보수적): (0,1,2) /clear·/effort 슬래시 명령과 local-command-stdout; (56,248,423) /commit 스킬 본문 덤프(매번 동일한 스킬 base-directory 설명, 일회성 plumbing); (424,42
+- [C/9fd8d0c7#0] Session is a standalone Q&A about git worktree concepts and Claude Code worktree tools (EnterWorktree/ExitWorktree), unrelated to dibang-sui domain intent but kept per cut-only/conservative rule. All
+- [C/a0764698#0] 세션 C(digital-guestbook-v3, Sui 이전 레거시 코드베이스)의 /scenario(웨딩메모리북+사진큐레이션 기획) → /scenario-implement(Go 백엔드 TDD 구현) 단일 흐름. 레거시이긴 하나 도메인 의도(메모리북 큐레이션 규칙, 이용가능시점 게이트 제거 결정, __HEART__ sentinel/recipient_slot
+- [C/a0764698#1] Session is a coherent off-chain dibang-wedding "Wedding MemoryBook" v2→v3 port (Supabase Postgres + Go + React REST), unrelated to Sui on-chain — but it shows legitimate user intent flow (build memory
+- [C/a0764698#2] Chunk is entirely from legacy project C (digital-guestbook-v3, non-Sui). Per charter §3, legacy is dropped only when disconnected AND showing no intent-flow; here the user's repeated intent ("메시지/커버/갤
+- [C/a0764698#3] 전체 세션이 project C(digital-guestbook-v3)의 오프체인 Supabase/React UI-데이터 분리 감사 + 리팩터링 오케스트레이션이다. 현재 방향(dibang-sui=Sui 온체인 신뢰네트워크)과 단절된 레거시(②)이며, 대부분은 워커 spawn·TaskUpdate·scope 파일 Read·빌드/린트 검증 같은 순수 도구 plum
+- [C/a0764698#4] Chunk is a single orchestration session for a UI/data-separation refactor in the LEGACY digital-guestbook-v3 repo (not dibang-sui/Sui on-chain). It is overwhelmingly mechanical plumbing: TaskUpdate ca
+- [C/a0764698#5] 대상 세션 C(a0764698)/u5 슬라이스 533블록 전체는 digital-guestbook-v3 오프체인 운영 작업(스모크 e2e, supabase 마이그레이션 timestamp 정합화, dbmate 로컬 셋업, d2 다이어그램 재생성/파일 rename, 폴더 명명규칙 룰 추가)이다. 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 직접 연
+- [C/a0764698#6] 이 청크(로컬 0~517 전부)는 digital-guestbook-v3(현 dibang-sui=Sui 온체인 전환 이전의 레거시 디방 프로젝트)에서 D2 다이어그램(api-contract / db-schema)의 SVG를 생성·인쇄(A4 PDF)하고, 테이블 헤더 색 반전·외곽선·구분선 등을 후처리하는 단일 연속 세션이다. 내용 전부가 다이어그램 인쇄/색칠
+- [C/a96e2bb4#0] 전체 세션은 레거시 prod Supabase(cash_gifts/messages/photos 등 v2/v3 웨딩 스키마) 데이터를 CSV로 비정규화 백업하는 운영 작업이다. dibang-sui = Sui 온체인 신뢰네트워크 방향과는 단절된 레거시 맥락이지만, charter 원칙대로 USER(★) 블록은 의도 핵심이라 전부 KEEP했고(백업 의도, CSV/x
+- [C/a9c72dd6#0] Session = guest-web origin env hardcoding fix (lineage of worktree D fix-guest-web-origin-env), coherent intent flow: bug discovery -> analysis report -> decision to use env+localhost fallback -> requ
+- [C/ae0d7b3b#0] 전체 세션이 legacy digital-guestbook-v3 레포의 오프체인 DB 연결(pgx/sqlc/simple_protocol/jsonb) Q&A로, dibang-sui Sui 온체인 방향과 단절. 그러나 charter상 USER(★)는 의도 핵심이라 전부 KEEP(질문·지시 흐름 보존). ASSISTANT 설명 블록도 simple_protocol
+- [C/b04384c8#0] Whole chunk is a CLI dev-tooling Q&A: user wants a single command (later the `lsv` shell function) to map running dev-server ports to which app/worktree (cwd) they belong to, plus debugging zsh alias/
+- [C/b09168df#0] 대상: 폴더 C = digital-guestbook-v3 (레거시 오프체인 웨딩 서비스). 한 세션 = 테스트 커버리지 시각화 리서치 → dependency-cruiser 구조도 그리기 → 빌드/타입 에러 디버깅·수정 → 커밋 → 피드 500 디버깅·수정. 현재 dibang-sui(Sui 온체인 신뢰네트워크) 방향과는 단절된 레거시 구현 맥락이라 전체가 p
+- [C/b09e38f3#0] Self-contained QR-PNG generation task for guest-web-v3 (off-topic from dibang-sui but USER intent is clean, so kept conservatively). Dropped pure tool plumbing/machine-noise: tool-availability probe (
+- [C/b2019784#0] 대상 슬라이스는 전부 digital-guestbook-v3(프로젝트 C) 메인 대화로, side→recipient_slot 리네임·CashGift·Guest Web 플로우·MoiVisit→LoungeEntry 네이밍 논의·포트 하드코딩 등 구현 세션이다. 헌장 기준 ②(레거시)에 해당하나, '왜 그 방향이 됐는지' 의도 흐름(네이밍 제안·결정, 사용자 정정
+- [C/b2019784#1] Project C (digital-guestbook-v3) — single coherent session building/styling the legacy off-chain wedding "lounge" page (Go API + React). Although the codebase is legacy (off-chain, pre-Sui), I kept it
+- [C/b2019784#2] 전체 슬라이스가 레거시(②): 작업 대상이 digital-guestbook-v3 / web-mobile-application 즉 옛 오프체인 REST/SDK/Postgres 웨딩 스택(직접 fetch→@gorae/contracts SDK 전환, dev-user 로그인, LoungeEntry/guestbook, /wedding-list 라우트 등). 현재 d
+- [C/b2019784#3] 슬라이스는 전부 digital-guestbook-v3(레거시 오프체인 결혼식 서비스) 세션으로, dibang-sui=Sui 온체인 방향 이전의 풀스택 구현 작업이다. 다만 charter는 레거시라도 USER★ 의도는 보수적으로 보존하라 하므로, 의도가 담긴 사용자 발화·설계 논의(원천 소스로 무엇을 쓸지=guest_name 논의 27/28/29, 역할/관계
+- [C/b4d3d650#0] Single session = project C (digital-guestbook-v3), the legacy off-chain wedding service, building/editing a tech-stack-map.html diagram. Per charter, leg-2(legacy)/leg-3(noise) drop is allowed when di
+- [C/b4d3d650#1] Legacy digital-guestbook-v3 session (predecessor repo), but the design-intent flow (Account as 6 individual JSONB columns vs whole-JSONB, DDL/RLS separation, domain-model-driven schema, doc reordering
+- [C/b73dd933#0] Project C = digital-guestbook-v3 (legacy offchain). Entire session is a photo-sharing UI port + storage bucket-split fix; no link to the Sui onchain trust-network direction. Per charter rule ②, legacy
+- [C/b73dd933#1] Entire 436-block session is digital-guestbook-v3 (legacy repo) photo-sharing bucket-split + SharePhotosTab UI work — Supabase Storage public/private split, render env, guest-name display, debugging. F
+- [C/ba19e2dd#0] All 5 blocks are local-command noise with no intent: USERMETA caveat (0), /effort command + its stdout (1,2), /exit command + its stdout (3,4). No real user utterances, no Sui/dibang intent. All pure
+- [C/bb410a17#0] 대상 청크는 전부 레거시 오프체인 앱(digital-guestbook-v3) admin의 '호스트 슬롯 등록해제' + '호스트 초대 발급' 기능 구현 세션이다. 현재 dibang-sui = Sui 온체인 신뢰네트워크 방향과 단절된 옛 Supabase/Go 구현 맥락이며, '왜 그 방향이 됐는지'를 설명하는 의도 흐름은 없다(순수 기능 구현). 따라서 레거시
+- [C/bb410a17#1] Entire chunk is legacy digital-guestbook-v3 work (admin host-invite feature + CORS debug), disconnected from current dibang-sui Sui direction. Applied cut-only, conservatively. KEPT: all USER blocks (
+- [C/bbc4435c#0] 대상 슬라이스는 digital-guestbook-v3의 legacy→v3 Supabase 데이터 복사 마이그레이션 분석/SQL 작성 세션. 단일 연속 의도 흐름이라 USER(★) 발화와 의사결정·검증 흐름은 전부 보존(보수적). DROP은 확신 가능한 무연결(③) 기계 잡음만 골랐다.\n\n- 116~130: prod에 execute_sql 도구가 없어 '
+- [C/bbc4435c#1] 대상 청크 전체가 프로젝트 C(digital-guestbook-v3) — 현재 dibang-sui=Sui 온체인 방향과 단절된 레거시 오프체인(Supabase v3) 작업: (1) legacy→v3 prod 데이터 마이그레이션, (2) apps/admin v3 페이지 신규 구축. 헌장 cut-only 원칙에 따라 보수적으로 처리: USER(★) 블록은 전부
+- [C/bbc4435c#2] 전체가 digital-guestbook-v3(pre-Sui) admin 페이지 확장 + dev/prod env 스왑 스크립트 작업의 단일 일관 스레드다. 레거시 맥락이긴 하나 '왜 이 방향이 됐는지' 의도 흐름(사용자 지시→원인 추적→스크립트 구상→태스크 세분화→TDD 구현)이 촘촘히 이어져 있어 레거시 통째 드롭은 하지 않고 보수적으로 cut. USER(
+- [C/bbc4435c#3] Slice u3 of session C (digital-guestbook-v3) — entirely the legacy pre-Sui admin-users/dashboard build (Go API + React admin + Supabase + Playwright e2e). By charter criterion ② this whole slice is le
+- [C/bbc4435c#4] Slice is project C (digital-guestbook-v3) = legacy offchain wedding admin app, entirely disconnected from current dibang-sui Sui onchain direction. But per charter KEEP principle, USER(★) intent (admi
+- [C/bbd13c70#0] 6 blocks total. Kept all USER blocks (0,2) — core intent: fix MyWedding 링크 복사 wrong base URL, decision to use env var with localhost fallback, request to create detailed tasks. Kept assistant blocks 1
+- [C/bd0304c8#0] 프로젝트 C (digital-guestbook-v3) 메인 대화 — 12시간 자율 테스트-커버리지 스윕 루프(레거시 오프체인 웨딩 서비스). cut-only, 보수적. KEEP: 모든 USER★(1,3,4,6 핵심 의도, 96/107/109/114 /loop·/commit command-args에 의도 담김, 113 사용자 중단), 의도·발견을 담은 ASS
+- [C/bd0304c8#1] 전체 430블록이 단일·연속 자동 cron 루프(Loop 5~14)인 legacy digital-guestbook-v3의 'test-coverage-sweep' 작업. USER(★) 블록 0개. 내용은 전부 기계 plumbing(테스트 파일 Write, vitest/go test 실행, 커밋, audit ledger/INDEX 갱신, TaskUpdate)으
+- [C/bd0304c8#2] 슬라이스 전체(382블록, 로컬 0-381)는 USER(★) 발화가 단 하나도 없는, 레거시 repo digital-guestbook-v3의 자율 "test-coverage-sweep" 루프(Loop 14~23)다. 내용은 전부 dibang-wedding의 hooks/queries/xState machine에 대한 vitest 테스트 작성 + 빌드 확인 +
+- [C/bd0304c8#3] Chunk is conversation C (digital-guestbook-v3) = legacy pre-Sui project, a test-coverage sweep workflow disconnected from dibang-sui's Sui on-chain trust-network direction. Per charter: legacy droppab
+- [C/bf31a4ee#0] 슬라이스는 4블록(로컬 0~3) 전부 기계성 잡음. 0=/clear 명령 마커, 1=/exit 명령 마커, 2="Goodbye!" stdout, 3=백그라운드 명령(local API 8080) killed task-notification. 모두 USER-kind지만 실제 사람 의도 발화가 아닌 세션 제어/도구 plumbing이라 DROP 기준 ③(무연결)에
+- [C/bffd2c37#0] Session is a debugging thread (admin 401) in legacy digital-guestbook-v3 — not dibang-sui Sui direction. Per cut-only conservatism I kept ALL USER blocks (1,2,40,41,42,44,45,61,62 0-base: 0,2,40,41,42
+- [C/c0720b88#0] Slice = single coherent feature session from digital-guestbook-v3 (project C, offchain legacy), 721 blocks. Topic: 모청(모바일 청첩장)→로그인→라운지 입장 흐름, 그리고 모청 경로(관계만/입장)와 QR 게스트플로우(방명록+현장참석) 엔티티 분리. KEEP-conser
+- [C/c0720b88#1] Chunk is entirely legacy digital-guestbook-v3 work (lounge entry/guestbook, pre-Sui) — disconnected from current dibang-sui Sui on-chain direction. Cut-only, conservative. KEPT all USER(★) blocks: 63,
+- [C/c20ea713#0] Session = digital-guestbook-v3 (code C, in-scope per charter) RSVP modal blue→green redesign. Fully coherent single intent flow with clear, consistent USER directives (initial redesign request with im
+- [C/c20ea713#1] Slice is a /reflect+/commit session in legacy digital-guestbook-v3 (pre-Sui) repo recording a root wildcard-rm accident and a false-attribution report, then committing the LESSON/CLAUDE.md safety rule
+- [C/c339c452#0] Session is entirely project C (digital-guestbook-v3, legacy off-chain wedding/guestbook). Per charter pass3 is cut-only and conservative: KEEP all 58 USER blocks (intent core) and substantive ASSISTAN
+- [C/c339c452#1] 전체 세션은 dibang-sui(Sui 온체인 신뢰네트워크)가 아니라 범용 /wiring 스킬 개선 + digital-guestbook-v3(오프체인 디방 웨딩) 커밋 맥락이다. 도메인상 레거시에 가깝지만, USER 발화들이 '스킬을 왜·어떻게 범용화할지', '포맷 강제', '두 세션 피드백 중 무엇을 반영할지' 같은 설계 의도 흐름을 담고 있어 보수적으로
+- [C/c3bd9dda#0] 전체 세션은 digital-guestbook-v3(오프체인 Supabase/Google OAuth 웨딩 앱) 작업으로, 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 단절된 레거시다. 다만 charter의 cut-only·보수 원칙에 따라 USER(★) 인간 발화와 의도·원인분석을 담은 ASSISTANT/RESULT는 전부 보존하고, 확신 가능
+- [C/c3bd9dda#1] Project C = legacy digital-guestbook-v3 (pre-Sui). Per charter, kept the coherent intent flow (안전·정석 방법 규칙 추가 79-90, Supabase 인증 위임 결정 77-78/94, DB dev/prod 분리 229+, Render 배포 + pooler 구조 학습 627-649)
+- [C/c5afd106#0] 세션 전체가 레거시 digital-guestbook-v3(오프체인 Supabase 웨딩라운지)의 디버깅/검증 Q&A로, 현재 dibang-sui=Sui 온체인 방향과 단절된 맥락. 두 USER 발화(0='모이는 중 로그 limit 걸려있나', 25='화면 데이터와 dev DB 일치 확인')는 의도 핵심이라 보존. 결론을 담은 최종 합성 ASSISTANT 블
+- [C/c6358920#0] Session C (digital-guestbook-v3, pre-Sui legacy) — coherent single initiative: 청첩장 에디터 사진 업로드 UX 개선(10MB 리사이즈 + 낙관적 UI + 백그라운드 업로드). Driven entirely by explicit USER intents, internally consistent, no
+- [C/c6358920#1] 대상 슬라이스는 전부 레거시 digital-guestbook-v3 프로젝트(스토리지 경로 일관화·이미지 업로드 압축·presigned)로, 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 단절돼 있다. 다만 cut-only·보수 원칙에 따라 ①USER(★) 발화는 전부 KEEP(의도 핵심): Opus→Fable5 리뷰 모델 변경 결정(280,28
+- [C/c6358920#2] 전체 486블록(0–485)이 모두 레거시 off-chain 프로젝트(digital-guestbook-v3)의 스토리지 마이그레이션 작업 plumbing이다. USER(★) 발화가 단 하나도 없는 연속 실행 구간으로, 내용은 presigned 업로드 전환·버킷 스코프 이관 도구·POST /uploads 폐기·sweep-orphans·코드리뷰·빌드/테스트 g
+- [C/c6358920#3] Legacy digital-guestbook-v3 session (storage path consistency + Edit-page hydrate-guard regression). Kept all genuine USER(★) intent: bug reports (31, 60), feedback on "온기" concept + bug (31), task-ge
+- [C/c67b9e16#0] Project C = digital-guestbook-v3, the legacy off-chain Supabase wedding guestbook (predecessor to dibang-sui). The whole session is legacy in the "different stack" sense, BUT it carries a load-bearing
+- [C/c97f9916#0] All 7 blocks are local-command plumbing noise (/effort attempts, invalid arg, /exit). No real USER intent — these are slash-command stdout/metadata only, disconnected from any dibang-sui intent flow.
+- [C/c99db8f9#0] 전체 세션은 프로젝트 C(digital-guestbook-v3) = 레거시 오프체인 제품의 e2e 런타임 에러 스윕 + 버그픽스 작업이다. 현재 방향(dibang-sui = Sui 온체인 신뢰네트워크)과 단절돼 있고 "왜 그 방향이 됐는지" 의도 흐름도 담고 있지 않다(순수 제품 QA/유지보수). 따라서 pass3 기준 ②레거시 + ③무연결(Playwrig
+- [C/c99db8f9#1] 전 세션 전체가 legacy digital-guestbook-v3(오프체인 Supabase/PostgREST/admin) QA·버그픽스·커밋 작업으로, 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 단절. '왜 Sui로 갔는지' 의도 흐름은 전혀 없음. DROP 기준: ②레거시 + ③무연결(Playwright 네비/스냅샷/콘솔, TaskUpda
+- [C/c9b853be#0] 전체 청크가 yazi/cmux 터미널 테마 설정이라는 개인 dotfile 작업으로, dibang-sui(Sui 온체인 신뢰네트워크) 프로젝트 의도와 완전히 단절된 '무연결' 맥락. 단 헌장의 보수 원칙(USER★ 거의 전부 보존, 확신할 때만 drop)을 따라 USER 발화와 '왜 그렇게 되는지'를 설명하는 핵심 어시스턴트 추론 블록은 모두 KEEP했다.
+- [C/cd013707#0] Session = /wiring skill run against the legacy digital-guestbook-v3 repo (off-chain, pre-Sui), then a genuine user feedback request about the skill, then exit. KEEP only the two genuine-intent blocks:
+- [C/cdd5685d#0] 슬라이스 전체가 3블록뿐: (0) local-command-caveat USERMETA(무시 지시 명시), (1) /exit 슬래시커맨드 에코, (2) "See ya!" stdout. 모두 의도와 무관한 순수 도구 plumbing/무의미 확인(기준 ③ 무연결). USER(★) 보존 원칙 대상이 아닌 슬래시커맨드 시스템 에코라 안전 drop. 의도 핵심 발화
+- [C/d27f3264#0] 슬라이스 전체가 기계 잡음. 0=local-command caveat 메타, 1=/exit 슬래시 커맨드(의도 아님), 2=stdout "Goodbye!". 셋 다 의도와 무관한 일회성 plumbing(무연결 기준). 실제 사람 발화 의도 없음. 모순/레거시 해당 없음.
+- [C/d3d7e7f3#0] Project C (digital-guestbook-v3) = legacy off-chain wedding service. Whole session is a multi-agent performance/refactoring issue-finding cycle on the off-chain codebase, disconnected from current dib
+- [C/d45f4eff#0] Session is the pre-Sui digital-guestbook-v3 predecessor, but its intent core (app boundaries: Guest Web = 비로그인 퍼널 입구 vs Dibang Wedding = 서비스 본체; 이름 마스킹 규칙 with Host/Ium 해제; 인증 vs 인가 분리; 축의금 스코프 제외 결정)
+- [C/d45f4eff#1] Session is wholly legacy digital-guestbook-v3 (pre-Sui codebase): API-contract access-policy tweaks, Ium column renames (type→relation_type, label→relation_label), and a long d2 ERD / API-diagram tool
+- [C/d45f4eff#2] Chunk is legacy digital-guestbook-v3 (pre-Sui) work: API-DB schema gap verification via 5 parallel sonnet agents, then fixing 4 severe API-spec issues (slug client-input + NOT NULL, owner_name/visitor
+- [C/d5f5e0eb#0] Session is entirely a Refactoring-UI cosmetic pass on the legacy digital-guestbook-v3 repo (mobile invitation: font sizes >=14px, spacing standardization, section hierarchy via eyebrow labels) — disco
+- [C/d5f5e0eb#1] Slice is entirely dev-ops plumbing in the legacy digital-guestbook-v3 repo (UI refactoring preview): port discovery, env copy, starting/killing vite servers, seed-account lookup, worktree removal — di
+- [C/d85f4ddf#0] 전체 530블록 세션 = 레거시 digital-guestbook-v3 이슈 #36(guest-web 지도 버튼 fix) 처리. dibang-sui(Sui 온체인)와 단절된 레거시지만, USER 발화와 의도 흐름은 전부 KEEP. 드롭한 것은 의도와 무관한 순수 기계 plumbing: codegraph/rg 탐색·파일 read·eslint/build 출력·p
+- [C/d94db003#0] Session is entirely legacy digital-guestbook-v3 wedding-app UI work (photo cards, font sizes, Korean labels), disconnected from current dibang-sui Sui on-chain direction. Per charter I stayed conserva
+- [C/da78509b#0] Conservative cut-only on a legacy digital-guestbook-v3 debugging session (off-chain Supabase/Render wedding service, disconnected from current Sui direction). Per charter, kept ALL USER(★) intent bloc
+- [C/da984c34#0] 단일 블록(idx 0)은 USER★ 의도 발화(웨딩리포트 공유사진 탭 UI를 web-mobile-application에서 가져오는 작업 지시)로 의도의 핵심. KEEP. 드롭 없음.
+- [C/daa2bc8c#0] 전체 7개 블록 모두 dibang-sui 프로젝트 의도(Sui 온체인 신뢰네트워크/웨딩 서비스)와 완전히 무관한 일회성 일반 지식 질의응답이다. 내용: (0-1) 미국 비상방송시스템 EBS 설명, (2-3) EBS 경보와 단전·단수 관계, (4-6) 불교 철학 2만자 요약 요청. USER(★) 블록도 보통은 의도 핵심으로 보존하나, 여기 USER 발화들은
+- [C/dcda3221#0] 2 blocks only: USER(★) asks what CI/CD stands for; ASSISTANT gives a generic glossary answer. USER is a star utterance — kept by default. ASSISTANT is its direct paired answer; dropping it would orpha
+- [C/ddad560a#0] Legacy digital-guestbook-v3 session: full lounge_entries→lounge_check_ins rename executed end-to-end (migration, sqlc, OpenAPI contract, Go backend, frontend, ERD, docs, PR #40, dev push, prod push pr
+- [C/ddad560a#1] Slice is legacy dibang-wedding (digital-guestbook-v3) PR #40 merge-conflict resolution via rebase onto origin/dev — pre-Sui, off the current dibang-sui on-chain direction. Dropped conservatively: idx0
+- [C/ddf02e9e#0] Session has two parts: (1) creating a /report skill, (2) running /wiring on the legacy digital-guestbook-v3 repo.
+
+KEEP: all USER(★) intent blocks for the /report skill design (1,3,4,6,20,22,24,32,33,
+- [C/df1971d7#0] 슬라이스 전체(122블록)는 레거시 digital-guestbook-v3(오프체인 Supabase/Go API)의 401 'user not found' 디버깅 세션이다. 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과는 단절된 레거시지만, 잘라내기 보수 원칙에 따라 확신할 수 있는 순수 기계 잡음만 제거했다.\n\nDROP 한 것(4건, 전부 무
+- [C/e6b0c711#0] 5 blocks total (local 0-4). DROP 3 (ToolSearch select:TaskCreate — pure tool plumbing, no intent) and 4 (empty RESULT — machine noise). KEEP 0 (USER★ paste of prior-session context carrying user's cor
+- [C/e9666f84#0] Whole session = landing-page work in legacy `digital-guestbook-v3` repo (pre-Sui), disconnected from dibang-sui Sui onchain direction. Per charter this is broadly 레거시, but I cut only at block-level co
+- [C/eacc1083#0] Entire session = a /wiring skill run on the LEGACY digital-guestbook-v3 repo (pre-Sui), producing a 5.5pt PDF wiring report and committing it. Legacy-2 context but evaluated conservatively per-block.
+- [C/ecb3c78c#0] 단일 일관 세션: v2 웨딩메모리북+사진큐레이션 기능을 v3로 이식하는 scenario 인터뷰. 모든 USER(★) 보존(2,8,30,31,66,68 등 의도 핵심). 드롭은 의도와 무연결한 일회성 서버 기동 plumbing에 한정: 0=/clear 노이즈, 3-6/9-14/16-25/27-28=서버 켜기 lsof·pnpm dev 기동 도구·결과(메모리북
+- [C/f25e5e8a#0] Session is a self-contained ERD d2 title-styling task in the legacy digital-guestbook-v3 repo that ends in full git revert (원상복구, blocks 137-141). Kept ALL USER blocks (intent core) and all assistant
+- [C/f6166956#0] Session is entirely about legacy digital-guestbook-v3 (Render TS2322 build error on AnnouncementForm Props mismatch, codegraph reindex noise, worktree cleanup, cross-session peeking) — context disconn
+- [C/f771598e#0] All 3 blocks are /exit local-command plumbing (caveat meta, /exit command, "See ya!" stdout). No USER intent — pure machine noise (criterion ③무연결). Drop all.
+- [C/f7a5972f#0] File has 129 blocks (local 0-128). Session is off-chain legacy digital-guestbook-v3 (Supabase/Go/React) debugging — dev-server cleanup + a 500-error diagnosis. Per charter, legacy alone is NOT auto-dr
+- [C/fa5f14a2#0] 0-base local indices. This entire chunk is a legacy session on digital-guestbook-v3 (offchain Supabase/Postgres/Go wedding service) — debugging a prod 500 and applying 11 Postgres migrations. It is fu
+- [C/fab52053#0] 슬라이스는 digital-guestbook-v3(프로젝트 C) 메인 대화 1세션 전체 — 레거시 web-mobile-application의 mecdisplay를 guest-web `/display` 라우트로 픽셀-동일 이식하는 작업(시나리오 인터뷰→21태스크 구현→흰화면 디버깅). 보수적 cut-only로 진행, USER(★)는 전부 KEEP.
+
+[드롭 근
+- [C/fab52053#1] 전체 청크는 dibang-sui(Sui 온체인 신뢰네트워크)와 단절된 별도 레포(digital-guestbook-v3)의 레거시 mecdisplay 이식 작업. 레거시 기준(②)으로 보면 전체 폐기 후보지만, 헌장이 보수적이고 USER(★) 블록은 의도 발굴의 핵심이라 거의 전부 KEEP. drop은 의도 신호 없는 순수 기계 plumbing에만 적용: 헤
+- [C/fbd2d649#0] Slice has only 5 blocks. Dropped 0,1 = pure slash-command plumbing (/model command echo + its local-command-stdout confirming model switch) — machine noise (③무연결), zero intent. Kept 2 (USER "안녕?") per
+- [C/fdd2f418#0] 전 세션이 legacy digital-guestbook-v3 스택(Supabase 마이그레이션 drift 청산, Go/chi/oapi-codegen/sqlc) 운영작업. 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 단절(Sui/Move/온체인 언급 0), '왜 Sui로 갔는지' 의도흐름도 없음 → 전체가 charter ②레거시 해당. 다만 c
+- [C/fdd2f418#1] Project C session (digital-guestbook-v3): legacy off-chain wedding app, fully disconnected from current dibang-sui = Sui on-chain direction. Two work threads — (a) OrbStack/Supabase local-DB migration
+- [C/fdd2f418#2] Whole chunk is legacy digital-guestbook-v3 (off-chain Supabase/Go) — disconnected from current dibang-sui Sui on-chain direction. Per charter, conservatively KEPT all USER(★) blocks (23,30,31,41,45,54
+- [D/2eb2e01a#0] Single coherent session: user reports lounge-entry/login redirect bug in the legacy digital-guestbook-v3 Supabase wedding app, requests analysis → task creation → implement+verify → PR + CI fix. This
+- [D/dc3068cc#0] Session D is a digital-guestbook-v3 worktree session (pre-Sui legacy). Per charter, legacy is dropped only when fully disconnected AND showing no intent-flow; KEEP is conservative, USER blocks kept al
+- [D/dc3068cc#1] 세션 D = digital-guestbook-v3 워크트리(레거시, pre-Sui). cut-only로 보수적 적용. DROP은 (a)순수 기계 plumbing(Playwright 업로드 재시도 루프·파일경로 에러·스냅샷, TaskCreate/TaskUpdate 확인, git status/diff 에코, build/lint/typecheck 실행 RESUL
+- [D/f2bb643e#0] Self-contained UI-label task in legacy digital-guestbook-v3 repo (lounge-v2: '온기'→'메모리', 'Feed'→'Message'), then moved to dev and committed. Whole session is legacy vs dibang-sui Sui direction, but th
+- [E/2a1bff76#0] Slice contains only mechanical noise: idx0 USERMETA local-command caveat, idx1 a /clear command (pure plumbing, no intent). idx2 is an empty line (no real block). Dropped 0,1 as 무연결 (one-off machine n
+- [E/3f6667af#0] 2 blocks total (each JSONL line = 1 block). Block 0 = USER but pure '/clear' command marker (session-control plumbing, zero intent) -> DROP confidently. Block 1 = USER message carrying real intent: an
+- [E/3f6667af#1] Block 0: ASSISTANT "Prompt is too long" system error message — pure machine noise, no intent, no connection (criterion ③ 무연결). DROP. Block 1: USER block. Although mostly a huge Excalidraw clipboard JS
+- [E/3f6667af#2] Block 0 = ASSISTANT "Prompt is too long" — pure machine error noise, no intent (criterion ③무연결). DROP. Block 1 = USER(★) message: despite massive excalidraw clipboard/image-data payload, it ends with
+- [E/3f6667af#3] 4 blocks total. Block 3 (USER) is the sole intent-bearing block: an excalidraw image clipboard plus the request "각 요청 사항 반영을 위한 태스크를 세부적으로 생성해줘. /create-tasks" — KEEP. Dropped: block 0 ASSISTANT "Prom
+- [E/3f6667af#4] 3 blocks total. idx0,idx2 = ASSISTANT "Prompt is too long" — 무연결 기계 잡음(빈 에러, 의도 없음) → DROP. idx1 = USER "안녕" (★) → KEEP.
+- [E/5b5cf62a#0] 슬라이스는 digital-guestbook-v3(레거시, pre-Sui) 워크트리 invitation-design-config 세션 1건 — 모바일 청첩장 에디터에 (1)전체 배경색 (2)레터링 펜/붓·굵기·색상 직접그리기 (3)텍스트 레터링 색상 UI 구현. 현재 dibang-sui=Sui 온체인 신뢰네트워크 방향과 단절된 레거시 앱 기능작업이고 '왜 S
+- [E/5b5cf62a#1] Single-session slice from the digital-guestbook-v3 'invitation-design-config' worktree: implementing 4 wedding-invitation design features (section card, full background color, draw lettering, letterin
+- [E/5b5cf62a#2] Slice E (digital-guestbook-v3 invitation-design-config worktree) = wedding invitation editor work session: 6 editor fixes (lettering Moveable, anim replay button, section cards/labels), then dnd-kit d
+- [E/5b5cf62a#3] 389 blocks. This chunk is a /run-tasks session in worktree invitation-design-config (digital-guestbook-v3) building an off-chain invitation drawing/canvas feature (@dnd-kit sortable, perfect-freehand
+- [E/5b5cf62a#4] Slice E__5b5cf62a u4, 562 blocks, single coherent session: implementing invitation canvas editor (T33/T34) + lettering timed-ink-replay with 10s draw cap (T35-T39) + canvas-drawing bbox/settings-zone
+- [E/5b5cf62a#5] 슬라이스 전체가 digital-guestbook-v3 청첩장 에디터(T44~T49) 작업 — dibang-sui의 Sui 온체인 방향과 단절된 레거시지만, 헌장은 슬라이스 내에서 동일 3기준(모순/단절레거시/노이즈)으로 cut-only 적용. 세션 내부는 일관됨(사용자가 앞 진술을 뒤집은 모순 없음). 보수적으로 처리: USER(★) 블록은 전부 보존(13
+- [E/5b5cf62a#6] 3 blocks total. IDX0, IDX1: pure /model command plumbing (model switch stdout) — no intent content, machine noise → DROP. IDX2: USER(★) block, 321KB excalidraw clipboard JSON dump with trailing one-li
+- [E/5b5cf62a#7] 4 blocks, single coherent intent flow about unifying invitation section background colors (current dibang-wedding UI work, not legacy). USER blocks 1 and 3 carry the design intent and the re-shared Ex
+- [E/5b5cf62a#8] 9 blocks total (0-8). Blocks 0-7 are USER clipboard image pastes (no text). Per KEEP-USER and "의심되면 KEEP" — images may carry intent I cannot read — all 8 USER blocks preserved conservatively. Block 8
+- [E/7e4a532c#0] 세션 전체가 digital-guestbook-v3 워크트리(invitation-design-config)의 청첩장 에디터 UI 수정 작업. 차터 §1 소스 스코프상 폴더 E로 포함 대상이라 통째 레거시 폐기는 하지 않고, USER(★) 의도 발화는 전부 보존(0~3,21,22,40~48,66,67,136,140~144,187~190,241,258~260,5
+- [E/7e4a532c#1] Chunk E (digital-guestbook-v3 invitation-design-config worktree) is entirely a legacy invitation-editor UI debugging cycle — lettering animation, fonts/readability, canvas drag, react-konva migration,
+- [E/7e4a532c#2] Legacy session (digital-guestbook-v3 worktree: invitation editor UI + guest-web A/B done page) — pre-Sui codebase, disconnected from dibang-sui direction. Per charter, kept all USER(★) blocks (intent
+- [E/995f2623#0] 슬라이스에 의도 신호가 전무. 인덱스 0=local-command-caveat(기계 주의문), 1=/clear 명령(순수 plumbing, 의도와 무연결)으로 DROP. 인덱스 2는 빈 줄/비블록이라 후보에서 제외. 실질적 USER 의도 발화는 0건이며 보존할 KEEP 대상 없음.
+- [E/b75f9651#0] 2-block slice. Block 0 = /clear command marker (pure machine plumbing, no intent) → DROP. Block 1 = USER★ message: a single batched request (대부분 excalidraw clipboard JSON/base64 노이즈지만, 내장 한글 텍스트와 말미 '
+- [E/b75f9651#1] 7 blocks total (idx 0-6). Drop idx 0 and 6: both ASSISTANT "Prompt is too long" error messages — pure machine noise (무연결), no intent, no design context. KEEP idx 1 (USER /create-tasks invocation, carr
+- [F/e1700ad7#0] Folder F = digital-guestbook-v3 lounge-check-in-rename worktree; whole session is e2e test scenario authoring + live Playwright/Supabase verification on dev URL. Per charter this is in-scope (pipeline
+- [F/e1700ad7#1] F-session (digital-guestbook-v3 lounge e2e + 이슈 생성). 보수적 cut-only. DROP=순수 기계 잡음만: 5/7 'File modified since read' tool_use_error 재시도 노이즈; 11/14/15 'Updated task #N status' RESULT 확인 노이즈; 17 Read 결과(파일
+- [F/e1700ad7#2] F slice u2: DB rename(v3_lounge_entries→check_ins) 잔존 버그 디버깅 + 재발방지 설계(sqlc 확대/통합테스트/CI게이트) 토론. 전 USER(2,14,16,21,23,25,32)는 의도 핵심—전부 KEEP. 레거시(guestbook-v3) 맥락이나 '왜 이 방향(스키마=진실원천으로 rename 사고 차단)'의 의도

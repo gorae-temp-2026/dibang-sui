@@ -1,0 +1,12 @@
+{
+  "code": "C",
+  "base": "fbd2d649-4a0f-4ae4-bef7-763240b21b68",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 4,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "Slice has only 5 blocks. Dropped 0,1 = pure slash-command plumbing (/model command echo + its local-command-stdout confirming model switch) — machine noise (③무연결), zero intent. Kept 2 (USER \"안녕?\") per"
+}

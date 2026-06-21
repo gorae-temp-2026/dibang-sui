@@ -1,0 +1,17 @@
+{
+  "code": "C",
+  "base": "00839156-1bc1-4b2d-896f-d0771e7ad688",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 32,
+  "drop_local": [
+    15,
+    16,
+    21,
+    22,
+    25,
+    26,
+    27
+  ],
+  "note": "Session is meta-workflow: Claude Code hook inventory + a \"왜\" scolding-pattern analysis over digital-guestbook-v3 transcripts. Carries USER intent about self-verification tooling (Stop hook -> Opus 4.8"
+}

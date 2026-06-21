@@ -1,0 +1,15 @@
+{
+  "code": "C",
+  "base": "ba19e2dd-f6b9-4909-babf-d090c197be01",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 5,
+  "drop_local": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "note": "All 5 blocks are local-command noise with no intent: USERMETA caveat (0), /effort command + its stdout (1,2), /exit command + its stdout (3,4). No real user utterances, no Sui/dibang intent. All pure "
+}

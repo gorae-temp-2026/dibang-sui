@@ -1,0 +1,9 @@
+{
+  "code": "C",
+  "base": "2a59a100-2a84-4f75-8fa1-b65f07d96e25",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 12,
+  "drop_local": [],
+  "note": "13블록(0-12) 단일 세션 슬라이스. 블록0(USER★)=핵심 의도: dibang-wedding 전체를 UI/API/local state까지 통합 state machine diagram으로 그리고 싶고 UML 문법으로 커버 가능한지 질의. 보존 필수. 블록1-12는 그 의도에 대한 분석 흐름: 컨벤션문서(STATE_MANAGEMENT.md)·머신 인벤토"
+}

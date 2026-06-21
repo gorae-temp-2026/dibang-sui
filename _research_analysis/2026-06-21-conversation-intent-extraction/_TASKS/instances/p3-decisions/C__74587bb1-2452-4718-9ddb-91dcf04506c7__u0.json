@@ -1,0 +1,12 @@
+{
+  "code": "C",
+  "base": "74587bb1-2452-4718-9ddb-91dcf04506c7",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "슬라이스는 3블록 전부 의미 없는 기계 잡음: (0) local-command caveat 메타, (1) /clear 명령어(의도 없는 슬래시 커맨드), (2) 빈 result. 실제 사람 의도 발화(★USER) 없음. 전부 무연결 plumbing으로 DROP."
+}

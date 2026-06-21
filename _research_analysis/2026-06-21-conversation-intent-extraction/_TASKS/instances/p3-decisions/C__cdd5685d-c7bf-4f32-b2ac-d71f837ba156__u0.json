@@ -1,0 +1,13 @@
+{
+  "code": "C",
+  "base": "cdd5685d-c7bf-4f32-b2ac-d71f837ba156",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 3,
+  "drop_local": [
+    0,
+    1,
+    2
+  ],
+  "note": "슬라이스 전체가 3블록뿐: (0) local-command-caveat USERMETA(무시 지시 명시), (1) /exit 슬래시커맨드 에코, (2) \"See ya!\" stdout. 모두 의도와 무관한 순수 도구 plumbing/무의미 확인(기준 ③ 무연결). USER(★) 보존 원칙 대상이 아닌 슬래시커맨드 시스템 에코라 안전 drop. 의도 핵심 발화"
+}

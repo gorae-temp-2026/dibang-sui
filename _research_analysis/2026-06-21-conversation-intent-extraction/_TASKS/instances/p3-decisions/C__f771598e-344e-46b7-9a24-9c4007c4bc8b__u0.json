@@ -1,0 +1,13 @@
+{
+  "code": "C",
+  "base": "f771598e-344e-46b7-9a24-9c4007c4bc8b",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 3,
+  "drop_local": [
+    0,
+    1,
+    2
+  ],
+  "note": "All 3 blocks are /exit local-command plumbing (caveat meta, /exit command, \"See ya!\" stdout). No USER intent — pure machine noise (criterion ③무연결). Drop all."
+}

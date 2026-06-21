@@ -1,0 +1,11 @@
+# 대용량 중간 산출물 — 스크립트(_TASKS/scripts)로 ~/.claude 트랜스크립트에서 재생성 가능. git 제외.
+01-extract-pass1/
+02-extract-pass2/
+03-extract-pass3/
+04-process-pass4/
+05-process-pass5/
+# 최종 합성 입력 중 거대 코퍼스(13MB)만 제외, 세션 의도 note는 유지
+06-process-pass6/_synthesis-inputs/user-intent-corpus.md
+# 서브에이전트용 청크 슬라이스(재생성 가능, ~52MB)
+_TASKS/instances/p3-chunks/
+# pass1 블록 사이드카가 들어있는 경로는 위 01~05에 포함됨

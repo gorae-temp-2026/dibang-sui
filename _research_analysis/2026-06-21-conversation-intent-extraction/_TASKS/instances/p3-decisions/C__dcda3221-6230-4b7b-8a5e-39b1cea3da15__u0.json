@@ -1,0 +1,9 @@
+{
+  "code": "C",
+  "base": "dcda3221-6230-4b7b-8a5e-39b1cea3da15",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [],
+  "note": "2 blocks only: USER(★) asks what CI/CD stands for; ASSISTANT gives a generic glossary answer. USER is a star utterance — kept by default. ASSISTANT is its direct paired answer; dropping it would orpha"
+}

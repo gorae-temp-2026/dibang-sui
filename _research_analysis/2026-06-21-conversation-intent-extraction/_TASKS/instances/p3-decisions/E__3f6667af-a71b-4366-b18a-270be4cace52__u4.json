@@ -1,0 +1,12 @@
+{
+  "code": "E",
+  "base": "3f6667af-a71b-4366-b18a-270be4cace52",
+  "unit_idx": 4,
+  "block_start": 10,
+  "n_blocks": 3,
+  "drop_local": [
+    0,
+    2
+  ],
+  "note": "3 blocks total. idx0,idx2 = ASSISTANT \"Prompt is too long\" — 무연결 기계 잡음(빈 에러, 의도 없음) → DROP. idx1 = USER \"안녕\" (★) → KEEP."
+}

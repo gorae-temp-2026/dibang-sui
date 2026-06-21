@@ -1,0 +1,14 @@
+{
+  "code": "C",
+  "base": "f7a5972f-2e19-45d3-815e-fefc4479cdcc",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 345,
+  "drop_local": [
+    18,
+    49,
+    88,
+    123
+  ],
+  "note": "File has 129 blocks (local 0-128). Session is off-chain legacy digital-guestbook-v3 (Supabase/Go/React) debugging — dev-server cleanup + a 500-error diagnosis. Per charter, legacy alone is NOT auto-dr"
+}

@@ -1,0 +1,9 @@
+{
+  "code": "C",
+  "base": "01ec31ad-f74d-4306-afd7-61163b47136f",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [],
+  "note": "2-block slice. idx0 USER asks whether a given session id can be spawned/controlled as a sub-agent (core intent, KEEP). idx1 ASSISTANT gives substantive on-topic answer (Agent tool can't take external "
+}

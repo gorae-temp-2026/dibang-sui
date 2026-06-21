@@ -1,0 +1,11 @@
+{
+  "code": "C",
+  "base": "e6b0c711-8ee2-4f63-9f44-ffaa08906ea4",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 4,
+  "drop_local": [
+    3
+  ],
+  "note": "5 blocks total (local 0-4). DROP 3 (ToolSearch select:TaskCreate — pure tool plumbing, no intent) and 4 (empty RESULT — machine noise). KEEP 0 (USER★ paste of prior-session context carrying user's cor"
+}

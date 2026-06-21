@@ -1,0 +1,17 @@
+{
+  "code": "C",
+  "base": "c97f9916-0335-4977-9fe9-ce8a7641d927",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 7,
+  "drop_local": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "note": "All 7 blocks are local-command plumbing noise (/effort attempts, invalid arg, /exit). No real USER intent — these are slash-command stdout/metadata only, disconnected from any dibang-sui intent flow. "
+}

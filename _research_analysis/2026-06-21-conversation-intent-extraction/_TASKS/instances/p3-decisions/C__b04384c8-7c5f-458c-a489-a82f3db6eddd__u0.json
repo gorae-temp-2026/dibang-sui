@@ -1,0 +1,18 @@
+{
+  "code": "C",
+  "base": "b04384c8-7c5f-458c-a489-a82f3db6eddd",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 82,
+  "drop_local": [
+    7,
+    8,
+    17,
+    19,
+    20,
+    49,
+    52,
+    55
+  ],
+  "note": "Whole chunk is a CLI dev-tooling Q&A: user wants a single command (later the `lsv` shell function) to map running dev-server ports to which app/worktree (cwd) they belong to, plus debugging zsh alias/"
+}

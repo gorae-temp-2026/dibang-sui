@@ -1,0 +1,23 @@
+{
+  "code": "C",
+  "base": "92a2a5fc-cf99-472e-b8bf-5f001168fe3a",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 491,
+  "drop_local": [
+    7,
+    60,
+    78,
+    101,
+    102,
+    105,
+    116,
+    158,
+    159,
+    160,
+    161,
+    162,
+    173
+  ],
+  "note": "Chunk is a single continuous debugging session in the legacy digital-guestbook-v3 codebase (project C, in SOURCE SCOPE) tracing a 500 on /users/me/weddings down to pgx simple_protocol + standard_confo"
+}

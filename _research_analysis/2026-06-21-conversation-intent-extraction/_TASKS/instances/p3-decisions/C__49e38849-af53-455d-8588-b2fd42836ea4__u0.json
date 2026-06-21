@@ -1,0 +1,12 @@
+{
+  "code": "C",
+  "base": "49e38849-af53-455d-8588-b2fd42836ea4",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 64,
+  "drop_local": [
+    2,
+    13
+  ],
+  "note": "Session is a coherent config-intent flow: user adds Opus 4.6 to /model picker, discovers it's not 1M, fixes to 1M. Kept conservatively. All USER blocks preserved (core intent + corrections). Dropped: "
+}

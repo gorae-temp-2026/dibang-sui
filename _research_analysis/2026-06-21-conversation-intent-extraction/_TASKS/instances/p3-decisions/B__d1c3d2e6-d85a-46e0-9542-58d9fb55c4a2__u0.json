@@ -1,0 +1,15 @@
+{
+  "code": "B",
+  "base": "d1c3d2e6-d85a-46e0-9542-58d9fb55c4a2",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 10,
+  "drop_local": [
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "note": "Sui event 온체인 신뢰성·Move 사용"
+}

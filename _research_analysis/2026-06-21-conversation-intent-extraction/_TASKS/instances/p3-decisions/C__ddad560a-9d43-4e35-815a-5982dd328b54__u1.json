@@ -1,0 +1,13 @@
+{
+  "code": "C",
+  "base": "ddad560a-9d43-4e35-815a-5982dd328b54",
+  "unit_idx": 1,
+  "block_start": 645,
+  "n_blocks": 13,
+  "drop_local": [
+    0,
+    6,
+    9
+  ],
+  "note": "Slice is legacy dibang-wedding (digital-guestbook-v3) PR #40 merge-conflict resolution via rebase onto origin/dev — pre-Sui, off the current dibang-sui on-chain direction. Dropped conservatively: idx0"
+}

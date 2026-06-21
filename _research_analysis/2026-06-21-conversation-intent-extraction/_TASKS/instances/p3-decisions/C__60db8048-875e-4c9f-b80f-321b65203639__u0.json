@@ -1,0 +1,13 @@
+{
+  "code": "C",
+  "base": "60db8048-875e-4c9f-b80f-321b65203639",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 3,
+  "drop_local": [
+    0,
+    1,
+    2
+  ],
+  "note": "슬라이스 전체가 3블록뿐이며 모두 의도 없는 기계 잡음. 0=USERMETA local-command caveat(무연결 plumbing). 1=USER이지만 실제 발화가 아닌 /exit 슬래시 명령 메타. 2=USER 태그지만 '/exit'의 stdout 'Goodbye!' 출력물. 셋 다 의도와 무관한 일회성 명령 plumbing(무연결)이라 drop."
+}

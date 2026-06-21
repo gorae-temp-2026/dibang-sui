@@ -1,0 +1,12 @@
+{
+  "code": "C",
+  "base": "5c7671d8-9fd1-4b6a-b511-e9159c0aaf41",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "Slice contains only 3 lines, all pure machine plumbing with zero intent signal. Block 0 (idx 0) = local-command-caveat USERMETA boilerplate. Block 1 (idx 1) = a bare /clear slash command (not real use"
+}

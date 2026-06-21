@@ -1,0 +1,13 @@
+{
+  "code": "C",
+  "base": "4b73e14e-d47a-446d-88f7-7830a83d0049",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 3,
+  "drop_local": [
+    0,
+    1,
+    2
+  ],
+  "note": "Slice contains only 3 blocks, all local-command plumbing with zero intent: idx0 USERMETA local-command caveat, idx1 /exit command invocation, idx2 \"Goodbye!\" stdout. None are real human-intent (★) utt"
+}

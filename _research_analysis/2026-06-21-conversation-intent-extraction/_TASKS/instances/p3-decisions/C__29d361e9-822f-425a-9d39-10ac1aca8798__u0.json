@@ -1,0 +1,27 @@
+{
+  "code": "C",
+  "base": "29d361e9-822f-425a-9d39-10ac1aca8798",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 57,
+  "drop_local": [
+    0,
+    1,
+    18,
+    26,
+    28,
+    40,
+    41,
+    42,
+    43,
+    45,
+    46,
+    47,
+    48,
+    51,
+    53,
+    54,
+    56
+  ],
+  "note": "Session is almost entirely an off-project category-theory tutorial (math Q&A), unrelated to dibang-sui's Sui trust-network intent — but per charter, USER-driven inquiry is intent-core and kept conserv"
+}

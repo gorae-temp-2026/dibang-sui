@@ -1,0 +1,12 @@
+{
+  "code": "E",
+  "base": "995f2623-118b-4513-8486-fd900427a044",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "슬라이스에 의도 신호가 전무. 인덱스 0=local-command-caveat(기계 주의문), 1=/clear 명령(순수 plumbing, 의도와 무연결)으로 DROP. 인덱스 2는 빈 줄/비블록이라 후보에서 제외. 실질적 USER 의도 발화는 0건이며 보존할 KEEP 대상 없음."
+}

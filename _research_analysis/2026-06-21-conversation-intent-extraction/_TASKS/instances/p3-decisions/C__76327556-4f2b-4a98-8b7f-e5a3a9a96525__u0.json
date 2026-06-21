@@ -1,0 +1,9 @@
+{
+  "code": "C",
+  "base": "76327556-4f2b-4a98-8b7f-e5a3a9a96525",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [],
+  "note": "2-block slice: USER asks a general-knowledge question about GitHub workflows/Actions, ASSISTANT explains. No project-domain intent (unrelated to dibang-sui Sui onchain direction), but per KEEP-USER pr"
+}

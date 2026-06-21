@@ -1,0 +1,13 @@
+{
+  "code": "E",
+  "base": "3f6667af-a71b-4366-b18a-270be4cace52",
+  "unit_idx": 3,
+  "block_start": 6,
+  "n_blocks": 4,
+  "drop_local": [
+    0,
+    1,
+    2
+  ],
+  "note": "4 blocks total. Block 3 (USER) is the sole intent-bearing block: an excalidraw image clipboard plus the request \"각 요청 사항 반영을 위한 태스크를 세부적으로 생성해줘. /create-tasks\" — KEEP. Dropped: block 0 ASSISTANT \"Prom"
+}

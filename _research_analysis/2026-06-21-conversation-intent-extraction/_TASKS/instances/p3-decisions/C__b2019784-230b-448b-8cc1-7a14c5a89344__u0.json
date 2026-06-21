@@ -1,0 +1,16 @@
+{
+  "code": "C",
+  "base": "b2019784-230b-448b-8cc1-7a14c5a89344",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 722,
+  "drop_local": [
+    377,
+    549,
+    550,
+    567,
+    608,
+    693
+  ],
+  "note": "대상 슬라이스는 전부 digital-guestbook-v3(프로젝트 C) 메인 대화로, side→recipient_slot 리네임·CashGift·Guest Web 플로우·MoiVisit→LoungeEntry 네이밍 논의·포트 하드코딩 등 구현 세션이다. 헌장 기준 ②(레거시)에 해당하나, '왜 그 방향이 됐는지' 의도 흐름(네이밍 제안·결정, 사용자 정정"
+}

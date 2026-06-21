@@ -1,0 +1,16 @@
+{
+  "code": "C",
+  "base": "4ebffa9c-ffa3-482c-97e5-b3bafac62c66",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 10,
+  "drop_local": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    9
+  ],
+  "note": "USER★ block 0 (favicon production 질문) = core intent, KEEP. Block 1, 6 = assistant 추론 발화이지만 의도 흐름(어느 앱이 prod인지 추론) 일부 보존 위해 KEEP. Drop 대상: 2,3,4,5,7 = 순수 도구 plumbing(ls/find/cat 호출과 raw 결과, 의도 무관 기계 잡음"
+}

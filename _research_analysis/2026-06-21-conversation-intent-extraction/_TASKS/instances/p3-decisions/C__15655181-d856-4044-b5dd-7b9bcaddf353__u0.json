@@ -1,0 +1,28 @@
+{
+  "code": "C",
+  "base": "15655181-d856-4044-b5dd-7b9bcaddf353",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 50,
+  "drop_local": [
+    0,
+    3,
+    4,
+    5,
+    6,
+    7,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    24,
+    25,
+    33,
+    34,
+    35
+  ],
+  "note": "Session is a one-off legacy debug of a 500 error in digital-guestbook-v3 admin activities endpoint — off-chain, disconnected from dibang-sui Sui direction (legacy ②). Kept conservatively per charter: "
+}

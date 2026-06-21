@@ -1,0 +1,17 @@
+{
+  "code": "C",
+  "base": "53ad0a8d-1559-452d-ae71-f62621215c5b",
+  "unit_idx": 1,
+  "block_start": 170,
+  "n_blocks": 351,
+  "drop_local": [
+    44,
+    199,
+    251,
+    252,
+    297,
+    309,
+    310
+  ],
+  "note": "Slice is a single u1 chunk from session C (digital-guestbook-v3, legacy pre-Sui). Per charter, legacy is dropped only when disconnected AND not showing intent-flow; here the USER (★) utterances carry "
+}

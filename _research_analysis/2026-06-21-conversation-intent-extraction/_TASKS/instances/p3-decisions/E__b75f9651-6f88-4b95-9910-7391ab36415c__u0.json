@@ -1,0 +1,11 @@
+{
+  "code": "E",
+  "base": "b75f9651-6f88-4b95-9910-7391ab36415c",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [
+    0
+  ],
+  "note": "2-block slice. Block 0 = /clear command marker (pure machine plumbing, no intent) → DROP. Block 1 = USER★ message: a single batched request (대부분 excalidraw clipboard JSON/base64 노이즈지만, 내장 한글 텍스트와 말미 '"
+}

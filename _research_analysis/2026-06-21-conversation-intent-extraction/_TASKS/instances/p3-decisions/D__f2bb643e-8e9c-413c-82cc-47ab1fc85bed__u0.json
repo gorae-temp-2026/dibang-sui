@@ -1,0 +1,23 @@
+{
+  "code": "D",
+  "base": "f2bb643e-8e9c-413c-82cc-47ab1fc85bed",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 103,
+  "drop_local": [
+    0,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    45,
+    49,
+    50,
+    51
+  ],
+  "note": "Self-contained UI-label task in legacy digital-guestbook-v3 repo (lounge-v2: '온기'→'메모리', 'Feed'→'Message'), then moved to dev and committed. Whole session is legacy vs dibang-sui Sui direction, but th"
+}

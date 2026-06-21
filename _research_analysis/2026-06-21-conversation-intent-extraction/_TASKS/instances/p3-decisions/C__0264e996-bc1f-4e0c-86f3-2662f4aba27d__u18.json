@@ -1,0 +1,16 @@
+{
+  "code": "C",
+  "base": "0264e996-bc1f-4e0c-86f3-2662f4aba27d",
+  "unit_idx": 18,
+  "block_start": 9442,
+  "n_blocks": 586,
+  "drop_local": [
+    417,
+    418,
+    548,
+    549,
+    550,
+    551
+  ],
+  "note": "전체 청크는 digital-guestbook-v3 레거시 세션(Supabase/psql, v3_memories 라운지 V2 '온기' 기능 구현)으로, 현재 dibang-sui Sui 온체인 방향과 단절돼 있다. 그러나 cut-only·보수 원칙에 따라 USER(★) 의도 블록은 레거시여도 전부 보존(e2e 지시 389, 메시지 미반영+LIVE 분리 의도 5"
+}

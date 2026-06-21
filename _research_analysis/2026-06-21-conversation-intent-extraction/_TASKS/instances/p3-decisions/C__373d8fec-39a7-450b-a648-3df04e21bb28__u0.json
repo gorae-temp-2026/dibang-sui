@@ -1,0 +1,16 @@
+{
+  "code": "C",
+  "base": "373d8fec-39a7-450b-a648-3df04e21bb28",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 496,
+  "drop_local": [
+    20,
+    56,
+    119,
+    134,
+    191,
+    230
+  ],
+  "note": "슬라이스 전체(496블록)를 읽음. 이 세션은 digital-guestbook-v3(프로젝트 C)의 '테스트 컨벤션 매뉴얼 + Go/Playwright/Vitest 인프라 도입' 단일 연속 아크다. dibang-sui의 Sui 온체인 방향 기준으로 보면 '레거시' 영역(Supabase/Playwright/웨딩 게스트북)이지만, 헌장의 DROP 기준은 보수적"
+}

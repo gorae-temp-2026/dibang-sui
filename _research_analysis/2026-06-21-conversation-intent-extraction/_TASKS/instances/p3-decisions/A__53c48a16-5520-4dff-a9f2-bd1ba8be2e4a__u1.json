@@ -1,0 +1,17 @@
+{
+  "code": "A",
+  "base": "53c48a16-5520-4dff-a9f2-bd1ba8be2e4a",
+  "unit_idx": 1,
+  "block_start": 451,
+  "n_blocks": 343,
+  "drop_local": [
+    26,
+    33,
+    92,
+    180,
+    199,
+    300,
+    342
+  ],
+  "note": "세션 전체가 현재 dibang-sui 방향(Sui Move 온체인 신뢰네트워크 컨트랙트)의 자가구동 개선 루프 — 척추(event/ledger) TDD→opus 적대검증→커밋, 부조 give·guestbook·ium·gift·invite 신호확장, credit.ts 신뢰→신용 리더, SDK 쿼리까지. 레거시 아님, 의도 흐름 핵심이라 거의 전부 KEEP.\\"
+}

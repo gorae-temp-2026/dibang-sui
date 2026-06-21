@@ -1,0 +1,11 @@
+{
+  "code": "A",
+  "base": "28ba2a9b-a348-4fa1-b8ff-e1d15dd74105",
+  "unit_idx": 5,
+  "block_start": 2646,
+  "n_blocks": 647,
+  "drop_local": [
+    350
+  ],
+  "note": "A__28ba2a9b u5 슬라이스(647블록, 로컬 0-645)는 단일 연속 세션으로 전부 현재 방향(dibang-sui = Sui 온체인) 작업이다: 호스트 웨딩 /invitation/create 폼 → 온체인 createWedding 실증(V-C6), dev 인증 우회(C6X-1·2·3), Supabase↔온체인 Sui ID 브릿지(C7-1~4·V-C"
+}

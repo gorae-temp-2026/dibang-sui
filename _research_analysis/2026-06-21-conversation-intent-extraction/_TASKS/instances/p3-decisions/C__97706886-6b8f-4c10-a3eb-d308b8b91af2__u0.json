@@ -1,0 +1,12 @@
+{
+  "code": "C",
+  "base": "97706886-6b8f-4c10-a3eb-d308b8b91af2",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "2개 블록 모두 의도와 무관한 기계 잡음. idx0=/model 슬래시 커맨드 호출, idx1=모델을 Opus 4.6으로 설정했다는 stdout 확인. 실질 사용자 의도 발화 없음(무연결 기준). 둘 다 DROP."
+}

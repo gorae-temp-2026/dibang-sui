@@ -1,0 +1,11 @@
+{
+  "code": "E",
+  "base": "3f6667af-a71b-4366-b18a-270be4cace52",
+  "unit_idx": 1,
+  "block_start": 2,
+  "n_blocks": 2,
+  "drop_local": [
+    0
+  ],
+  "note": "Block 0: ASSISTANT \"Prompt is too long\" system error message — pure machine noise, no intent, no connection (criterion ③ 무연결). DROP. Block 1: USER block. Although mostly a huge Excalidraw clipboard JS"
+}

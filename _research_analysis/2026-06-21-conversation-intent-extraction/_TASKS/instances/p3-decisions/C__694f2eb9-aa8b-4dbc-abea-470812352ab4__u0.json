@@ -1,0 +1,24 @@
+{
+  "code": "C",
+  "base": "694f2eb9-aa8b-4dbc-abea-470812352ab4",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 27,
+  "drop_local": [
+    0,
+    3,
+    5,
+    6,
+    8,
+    9,
+    11,
+    12,
+    13,
+    14,
+    16,
+    19,
+    20,
+    24
+  ],
+  "note": "Session is a Supabase prod data-pull Q&A on v3 wedding tables (May weddings: message/login counts). Off the Sui on-chain direction but it's an active operational query, not abandoned legacy implementa"
+}

@@ -1,0 +1,16 @@
+{
+  "code": "C",
+  "base": "b09168df-7710-4cca-ab1a-dd9f63e6e38b",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 431,
+  "drop_local": [
+    8,
+    9,
+    13,
+    14,
+    39,
+    40
+  ],
+  "note": "대상: 폴더 C = digital-guestbook-v3 (레거시 오프체인 웨딩 서비스). 한 세션 = 테스트 커버리지 시각화 리서치 → dependency-cruiser 구조도 그리기 → 빌드/타입 에러 디버깅·수정 → 커밋 → 피드 500 디버깅·수정. 현재 dibang-sui(Sui 온체인 신뢰네트워크) 방향과는 단절된 레거시 구현 맥락이라 전체가 p"
+}

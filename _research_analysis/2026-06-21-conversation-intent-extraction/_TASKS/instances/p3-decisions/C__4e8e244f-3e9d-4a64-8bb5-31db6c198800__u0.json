@@ -1,0 +1,9 @@
+{
+  "code": "C",
+  "base": "4e8e244f-3e9d-4a64-8bb5-31db6c198800",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [],
+  "note": "2 blocks only. idx0 USER(\"랜딩페이지 작업하자\") is intent core — KEEP. idx1 ASSISTANT(\"네\") is a bare ack but trivially tied to the USER block; no contradiction/legacy/noise to confidently drop. Conservative: d"
+}

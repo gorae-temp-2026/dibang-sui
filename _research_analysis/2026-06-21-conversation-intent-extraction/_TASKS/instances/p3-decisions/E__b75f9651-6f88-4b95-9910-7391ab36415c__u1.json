@@ -1,0 +1,12 @@
+{
+  "code": "E",
+  "base": "b75f9651-6f88-4b95-9910-7391ab36415c",
+  "unit_idx": 1,
+  "block_start": 2,
+  "n_blocks": 7,
+  "drop_local": [
+    0,
+    6
+  ],
+  "note": "7 blocks total (idx 0-6). Drop idx 0 and 6: both ASSISTANT \"Prompt is too long\" error messages — pure machine noise (무연결), no intent, no design context. KEEP idx 1 (USER /create-tasks invocation, carr"
+}

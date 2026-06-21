@@ -1,0 +1,12 @@
+{
+  "code": "B",
+  "base": "a3cba1c5-60e6-45c0-adf4-905c62a95d88",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [
+    0,
+    1
+  ],
+  "note": "빈 세션"
+}

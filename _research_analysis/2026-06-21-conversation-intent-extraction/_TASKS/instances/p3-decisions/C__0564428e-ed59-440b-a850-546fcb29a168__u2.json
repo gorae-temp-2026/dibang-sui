@@ -1,0 +1,14 @@
+{
+  "code": "C",
+  "base": "0564428e-ed59-440b-a850-546fcb29a168",
+  "unit_idx": 2,
+  "block_start": 623,
+  "n_blocks": 7,
+  "drop_local": [
+    1,
+    2,
+    5,
+    6
+  ],
+  "note": "Dropped pure slash-command plumbing/stdout echoes: idx1-2 (/effort command invocation + local stdout echo) and idx5-6 (same /effort command + stdout echo, repeated). These are mechanical noise with no"
+}

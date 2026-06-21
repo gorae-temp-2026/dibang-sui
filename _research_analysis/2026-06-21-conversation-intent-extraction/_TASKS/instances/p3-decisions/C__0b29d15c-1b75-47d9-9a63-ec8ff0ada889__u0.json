@@ -1,0 +1,9 @@
+{
+  "code": "C",
+  "base": "0b29d15c-1b75-47d9-9a63-ec8ff0ada889",
+  "unit_idx": 0,
+  "block_start": 0,
+  "n_blocks": 2,
+  "drop_local": [],
+  "note": "2 blocks only. idx0=USER core intent (웨딩리포트 공유사진 탭 UI를 web-mobile-application에서 이식). idx1=ASSISTANT intent-confirmation paraphrasing scope/source — carries intent flow, no contradiction/noise. Legacy "
+}
