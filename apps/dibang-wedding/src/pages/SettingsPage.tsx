@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router';
 import { useState, useRef, type ChangeEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from '@xstate/react';
-import { Coins, Plus } from 'lucide-react';
+import { Coins, Plus, ChevronRight } from 'lucide-react';
 import {
   getMeOptions,
   getMeQueryKey,
@@ -140,6 +140,24 @@ export function SettingsPage() {
         <p className="mt-3 flex items-center gap-1.5 text-xs text-muted">
           <Coins className="h-3.5 w-3.5 text-[#E8A865]" /> {t('settings.chargeHint')}
         </p>
+      </div>
+
+      {/* 알아보기 — 시그널·모이크레딧 설명 페이지(프로필 상세 설명 이전처) */}
+      <div className="rounded-xl border border-line bg-white p-2 mb-4">
+        {[
+          { label: t('settings.guideSignal'), to: '/guide/signal' },
+          { label: t('settings.guideCredit'), to: '/guide/moi-credit' },
+        ].map((g) => (
+          <button
+            key={g.to}
+            type="button"
+            onClick={() => navigate(g.to)}
+            className="flex w-full items-center justify-between rounded-lg px-3 py-3.5 text-left hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-base font-medium text-navy">{g.label}</span>
+            <ChevronRight className="h-5 w-5 text-muted" />
+          </button>
+        ))}
       </div>
 
       <div className="rounded-xl border border-line bg-white p-5 mb-4">

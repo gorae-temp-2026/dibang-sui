@@ -9,7 +9,6 @@ import type { MeetingContext, ProfileContext, ProfileData } from './types'
 import { InyeonGraph } from './InyeonGraph'
 import { SignalSunburst } from './SignalSunburst'
 import { TrustRange } from './TrustRange'
-import { MoiCreditPanel } from './MoiCreditPanel'
 
 // 실사진 에셋 전 — hue 그라데이션 placeholder (InyeonCard와 통일).
 const photoBg = (hue: number) => `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
@@ -129,10 +128,6 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
 
         <Section title="익명 신뢰범위">
           <TrustRange trust={data.trustRange} />
-        </Section>
-
-        <Section title="Moi Credit — raw → 층 → 공식">
-          <MoiCreditPanel data={data} />
         </Section>
 
         {onIeum && (
