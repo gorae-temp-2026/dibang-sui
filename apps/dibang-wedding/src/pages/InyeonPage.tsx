@@ -2,10 +2,13 @@
 // 구조: 다크 셸 + 상단(매칭범위·지갑) + 본문 스크린(유니버스 덱/받은이음/채팅/프로필) + 우측 irail + 시트.
 // 흐름: 카드 탐색 → 사진 게이트(2장무료/3장째 요네) → 이음 신청(한마디) → 매칭 → (Moi Credit 재료).
 // 받은이음·채팅 화면은 스텁(TODO), 프로필 상세는 ⑤ 공유 프로필 컴포넌트에서 본구현 예정.
+import { useMemo } from 'react'
 import { useMachine, useSelector } from '@xstate/react'
+import { fromPromise } from 'xstate'
 import { giftActor } from '../machines/gift.machine'
 import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
+import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
 import { POOL, TIER_META } from '../components/inyeon/data'
 import type { Moi } from '../components/inyeon/types'
 import { SwipeDeck } from '../components/inyeon/SwipeDeck'
@@ -23,7 +26,28 @@ import { MoiGateModal } from '../components/MoiGateModal'
 const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.id === id) ?? null)
 
 export function InyeonPage() {
-  const [state, send] = useMachine(inyeonMachine)
+  const { requestIum, acceptIum } = useOnchainHostActions()
+  // 이음 신청 = 온체인 request_ium(상대 Sui 주소). 컴포넌트가 .provide()로 actor를 주입(STATE_MANAGEMENT §4).
+  // 현재 데모 데이터(POOL)는 숫자 moiId뿐(실 Sui 주소 없음) — 실유저 매핑 후 toUser를 넘기게 됨.
+  // 지금은 온체인 호출을 시도하되 주소가 없으면 mock 성공(accepted:true)으로 fallback.
+  const machine = useMemo(
+    () =>
+      inyeonMachine.provide({
+        actors: {
+          sendIeum: fromPromise<{ accepted: boolean }, { targetId: number | null }>(async ({ input }) => {
+            if (input.targetId != null) {
+              // TODO: targetId(데모 moiId) → 실 Sui 주소 변환. 실유저 매핑 테이블 후 교체.
+              // 지금은 데모 주소가 없어 온체인 skip — 실유저 데이터 연결 시 아래 주석 해제.
+              // const toUser = lookupSuiAddress(input.targetId)
+              // if (toUser) await requestIum({ toUser })
+            }
+            return { accepted: true }
+          }),
+        },
+      }),
+    [requestIum],
+  )
+  const [state, send] = useMachine(machine)
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
 
   const {
@@ -92,7 +116,15 @@ export function InyeonPage() {
             incoming={incoming}
             sentIds={sentIds}
             unlockedIds={unlockedIds}
-            onAccept={(moiId) => send({ type: 'ACCEPT_REQ', moiId })}
+            onAccept={(moiId) => {
+              send({ type: 'ACCEPT_REQ', moiId })
+              // 온체인 accept_ium fire-and-forget. 데모 데이터엔 eventId·requestId가 없어 skip.
+              // 실유저 데이터 연결 시 incoming에 eventId·requestId 추가 → 아래 guard 통과.
+              const req = incoming.find((r) => r.moiId === moiId)
+              if (req && 'eventId' in req && 'requestId' in req) {
+                acceptIum({ eventId: req.eventId as string, requestId: req.requestId as string }).catch(() => {})
+              }
+            }}
             onDecline={(moiId) => send({ type: 'DECLINE_REQ', moiId })}
             onOpenProfile={(id) => send({ type: 'OPEN_PROFILE', id })}
           />
