@@ -1,0 +1,8 @@
+{
+  "agent": "B",
+  "wallets": [
+    { "name": "Wallet1", "address": "0xa1c5d442c86ca9454f70bec6b23b40b3e30fffa8b078fd4273ed4c41e0a80757", "role": "User" },
+    { "name": "Wallet2", "address": "0xc8d5454cf83eb942eedd872ef55235208f047c2bb800c253781f0e575c520e93", "role": "Recipient" },
+    { "name": "Wallet3", "address": "0x3801db86d80719c2b0ea9e8b2428927f2ee4e862c4175755f7239bc50e5893ea", "role": "Guest" }
+  ]
+}

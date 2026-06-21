@@ -37,33 +37,35 @@ function addrShort(addr: string) {
 }
 
 function buildOnchainProfile(
-  targetAddr: string,
-  myAddr: string,
+  addr: string,
+  isSelf: boolean,
   signals: SignalQuery[],
   actions: ActionLoggedQuery[],
 ): ProfileData {
-  const between = signals.filter(
-    (s) => (s.from === myAddr && s.to === targetAddr) || (s.from === targetAddr && s.to === myAddr),
-  )
-  const emSignals = between.filter((s) => s.kind === 1)
-  const csSignals = between.filter((s) => s.kind === 2)
+  // isSelf: 나와 관련된 모든 신호/액션. !isSelf: addr은 상대, 나↔상대 간만.
+  const relevant = isSelf
+    ? signals.filter((s) => s.from === addr || s.to === addr)
+    : signals // 호출 전에 이미 필터 (아래 useEffect 참조)
+  const relevantActions = isSelf
+    ? actions.filter((a) => a.actor === addr || a.target === addr)
+    : actions
+
+  const emSignals = relevant.filter((s) => s.kind === 1)
+  const csSignals = relevant.filter((s) => s.kind === 2)
   const emTotal = emSignals.reduce((a, s) => a + s.magnitude, 0)
   const csTotal = csSignals.reduce((a, s) => a + s.magnitude, 0)
 
-  const myActions = actions.filter(
-    (a) => (a.actor === myAddr && a.target === targetAddr) || (a.actor === targetAddr && a.target === myAddr),
-  )
-  const busu = myActions.filter((a) => a.actionType === 0).length
-  const ium = myActions.filter((a) => a.actionType === 1 || a.actionType === 2).length
-  const gift = myActions.filter((a) => a.actionType === 3).length
-  const write = myActions.filter((a) => a.actionType === 4).length
+  const busu = relevantActions.filter((a) => a.actionType === 0).length
+  const ium = relevantActions.filter((a) => a.actionType === 1 || a.actionType === 2).length
+  const gift = relevantActions.filter((a) => a.actionType === 3).length
+  const write = relevantActions.filter((a) => a.actionType === 4).length
 
   const score = Math.min(1000, emTotal / 100 + csTotal * 50 + busu * 30 + ium * 20 + gift * 15 + write * 10)
   const tier = score >= 820 ? 'AAA' : score >= 760 ? 'AA' : score >= 690 ? 'A' : score >= 620 ? 'BBB' : score >= 550 ? 'BB' : 'B'
-  const label = score >= 760 ? '매우 좋음' : score >= 620 ? '좋음' : score >= 480 ? '보통' : '낮음'
+  const label = score >= 760 ? '매우 좋음' : score >= 620 ? '좋음' : score >= 480 ? '보통' : score > 0 ? '낮음' : '데이터 없음'
 
   const signal: SignalNode = {
-    name: '우리',
+    name: isSelf ? '나' : '우리',
     children: [
       { name: 'EM', children: [{ name: '부조', value: emTotal / 1e6 }, { name: '선물', value: gift }] },
       { name: 'CS', children: [{ name: '참석', value: csSignals.filter(s => s.source === 5).length }, { name: '이음', value: ium }, { name: '대화', value: write }, { name: '모임', value: 0 }] },
@@ -72,29 +74,37 @@ function buildOnchainProfile(
     ],
   }
 
-  const selfId = addrShort(myAddr)
-  const targetId = addrShort(targetAddr)
+  const selfLabel = addrShort(addr)
+  const nodes: { id: string; label: string; hue: number; self?: boolean; here?: boolean }[] = [
+    { id: selfLabel, label: selfLabel, hue: 210, self: true },
+  ]
+  const links: { source: string; target: string; type: string; value: number }[] = []
+
+  // 이음 완료(ACCEPT_IUM=2) 상대만 그래프 노드+링크
+  const iumPeers = new Set<string>()
+  relevantActions.filter((a) => a.actionType === 2).forEach((a) => {
+    if (a.actor !== addr) iumPeers.add(a.actor)
+    if (a.target && a.target !== addr) iumPeers.add(a.target)
+  })
+  iumPeers.forEach((p) => {
+    const pLabel = addrShort(p)
+    nodes.push({ id: pLabel, label: pLabel, hue: parseInt(p.slice(2, 6), 16) % 360, here: true })
+    links.push({ source: selfLabel, target: pLabel, type: '이음', value: 1 })
+  })
+
   return {
-    subject: targetId,
+    subject: selfLabel,
     asOf: 'now',
     moiCredit: { value: score / 1000, score: Math.round(score), tier, rank: 0, total: 0, onchain: true },
     trace: {
       L1_raw: { 부조: busu, 이음: ium, 대화: write, 선물: gift, total: busu + ium + write + gift },
       L2_fold: { 부조EM: emTotal, 증여EM: gift, topTies: [] },
-      L3_phi: { 부조: emTotal > 0 ? 1 : 0, CS: csTotal > 0 ? 1 : 0, 이행: 1, op: 'onchain signal query' },
+      L3_phi: { 부조: emTotal > 0 ? 1 : 0, CS: csTotal > 0 ? 1 : 0, 이행: 1, op: 'onchain' },
       L4_integrate: { W: { 부조: 0.5, cs: 0.3, 이행: 0.2 }, formula: 'onchain', value: score / 1000 },
     },
-    graph: {
-      nodes: [
-        { id: selfId, label: selfId, hue: 210, self: true },
-        { id: targetId, label: targetId, hue: 30, here: true },
-      ],
-      links: myActions.some((a) => a.actionType === 2)
-        ? [{ source: selfId, target: targetId, type: '이음', value: 1 }]
-        : [],
-    },
+    graph: { nodes, links },
     signal,
-    trustRange: { tier, label, anon: between.length === 0 },
+    trustRange: { tier, label, anon: relevant.length === 0 },
   }
 }
 
@@ -268,69 +278,29 @@ export function MoiGatherPage() {
 
   const profileMoi = profileMoiId ? crowdById[profileMoiId] : null
 
-  // 온체인 프로필 데이터 — 클릭 시 신호/액션 조회 ("나" 포함)
+  // 온체인 프로필 데이터 — 클릭 시 신호/액션 조회. "나"와 "다른 사람" 동일 함수, isSelf만 다름.
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   useEffect(() => {
     if (!profileMoi || !address) {
       setProfileData(null)
       return
     }
-    const targetAddr = profileMoi.me ? address : profileMoi.id
+    const isSelf = !!profileMoi.me
+    const targetAddr = isSelf ? address : profileMoi.id
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
     const client = createJsonRpcClient(network)
     Promise.all([getSignalEvents(client), getActionLoggedEvents(client)])
-      .then(([signals, actions]) => {
-        if (profileMoi.me) {
-          // "나" = 내가 주고받은 모든 신호/액션 집계
-          const mySignals = signals.filter((s) => s.from === address || s.to === address)
-          const myActions = actions.filter((a) => a.actor === address || a.target === address)
-          const emTotal = mySignals.filter((s) => s.kind === 1).reduce((a, s) => a + s.magnitude, 0)
-          const csTotal = mySignals.filter((s) => s.kind === 2).reduce((a, s) => a + s.magnitude, 0)
-          const busu = myActions.filter((a) => a.actionType === 0).length
-          const ium = myActions.filter((a) => a.actionType === 1 || a.actionType === 2).length
-          const gift = myActions.filter((a) => a.actionType === 3).length
-          const write = myActions.filter((a) => a.actionType === 4).length
-          const score = Math.min(1000, emTotal / 100 + csTotal * 50 + busu * 30 + ium * 20 + gift * 15 + write * 10)
-          const tier = score >= 820 ? 'AAA' : score >= 760 ? 'AA' : score >= 690 ? 'A' : score >= 620 ? 'BBB' : score >= 550 ? 'BB' : 'B'
-          const label = score >= 760 ? '매우 좋음' : score >= 620 ? '좋음' : score >= 480 ? '보통' : score > 0 ? '낮음' : '데이터 없음'
-          const addr = addrShort(address)
-          const signal: SignalNode = {
-            name: '나',
-            children: [
-              { name: 'EM', children: [{ name: '부조', value: emTotal / 1e6 }, { name: '선물', value: gift }] },
-              { name: 'CS', children: [{ name: '참석', value: mySignals.filter(s => s.kind === 2 && s.source === 5).length }, { name: '이음', value: ium }, { name: '대화', value: write }, { name: '모임', value: 0 }] },
-              { name: 'AR', children: [{ name: '관계', value: 0, stub: true }] },
-              { name: 'MP', children: [{ name: '거래', value: 0, stub: true }] },
-            ],
-          }
-          // 이음 완료(ACCEPT_IUM=2) 상대만 그래프에 표시
-          const iumPeers = new Set<string>()
-          myActions.filter((a) => a.actionType === 2).forEach((a) => {
-            if (a.actor !== address) iumPeers.add(a.actor)
-            if (a.target && a.target !== address) iumPeers.add(a.target)
-          })
-          const nodes = [{ id: addr, label: addr, hue: 210, self: true as const }]
-          const links: { source: string; target: string; type: string; value: number }[] = []
-          Array.from(iumPeers).slice(0, 10).forEach((p) => {
-            const pAddr = addrShort(p)
-            nodes.push({ id: pAddr, label: pAddr, hue: parseInt(p.slice(2, 6), 16) % 360, here: true })
-            links.push({ source: addr, target: pAddr, type: '이음', value: 1 })
-          })
-          setProfileData({
-            subject: addr, asOf: 'now',
-            moiCredit: { value: score / 1000, score: Math.round(score), tier, rank: 0, total: 0, onchain: true },
-            trace: {
-              L1_raw: { 부조: busu, 이음: ium, 대화: write, 선물: gift, total: busu + ium + write + gift },
-              L2_fold: { 부조EM: emTotal, 증여EM: gift, topTies: [] },
-              L3_phi: { 부조: emTotal > 0 ? 1 : 0, CS: csTotal > 0 ? 1 : 0, 이행: 1, op: 'onchain' },
-              L4_integrate: { W: { 부조: 0.5, cs: 0.3, 이행: 0.2 }, formula: 'onchain', value: score / 1000 },
-            },
-            graph: { nodes, links },
-            signal,
-            trustRange: { tier, label, anon: false },
-          })
+      .then(([allSignals, allActions]) => {
+        if (isSelf) {
+          setProfileData(buildOnchainProfile(address, true, allSignals, allActions))
         } else {
-          setProfileData(buildOnchainProfile(targetAddr, address, signals, actions))
+          const pairSignals = allSignals.filter(
+            (s) => (s.from === address && s.to === targetAddr) || (s.from === targetAddr && s.to === address),
+          )
+          const pairActions = allActions.filter(
+            (a) => (a.actor === address && a.target === targetAddr) || (a.actor === targetAddr && a.target === address),
+          )
+          setProfileData(buildOnchainProfile(targetAddr, false, pairSignals, pairActions))
         }
       })
       .catch(() => setProfileData(null))

@@ -1,0 +1,49 @@
+{"id":"W-4","status":"PASS","ts":"2026-06-21T19:24:39.760Z","msg":"Registry/Matrix/Shop 공유 오브젝트 확인 완료"}
+{"id":"B-1-1","status":"PASS","ts":"2026-06-21T19:24:43.103Z","digest":"4bJXFKfZegRqBEpcxmbSCHKLnixuA87pLSs3zRdvdBSh","moiId":"0x8b97738a6c59602c49a2b4255fb7c8c7f95e8e7bc7a0f235008fb128b26ca329"}
+{"id":"B-1-2","status":"PASS","ts":"2026-06-21T19:24:43.200Z","moiIds":["0x8b97738a6c59602c49a2b4255fb7c8c7f95e8e7bc7a0f235008fb128b26ca329"]}
+{"id":"B-1-3","status":"PASS","ts":"2026-06-21T19:24:43.300Z","moiEvent":{"moiId":"0x8b97738a6c59602c49a2b4255fb7c8c7f95e8e7bc7a0f235008fb128b26ca329","owner":"0x1019fe9b187b79f6908317f320098b0a1cb00b9499d31a232ae2a9dd4406ca7a"}}
+{"id":"B-1-4","status":"PASS","ts":"2026-06-21T19:24:47.070Z","digest":"CHyDpC61c39jKwy2PPKYQ7eCuU7xRRaaaMpfNPfJDC8A","moi2Id":"0x8bed87f287c26b10e4c6ccff7bf802dea335dc42bfa08f7ef61966d47e5bbb39","count":2}
+{"id":"B-2-1","status":"PASS","ts":"2026-06-21T19:24:50.721Z","digest":"3ej2idkL3mGHeg33wni6kR8EYtzBwZ4n1ToqDFtNsKPj","itemId":"0x3391fe468aa683506dddbbe39ba249d36759e22e4c81c491a0f765f47697d4fb"}
+{"id":"B-2-2","status":"PASS","ts":"2026-06-21T19:24:50.820Z","item":{"id":"0x3391fe468aa683506dddbbe39ba249d36759e22e4c81c491a0f765f47697d4fb","name":"TestHat","itemType":"hat","slot":"head"}}
+{"id":"B-2-3","status":"PASS","ts":"2026-06-21T19:24:54.330Z","digest":"J11fePRWLbo4p1cDG3sTPvxqtX6VgrRhhBSBvDkQHHzy","itemId":"0x0e7923a162d78c66a6c9067339a489920d746b47107e20dfff46748a4ee89433"}
+{"id":"B-2-4","status":"PASS","ts":"2026-06-21T19:24:57.910Z","digest":"5NhHsqK4MemysMY5xN39HW1g2q2Famb2BQNd1LbDLK6B","itemId":"0x2cb633d2d97974152e11c6fe7c86e9f65cfb5a158e0ba81c0f82d9ce3e9a992c"}
+{"id":"B-2-5","status":"EXPECTED_FAIL","ts":"2026-06-21T19:24:58.413Z","error":"Transaction resolution failed: MoveAbort in 2nd command, abort code: 2, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::moi::purchase_item' (instruction 13)"}
+{"id":"B-2-6","status":"EXPECTED_FAIL","ts":"2026-06-21T19:24:58.971Z","error":"Transaction resolution failed: MoveAbort in 2nd command, abort code: 0, in '0x7e069abe383e80d32f2aec17b3793da82aabc8c2edf84abbf68dd7b719e71497::payment_kit::write_payment_record' (line 419)"}
+{"id":"B-2-7","status":"PASS","ts":"2026-06-21T19:24:59.070Z","objectType":"0x7e069abe383e80d32f2aec17b3793da82aabc8c2edf84abbf68dd7b719e71497::payment_kit::PaymentRegistry"}
+{"id":"B-3-1","status":"PASS","ts":"2026-06-21T19:25:02.363Z","digest":"2AGBNxx2dSMwU7qRc5RviZZbxEgfFH6FQFPWPwGDWQZX"}
+{"id":"B-3-2","status":"PASS","ts":"2026-06-21T19:25:02.470Z","ownedCount":2}
+{"id":"B-3-3","status":"PASS","ts":"2026-06-21T19:25:05.991Z","digest":"FoqdutW6g4cPVToFrNjMH5oxSD4xK2xqQxptFKk9jRJd"}
+{"id":"B-3-4","status":"EXPECTED_FAIL","ts":"2026-06-21T19:25:06.533Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 0, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::moi::equip_item' (instruction 14)"}
+{"id":"B-4-1","status":"PASS","ts":"2026-06-21T19:25:09.841Z","digest":"EYVsTkY5V2PS2mDfLmPySS651yBjxxs2Dv6LvQbqyeSP"}
+{"id":"B-4-2","status":"PASS","ts":"2026-06-21T19:25:09.933Z","ownedCount":2}
+{"id":"B-4-3","status":"EXPECTED_FAIL","ts":"2026-06-21T19:25:10.351Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 1, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::moi::unequip_item' (instruction 9)"}
+{"id":"B-4-4","status":"PASS","ts":"2026-06-21T19:25:13.630Z","digest":"6pcdkKdGJBASr4F1YmFFAbHd9iNjbedCY5VPNGkXesr8"}
+{"id":"B-5-1-wedding","status":"PASS","ts":"2026-06-21T19:25:17.281Z","weddingId":"0x9271ab3a5f76480972c19c309d48f352602fbf639a3fee7189279e12e0a9e33a","eventId":"0x223a16b5cd9a1434bd8084062fc296cf0cc5c09ea84797805dad3fcf2ff68139","capId":"0xd3c73533e46109d6ae35eed6bc646f58861f73a39530538b5c3f4b5a3511cbc5"}
+{"id":"B-5-1-vault","status":"PASS","ts":"2026-06-21T19:25:20.813Z","vaultId":"0xf63eb052593c546458a68bbbf796290ef6db41a6a5aceb8f0a0380c620f9ac73"}
+{"id":"B-5-1-guest-participate","status":"PASS","ts":"2026-06-21T19:25:24.231Z","guestParticipationId":"0x68d7dceabe130be000b9b1ebbebe368c6f5ed764c67fb7ed2508eeb950199791"}
+{"id":"B-5-1","status":"PASS","ts":"2026-06-21T19:25:24.233Z","msg":"사전 준비 완료","hostParticipationId":"0x17d8e7d27951b08eb0fa479292c0fea42ef2984b2491aedfaef0c9e917bcf5f5"}
+{"id":"B-5-2","status":"PASS","ts":"2026-06-21T19:25:27.760Z","giftItemId":"0x28ed87ca6b0a22d54a284d74425c3741cf9aa5d11d0c660714fb5fbeaa0660c9"}
+{"id":"B-5-3","status":"PASS","ts":"2026-06-21T19:25:31.101Z","digest":"G4G3rZwDR11ASnfpGPTUDvbCEu1SVMvv7U9eUhvygw4S"}
+{"id":"B-5-4","status":"PASS","ts":"2026-06-21T19:25:31.260Z","recipientItemCount":1}
+{"id":"B-5-5","status":"PASS","ts":"2026-06-21T19:25:31.360Z","userItemCount":1}
+{"id":"B-5-6","status":"PASS","ts":"2026-06-21T19:25:31.470Z","actionType":3,"actor":"0x1019fe9b187b79f6908317f320098b0a1cb00b9499d31a232ae2a9dd4406ca7a"}
+{"id":"B-5-7","status":"PASS","ts":"2026-06-21T19:25:31.571Z","signal":{"eventId":"0x223a16b5cd9a1434bd8084062fc296cf0cc5c09ea84797805dad3fcf2ff68139","kind":2,"resourceId":0,"source":3,"from":"0x1019fe9b187b79f6908317f320098b0a1cb00b9499d31a232ae2a9dd4406ca7a","to":"0xd7ce95795de01d1d971ead4bcca4733b63e7fe66f20c9c124667c534bb2b8f51","magnitude":1,"ts":1782069928436}}
+{"id":"B-5-8","status":"PASS","ts":"2026-06-21T19:25:31.571Z","giftCsSignalCount":1}
+{"id":"B-6-1","status":"PASS","ts":"2026-06-21T19:25:34.950Z","digest":"CU35SaEmy5hPAqxvfE9KMgNv9zE6w9yc4MULBJAfDa8M"}
+{"id":"B-6-2","status":"FAIL","ts":"2026-06-21T19:25:37.068Z","error":"WRITE_MESSAGE ActionRecord not found","guestAddr":"0x05edc320bcaad66d566222edb1d960de31909181547d26225280cf9b5d4574dc","allActors":["0x25999a3b70d6fc61bb69d5d7ae0ce419bc8c0fefe2222b18b56de70cd5191288:0","0xdf6895cb28f9ed5ccfaa87fada9561416d97415e2cd7ea51771e9337eb0a81fb:0","0xd7171b2ddd06aafb32305d953ae46bb1c53e629c36fac9347698499862f1bd17:6","0x331332a8cf66514a8aaf71bab9f0e1b2e09a5d5b6bf379eab5290c3ea14bc73b:3","0x026272916076bcdb1fcb91f62c0175678afcb1b57732761ccbb6145312592056:0","0x1114d83f7b04b43d0afad8e520f0436e19e4b87e07242a0fe86667536973bffc:0","0x45268b39aebdb1d69f9a9c89ca4c67f5781d0ca54fabd2a22f20c7b6d72d24a3:0","0x1114d83f7b04b43d0afad8e520f0436e19e4b87e07242a0fe86667536973bffc:0","0x1019fe9b187b79f6908317f320098b0a1cb00b9499d31a232ae2a9dd4406ca7a:3","0x05edc320bcaad66d566222edb1d960de31909181547d26225280cf9b5d4574dc:4"]}
+{"id":"B-6-3","status":"PASS","ts":"2026-06-21T19:25:37.231Z","signal":{"eventId":"0x223a16b5cd9a1434bd8084062fc296cf0cc5c09ea84797805dad3fcf2ff68139","kind":2,"resourceId":0,"source":4,"from":"0x05edc320bcaad66d566222edb1d960de31909181547d26225280cf9b5d4574dc","to":"0x1019fe9b187b79f6908317f320098b0a1cb00b9499d31a232ae2a9dd4406ca7a","magnitude":1,"ts":1782069932273}}
+{"id":"B-6-4","status":"EXPECTED_FAIL","ts":"2026-06-21T19:25:37.237Z","error":"fetch failed"}
+{"id":"B-7-1","status":"PASS","ts":"2026-06-21T19:25:40.988Z","digest":"4FJWJrHUMu8Mv16zmoZbTR7sY7FBj2nzjnqLbzFtSkgc","edgeId":"0x67a06f2f6f3795f47e9defc05f7c0e268c84bc074796af1d8167fa704a4879de"}
+{"id":"B-7-2","status":"PASS","ts":"2026-06-21T19:25:41.081Z","objectType":"0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::edge_balance::EdgeBalance"}
+{"id":"B-7-3","status":"PASS","ts":"2026-06-21T19:25:44.661Z","digest":"EYmWQ5fVq6KHte7U464dUQJves77q3U4YEeexjfaw8SF"}
+{"id":"B-7-4","status":"PASS","ts":"2026-06-21T19:25:48.172Z","digest":"3vpNuSc3X3PPvez2DzaT4jZkVMMnB7dJs6FPwG1v5fSy"}
+{"id":"B-7-5","status":"PASS","ts":"2026-06-21T19:25:51.811Z","digest":"FqR4fmGabkGYZ8TMkp2GCVYG3hYPRNdGanLTdauPGc9b"}
+{"id":"B-7-6","status":"PASS","ts":"2026-06-21T19:25:55.161Z","digest":"9rGvHwc3P5uBzs7i5ifdSasrsvS3yrvaroPBWbjU81Xc"}
+{"id":"B-7-7","status":"EXPECTED_FAIL","ts":"2026-06-21T19:25:55.652Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 2, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::edge_balance::create_edge' (instruction 8)"}
+{"id":"B-7-8","status":"EXPECTED_FAIL","ts":"2026-06-21T19:25:56.113Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 0, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::edge_balance::record' (instruction 45)"}
+{"id":"B-7-9","status":"EXPECTED_FAIL","ts":"2026-06-21T19:25:56.513Z","error":"Transaction resolution failed: MoveAbort in 1st command, abort code: 1, in '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e::edge_balance::record' (instruction 69)"}
+{"id":"B-8-1","status":"PASS","ts":"2026-06-21T19:25:56.802Z","discoveredCount":17,"userDegree":1}
+{"id":"B-8-2","status":"PASS","ts":"2026-06-21T19:25:56.903Z","eventId":"0x223a16b5cd9a1434bd8084062fc296cf0cc5c09ea84797805dad3fcf2ff68139","eventType":0}
+{"id":"B-8-3","status":"PASS","ts":"2026-06-21T19:25:57.171Z","guestParticipationCount":1}
+{"id":"B-8-4","status":"PASS","ts":"2026-06-21T19:25:57.296Z","totalSignals":44,"relevantSignals":3}
+{"id":"B-8-5","status":"PASS","ts":"2026-06-21T19:25:57.412Z","totalActions":32,"relevantActions":2}

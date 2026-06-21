@@ -36,6 +36,7 @@ const accessories: ShopItem[] = manifest.accessories.map((ac) => ({ id: idFromFi
 
 export const SHOP: ShopItem[] = [...heads, ...bodies, ...items, ...accessories]
 export const ITEM_BY_ID: Record<string, ShopItem> = Object.fromEntries(SHOP.map((it) => [it.id, it]))
+export const ITEM_BY_NAME: Record<string, ShopItem> = Object.fromEntries(SHOP.map((it) => [it.name, it]))
 /** 캔버스 텍스처 프리로드용 전체 url. */
 export const ALL_ASSET_URLS: string[] = SHOP.map((it) => it.url)
 
