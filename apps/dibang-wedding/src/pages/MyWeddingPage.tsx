@@ -8,9 +8,11 @@ import { WeddingCard } from '../components/my-wedding/WeddingCard';
 import { AddCard } from '../components/my-wedding/AddCard';
 import { DefiTeaserCard } from '../components/my-wedding/DefiTeaserCard';
 import { getGuestWebOrigin } from '../lib/external-urls';
+import { useT } from '../lib/i18n';
 
 export function MyWeddingPage() {
   const navigate = useNavigate();
+  const t = useT();
   const { data: weddings, isLoading } = useQuery({
     ...getMyWeddingsOptions(),
     retry: false,
@@ -74,11 +76,11 @@ export function MyWeddingPage() {
   return (
     <div className="py-8">
       <div className="px-6 mb-6">
-        <h1 className="text-[28px] font-semibold text-navy">나의 결혼식</h1>
+        <h1 className="text-[28px] font-semibold text-navy">{t('nav.myEvent')}</h1>
       </div>
 
       {isLoading && (
-        <p className="text-base text-muted text-center py-8">불러오는 중...</p>
+        <p className="text-base text-muted text-center py-8">{t('events.loading')}</p>
       )}
 
       {!isLoading && (

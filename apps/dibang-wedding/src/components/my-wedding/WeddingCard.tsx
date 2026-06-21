@@ -4,6 +4,7 @@ import type { WeddingSummary } from '@gorae/contracts';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import { renderQrToCanvas, downloadQrAsPng } from '../../lib/qr-render';
 import { HostSlotSectionContainer } from './HostSlotSectionContainer';
+import { useT } from '../../lib/i18n';
 
 function formatDday(dateStr: string): string {
   const wedding = new Date(dateStr + 'T00:00:00');
@@ -55,6 +56,7 @@ export function WeddingCard({
   onShareInvite,
 }: WeddingCardProps) {
   const navigate = useNavigate();
+  const t = useT();
   const d = new Date(wedding.date);
   const formatted = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
@@ -271,6 +273,9 @@ export function WeddingCard({
 
       {/* Wedding basic info */}
       <div className="px-1 -mt-1">
+        <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-[#1E3A5F] px-2.5 py-0.5 text-xs font-bold text-white">
+          💍 {t('events.badge.wedding')}
+        </span>
         <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2">
           {wedding.groom_name} & {wedding.bride_name}
           {myRole && (

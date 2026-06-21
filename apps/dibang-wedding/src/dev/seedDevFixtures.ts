@@ -20,6 +20,12 @@ import {
   CHULSOO_WEDDING_FULL,
   CHULSOO_FEED,
   CHULSOO_ANNOUNCEMENTS,
+  BYEONGJU_LOUNGE_ID,
+  BYEONGJU_WEDDING_ID,
+  BYEONGJU_LOUNGE,
+  BYEONGJU_WEDDING_FULL,
+  BYEONGJU_FEED,
+  BYEONGJU_ANNOUNCEMENTS,
 } from './devFixtures'
 
 export function seedDevFixtures(qc: QueryClient) {
@@ -31,4 +37,9 @@ export function seedDevFixtures(qc: QueryClient) {
   qc.setQueryData(getWeddingOptions({ path: { weddingId: CHULSOO_WEDDING_ID } }).queryKey, CHULSOO_WEDDING_FULL)
   qc.setQueryData(listAnnouncementsOptions({ path: { loungeId: CHULSOO_LOUNGE_ID } }).queryKey, { data: CHULSOO_ANNOUNCEMENTS, has_more: false } as never)
   qc.setQueryData(listFeedInfiniteQueryKey({ path: { loungeId: CHULSOO_LOUNGE_ID } }), { pages: [{ data: CHULSOO_FEED, has_more: false }], pageParams: [undefined] } as never)
+  // 보조 동선 — 강병주♥송민정 라운지(lng-1) 기본 피드 시드.
+  qc.setQueryData(getLoungeOptions({ path: { loungeId: BYEONGJU_LOUNGE_ID } }).queryKey, BYEONGJU_LOUNGE)
+  qc.setQueryData(getWeddingOptions({ path: { weddingId: BYEONGJU_WEDDING_ID } }).queryKey, BYEONGJU_WEDDING_FULL)
+  qc.setQueryData(listAnnouncementsOptions({ path: { loungeId: BYEONGJU_LOUNGE_ID } }).queryKey, { data: BYEONGJU_ANNOUNCEMENTS, has_more: false } as never)
+  qc.setQueryData(listFeedInfiniteQueryKey({ path: { loungeId: BYEONGJU_LOUNGE_ID } }), { pages: [{ data: BYEONGJU_FEED, has_more: false }], pageParams: [undefined] } as never)
 }

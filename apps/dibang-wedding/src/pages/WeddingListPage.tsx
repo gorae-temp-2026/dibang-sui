@@ -5,6 +5,10 @@ import { getMyParticipatedWeddingsOptions } from '@gorae/contracts/@tanstack/rea
 import type { ParticipatedWedding } from '@gorae/contracts';
 import { colors, fonts } from '../lib/theme';
 import { useJoinWeddingFromParam } from '../queries/wedding-list/useJoinWeddingFromParam';
+import { useT } from '../lib/i18n';
+
+// 이벤트 일반화: type(wedding|party) + party는 title 표시. fixture에서 주입(없으면 wedding).
+type EventItem = ParticipatedWedding & { type?: 'wedding' | 'party'; title?: string };
 
 function formatDday(dateStr: string): string {
   const wedding = new Date(dateStr + 'T00:00:00');
@@ -33,7 +37,10 @@ function formatDateKorean(dateStr: string, time?: string): string {
   return result;
 }
 
-function EventCard({ wedding, onClick }: { wedding: ParticipatedWedding; onClick: () => void }) {
+function EventCard({ wedding, onClick }: { wedding: EventItem; onClick: () => void }) {
+  const t = useT();
+  const isParty = wedding.type === 'party';
+  const displayName = isParty ? wedding.title ?? t('events.badge.party') : `${wedding.groom_name} & ${wedding.bride_name}`;
   const d = new Date(wedding.date + 'T00:00:00');
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -95,8 +102,27 @@ function EventCard({ wedding, onClick }: { wedding: ParticipatedWedding; onClick
             ...(hasPhoto ? { inset: 0, display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', paddingLeft: 24, paddingRight: 24, paddingTop: 24, paddingBottom: 20 } : {}),
           }}
         >
-          {/* D-day 배지 (지난 결혼식은 '완료' 태그를 표시하지 않음. wrapper는 유지하여 space-between 레이아웃 보존) */}
-          <div style={{ marginBottom: hasPhoto ? 0 : 20 }}>
+          {/* 상단 행: 타입 뱃지(웨딩 💍 / 파티 🎉) + D-day(지난 이벤트는 미표시) */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: hasPhoto ? 0 : 20 }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: '#FFFFFF',
+                color: isParty ? '#7C5CF0' : colors.textPrimary,
+                fontSize: 13,
+                fontWeight: 800,
+                paddingLeft: 10,
+                paddingRight: 11,
+                paddingTop: 4,
+                paddingBottom: 4,
+                borderRadius: 999,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+              }}
+            >
+              {isParty ? '🎉' : '💍'} {isParty ? t('events.badge.party') : t('events.badge.wedding')}
+            </span>
             {!isPast && (
               <span
                 style={{
@@ -128,7 +154,7 @@ function EventCard({ wedding, onClick }: { wedding: ParticipatedWedding; onClick
                 lineHeight: '34px',
               }}
             >
-              {wedding.groom_name} & {wedding.bride_name}
+              {displayName}
             </div>
             <div style={{ marginTop: 8, fontSize: 16, color: '#FFFFFF' }}>
               {formatDateKorean(wedding.date, wedding.time)}
@@ -166,7 +192,7 @@ function EventCard({ wedding, onClick }: { wedding: ParticipatedWedding; onClick
           </div>
         )}
         <p style={{ fontSize: 14, color: colors.textMuted, margin: '12px 0 0', textAlign: 'right' }}>
-          웨딩라운지 바로가기 ›
+          {t('events.loungeShortcut')} ›
         </p>
       </div>
     </div>
@@ -175,6 +201,7 @@ function EventCard({ wedding, onClick }: { wedding: ParticipatedWedding; onClick
 
 export function WeddingListPage() {
   const navigate = useNavigate();
+  const t = useT();
   const [searchParams, setSearchParams] = useSearchParams();
   const joinedRef = useRef(false);
   const joinWedding = useJoinWeddingFromParam();
@@ -205,7 +232,7 @@ export function WeddingListPage() {
     ...getMyParticipatedWeddingsOptions(),
   });
 
-  const weddingList = Array.isArray(weddings) ? weddings : [];
+  const weddingList = (Array.isArray(weddings) ? weddings : []) as EventItem[];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const upcoming = weddingList.filter((w) => new Date(w.date + 'T00:00:00') >= today);
@@ -222,21 +249,21 @@ export function WeddingListPage() {
           margin: 0,
         }}
       >
-        참여한 결혼식
+        {t('events.joined')}
       </h1>
       <div style={{ marginBottom: 24 }} />
 
-      {/* 예정된 결혼식 */}
+      {/* 예정된 이벤트 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: 2, color: colors.brand }}>
-          예정된 결혼식
+          {t('events.upcoming')}
         </span>
-        <span style={{ fontSize: 14, color: colors.textMuted }}>{isLoading ? '-' : upcoming.length}건</span>
+        <span style={{ fontSize: 14, color: colors.textMuted }}>{isLoading ? '-' : t('events.count', { n: upcoming.length })}</span>
       </div>
 
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '40px 0', color: colors.textMuted }}>
-          불러오는 중...
+          {t('events.loading')}
         </div>
       ) : upcoming.length === 0 ? (
         <div
@@ -250,7 +277,7 @@ export function WeddingListPage() {
             border: `1.5px dashed ${colors.borderWarm}`,
           }}
         >
-          <span style={{ fontSize: 16, color: colors.textMuted }}>예정된 결혼식이 없습니다</span>
+          <span style={{ fontSize: 16, color: colors.textMuted }}>{t('events.upcomingEmpty')}</span>
         </div>
       ) : (
         upcoming.map((w) => (
@@ -267,17 +294,17 @@ export function WeddingListPage() {
         <div style={{ flex: 1, height: 1, backgroundColor: colors.borderWarm }} />
       </div>
 
-      {/* 지난 결혼식 */}
+      {/* 지난 이벤트 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: 2, color: colors.textSecondary }}>
-          지난 결혼식
+          {t('events.past')}
         </span>
-        <span style={{ fontSize: 14, color: colors.textMuted }}>{isLoading ? '-' : past.length}건</span>
+        <span style={{ fontSize: 14, color: colors.textMuted }}>{isLoading ? '-' : t('events.count', { n: past.length })}</span>
       </div>
 
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '40px 0', color: colors.textMuted }}>
-          불러오는 중...
+          {t('events.loading')}
         </div>
       ) : past.length === 0 ? (
         <div
@@ -291,7 +318,7 @@ export function WeddingListPage() {
             border: `1.5px dashed ${colors.borderWarm}`,
           }}
         >
-          <span style={{ fontSize: 16, color: colors.textMuted }}>지난 결혼식이 없습니다</span>
+          <span style={{ fontSize: 16, color: colors.textMuted }}>{t('events.pastEmpty')}</span>
         </div>
       ) : (
         past.map((w) => (

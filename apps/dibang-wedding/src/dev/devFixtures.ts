@@ -35,8 +35,11 @@ export const MY_WEDDINGS: WeddingSummary[] = [
   },
 ]
 
-// 참여한 결혼식 = 철수의 사회적 이력(과거 다수 + 다가오는 일부). 모두 fixture.
-const part = (id: string, g: string, b: string, date: string, venue: string, hall: string, loungeId: string, time = '12:00'): ParticipatedWedding => ({
+// 참여한 이벤트 = 철수의 사회적 이력(과거 다수 + 다가오는 일부). 모두 fixture.
+// 이벤트 일반화: type('wedding'|'party'). 웨딩=신랑♥신부 / 파티=title 표시.
+export type EventItem = ParticipatedWedding & { type: 'wedding' | 'party'; title?: string }
+
+const part = (id: string, g: string, b: string, date: string, venue: string, hall: string, loungeId: string, time = '12:00'): EventItem => ({
   id,
   groom_name: g,
   bride_name: b,
@@ -45,14 +48,31 @@ const part = (id: string, g: string, b: string, date: string, venue: string, hal
   venue_name: venue,
   venue_hall: hall,
   lounge_id: loungeId,
+  type: 'wedding',
 })
 
-export const PARTICIPATED: ParticipatedWedding[] = [
+// 파티 이벤트 — 커플명 대신 title 표시.
+const party = (id: string, title: string, date: string, venue: string, hall: string, loungeId: string, time: string): EventItem => ({
+  id,
+  groom_name: '',
+  bride_name: '',
+  date,
+  time,
+  venue_name: venue,
+  venue_hall: hall,
+  lounge_id: loungeId,
+  type: 'party',
+  title,
+})
+
+export const PARTICIPATED: EventItem[] = [
   // 다가오는(미래)
+  party('pw-up-party', '정해린의 생일파티', '2026-07-04', '피플더 테라스 라운지', '청담동', 'lng-up-party', '19:00'),
   part('pw-up1', '박준영', '한소희', '2026-07-11', '아펠가모 선릉', '루나홀', 'lng-up1', '11:00'),
   part('pw-up2', '정우성', '김지원', '2026-08-23', '라움 아트센터', '그랜드볼룸', 'lng-up2', '14:00'),
   // 지난(과거)
   part('pw-1', '강병주', '송민정', '2026-05-16', '소노펠리체 라비에벨', '채플', 'lng-1', '13:30'),
+  party('pw-past-party', '북한산 등산 동호회 파티', '2026-05-02', '북한산 백운대 입구', '', 'lng-past-party', '10:00'),
   part('pw-2', '이도현', '문가영', '2026-04-12', '그랜드 하얏트 서울', '그랜드볼룸', 'lng-2', '12:00'),
   part('pw-3', '최우식', '전소민', '2025-11-09', '더라움', '컨벤션홀', 'lng-3', '15:00'),
   part('pw-4', '남주혁', '배수지', '2025-10-18', '워커힐 르뱅', '애스톤하우스', 'lng-4', '11:30'),
@@ -108,5 +128,38 @@ export const CHULSOO_FEED: FeedItem[] = [
 
 export const CHULSOO_ANNOUNCEMENTS = [
   { id: 'an1', lounge_id: CHULSOO_LOUNGE_ID, host_id: CHULSOO_ME.id, message: '와주시는 모든 분들께 미리 감사드려요 🙏 주차는 건물 지하 1~3층 가능합니다.', is_pinned: true, created_at: '2026-06-18T08:00:00Z' },
+] as unknown as Announcement[]
+
+// ─ 지난 이벤트 '강병주 & 송민정' 라운지(lng-1) — 보조 동선 콘텐츠 시드(CHULSOO 패턴) ─
+// 철수는 하객(host 아님). 기본 피드만 시드. 나머지 지난 이벤트 라운지는 비활성(시드 없음).
+export const BYEONGJU_LOUNGE_ID = 'lng-1'
+export const BYEONGJU_WEDDING_ID = 'pw-1'
+
+export const BYEONGJU_LOUNGE = {
+  id: BYEONGJU_LOUNGE_ID,
+  wedding_id: BYEONGJU_WEDDING_ID,
+  name: '강병주 · 송민정의 라운지',
+  gather_place: { id: 'gp-byeongju', name: '모이가 모인곳' },
+} as unknown as Lounge
+
+export const BYEONGJU_WEDDING_FULL = {
+  id: BYEONGJU_WEDDING_ID,
+  status: 'completed',
+  info: { groom_name: '강병주', bride_name: '송민정', date: '2026-05-16', time: '13:30', venue_name: '소노펠리체 라비에벨', venue_hall: '채플' },
+  hosts: { host_groom_id: 'byeongju-host', host_bride_id: 'minjeong-host' },
+  lounge: { id: BYEONGJU_LOUNGE_ID, name: '강병주 · 송민정의 라운지' },
+  invitations: [],
+  created_at: '2026-04-20T00:00:00Z',
+} as unknown as Wedding
+
+export const BYEONGJU_FEED: FeedItem[] = [
+  fi('guestbook_message', 'bj-gm1', '2026-05-16T15:00:00Z', { message: '병주야 민정아 결혼 축하해!! 평생 행복하자 🎉', guest_name: '김철수', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '대학 동기', view_count: 28 }),
+  fi('memory', 'bj-m1', '2026-05-16T14:20:00Z', { text: '라비에벨 채플 너무 예뻤다 🌿', photo_url: '/assets/inyeon-photos/c2.jpg', author_name: '송민정' }),
+  fi('guestbook_message', 'bj-gm2', '2026-05-16T13:50:00Z', { message: '두 사람 너무 잘 어울려요 💕', guest_name: '문가영', recipient_slot: 'bride', relation_category: '직장동료', view_count: 19 }),
+  fi('guestbook_entry', 'bj-ge1', '2026-05-16T13:10:00Z', { guest_name: '이도현', recipient_slot: 'groom', relation_category: '친구/지인', relation_detail: '고향 친구' }, 9),
+]
+
+export const BYEONGJU_ANNOUNCEMENTS = [
+  { id: 'bj-an1', lounge_id: BYEONGJU_LOUNGE_ID, host_id: 'byeongju-host', message: '함께해 주신 모든 분들께 감사드립니다 🙏', is_pinned: true, created_at: '2026-05-16T12:00:00Z' },
 ] as unknown as Announcement[]
 
