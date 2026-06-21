@@ -55,3 +55,41 @@ export function buildRevokeIumTx(params: RevokeIumParams): Transaction {
   });
   return tx;
 }
+
+export interface RequestIumParams {
+  /** 이음을 신청할 상대 지갑 주소. */
+  toUser: string;
+}
+
+export interface AcceptIumParams {
+  /** request_ium이 만든 매칭 INYEON Event ID. */
+  eventId: string;
+  /** 수신자가 소유한 IumRequest 객체 ID(소유=수락 권한). */
+  requestId: string;
+}
+
+/**
+ * 이음 신청(현행) — `request_ium(to_user, clock)`. 매칭 INYEON Event 생성(신청자=INITIATOR) + IumRequest를
+ * to_user에게 전달. relationType·label(PII) 없음(오프체인). buildCreateIumTx 대체.
+ */
+export function buildRequestIumTx(params: RequestIumParams): Transaction {
+  const tx = new Transaction();
+  tx.moveCall({
+    target: moveTarget('ium', 'request_ium'),
+    arguments: [tx.pure.address(params.toUser), tx.object.clock()],
+  });
+  return tx;
+}
+
+/**
+ * 이음 수락(현행) — `accept_ium(ev, req, clock)`. 수신자가 RECEIVER로 참가해 매칭 확정 → 양방향 CS 신호 발행.
+ * req(IumRequest)는 수신자 소유(소유=게이트). buildRevokeIumTx의 정상 대응(매칭은 취소 아닌 수락).
+ */
+export function buildAcceptIumTx(params: AcceptIumParams): Transaction {
+  const tx = new Transaction();
+  tx.moveCall({
+    target: moveTarget('ium', 'accept_ium'),
+    arguments: [tx.object(params.eventId), tx.object(params.requestId), tx.object.clock()],
+  });
+  return tx;
+}

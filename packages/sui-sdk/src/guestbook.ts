@@ -54,3 +54,22 @@ export function buildClaimEntryTx(params: ClaimEntryParams): Transaction {
   });
   return tx;
 }
+
+export interface WriteParams {
+  weddingId: string;
+  /** 하객이 이 결혼식 이벤트에 GUEST로 참가해 받은 Participation 객체 ID(참가-먼저). */
+  participationId: string;
+}
+
+/**
+ * 방명록(현행) — `write(wedding, participation, clock)`. 본문·이름은 오프체인(PII 없음).
+ * WRITE_MESSAGE → CS 신호를 온체인 분류·발행한다. buildWriteEntryTx 대체.
+ */
+export function buildWriteTx(params: WriteParams): Transaction {
+  const tx = new Transaction();
+  tx.moveCall({
+    target: moveTarget('guestbook', 'write'),
+    arguments: [tx.object(params.weddingId), tx.object(params.participationId), tx.object.clock()],
+  });
+  return tx;
+}

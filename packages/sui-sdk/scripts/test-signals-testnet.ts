@@ -24,6 +24,10 @@ import {
   getSignalEvents,
   getWedding,
   getCashGiftVault,
+  buildGiveTx,
+  buildWriteTx,
+  buildRequestIumTx,
+  buildAcceptIumTx,
 } from '../src/index';
 import { creditFromSignals, type SignalEvent } from '../../../apps/dibang-wedding/src/lib/credit';
 
@@ -78,6 +82,8 @@ async function main() {
   console.log('PKG :', PKG);
   console.log('HOST:', H);
   console.log('GUEST:', G);
+  // SDK 빌더가 moveTarget(getConfig().packageId)를 쓰므로, *빌더 사용 전* 새 배포 PKG로 설정.
+  configureSui({ network: 'testnet', packageId: PKG });
 
   // 펀딩: HOST faucet → GUEST에 0.3 SUI 송금(faucet 레이트리밋 회피).
   await faucet(H);
@@ -114,35 +120,23 @@ async function main() {
   const partId = created(r3, '::event::Participation');
   console.log('  ✓ participate (attendance CS)', { partId });
 
-  // 4) GUEST: give(부조 1000 MIST) → BUSU 신호.
-  const t4 = new Transaction();
-  const [coin] = t4.splitCoins(t4.gas, [1000]);
-  t4.moveCall({
-    target: `${PKG}::cash_gift::give`,
-    arguments: [t4.object(vaultId), t4.object(weddingId), t4.object(partId), coin, t4.object(CLOCK)],
-  });
-  await executeAndAssert(client, { transaction: t4, signer: guest });
-  console.log('  ✓ give (BUSU)');
+  // 4) GUEST: give(부조 1000 MIST) → BUSU 신호. (SDK buildGiveTx 실증)
+  await executeAndAssert(client, { transaction: buildGiveTx({ vaultId, weddingId, participationId: partId, amount: 1000n }), signer: guest });
+  console.log('  ✓ give (BUSU) — buildGiveTx');
 
-  // 5) GUEST: write(방명록) → CS 신호.
-  const t5 = new Transaction();
-  t5.moveCall({ target: `${PKG}::guestbook::write`, arguments: [t5.object(weddingId), t5.object(partId), t5.object(CLOCK)] });
-  await executeAndAssert(client, { transaction: t5, signer: guest });
-  console.log('  ✓ write (CS)');
+  // 5) GUEST: write(방명록) → CS 신호. (SDK buildWriteTx 실증)
+  await executeAndAssert(client, { transaction: buildWriteTx({ weddingId, participationId: partId }), signer: guest });
+  console.log('  ✓ write (CS) — buildWriteTx');
 
-  // 6) 인연 매칭: HOST(=initiator A) request_ium(GUEST=receiver B) → INYEON Event + IumRequest(→B).
-  const t6 = new Transaction();
-  t6.moveCall({ target: `${PKG}::ium::request_ium`, arguments: [t6.pure.address(G), t6.object(CLOCK)] });
-  const r6 = await executeAndAssert(client, { transaction: t6, signer: host });
+  // 6) 인연 매칭: HOST(=initiator A) request_ium(GUEST=receiver B) → INYEON Event + IumRequest(→B). (buildRequestIumTx 실증)
+  const r6 = await executeAndAssert(client, { transaction: buildRequestIumTx({ toUser: G }), signer: host });
   const inyeonEventId = created(r6, '::event::Event');
   const reqId = created(r6, '::ium::IumRequest');
-  console.log('  ✓ request_ium', { inyeonEventId });
+  console.log('  ✓ request_ium — buildRequestIumTx', { inyeonEventId });
 
-  // 7) GUEST(B) accept_ium → 매칭 확정 = 양방향 CS(initiator↔receiver) 신호.
-  const t7 = new Transaction();
-  t7.moveCall({ target: `${PKG}::ium::accept_ium`, arguments: [t7.object(inyeonEventId), t7.object(reqId), t7.object(CLOCK)] });
-  await executeAndAssert(client, { transaction: t7, signer: guest });
-  console.log('  ✓ accept_ium (match CS 양방향)');
+  // 7) GUEST(B) accept_ium → 매칭 확정 = 양방향 CS(initiator↔receiver) 신호. (buildAcceptIumTx 실증)
+  await executeAndAssert(client, { transaction: buildAcceptIumTx({ eventId: inyeonEventId, requestId: reqId }), signer: guest });
+  console.log('  ✓ accept_ium (match CS 양방향) — buildAcceptIumTx');
 
   // 8) read: 온체인 SignalEmitted 조회 (인덱싱 대기 후).
   configureSui({ network: 'testnet', packageId: PKG });

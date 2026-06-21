@@ -81,3 +81,32 @@ export function buildWithdrawTx(params: WithdrawParams): Transaction {
   tx.transferObjects([coin], params.owner);
   return tx;
 }
+
+export interface GiveParams {
+  vaultId: string;
+  weddingId: string;
+  /** 하객(actor)이 이 결혼식 이벤트에 GUEST로 참가해 받은 Participation 객체 ID(참가-먼저). */
+  participationId: string;
+  /** MIST 단위 부조 금액. */
+  amount: bigint;
+}
+
+/**
+ * 부조(현행) — 가스에서 금액 분리 → `give(vault, wedding, participation, coin, clock)`. PII 없음(결정#2).
+ * give가 방향·역할을 participation에서 파생해 GIVE_MONEY → BUSU 신호를 온체인 분류·발행한다. buildSendGiftTx 대체.
+ */
+export function buildGiveTx(params: GiveParams): Transaction {
+  const tx = new Transaction();
+  const coin = tx.splitCoins(tx.gas, [tx.pure.u64(params.amount)]);
+  tx.moveCall({
+    target: moveTarget('cash_gift', 'give'),
+    arguments: [
+      tx.object(params.vaultId),
+      tx.object(params.weddingId),
+      tx.object(params.participationId),
+      coin,
+      tx.object.clock(),
+    ],
+  });
+  return tx;
+}
