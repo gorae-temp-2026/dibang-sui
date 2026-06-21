@@ -4,6 +4,7 @@
  * 우측 세로 타임라인 슬라이더 + 노드 클릭 프로필 패널.
  */
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useSearchParams } from 'react-router'
 import ForceGraph2D from 'react-force-graph-2d'
 import { createJsonRpcClient, getSignalEvents, getParticipatedEvents, getMoiCreatedEvents, getIumAcceptedEvents, configureSui, type SuiNetwork } from '@gorae/sui-sdk'
 import { env } from '../env'
@@ -186,10 +187,22 @@ export function TrustGraphPage() {
     )
   }
 
+  const [searchParams] = useSearchParams()
+  const showVideo = searchParams.get('video') === '1'
   const tsLabel = new Date(currentMaxTs).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#0A1626]">
+    <div className="relative flex h-screen w-screen overflow-hidden bg-[#0A1626]">
+      {showVideo && (
+        <div className="h-full w-1/2 flex-shrink-0 border-r border-white/10">
+          <iframe
+            src="/submit/demo_video_player.html"
+            className="h-full w-full border-none"
+            allow="autoplay"
+          />
+        </div>
+      )}
+      <div className={`relative ${showVideo ? 'w-1/2' : 'w-full'} h-full`}>
       {/* 좌상단 통계 */}
       <div className="absolute left-4 top-4 z-10 rounded-xl bg-black/50 px-4 py-3 backdrop-blur">
         <h1 className="text-lg font-bold text-white">Trust Network Graph</h1>
@@ -300,7 +313,7 @@ export function TrustGraphPage() {
       <ForceGraph2D
         ref={graphRef}
         graphData={graphData}
-        width={typeof window !== 'undefined' ? window.innerWidth : 800}
+        width={typeof window !== 'undefined' ? (showVideo ? window.innerWidth / 2 : window.innerWidth) : 800}
         height={typeof window !== 'undefined' ? window.innerHeight : 600}
         backgroundColor="#0A1626"
         cooldownTicks={30}
@@ -332,6 +345,7 @@ export function TrustGraphPage() {
           ctx.fillText(node.label, node.x, node.y + r + 4)
         }}
       />
+      </div>
     </div>
   )
 }
