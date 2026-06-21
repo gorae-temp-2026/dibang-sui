@@ -14,6 +14,7 @@
 module dibang_wedding::ledger;
 
 use dibang_wedding::event as gathering;
+use dibang_wedding::signal::{Self, Signal};
 use sui::clock::Clock;
 use sui::event;
 
@@ -64,6 +65,8 @@ public struct ActionRecord has key {
     /// 이 액션이 청산하는 이전 의무(대여 상환 등). 없으면 none.
     settles: Option<ID>,
     created_at_ms: u64,
+    /// 이 액션에서 *온체인 분류*된 신호들(부조/유대, fan-out 0~N). 분류=SSOT — DeFi가 직접 읽고, 인덱서는 SignalEmitted로.
+    signals: vector<Signal>,
 }
 
 // === Events ===
@@ -101,6 +104,9 @@ public(package) fun log(
     assert!(gathering::participant(participation) == actor, EActorMismatch);
     let event_id = gathering::participation_event_id(participation);
     let role_id = gathering::role_id(participation);
+    let event_type = gathering::participation_event_type(participation);
+    // 온체인 분류: 이 액션 → 0~N 신호(fan-out). 분류 규칙은 signal 모듈(온체인 SSOT); 가중치·전파는 오프체인.
+    let signals = signal::project_action(action_type, event_type, role_id, actor, target, amount);
 
     let rec = ActionRecord {
         id: object::new(ctx),
@@ -112,8 +118,11 @@ public(package) fun log(
         amount,
         settles,
         created_at_ms: clock.timestamp_ms(),
+        signals,
     };
     let id = object::id(&rec);
+    // 분류된 신호를 SignalEmitted로 발행(인덱서/credit.ts 입력) — fan-out 만큼.
+    signal::emit_signals(&rec.signals, event_id, clock);
     event::emit(ActionLogged {
         record_id: id,
         event_id,
@@ -132,6 +141,8 @@ public(package) fun log(
 // === Views ===
 
 public fun record_event_id(rec: &ActionRecord): ID { rec.event_id }
+/// 이 액션에서 분류된 신호들(온체인 SSOT). DeFi 등 온체인 소비자가 직접 읽음.
+public fun record_signals(rec: &ActionRecord): vector<Signal> { rec.signals }
 public fun action_type(rec: &ActionRecord): u8 { rec.action_type }
 public fun actor(rec: &ActionRecord): address { rec.actor }
 public fun target(rec: &ActionRecord): Option<address> { rec.target }

@@ -54,6 +54,8 @@ public struct Event has key {
 public struct Participation has key {
     id: UID,
     event_id: ID,
+    // 이 참가가 속한 이벤트의 타입(WEDDING/INYEON). 발행 시 Event에서 복사 — ledger::log이 신호 분류에 씀(추가 인자/조회 없이).
+    event_type: u8,
     participant: address,
     role_id: u8,
     created_at_ms: u64,
@@ -90,7 +92,7 @@ public fun new_event(event_type: u8, creator_role_id: u8, clock: &Clock, ctx: &m
     let event_id = object::id(&ev);
     event::emit(EventCreated { event_id, event_type, creator });
     transfer::share_object(ev);
-    mint_participation(event_id, creator, creator_role_id, clock, ctx);
+    mint_participation(event_id, event_type, creator, creator_role_id, clock, ctx);
     event_id
 }
 
@@ -99,7 +101,7 @@ public fun new_event(event_type: u8, creator_role_id: u8, clock: &Clock, ctx: &m
 public fun participate(ev: &Event, role_id: u8, clock: &Clock, ctx: &mut TxContext): ID {
     assert!(role_id <= ROLE_MAX, EInvalidRole);
     assert!(is_self_claimable(role_id), ENotSelfClaimable);
-    mint_participation(object::id(ev), ctx.sender(), role_id, clock, ctx)
+    mint_participation(object::id(ev), ev.event_type, ctx.sender(), role_id, clock, ctx)
 }
 
 /// 이벤트 생성자가 타인에게 임의 역할(공동 혼주·주례 등 권위 역할 포함)을 부여한다.
@@ -107,7 +109,7 @@ public fun participate(ev: &Event, role_id: u8, clock: &Clock, ctx: &mut TxConte
 public fun assign_role(ev: &Event, to: address, role_id: u8, clock: &Clock, ctx: &mut TxContext): ID {
     assert!(ctx.sender() == ev.creator, ENotCreator);
     assert!(role_id <= ROLE_MAX, EInvalidRole);
-    mint_participation(object::id(ev), to, role_id, clock, ctx)
+    mint_participation(object::id(ev), ev.event_type, to, role_id, clock, ctx)
 }
 
 // === Package-internal ===
@@ -122,7 +124,7 @@ public(package) fun mint_participation_for(
     ctx: &mut TxContext,
 ): ID {
     assert!(role_id <= ROLE_MAX, EInvalidRole);
-    mint_participation(object::id(ev), to, role_id, clock, ctx)
+    mint_participation(object::id(ev), ev.event_type, to, role_id, clock, ctx)
 }
 
 // === Private ===
@@ -133,10 +135,11 @@ fun is_self_claimable(role_id: u8): bool {
     role_id == ROLE_GUEST
 }
 
-fun mint_participation(event_id: ID, participant: address, role_id: u8, clock: &Clock, ctx: &mut TxContext): ID {
+fun mint_participation(event_id: ID, event_type: u8, participant: address, role_id: u8, clock: &Clock, ctx: &mut TxContext): ID {
     let p = Participation {
         id: object::new(ctx),
         event_id,
+        event_type,
         participant,
         role_id,
         created_at_ms: clock.timestamp_ms(),
@@ -154,6 +157,7 @@ public fun creator(ev: &Event): address { ev.creator }
 public fun event_created_at_ms(ev: &Event): u64 { ev.created_at_ms }
 
 public fun participation_event_id(p: &Participation): ID { p.event_id }
+public fun participation_event_type(p: &Participation): u8 { p.event_type }
 public fun participant(p: &Participation): address { p.participant }
 public fun role_id(p: &Participation): u8 { p.role_id }
 
