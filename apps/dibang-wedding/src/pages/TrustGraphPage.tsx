@@ -44,6 +44,8 @@ function buildGraph(rawEdges: RawEdge[], _allAddresses: Set<string>, iumMap: Map
 }
 
 export function TrustGraphPage() {
+  const [searchParams] = useSearchParams()
+  const showVideo = searchParams.get('video') !== '0'
   const [rawEdges, setRawEdges] = useState<RawEdge[]>([])
   const [allAddresses, setAllAddresses] = useState<Set<string>>(new Set())
   const [iumMap, setIumMap] = useState<Map<string, string[]>>(new Map())
@@ -187,8 +189,6 @@ export function TrustGraphPage() {
     )
   }
 
-  const [searchParams] = useSearchParams()
-  const showVideo = searchParams.get('video') === '1'
   const tsLabel = new Date(currentMaxTs).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
   return (
