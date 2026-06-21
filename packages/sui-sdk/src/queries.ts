@@ -295,3 +295,32 @@ export async function getParticipatedEvents(client: SuiJsonRpcClient): Promise<P
     return { eventId: asString(p.event_id), participant: asString(p.participant), roleId: asNumber(p.role_id) };
   });
 }
+
+/**
+ * signal::SignalEmitted — **온체인에서 분류된 신호**(부조/유대, kind). credit.ts의 주 입력.
+ * 분류=온체인 SSOT이므로 credit은 이걸 fold→Φ만 하면 됨(action/event/role 재분류 불필요).
+ * 한 액션이 여러 SignalEmitted를 낼 수 있음(fan-out). magnitude=EM 금액/CS 1.
+ */
+export interface SignalQuery {
+  eventId: string;
+  kind: number;
+  from: string;
+  to: string;
+  magnitude: number;
+  ts: number;
+}
+
+export async function getSignalEvents(client: SuiJsonRpcClient): Promise<SignalQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('signal', 'SignalEmitted'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return {
+      eventId: asString(p.event_id),
+      kind: asNumber(p.kind),
+      from: asString(p.from),
+      to: asString(p.to),
+      magnitude: asNumber(p.magnitude),
+      ts: asNumber(p.created_at_ms),
+    };
+  });
+}

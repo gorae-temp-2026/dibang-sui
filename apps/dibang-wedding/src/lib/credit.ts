@@ -1,29 +1,13 @@
-// 신뢰 → 신용 (오프체인 크레딧 리더)
+// 신뢰 → 신용 (오프체인 *집계*)
 //
-// 온체인 raw 이벤트(dibang_wedding::ledger `ActionLogged` + ::event `EventCreated`)를 읽어
-// 지갑별 신용 점수를 계산한다. 설계(MASTER_DIRECTIVE / SUI_CONTRACT_DESIGN_DIRECTION 결정#12):
-// - 신용 계산은 **오프체인**. 온체인은 raw 액션만. 해석(부조/EM/CS)·전파 비중은 *여기*에 산다(온체인에 안 박음).
-// - 파이프라인: raw 액션 → project(해석 규칙) → fold(EM 부조 give[g][h] / CS tie[a][b]) → Φ(전파) → 가중합.
-// - Φ = 09-credit-propagation PHI-5: **부조 = reversed-giving PageRank**(베푼 쪽이 적립, 상대 신용으로 가중),
-//   **CS = authority PageRank**(유대받는 쪽 적립, 고신뢰자에게 받을수록↑ — 유대의 질 반영), 이행 = 데이터 없으면 0.7.
-// - 가중합(doc 09): 최종 = 0.5·부조 + 0.3·CS + 0.2·이행. (first-cut 임의값 — 실데이터로 튜닝.)
-// - 증여(GIFT) EM은 부조 전파에서 제외(MOICREDIT_AUDIT: sole-giver 농사 방지) → CS로만 집계.
+// **분류는 온체인이 한다.** "이 액션이 부조/유대다"라는 신호 분류(project·fan-out·방향·자기엣지)는
+// contracts/dibang_wedding/sources/signal.move(온체인 SSOT)가 수행하고 SignalEmitted로 발행한다.
+// 이 파일은 그 *분류된 Signal*만 입력받아 fold→Φ(전파)→가중합으로 지갑별 신용을 낸다(집계 전담).
+// 온체인에 두기 어려운 그래프-단위 연산(wash net 상쇄)·전파(PageRank)·가중치만 여기 남는다.
+// 09-credit-propagation PHI-5: 부조=reversed-giving PageRank(net) / CS=authority PageRank / 가중합 0.5·0.3·0.2.
 
-// action_type — contracts/dibang_wedding/sources/ledger.move 와 일치(u8).
-export const ACTION = {
-  GIVE_MONEY: 0,
-  REQUEST_IUM: 1,
-  ACCEPT_IUM: 2,
-  GIFT: 3,
-  WRITE_MESSAGE: 4,
-  ATTEND: 5,
-  INVITE: 6,
-} as const
-
-// event_type — ::event 와 일치.
-export const EVENT = { WEDDING: 0, INYEON: 1 } as const
-// role_id — ::event 와 일치.
-export const ROLE = { HOST: 0, GUEST: 1, OFFICIANT: 2, INITIATOR: 3, RECEIVER: 4 } as const
+// SignalKind — contracts/dibang_wedding/sources/signal.move 와 일치(u8).
+export const KIND = { NONE: 0, BUSU: 1, CS: 2 } as const
 
 const DAMPING = 0.85
 const ITERS = 60
@@ -32,30 +16,13 @@ const W_CS = 0.3
 const W_PERF = 0.2
 const PERF_NO_RECORD = 0.7
 
-/** ledger::ActionLogged 이벤트(온체인 필드 미러). amount 등은 number로 파싱된 것으로 가정. */
-export interface ActionLoggedEvent {
-  eventId: string
-  actionType: number
-  actor: string
-  target: string | null
-  roleId: number
-  amount: number
-  ts: number
-}
-
-/** event::EventCreated 이벤트(event_id → event_type 해석 + creator). */
-export interface EventCreatedEvent {
-  eventId: string
-  eventType: number
-  /** 이벤트 생성자(웨딩=혼주). 참석(Participation)의 CS 대상. */
-  creator: string
-}
-
-/** event::Participated 이벤트 — 참가(역할). 참석 = CS '함께함' 신호의 원천(참가=출석). */
-export interface ParticipatedEvent {
-  eventId: string
-  participant: string
-  roleId: number
+/** 온체인에서 분류·발행된 신호(signal::SignalEmitted 미러). credit의 유일 입력 — 분류는 이미 끝났다. */
+export interface SignalEvent {
+  kind: number
+  from: string
+  to: string
+  /** EM=금액, CS=1. */
+  magnitude: number
 }
 
 export interface CreditResult {
@@ -77,73 +44,9 @@ function addEdge(g: Graph, from: string, to: string, w: number) {
 }
 
 /**
- * project + fold — raw 액션을 EM 부조 그래프와 CS 유대 그래프로 접는다.
- * 해석 규칙(action_type × event_type × role):
- * - GIVE_MONEY @ WEDDING (하객 GUEST → 혼주) = 부조(EM): give[actor][target] += amount.
- * - WRITE_MESSAGE / INVITE / GIFT = 유대(CS): tie[actor][target] += 1. (GIFT EM은 부조 제외)
- * - 인연 매칭·참석은 ActionLogged가 아니라 *Participated*에서 도출(§3-F: ium은 ledger 미기록). 아래 참가 루프.
- * - REQUEST_IUM(대기)·ACCEPT_IUM(ledger 미기록)·target 없는 건 ActionLogged 무신호.
- */
-function fold(
-  actions: ActionLoggedEvent[],
-  events: EventCreatedEvent[],
-  participated: ParticipatedEvent[],
-): { busu: Graph; cs: Graph; nodes: Set<string> } {
-  const eventType = new Map(events.map((e) => [e.eventId, e.eventType]))
-  const eventCreator = new Map(events.map((e) => [e.eventId, e.creator]))
-  const busu: Graph = new Map()
-  const cs: Graph = new Map()
-  const nodes = new Set<string>()
-
-  for (const a of actions) {
-    nodes.add(a.actor)
-    if (a.target) nodes.add(a.target)
-    // 대상 없음 / 자기엣지(actor==target = 자기거래 농사) 제외 — §8 V4 "자기통제 target은 Φ에서 필터".
-    if (!a.target || a.actor === a.target) continue
-
-    const et = eventType.get(a.eventId)
-    switch (a.actionType) {
-      case ACTION.GIVE_MONEY:
-        // 부조 = 결혼식의 하객→혼주 EM. 그 외 맥락(거래 등)은 first-cut 제외.
-        if (et === EVENT.WEDDING && a.roleId === ROLE.GUEST && a.amount > 0) {
-          addEdge(busu, a.actor, a.target, a.amount)
-        }
-        break
-      case ACTION.WRITE_MESSAGE:
-      case ACTION.INVITE:
-      case ACTION.GIFT:
-        // 유대 신호(방향별 누적). 증여(GIFT)도 CS로만(EM 부조 전파 제외).
-        // (ACCEPT_IUM은 ledger에 안 기록됨 — 인연 매칭 CS는 아래 Participated 루프에서 양방향 도출.)
-        addEdge(cs, a.actor, a.target, 1)
-        break
-      default:
-        break // REQUEST_IUM 등
-    }
-  }
-
-  // 참석·매칭 = Participated에서 CS 도출(§3-F: 인연 매칭은 ledger 미기록 → Event+양측 Participation으로).
-  // - 웨딩: 참석 = 참가자 → 생성자(혼주) 단방향 CS(함께함). (I1)
-  // - 인연(INYEON): 매칭 = 상호 관계 → 생성자(initiator) ↔ 참가자(receiver) 양방향 CS. (Critical1/I-CS1)
-  // 생성자 본인 Participation(participant==creator)은 엣지 아님.
-  for (const p of participated) {
-    nodes.add(p.participant)
-    const creator = eventCreator.get(p.eventId)
-    if (!creator) continue
-    nodes.add(creator)
-    if (p.participant === creator) continue
-    addEdge(cs, p.participant, creator, 1)
-    // 인연 매칭은 상호 — 반대 방향(생성자→참가자)도 추가.
-    if (eventType.get(p.eventId) === EVENT.INYEON) addEdge(cs, creator, p.participant, 1)
-  }
-
-  return { busu, cs, nodes }
-}
-
-/**
  * 부조 그래프를 *net*으로 변환 — 상호 엣지 상쇄(net[A][B] = max(0, give[A][B] − give[B][A])).
- * 07 fold의 EM 정의(net = give − recv, 아벨군 청산)와 정합시키고, **A↔B wash(순환 부조)를 자동 0**으로 만든다
- * (서로 같은 양이면 net 0; 정직한 비대칭 부조는 차액만 남아 보존). reversed-giving은 PageRank 계열이라 상호참조
- * 클러스터를 못 거르므로(09 §5 correlation discounting 미적용), net 전파가 그 1차 방어다(§8 b — 시빌 wash 차단).
+ * 07 EM 아벨군(net=give−recv) 정합 + A↔B wash(순환 부조)를 0으로(시빌 방어, §8 b). 그래프-단위라 온체인 분류로
+ * 못 하고 여기(집계) 잔류.
  */
 function netGiveGraph(give: Graph): Graph {
   const net: Graph = new Map()
@@ -158,10 +61,8 @@ function netGiveGraph(give: Graph): Graph {
 }
 
 /**
- * 부조 신용 = reversed-giving PageRank (PHI-5).
- * recv[h] = Σ_g give[g][h]; π_g = (1−d)/N + d·Σ_h (give[g][h]/recv[h])·π_h.
- * "베푼 쪽이 적립, 상대(받은 쪽)의 신용으로 가중되는 재귀 전파" — 받는 행위는 신용을 안 올린다.
- * 입력은 *net* give 그래프(netGiveGraph) — gross를 전파하면 wash를 신용으로 오인.
+ * 부조 신용 = reversed-giving PageRank (PHI-5). 베푼 쪽이 적립, 상대 신용으로 가중되는 재귀 전파.
+ * recv[h] = Σ_g give[g][h]; π_g = (1−d)/N + d·Σ_h (give[g][h]/recv[h])·π_h. 입력은 net give 그래프.
  */
 function reversedGivingPageRank(give: Graph, nodes: string[]): Record<string, number> {
   const N = nodes.length
@@ -189,8 +90,8 @@ function reversedGivingPageRank(give: Graph, nodes: string[]): Record<string, nu
 }
 
 /**
- * CS 신용 = authority PageRank (PHI-5 정식). 유대받는 쪽이 적립하되, **높은 신뢰 노드에게 유대받을수록 더 높다**.
- * π_b = (1−d)/N + d·Σ_a (tie[a][b]/out[a])·π_a (out[a] = a의 총 유대). flat in-tie와 달리 유대의 *질*(중심성)을 반영.
+ * CS 신용 = authority PageRank (PHI-5 정식). 유대받는 쪽이 적립하되 높은 신뢰 노드에게 받을수록 더 높다.
+ * π_b = (1−d)/N + d·Σ_a (tie[a][b]/out[a])·π_a (out[a] = a의 총 유대).
  */
 function authorityPageRank(g: Graph, nodes: string[]): Record<string, number> {
   const N = nodes.length
@@ -222,26 +123,36 @@ function normalize(scores: Record<string, number>, nodes: string[]): Record<stri
 }
 
 /**
- * 온체인 raw 이벤트 → 지갑별 신용. (신뢰 → 신용)
- * decision#12: 오프체인 계산. 결정값(비중·이행 기본치)은 여기(튜닝 대상)에만 있다.
+ * 온체인 Signal들을 부조(EM) / 유대(CS) 그래프로 접는다. **분류는 이미 온체인서 끝남** — kind로 분기만.
+ * (fan-out·방향·자기엣지 필터는 signal.move가 했음. 여기선 자기엣지는 방어적으로 한 번 더 스킵.)
  */
-export function creditFromEvents(
-  actions: ActionLoggedEvent[],
-  events: EventCreatedEvent[],
-  participated: ParticipatedEvent[] = [],
-): CreditResult {
-  const { busu, cs, nodes } = fold(actions, events, participated)
-  const nodeList = [...nodes]
+function fold(signals: SignalEvent[]): { busu: Graph; cs: Graph; nodes: Set<string> } {
+  const busu: Graph = new Map()
+  const cs: Graph = new Map()
+  const nodes = new Set<string>()
+  for (const s of signals) {
+    nodes.add(s.from)
+    nodes.add(s.to)
+    if (s.from === s.to) continue // 온체인서 이미 걸러지나 방어
+    if (s.kind === KIND.BUSU) addEdge(busu, s.from, s.to, s.magnitude)
+    else if (s.kind === KIND.CS) addEdge(cs, s.from, s.to, s.magnitude)
+  }
+  return { busu, cs, nodes }
+}
 
-  // net 전파(wash 상쇄 + 07 EM 아벨군 정합): 상호 부조의 같은 양은 청산, 차액만 신용에 전파.
-  const busuRaw = reversedGivingPageRank(netGiveGraph(busu), nodeList)
-  // 부조 standing = teleport 기준선((1−d)/N) 위로 전파된 *초과분*(베푼 활동이 만든 기여). 비-기여자(안 베푼
-  // 사람)는 기준선에 머물러 초과분 0 → 부조 신용 0. (기준선까지 정규화하면 '아무도 안 베푼 그래프'에서
-  // 전원이 만점이 되는 퇴화를 막는다. PageRank는 그대로, 표현만 초과분 기준.)
+/**
+ * 온체인 분류 신호 → 지갑별 신용. (신뢰 → 신용; 집계 전담)
+ * 부조 standing·CS는 teleport 기준선 초과분으로 0~1화(비-기여자=0, 전원-만점 퇴화 방지).
+ */
+export function creditFromSignals(signals: SignalEvent[]): CreditResult {
+  const { busu, cs, nodes } = fold(signals)
+  const nodeList = [...nodes]
   const baseline = nodeList.length > 0 ? (1 - DAMPING) / nodeList.length : 0
+
+  // net 전파(wash 상쇄 + 07 EM 아벨군) 후 reversed-giving.
+  const busuRaw = reversedGivingPageRank(netGiveGraph(busu), nodeList)
   const busuExcess: Record<string, number> = {}
   for (const n of nodeList) busuExcess[n] = Math.max(0, (busuRaw[n] ?? 0) - baseline)
-  // CS도 부조와 동일하게 기준선 초과분으로(유대 없는 노드 = CS 0, 전원-만점 퇴화 방지).
   const csRaw = authorityPageRank(cs, nodeList)
   const csExcess: Record<string, number> = {}
   for (const n of nodeList) csExcess[n] = Math.max(0, (csRaw[n] ?? 0) - baseline)
