@@ -181,6 +181,12 @@ export function TrustGraphPage() {
     )
   }
 
+  useEffect(() => {
+    if (!graphRef.current) return
+    graphRef.current.d3Force('charge')?.strength(-300).distanceMax(500)
+    graphRef.current.d3Force('link')?.distance(100)
+  })
+
   const tsLabel = new Date(currentMaxTs).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
   return (
@@ -301,6 +307,8 @@ export function TrustGraphPage() {
         cooldownTicks={30}
         warmupTicks={10}
         d3AlphaMin={0.05}
+        d3VelocityDecay={0.3}
+        nodeRelSize={6}
         onNodeClick={handleNodeClick}
         nodeColor={(n: GNode) => selectedNode?.id === n.id ? '#F8C57A' : `hsl(${n.hue}, 60%, 55%)`}
         nodeVal={(n: GNode) => Math.max(2, n.signalCount + 1)}
