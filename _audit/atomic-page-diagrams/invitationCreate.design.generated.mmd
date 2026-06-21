@@ -1,0 +1,88 @@
+stateDiagram-v2
+  [*] --> invitationCreateDesign_slugModal
+  state "slugModal" as invitationCreateDesign_slugModal {
+    [*] --> invitationCreateDesign_slugModal_idle
+    state "idle" as invitationCreateDesign_slugModal_idle
+    state "debouncing" as invitationCreateDesign_slugModal_debouncing
+    state "checking · invoke: checkSlug" as invitationCreateDesign_slugModal_checking
+    state "taken" as invitationCreateDesign_slugModal_taken
+    state "available" as invitationCreateDesign_slugModal_available
+    state "error" as invitationCreateDesign_slugModal_error
+  }
+  state "editor (parallel)" as editor {
+    state "edit" as invitationCreateDesign_editor_edit {
+      [*] --> editing
+      state "editing" as editing
+    }
+    --
+    state "upload" as invitationCreateDesign_editor_upload {
+      [*] --> invitationCreateDesign_editor_upload_idle
+      state "idle" as invitationCreateDesign_editor_upload_idle
+      state "active" as invitationCreateDesign_editor_upload_active
+      invitationCreateDesign_editor_upload_active : ADD_COVER / spawnCover
+      invitationCreateDesign_editor_upload_active : ADD_GALLERY [galleryHasRoom] / spawnGallery
+      invitationCreateDesign_editor_upload_active : ITEM_DONE / markItemDone
+      invitationCreateDesign_editor_upload_active : ITEM_FAILED / markItemFailed
+      invitationCreateDesign_editor_upload_active : RETRY_ITEM [canRetryItem] / markItemRetrying, sendTo
+      invitationCreateDesign_editor_upload_active : REMOVE_ITEM / removeItem
+    }
+    --
+    state "canvas" as invitationCreateDesign_editor_canvas {
+      [*] --> invitationCreateDesign_editor_canvas_idle
+      state "idle" as invitationCreateDesign_editor_canvas_idle
+      state "uploading · invoke: canvasUpload" as invitationCreateDesign_editor_canvas_uploading
+    }
+  }
+  state "saving" as saving {
+    [*] --> invitationCreateDesign_saving_decideMode
+    state "decideMode" as invitationCreateDesign_saving_decideMode
+    state "createMode" as invitationCreateDesign_saving_createMode {
+      [*] --> invitationCreateDesign_saving_createMode_creatingWedding
+      state "creatingWedding · invoke: createWedding" as invitationCreateDesign_saving_createMode_creatingWedding
+      state "updatingInvitation · invoke: updateInvitation" as invitationCreateDesign_saving_createMode_updatingInvitation
+      state "onchain · invoke: createWeddingOnchain" as invitationCreateDesign_saving_createMode_onchain
+    }
+    state "addMode" as invitationCreateDesign_saving_addMode {
+      [*] --> invitationCreateDesign_saving_addMode_creatingInvitation
+      state "creatingInvitation · invoke: createInvitation" as invitationCreateDesign_saving_addMode_creatingInvitation
+      state "updatingInvitation · invoke: updateInvitation" as invitationCreateDesign_saving_addMode_updatingInvitation
+    }
+  }
+  state "success «final»" as saved
+  state "left «final»" as invitationCreateDesign_left
+
+  invitationCreateDesign_slugModal --> invitationCreateDesign_slugModal_debouncing : TYPE / setSlug
+  invitationCreateDesign_slugModal --> invitationCreateDesign_left : CLOSE
+  invitationCreateDesign_slugModal --> editor : CONFIRM [slugAvailable]
+  invitationCreateDesign_slugModal_debouncing --> invitationCreateDesign_slugModal_checking : after 500ms [slugLongEnough]
+  invitationCreateDesign_slugModal_debouncing --> invitationCreateDesign_slugModal_idle : after 500ms
+  invitationCreateDesign_slugModal_checking --> invitationCreateDesign_slugModal_taken : onDone [slugTaken] / setStatusTaken
+  invitationCreateDesign_slugModal_checking --> invitationCreateDesign_slugModal_available : onDone / setStatusAvailable
+  invitationCreateDesign_slugModal_checking --> invitationCreateDesign_slugModal_available : onError [is404] / setStatusAvailable
+  invitationCreateDesign_slugModal_checking --> invitationCreateDesign_slugModal_error : onError / setStatusError
+  editor --> invitationCreateDesign_left : HEADER_LOGO
+  editor --> editor : DISMISS_TOAST / clearToast
+  editor --> editor : SAVE [uploadingNow] / toastUploadWait
+  editor --> editor : SAVE [addSlugInvalid] / toastSlugRequired
+  editor --> editor : SAVE [createHasMissing] / toastMissing
+  editor --> saving : SAVE / clearToast, setSaveMeta
+  invitationCreateDesign_editor_upload_idle --> invitationCreateDesign_editor_upload_active : ADD_COVER / spawnCover
+  invitationCreateDesign_editor_upload_idle --> invitationCreateDesign_editor_upload_active : ADD_GALLERY [galleryHasRoom] / spawnGallery
+  invitationCreateDesign_editor_upload_active --> invitationCreateDesign_editor_upload_idle : always [noItems]
+  invitationCreateDesign_editor_canvas_idle --> invitationCreateDesign_editor_canvas_uploading : UPLOAD_CANVAS
+  invitationCreateDesign_editor_canvas_uploading --> invitationCreateDesign_editor_canvas_idle : onDone
+  invitationCreateDesign_editor_canvas_uploading --> invitationCreateDesign_editor_canvas_idle : onError
+  invitationCreateDesign_saving_decideMode --> invitationCreateDesign_saving_addMode : always [isAddMode]
+  invitationCreateDesign_saving_decideMode --> invitationCreateDesign_saving_createMode : always
+  invitationCreateDesign_saving_createMode_creatingWedding --> invitationCreateDesign_saving_createMode_updatingInvitation : onDone [hasInvitationData] / setCreatedWedding
+  invitationCreateDesign_saving_createMode_creatingWedding --> invitationCreateDesign_saving_createMode_onchain : onDone / setCreatedWedding
+  invitationCreateDesign_saving_createMode_creatingWedding --> editing : onError / setSaveError
+  invitationCreateDesign_saving_createMode_updatingInvitation --> invitationCreateDesign_saving_createMode_onchain : onDone
+  invitationCreateDesign_saving_createMode_updatingInvitation --> editing : onError / setSaveError
+  invitationCreateDesign_saving_createMode_onchain --> saved : onDone
+  invitationCreateDesign_saving_createMode_onchain --> saved : onError / markOnchainFailed
+  invitationCreateDesign_saving_addMode_creatingInvitation --> invitationCreateDesign_saving_addMode_updatingInvitation : onDone [hasInvitationData] / setCreatedInvitation
+  invitationCreateDesign_saving_addMode_creatingInvitation --> saved : onDone / setCreatedInvitation
+  invitationCreateDesign_saving_addMode_creatingInvitation --> editing : onError / setSaveError
+  invitationCreateDesign_saving_addMode_updatingInvitation --> saved : onDone
+  invitationCreateDesign_saving_addMode_updatingInvitation --> editing : onError / setSaveError
