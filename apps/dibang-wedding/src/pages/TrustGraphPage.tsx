@@ -149,6 +149,11 @@ export function TrustGraphPage() {
   const iumPartners = selectedNode ? (iumMap.get(selectedNode.id) ?? []) : []
 
   const graphRef = useRef<any>(null)
+  useEffect(() => {
+    if (!graphRef.current) return
+    graphRef.current.d3Force('charge')?.strength(-300).distanceMax(500)
+    graphRef.current.d3Force('link')?.distance(100)
+  })
   const handleNodeClick = useCallback((node: GNode & { x?: number; y?: number }) => {
     if (graphRef.current && node.x != null && node.y != null) {
       const coords = graphRef.current.graph2ScreenCoords(node.x, node.y)
@@ -180,12 +185,6 @@ export function TrustGraphPage() {
       </div>
     )
   }
-
-  useEffect(() => {
-    if (!graphRef.current) return
-    graphRef.current.d3Force('charge')?.strength(-300).distanceMax(500)
-    graphRef.current.d3Force('link')?.distance(100)
-  })
 
   const tsLabel = new Date(currentMaxTs).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
