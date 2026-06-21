@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { useState } from 'react';
+import { useState, useRef, type ChangeEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from '@xstate/react';
 import { Coins, Plus } from 'lucide-react';
@@ -13,12 +13,26 @@ import { useSignOut } from '../queries/auth/useSignOut';
 import { giftActor } from '../machines/gift.machine';
 import { YoneChargeSheet } from '../components/settings/YoneChargeSheet';
 import { useT, useLangStore, type Lang } from '../lib/i18n';
+import { useInyeonProfile, fileToProfileDataUrl } from '../stores/inyeonProfile';
 
 export function SettingsPage() {
   const navigate = useNavigate();
   const t = useT();
   const lang = useLangStore((s) => s.lang);
   const setLang = useLangStore((s) => s.setLang);
+  const photoUrl = useInyeonProfile((s) => s.photoUrl);
+  const setPhotoUrl = useInyeonProfile((s) => s.setPhotoUrl);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handlePickPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    const url = await fileToProfileDataUrl(f);
+    setPhotoUrl(url);
+    setToast(t('settings.saved'));
+    setTimeout(() => setToast(null), 2000);
+  };
   const { session } = useAuth();
   const signOut = useSignOut();
   const queryClient = useQueryClient();
@@ -64,6 +78,26 @@ export function SettingsPage() {
       <div className="rounded-xl border border-line bg-white p-5 mb-4">
         <p className="text-sm text-muted mb-1">{t('settings.currentLogin')}</p>
         <p className="text-lg font-semibold text-navy">{userName}</p>
+      </div>
+
+      {/* 디방인연 대표 사진 — 전 화면 공통(프로필·이음 신청·채팅). 업로드=축소 data URL 저장. */}
+      <div className="rounded-xl border border-line bg-white p-5 mb-4">
+        <p className="text-base font-semibold text-navy mb-3">{t('settings.profilePhoto')}</p>
+        <div className="flex items-center gap-4">
+          <div
+            className="h-16 w-16 flex-shrink-0 rounded-full bg-cover bg-center ring-1 ring-line"
+            style={{ backgroundImage: `url(${photoUrl})` }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-navy hover:bg-gray-50 transition-colors"
+          >
+            {t('settings.changePhoto')}
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handlePickPhoto} className="hidden" />
+        </div>
+        <p className="mt-3 text-xs text-muted">{t('settings.profilePhotoHint')}</p>
       </div>
 
       {/* 언어 설정 — ko/en (데모 핵심 범위: 네비·인연·Setting) */}

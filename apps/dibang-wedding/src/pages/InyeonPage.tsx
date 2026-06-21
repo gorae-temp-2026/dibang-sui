@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/s
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { profileForPersona, chulsooPlazaProfile } from '../components/profile/personaProfiles'
 import { useT } from '../lib/i18n'
+import { useInyeonProfile } from '../stores/inyeonProfile'
 import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
 import { ChatScreen } from '../components/inyeon/ChatScreen'
 
@@ -180,10 +181,11 @@ export function InyeonPage() {
 // 내 프로필 — 신뢰잔액(Moi Credit 재료)이 데모 핵심이라 정적으로 표시. 편집/업로드는 TODO.
 // "내 전체 프로필" → 공유 ProfileSheet(⑤): ① 연결 그래프 + ② signal sunburst + Moi Credit raw→층→공식.
 function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
+  const photoUrl = useInyeonProfile((s) => s.photoUrl)
   return (
     <div className="h-full overflow-y-auto px-5 pb-6 pt-5">
       <div className="text-center">
-        <div className="mx-auto h-24 w-24 rounded-full bg-cover bg-center" style={{ backgroundImage: 'url(/assets/inyeon-photos/my-profile.jpg)' }} />
+        <div className="mx-auto h-24 w-24 rounded-full bg-cover bg-center" style={{ backgroundImage: `url(${photoUrl})` }} />
         <div className="mt-3 text-xl font-extrabold text-white">유상</div>
         <div className="mt-0.5 text-xs text-white/50">모이 #1024 · 서울</div>
       </div>
