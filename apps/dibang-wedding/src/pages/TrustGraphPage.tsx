@@ -12,13 +12,15 @@ interface RawEdge { from: string; to: string; value: number; kind: string; ts: n
 interface GNode { id: string; label: string; hue: number; signalCount: number; iumCount: number }
 interface GLink { source: string; target: string; value: number; kind: string }
 
-function buildGraph(rawEdges: RawEdge[], allAddresses: Set<string>, iumMap: Map<string, string[]>, maxTs: number) {
+function buildGraph(rawEdges: RawEdge[], _allAddresses: Set<string>, iumMap: Map<string, string[]>, maxTs: number) {
   const filtered = rawEdges.filter((e) => e.ts <= maxTs)
-  const nodeSet = new Set<string>(allAddresses)
+  const nodeSet = new Set<string>()
   const edgeMap = new Map<string, { value: number; kind: string }>()
   const signalCountMap = new Map<string, number>()
 
   for (const e of filtered) {
+    nodeSet.add(e.from)
+    nodeSet.add(e.to)
     const key = [e.from, e.to].sort().join('|')
     const existing = edgeMap.get(key)
     edgeMap.set(key, { value: (existing?.value ?? 0) + e.value, kind: existing?.kind && !existing.kind.includes(e.kind) ? `${existing.kind}+${e.kind}` : e.kind })
@@ -75,10 +77,17 @@ export function TrustGraphPage() {
           if (!byEvent.has(p.eventId)) byEvent.set(p.eventId, { members: [], ts: 0 })
           byEvent.get(p.eventId)!.members.push(p.participant)
         }
-        for (const { members } of byEvent.values()) {
+        // 이벤트별 최소 신호 ts 매핑(참가 엣지에 시점 부여)
+        const eventTsMap = new Map<string, number>()
+        for (const s of signals) {
+          const cur = eventTsMap.get(s.eventId)
+          if (!cur || s.ts < cur) eventTsMap.set(s.eventId, s.ts)
+        }
+        for (const [eid, { members }] of byEvent.entries()) {
+          const eventTs = eventTsMap.get(eid) ?? (minTs || Date.now())
           for (let i = 0; i < members.length; i++) {
             for (let j = i + 1; j < members.length; j++) {
-              edges.push({ from: members[i]!, to: members[j]!, value: 1, kind: 'event', ts: minTs || Date.now() })
+              edges.push({ from: members[i]!, to: members[j]!, value: 1, kind: 'event', ts: eventTs })
             }
           }
         }
