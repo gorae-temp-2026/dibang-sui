@@ -6,7 +6,7 @@
  */
 
 import { Transaction } from '@mysten/sui/transactions';
-import { moveTarget } from './constants';
+import { moveTarget, requireMatrixId } from './constants';
 
 export interface CreateVaultParams {
   weddingId: string;
@@ -69,6 +69,8 @@ export function buildGiveTx(params: GiveParams): Transaction {
       tx.object(params.weddingId),
       tx.object(params.participationId),
       coin,
+      // 온체인 집계 배선: 부조 BUSU를 EM-money TrustMatrix에 반영(레지스트리로 라우팅된 ID).
+      tx.object(requireMatrixId('emMoney')),
       tx.object.clock(),
     ],
   });

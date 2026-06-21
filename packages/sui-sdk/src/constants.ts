@@ -12,6 +12,15 @@ export interface SuiContractConfig {
   network: SuiNetwork;
   /** dibang_wedding Move 패키지 ID */
   packageId: string;
+  /**
+   * TrustRegistry shared object ID(bootstrap 후 주입). 신호→매트릭스 라우팅 색인.
+   * 결정#42(온체인 레지스트리). PTB는 이 색인으로 매트릭스 ID를 얻어 tx 입력에 넣는다.
+   */
+  trustRegistryId?: string;
+  /** EM-부조(돈) TrustMatrix shared object ID. give가 이 매트릭스를 갱신. */
+  emMoneyMatrixId?: string;
+  /** CS(유대) TrustMatrix shared object ID. write/invite/gift/participate/accept_ium이 갱신. */
+  csMatrixId?: string;
 }
 
 /** testnet 배포 기본값 (2026-06-21 cutover — 신뢰그래프+신호+add_host primary 게이트, digest CEhq5tz1...). 구 0x6bb8 대체. */
@@ -36,6 +45,20 @@ export function configureSui(config: Partial<SuiContractConfig>): void {
 /** 현재 활성 설정. */
 export function getConfig(): SuiContractConfig {
   return activeConfig;
+}
+
+/**
+ * 배선용 TrustMatrix 객체 ID를 꺼낸다. 미설정이면 명확히 실패한다 —
+ * bootstrap(trust_registry::bootstrap) 후 그 ID들을 configureSui로 주입해야 한다.
+ * `emMoney` = 부조(EM-money) 매트릭스, `cs` = 유대(CS) 매트릭스.
+ */
+export function requireMatrixId(which: 'emMoney' | 'cs'): string {
+  const id = which === 'emMoney' ? activeConfig.emMoneyMatrixId : activeConfig.csMatrixId;
+  if (!id) {
+    const key = which === 'emMoney' ? 'emMoneyMatrixId' : 'csMatrixId';
+    throw new Error(`TrustMatrix(${which}) 미설정 — bootstrap 후 configureSui({ ${key}: '0x…' }) 주입 필요`);
+  }
+  return id;
 }
 
 /** `${packageId}::${module}::${fn}` 형태의 moveCall target 문자열을 만든다. */

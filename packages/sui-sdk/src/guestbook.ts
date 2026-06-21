@@ -6,7 +6,7 @@
  */
 
 import { Transaction } from '@mysten/sui/transactions';
-import { moveTarget } from './constants';
+import { moveTarget, requireMatrixId } from './constants';
 
 export interface WriteParams {
   weddingId: string;
@@ -22,7 +22,13 @@ export function buildWriteTx(params: WriteParams): Transaction {
   const tx = new Transaction();
   tx.moveCall({
     target: moveTarget('guestbook', 'write'),
-    arguments: [tx.object(params.weddingId), tx.object(params.participationId), tx.object.clock()],
+    arguments: [
+      tx.object(params.weddingId),
+      tx.object(params.participationId),
+      // 방명록 CS를 CS TrustMatrix에 반영.
+      tx.object(requireMatrixId('cs')),
+      tx.object.clock(),
+    ],
   });
   return tx;
 }

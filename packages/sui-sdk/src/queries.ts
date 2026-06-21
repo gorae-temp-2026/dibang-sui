@@ -327,6 +327,8 @@ export async function getParticipatedEvents(client: SuiJsonRpcClient): Promise<P
 export interface SignalQuery {
   eventId: string;
   kind: number;
+  /** 자원 식별(EM 돈=0, CS=0). (kind, resource_id) = 온체인 TrustMatrix 타입 키. signal.move 결정#43. */
+  resourceId: number;
   /** 원천 행위(action_type / 참석=5 / 매칭=2) — 오프체인 행위별 CS 차등 가중용. */
   source: number;
   from: string;
@@ -342,6 +344,7 @@ export async function getSignalEvents(client: SuiJsonRpcClient): Promise<SignalQ
     return {
       eventId: asString(p.event_id),
       kind: asNumber(p.kind),
+      resourceId: asNumber(p.resource_id),
       source: asNumber(p.source),
       from: asString(p.from),
       to: asString(p.to),

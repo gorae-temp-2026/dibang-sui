@@ -8,7 +8,7 @@
  */
 
 import { Transaction } from '@mysten/sui/transactions';
-import { moveTarget } from './constants';
+import { moveTarget, requireMatrixId } from './constants';
 
 export interface CreateWeddingParams {
   /** WeddingCap을 받을 주소(보통 호출자 본인). */
@@ -66,6 +66,8 @@ export function buildInviteTx(params: InviteParams): Transaction {
       tx.object(params.weddingId),
       tx.object(params.hostParticipationId),
       tx.pure.address(params.guest),
+      // 초대 CS를 CS TrustMatrix에 반영.
+      tx.object(requireMatrixId('cs')),
       tx.object.clock(),
     ],
   });

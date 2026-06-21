@@ -7,7 +7,7 @@
  */
 
 import { Transaction } from '@mysten/sui/transactions';
-import { moveTarget } from './constants';
+import { moveTarget, requireMatrixId } from './constants';
 
 export interface RequestIumParams {
   /** 이음을 신청할 상대 지갑 주소. */
@@ -42,7 +42,13 @@ export function buildAcceptIumTx(params: AcceptIumParams): Transaction {
   const tx = new Transaction();
   tx.moveCall({
     target: moveTarget('ium', 'accept_ium'),
-    arguments: [tx.object(params.eventId), tx.object(params.requestId), tx.object.clock()],
+    arguments: [
+      tx.object(params.eventId),
+      tx.object(params.requestId),
+      // 매칭 양방향 CS를 CS TrustMatrix에 반영.
+      tx.object(requireMatrixId('cs')),
+      tx.object.clock(),
+    ],
   });
   return tx;
 }

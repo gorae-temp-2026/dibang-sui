@@ -6,7 +6,7 @@
  */
 
 import { Transaction } from '@mysten/sui/transactions';
-import { moveTarget } from './constants';
+import { moveTarget, requireMatrixId } from './constants';
 
 export interface GiftParams {
   /** 선물하는 사람(giver)의 Participation 객체 ID — 자기 소유 soulbound(방향·event 파생). */
@@ -26,6 +26,8 @@ export function buildGiftTx(params: GiftParams): Transaction {
       tx.object(params.participationId),
       tx.object(params.itemId),
       tx.pure.address(params.recipient),
+      // 선물 CS를 CS TrustMatrix에 반영.
+      tx.object(requireMatrixId('cs')),
       tx.object.clock(),
     ],
   });
