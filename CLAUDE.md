@@ -24,10 +24,10 @@
   있음 → **충돌 시 도메인 모델 우선.** "왜/방향"은 `_onboarding/VISION-AND-INTENT.md`가 원천.
 - 추측 금지. 실제 문서·코드·온체인 상태로 확인(전역 §2).
 
-## 2. 앱 경계 규칙 (절대 혼동 금지)
-- **guest-web = 비로그인 익명 전환 퍼널.** 로그인/zkLogin/온체인 신원을 **여기 붙이지 않는다.**
+## 2. 앱 경계 규칙
+- **guest-web = 게스트 전환 퍼널.** ⚠️[변경 2026-06-21] 원래 "비로그인 익명"(zkLogin 금지)이었으나 **일단 guest-web도 zkLogin으로 서명해 온체인 트랜잭션을 직접 날리는 걸로 변경.** 게스트가 본인 zkLogin 지갑으로 give/write/rsvp를 직접 서명한다 → **익명 기록·서비스 대리서명·claim 메커니즘 폐기.** (이전의 "zkLogin/온체인 신원을 여기 붙이지 않는다" 규칙은 이 결정으로 무효.)
 - **dibang-wedding = 로그인 서비스 본체.** zkLogin·온체인 신원·신뢰네트워크(Moi/Ium)는 **여기.**
-- **admin = 별도 운영 read-only.** 상세 `_onboarding/02-APP-BOUNDARIES.md`.
+- **admin = 별도 운영 read-only.** 상세 `_onboarding/02-APP-BOUNDARIES.md`(이 변경 미반영 — 갱신 필요).
 
 ## 3. 온체인 작업 규칙
 - **결정 대기 항목(`06` §F) 확정 전 큰 구현 착수 금지** — 사용자에게 확인.

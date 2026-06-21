@@ -1,5 +1,8 @@
 # 결정 로그 (Decision Log) — dibang-sui
 
+> ⚠️ **[앱 경계 변경 2026-06-21]** guest-web의 "비로그인 익명·zkLogin 금지"는 **폐기**됐다. 이제 **guest-web도 zkLogin으로 서명해 온체인 트랜잭션을 직접 날린다** (게스트가 본인 지갑으로 give/write/rsvp 서명 → 익명 기록·서비스 대리서명·claim 메커니즘 불필요). 아래 본문의 "비로그인/익명 퍼널/대리서명/claim/zkLogin 금지" 서술은 이 결정으로 **무효**. SSOT: `CLAUDE.md §2`.
+
+
 > 대상: `_research_analysis/2026-06-21-conversation-intent-extraction`의 세션 의도 노트(`06-.../`)
 > + 5차 가공 산출물(`05-.../`_appended/docs·code).
 > 목적: 대화에서 내려진 **주요 결정과 그 근거·의도**를 사실 그대로 정리. 추측 없음, 입력 근거.

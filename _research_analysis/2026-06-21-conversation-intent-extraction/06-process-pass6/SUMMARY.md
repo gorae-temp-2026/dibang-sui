@@ -1,5 +1,8 @@
 # dibang-sui 온보딩 — 한 장 요약 (SUMMARY)
 
+> ⚠️ **[앱 경계 변경 2026-06-21]** guest-web의 "비로그인 익명·zkLogin 금지"는 **폐기**됐다. 이제 **guest-web도 zkLogin으로 서명해 온체인 트랜잭션을 직접 날린다** (게스트가 본인 지갑으로 give/write/rsvp 서명 → 익명 기록·서비스 대리서명·claim 메커니즘 불필요). 아래 본문의 "비로그인/익명 퍼널/대리서명/claim/zkLogin 금지" 서술은 이 결정으로 **무효**. SSOT: `CLAUDE.md §2`.
+
+
 > 700MB 대화기록(160세션) + 현 프로젝트 문서·코드를 6단계로 정제·합성한 온보딩의 **1페이지 요약**.
 > 깊이가 필요하면 → `HANDBOOK.md`(메인), `DECISION-LOG.md`, `INTENT-TIMELINE.md`, `FAQ.md`, `GLOSSARY.md`.
 > 충돌 시 진실원천 우선순위: `_onboarding/VISION-AND-INTENT.md`(왜) → `_architecture/DOMAIN_MODEL_SUMMARY.md`(무엇, SSOT) → `_scenario/*`(어떻게).

@@ -1,5 +1,8 @@
 # 07 — 교훈 (이전 세션의 실수 — 반복 금지)
 
+> ⚠️ **[앱 경계 변경 2026-06-21]** guest-web의 "비로그인 익명·zkLogin 금지"는 **폐기**됐다. 이제 **guest-web도 zkLogin으로 서명해 온체인 트랜잭션을 직접 날린다** (게스트가 본인 지갑으로 give/write/rsvp 서명 → 익명 기록·서비스 대리서명·claim 메커니즘 불필요). 아래 본문의 "비로그인/익명 퍼널/대리서명/claim/zkLogin 금지" 서술은 이 결정으로 **무효**. SSOT: `CLAUDE.md §2`.
+
+
 > 이전 세션이 도메인 모델·앱 경계·비전을 **안 읽고** 온체인 설계를 시작해 여러 오해를 했다. 솔직히 남긴다.
 > 핵심 교훈: **코드 만지기 전 `VISION-AND-INTENT.md` + `_architecture/DOMAIN_MODEL_SUMMARY.md`(SSOT) +
 > `02-APP-BOUNDARIES.md`를 먼저 읽어라.**
@@ -11,11 +14,12 @@
 - **결과**: 아래 L2~L5의 오해들. 코드는 빌드·테스트가 됐지만 **서비스 의도와 어긋난 전제** 위에 세워졌다.
 - **교훈**: "빌드 통과 = 맞다"가 아니다. 의도 정합이 먼저. 큰 구현 전 SSOT부터.
 
-## L2 — 익명 퍼널(guest-web)에 로그인을 붙였다
+## L2 — 익명 퍼널(guest-web)에 로그인을 붙였다 ⚠️[2026-06-21 반전: 이제 그게 맞는 방향이 됨]
 - **무엇**: guest-web에 zkLogin 로그인 Provider/훅을 넣고 "하객이 로그인해서 온체인에 쓴다"고 가정.
-- **사실**: guest-web은 **비로그인 익명 전환 퍼널**(APP_SCOPE). 청첩장·방명록·축의 전부 익명(guest_id optional).
-  로그인 본체는 dibang-wedding. → **온체인 신원/zkLogin은 dibang-wedding 소속.**
-- **교훈**: 어느 앱에 작업하는지 `02-APP-BOUNDARIES.md`로 먼저 확인. 익명/로그인 경계를 깨지 마라.
+- **사실(2026-06-21 변경)**: ~~guest-web은 비로그인 익명 전환 퍼널~~ → **이제 guest-web도 zkLogin 서명으로
+  게스트가 본인 지갑에서 직접 온체인에 쓴다(익명 기록·대리서명·claim 폐기).** 당시 규칙("비로그인 익명")에선
+  실수였으나, 규칙 자체가 바뀌어 지금은 의도된 방향이다.
+- **교훈(여전히 유효)**: 어느 앱에 작업하는지 먼저 확인하되 — **경계 규칙은 변한다.** 최신 SSOT는 `CLAUDE.md §2`.
 
 ## L3 — 활동 기록을 transfer 가능한 객체로 만들었다 (SBT 위반)
 - **무엇**: GuestbookEntry·CashGiftRecord·MoiItem·Ium을 `key + store`(public_transfer 가능)로 작성. (단 **MoiItem은 선물·거래 의도 자산**이라 `06 §E`에서 `store` 유지로 결정 — SBT 위반 정정 대상은 GuestbookEntry·CashGiftRecord·Ium 3개.)

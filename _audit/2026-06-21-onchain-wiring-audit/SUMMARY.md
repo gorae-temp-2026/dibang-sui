@@ -1,5 +1,11 @@
 # 온체인 배선 감사 — 컨트랙트→hook→UI "끝까지 연결" 현황 (2026-06-21)
 
+> **⚠️ 결정 변경 (2026-06-21, 본 감사 이후):**
+> 1. **guest-web도 zkLogin 서명** — 비로그인 익명 폐기. 게스트가 본인 지갑으로 give/write/rsvp 직접 서명 → '온체인 작성 주체' 미결 해소, 익명 claim 메커니즘 불필요. (CLAUDE §2 갱신)
+> 2. **WeddingCap = key-only soulbound** 확정(현 코드 key+store 정정 대상).
+> 3. **샵 결제 = SUI 직접, UI도 SUI 표기** — 프론트 mock 요네는 SUI로 정렬.
+> 아래 본문 중 "guest-web 비로그인이라 give/write 안 함"·"요네/SUI 미정"은 위 결정으로 갱신됨.
+
 > **방법(이전 보고 정정)**: "코드가 있네" 수준이 아니라 체인 바닥(`ZkLoginProvider.executeOnchain`)까지 추적해
 > ① 중간에 mock이 끼는지 ② 실제 제출까지 가는지 ③ 어떤 게이트에서 멈추는지를 확인했다.
 > **검증 한계**: 코드 경로 완결 ≠ 라이브 실행 검증. zkLogin 라이브는 Google OAuth client+ZK prover 필요(헤드리스 불가, CLAUDE §5) — 본 감사는 **코드 경로 + 게이트 조건**까지이고 실제 testnet 실행은 자격증명 대기.

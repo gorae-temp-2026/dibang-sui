@@ -1,5 +1,8 @@
 # dibang-sui 신규 팀원 FAQ
 
+> ⚠️ **[앱 경계 변경 2026-06-21]** guest-web의 "비로그인 익명·zkLogin 금지"는 **폐기**됐다. 이제 **guest-web도 zkLogin으로 서명해 온체인 트랜잭션을 직접 날린다** (게스트가 본인 지갑으로 give/write/rsvp 서명 → 익명 기록·서비스 대리서명·claim 메커니즘 불필요). 아래 본문의 "비로그인/익명 퍼널/대리서명/claim/zkLogin 금지" 서술은 이 결정으로 **무효**. SSOT: `CLAUDE.md §2`.
+
+
 > 프로젝트 오너(사용자)가 여러 세션에서 **실제로 던진 질문**과, 자료에 근거한 답을 정리했다. 추측 없이 문서·코드·실제 발화로만 작성했다.
 >
 > **질문 출처**: `06-process-pass6/_synthesis-inputs/user-intent-corpus.md` (오너 실제 발화 코퍼스)

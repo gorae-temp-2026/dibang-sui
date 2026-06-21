@@ -1,5 +1,8 @@
 # 03 — 정체성·인증 (현재 Supabase + 목표 zkLogin)
 
+> ⚠️ **[앱 경계 변경 2026-06-21]** guest-web의 "비로그인 익명·zkLogin 금지"는 **폐기**됐다. 이제 **guest-web도 zkLogin으로 서명해 온체인 트랜잭션을 직접 날린다** (게스트가 본인 지갑으로 give/write/rsvp 서명 → 익명 기록·서비스 대리서명·claim 메커니즘 불필요). 아래 본문의 "비로그인/익명 퍼널/대리서명/claim/zkLogin 금지" 서술은 이 결정으로 **무효**. SSOT: `CLAUDE.md §2`.
+
+
 > 원본: `_architecture/API_CONVENTIONS.md`(§2 정책, §3 마스킹, §7 보안), `_scenario/2026-05-26-user-consent-onboarding/SCENARIOS.md`, `VISION-AND-INTENT.md`(§3·§4·§5).
 > "언제 로그인이 필요하고 언제 익명인가"를 정확히 잡는 문서. 온체인 신원 설계의 기반.
 
