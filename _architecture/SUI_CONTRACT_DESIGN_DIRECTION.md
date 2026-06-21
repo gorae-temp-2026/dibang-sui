@@ -96,7 +96,7 @@ event ActionLogged { 위 필드 미러 }   // 인덱서 fold 입력
 
 ### 3-E. 돈
 - **`CashGiftVault`** (shared, Balance<SUI>) — 유지, WeddingCap withdraw 게이트. **혼잡 주의(R1):** 인기 결혼식 300하객 동시 입금은 단일 shared vault `&mut`로 직렬화 → 데모 throughput 한계(허용 가능) 또는 슬롯별 sub-vault.
-- **`YONE` coin** — **데모에선 보류/SUI 직접 결제(R3 컷)**. 정식 도입 시 OTW+TreasuryCap, **TreasuryCap 커스터디 명시 필수**(소지자가 무한 발행 = 경제 전체 단일 침해점), 규제코인(DenyCap) 여부·decimals 선택 명문화.
+- **`YONE` coin** — **[결정#6 확정 06-21] 모든 결제·비용 = SUI 직접 결제. YONE(Coin<YONE>) 전환은 후순위.** 정식 도입 시 OTW+TreasuryCap, **TreasuryCap 커스터디 명시 필수**(소지자가 무한 발행 = 경제 전체 단일 침해점), 규제코인(DenyCap) 여부·decimals 선택 명문화.
 
 ### 3-F. 엣지(Ium=CS) — 소유권 기준 라이프사이클 재설계 (R1 C2)
 v1의 `bind(initiator_moi, receiver_moi)`는 **불가**(receiver가 initiator의 owned Moi를 `&mut` 못 함). 재설계:
@@ -109,12 +109,12 @@ v1의 `bind(initiator_moi, receiver_moi)`는 **불가**(receiver가 initiator의
 프론트(`moiPlaza.machine`·`ShopSheet`·`gift.machine`/`giftActor`·`GiftPicker`·moi-gather `data.ts`/`manifest`)가 이미 구현한 도메인. 온체인 대응:
 
 - **`MoiItem`** (key+store 유지 — 유일하게 transfer 가능한 자산) = 샵 아이템. `{ id, name, category(hair/clothes/interior/accessory), slot?(head/body/acc) }`. 헤어·옷·액세서리=장착, 인테리어=광장(GatherPlace) 배치.
-- **`YONE` 화폐** (Coin<YONE>) = 구매·선물 결제 수단. SUI/USDC로 충전. **신뢰 신호 아님(MP/화폐).** 데모는 보류·SUI 직접(결정#6). 구매 1회 차감, 장착·배치 토글 무료.
+- **결제 수단** = 구매·선물 결제. **[결정#6 확정 06-21] 모든 결제 = `Coin<SUI>` 직접**(YONE(Coin<YONE>) 전환은 후순위). 구매는 무료 발행이 아니라 **SUI 결제로 mint를 게이트**(`moi::purchase_item(payment: Coin<SUI>, …)`, mint는 public(package) 봉인) — **신뢰 신호 아님(MP/화폐)**. 구매 1회 차감, 장착·배치 토글 무료.
 
 **세 행위의 신뢰 신호 구분 (★ 설계 핵심):**
 | 행위 | 방향 | 온체인 | 신뢰 신호 |
 |---|---|---|---|
-| **구매**(샵: 나→시스템) | 자기 | 요네 차감 + MoiItem mint(구매자 소유) | **없음** — 시장 거래(MP·즉시청산), 사람↔사람 엣지 아님 |
+| **구매**(샵: 나→시스템) | 자기 | **SUI 결제(Coin<SUI>) → MoiItem mint**(구매자 소유, 무료 발행 폐기·결정#6) | **없음** — 시장 거래(MP·즉시청산), 사람↔사람 엣지 아님 |
 | **선물**(나→상대) | giver→recipient | MoiItem `public_transfer`(자산 이동) **+** `ledger::log(GIFT)` SBT | **있음 — 증여(EM·CS)**. 단 **EM은 부조 전파에서 제외**(MOICREDIT_AUDIT: sole-giver 악용 방지) → CS 위주 |
 | **장착/배치**(내 Moi·광장 꾸미기) | 자기 | Moi.equipped(dof+VecMap) / InteriorItem 배치 좌표 | **없음** — 꾸미기 상태일 뿐, 관계 행위 아님 |
 
@@ -260,7 +260,9 @@ utils.move     유지
 
 **온체인 읽기 모델(DeFi trustless):** 분류 SSOT = signal.move *순수 함수*. 온체인 소비자는 stored 소스 객체(ActionRecord·Event·Participation)로 분류 함수를 호출해 분류를 trustless 재현. ledger는 결과를 ActionRecord.signals에 캐시(편의·DeFi 직접읽기). 인덱서/credit.ts는 SignalEmitted로 읽음(오프체인 경로). `Participation.event_type` 추가로 `ledger::log`이 추가 조회 없이 event_type 파생.
 
-**검증:** signal 단위(fan-out 0~N·방향·source·자기엣지·비-GUEST give) + e2e(give→stored BUSU, write→CS) + credit e2e(부조 서열·wash net·CS authority·매칭 양방향). sui move 49/49 · vitest 9/9 · 앱·SDK tsc 0. opus 2차 적대 리뷰 7건: 미러상수·fan-out·자기엣지·순환의존 **무결**; source 보존·주석드리프트 **즉시 수정**.
+**검증:** signal 단위(fan-out 0~N·방향·source·자기엣지·비-GUEST give) + e2e(give→stored BUSU, write→CS) + credit e2e(부조 서열·wash net·CS authority·매칭 양방향) + 미러상수 안티-드리프트 핀 + SDK↔credit 드리프트 가드. **sui move 50/50 · vitest 10/10 · 앱·SDK tsc 0.** opus 2차 적대 리뷰 7건: 미러상수·fan-out·자기엣지·순환의존 **무결**; source 보존·주석드리프트 **즉시 수정**; 드리프트 위험 2개 **테스트로 전환**.
+
+**testnet 실호출 실증(2026-06-21):** 신규 배포 pkg `0x32654d9d…7d97cc`(digest `8sRmqdTP…`)에 HOST/GUEST 2지갑으로 create_wedding→create_vault→participate→give→write 실행 → 온체인 `SignalEmitted` **3건 실조회**: 참석 `CS(source=ATTEND, 하객→혼주)` · 부조 `BUSU(source=GIVE_MONEY, 1000)` · 방명록 `CS(source=WRITE_MESSAGE)` — 방향·source·magnitude·fan-out 전부 정확. `creditFromSignals` → 하객 busu=1·혼주 cs=1(신용 0.64/0.44). **분류=온체인 → 집계=오프체인 전 파이프라인 실증.** 스크립트: `packages/sui-sdk/scripts/test-signals-testnet.ts`.
 
 **남은 후속(적대 리뷰 — 정직 기록):**
 1. **참석·매칭 신호 stored 미보존(emit-only)** — 현재는 classify 함수 재현으로 trustless 충족. DeFi *직접* 읽기 완전 대칭 원하면 `Participation.signals` 또는 매칭 SBT 보존(후속).
@@ -275,7 +277,7 @@ utils.move     유지
 3. **익명 claim 인증:** 호스트 공동서명(권장) / claim 비밀 / 미전파 출석사실. (v1 "단순 claim"은 사칭 취약 — 폐기)
 4. ~~신용 계산 위치~~ **[결정완료 06-20]** 오프체인 인덱서가 온체인 raw를 읽어 계산(결과 일단 가정). 신뢰있는 온체인 재진입(오라클 서명/ZK)은 나중. 원본 raw는 전부 온체인이 SSOT.
 5. **micro-interaction:** 이벤트+집계(권장) — 사실상 채택.
-6. **YONE:** 데모 보류·SUI 직접(권장) vs 즉시 Coin<YONE>.
+6. ~~YONE~~ **[결정완료 06-21]** 모든 결제·비용 = **SUI 직접**(Coin<SUI>). YONE(Coin<YONE>) 전환은 **후순위**. 샵/아이템은 **무료 발행 폐기 → Sui payment SDK 기반 SUI 결제 '구매'로 mint 게이트**(`moi::purchase_item(payment: Coin<SUI>)` + `mint_item` public(package) 봉인). SUI 결제 게이트가 서야 gift-CS 신뢰 가능(§8 c 농사 차단과 연결).
 7. ~~해커톤 범위~~ **[결정완료 06-20]** 범위 = 전체(wedding+inyeon). 빌드 순서 = 웨딩 부조로 척추 먼저, 그 뒤 신호 확장(§10).
 8. USDSui 시점(서비스 로직 완성 후).
 
