@@ -5,34 +5,47 @@
 import { useState } from 'react'
 import { useSelector } from '@xstate/react'
 import { ArrowLeft, Gift, Lock, Play, Send, X } from 'lucide-react'
-import { POOL, DM_COST, MOI_MEM, seedDm } from './data'
-import type { DmMsg } from './types'
+import { DM_COST, MOI_MEM, seedDm } from './data'
+import type { DmMsg, Moi } from './types'
+import type { Note } from '../../hooks/useNotes'
+import type { MoiItemOnChain } from '@gorae/sui-sdk'
+import type { OnchainGiftEntry } from '../../hooks/useGiftLog'
 import { giftActor, type GiftEvent } from '../../machines/gift.machine'
 import { GiftPicker } from '../moi-gather/GiftPicker'
 import { ITEM_BY_ID } from '../moi-gather/data'
 import { cn } from '../../lib/utils'
 
-const moiById = (id: number) => POOL.find((m) => m.id === id)
 const photoBg = (hue: number) => `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
 
 interface ChatScreenProps {
+  pool: Moi[]
   matchedIds: number[]
   chatOpen: Record<number, boolean>
   dms: Record<number, DmMsg[]>
   dmRoomId: number | null
   memoryId: number | null
+  ownedOnchainItems: MoiItemOnChain[]
+  suiBalance: number
+  onPurchase: (name: string, itemType: string, slot: string) => Promise<void>
   onOpenDmRoom: (id: number) => void
   onCloseDmRoom: () => void
   onOpenMemory: (id: number) => void
   onCloseMemory: () => void
   onSendDm: (id: number, text: string) => void
   onOpenProfile: (id: number) => void
+  notes: Note[]
+  myAddress: string | null
+  onchainGiftLog: OnchainGiftEntry[]
 }
 
 export function ChatScreen({
+  pool,
   matchedIds,
   chatOpen,
   dms,
+  ownedOnchainItems,
+  suiBalance,
+  onPurchase,
   dmRoomId,
   memoryId,
   onOpenDmRoom,
@@ -41,6 +54,9 @@ export function ChatScreen({
   onCloseMemory,
   onSendDm,
   onOpenProfile,
+  notes,
+  myAddress,
+  onchainGiftLog,
 }: ChatScreenProps) {
   // 선물 = 전역 giftActor 소유(인연 채팅 송신 ↔ 광장 수신 공유). DM 상태는 inyeonMachine 소유(props).
   const [giftOpen, setGiftOpen] = useState(false)
@@ -50,12 +66,12 @@ export function ChatScreen({
   const giftPending = useSelector(giftActor, (s) => s.context.pending?.itemId ?? null)
   const giftError = useSelector(giftActor, (s) => s.context.error)
 
+  const moiById = (id: number) => pool.find((m) => m.id === id)
+
   const sendGift = (toId: number, itemId: string) => {
     const m = moiById(toId)
-    giftActor.send({ type: 'SEND_GIFT', itemId, toId: String(toId), toName: m?.name ?? '상대' })
-    // 데모: 잠시 후 상대가 답례 선물 → 수신함(인벤토리)
-    const back = ['champagne', 'bouquet', 'heart_balloon', 'garland'][giftLog.length % 4] ?? 'bouquet'
-    setTimeout(() => giftActor.send({ type: 'RECEIVE_GIFT', itemId: back, fromId: String(toId), fromName: m?.name ?? '상대' }), 1500)
+    const suiAddress = m && (m as Moi & { suiAddress?: string }).suiAddress
+    giftActor.send({ type: 'SEND_GIFT', itemId, toId: suiAddress ?? String(toId), toName: m?.name ?? '상대' })
   }
 
   const matched = matchedIds.map(moiById).filter((m): m is NonNullable<typeof m> => !!m)
@@ -123,8 +139,21 @@ export function ChatScreen({
       {dmRoomId != null && (
         <DmRoom
           moiId={dmRoomId}
+          pool={pool}
           msgs={dms[dmRoomId] ?? seedDm()}
+          notes={(() => {
+            const m = moiById(dmRoomId)
+            const addr = m && (m as Moi & { suiAddress?: string }).suiAddress
+            if (!addr || !myAddress) return []
+            return notes.filter((n) => (n.from === addr && n.to === myAddress) || (n.from === myAddress && n.to === addr))
+          })()}
+          myAddress={myAddress}
           giftLog={giftLog.filter((g) => g.counterpartId === String(dmRoomId))}
+          onchainGifts={(() => {
+            const m = moiById(dmRoomId)
+            const addr = m && (m as Moi & { suiAddress?: string }).suiAddress
+            return addr ? onchainGiftLog.filter((g) => g.actor === addr || g.target === addr) : []
+          })()}
           onSend={(t) => onSendDm(dmRoomId, t)}
           onClose={onCloseDmRoom}
           onOpenProfile={() => onOpenProfile(dmRoomId)}
@@ -138,21 +167,24 @@ export function ChatScreen({
           toName={moiById(dmRoomId)?.name ?? '상대'}
           yone={giftYone}
           received={giftReceived}
+          ownedOnchainItems={ownedOnchainItems}
+          suiBalance={suiBalance}
           pendingItemId={giftPending}
+          onPurchase={onPurchase}
           error={giftError}
           onGift={(itemId) => sendGift(dmRoomId, itemId)}
           onCharge={() => giftActor.send({ type: 'CHARGE' })}
           onDismissError={() => giftActor.send({ type: 'DISMISS_ERROR' })}
         />
       )}
-      {memoryId != null && <MemoryViewer moiId={memoryId} onClose={onCloseMemory} />}
+      {memoryId != null && <MemoryViewer moiId={memoryId} pool={pool} onClose={onCloseMemory} />}
     </div>
   )
 }
 
-function DmRoom({ moiId, msgs, giftLog, onSend, onClose, onOpenProfile, onOpenGift }: { moiId: number; msgs: DmMsg[]; giftLog: GiftEvent[]; onSend: (t: string) => void; onClose: () => void; onOpenProfile: () => void; onOpenGift: () => void }) {
+function DmRoom({ moiId, pool, msgs, notes, myAddress, giftLog, onchainGifts, onSend, onClose, onOpenProfile, onOpenGift }: { moiId: number; pool: Moi[]; msgs: DmMsg[]; notes: Note[]; myAddress: string | null; giftLog: GiftEvent[]; onchainGifts: OnchainGiftEntry[]; onSend: (t: string) => void; onClose: () => void; onOpenProfile: () => void; onOpenGift: () => void }) {
   const [text, setText] = useState('')
-  const m = moiById(moiId)
+  const m = pool.find((p) => p.id === moiId)
   if (!m) return null
   const submit = () => {
     const v = text.trim()
@@ -175,6 +207,16 @@ function DmRoom({ moiId, msgs, giftLog, onSend, onClose, onOpenProfile, onOpenGi
         </button>
       </header>
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
+        {notes.length > 0 && (
+          <div className="mx-auto max-w-[85%] rounded-xl bg-[#F8C57A]/10 px-3 py-2 text-center text-[10.5px] text-[#F8C57A]">🔗 온체인 쪽지 {notes.length}건</div>
+        )}
+        {notes.map((note, i) =>
+          note.from === myAddress ? (
+            <div key={`n${i}`} className="ml-auto max-w-[78%] rounded-2xl rounded-br-md bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] px-3.5 py-2 text-[13px] text-white">{note.text}</div>
+          ) : (
+            <div key={`n${i}`} className="mr-auto max-w-[78%] rounded-2xl rounded-bl-md bg-white/[0.08] px-3.5 py-2 text-[13px] text-white">{note.text}</div>
+          ),
+        )}
         {msgs.map((msg, i) =>
           msg.sys ? (
             <div key={i} className="mx-auto max-w-[85%] rounded-xl bg-white/[0.04] px-3 py-2 text-center text-[10.5px] leading-relaxed text-white/45">{msg.sys}</div>
@@ -190,6 +232,18 @@ function DmRoom({ moiId, msgs, giftLog, onSend, onClose, onOpenProfile, onOpenGi
             <span className="text-[11.5px] leading-snug text-white/85">
               {g.fromMe ? `${m.name}님에게 ${ITEM_BY_ID[g.itemId]?.name ?? '선물'} 선물했어요` : `${m.name}님이 ${ITEM_BY_ID[g.itemId]?.name ?? '선물'} 선물했어요`}
               <b className="ml-1 text-[#F8C57A]">💝 신뢰 신호 +1</b>
+            </span>
+          </div>
+        ))}
+        {onchainGifts.length > 0 && (
+          <div className="mx-auto max-w-[85%] rounded-xl bg-[#46d77f]/10 px-3 py-2 text-center text-[10.5px] text-[#46d77f]">🔗 온체인 선물 기록 {onchainGifts.length}건</div>
+        )}
+        {onchainGifts.map((g, i) => (
+          <div key={`og${i}`} className="mx-auto flex max-w-[88%] items-center gap-2 rounded-xl border border-[#46d77f]/30 bg-[#46d77f]/10 px-3 py-2">
+            <span className="text-2xl">🎁</span>
+            <span className="text-[11.5px] leading-snug text-white/85">
+              {g.fromMe ? `${m.name}님에게 온체인 선물` : `${m.name}님이 온체인 선물`}
+              <b className="ml-1 text-[#46d77f]">💎 GIFT 신뢰 신호 (온체인)</b>
             </span>
           </div>
         ))}
@@ -213,8 +267,8 @@ function DmRoom({ moiId, msgs, giftLog, onSend, onClose, onOpenProfile, onOpenGi
   )
 }
 
-function MemoryViewer({ moiId, onClose }: { moiId: number; onClose: () => void }) {
-  const m = moiById(moiId)
+function MemoryViewer({ moiId, pool, onClose }: { moiId: number; pool: Moi[]; onClose: () => void }) {
+  const m = pool.find((p) => p.id === moiId)
   if (!m) return null
   const views = (moiId % 30) + 12
   return (

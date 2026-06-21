@@ -25,11 +25,18 @@ import { ChatScreen } from '../components/inyeon/ChatScreen'
 import { MoiGateModal } from '../components/MoiGateModal'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { useMyCreditStats } from '../hooks/useCredit'
+import { useOwnedItems } from '../hooks/useOwnedItems'
+import { useSuiBalance } from '../hooks/useSuiBalance'
 import { useNotes } from '../hooks/useNotes'
+import { useGiftLog } from '../hooks/useGiftLog'
 
 export function InyeonPage() {
   const { requestIum, acceptIum, gift: onchainGift, purchaseItem } = useOnchainHostActions()
+  const { items: ownedOnchainItems, refetch: refetchItems } = useOwnedItems()
+  const { balanceSui, refetch: refetchBalance } = useSuiBalance()
+  const zk = useZkLogin()
   const noteActions = useNotes()
+  const { gifts: onchainGiftLog } = useGiftLog()
   const { users: discoveredUsers, incoming: discoveredIncoming, sentMoiIds, matchedAddresses, loading: discoverLoading, refetch: refetchDiscover } = useDiscoverUsers()
   const pool = discoveredUsers
   const moiById = (id: number | null) => (id == null ? null : pool.find((m) => m.id === id) ?? null)
@@ -166,6 +173,20 @@ export function InyeonPage() {
             dms={dms}
             dmRoomId={dmRoomId}
             memoryId={memoryId}
+            ownedOnchainItems={ownedOnchainItems}
+            suiBalance={balanceSui}
+            onPurchase={async (name, itemType, slot) => {
+              const config = (await import('@gorae/sui-sdk')).getConfig()
+              await purchaseItem({
+                registryId: config.shopRegistryId!,
+                nonce: crypto.randomUUID(),
+                name,
+                itemType,
+                slot,
+              })
+              refetchItems()
+              refetchBalance()
+            }}
             onOpenDmRoom={(id) => send({ type: 'OPEN_DM_ROOM', id })}
             onCloseDmRoom={() => send({ type: 'CLOSE_DM_ROOM' })}
             onOpenMemory={(id) => send({ type: 'OPEN_MEMORY', id })}
@@ -177,6 +198,9 @@ export function InyeonPage() {
               if (suiAddr) noteActions.sendNote(suiAddr, text).catch(() => {})
             }}
             onOpenProfile={(id) => send({ type: 'OPEN_PROFILE', id })}
+            notes={noteActions.notes}
+            myAddress={zk.address}
+            onchainGiftLog={onchainGiftLog}
           />
         )}
 
