@@ -3,6 +3,7 @@
 // 에셋: public/assets/moi/{heads,bodies,items,accessories} (원본 moi_assets 복사). 합성=head(neck278)+body(neck256).
 // 모이 = head(헤어) + body(옷). head 교체=헤어변경 / body 교체=옷변경. accessory=머리·얼굴 소품. casual=리컬러.
 import manifest from './manifest.json'
+import { POOL } from '../inyeon/data'
 
 const ASSET_BASE = '/assets/moi'
 const idFromFile = (file: string) => file.split('/').pop()!.replace(/\.png$/, '')
@@ -64,6 +65,10 @@ export interface PlazaMoi {
   /** casual 리컬러 틴트(pixi hex). */
   color: number
   me?: boolean
+  /** 인연 페르소나 연결(POOL id). 있으면 클릭 시 인연 탭과 동일 프로필 + 실사진. */
+  personaId?: number
+  /** 실사진 url(hero 모이만 — 프로필 시트 헤더용). */
+  photoUrl?: string
 }
 
 const NAMES = ['서연', '준호', '민지', '태윤', '하은', '도현', '지우', '수아', '예진', '시우', '하준', '지호', '민서', '서윤', '지안', '하린', '은우', '유진', '다은', '준우']
@@ -76,9 +81,33 @@ function makeRng(seed: number) {
   let s = seed >>> 0
   return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 0xffffffff)
 }
+
+// 광장에 등장하는 인연 페르소나 = 철수가 실제로 만난 사람만(tier 0 = 같은 결혼식 참석).
+// ★대표 지침(260621): 만난 적 없는 새 인연(tier 1·2)은 이 결혼식 광장에 나타나지 않는다.
+const PLAZA_PERSONAS = POOL.filter((p) => p.tier === 0)
+// hero 앞줄 배치(나 주변, 클릭하기 쉬운 전경).
+const HERO_SPOTS = [{ x: 0.31, y: 0.8 }, { x: 0.69, y: 0.8 }, { x: 0.5, y: 0.72 }, { x: 0.4, y: 0.66 }, { x: 0.6, y: 0.66 }]
+
 function genCrowd(n: number): PlazaMoi[] {
   const rng = makeRng(42)
   const out: PlazaMoi[] = [{ id: 'me', name: '나 (유상)', role: '나의 모이', x: 0.5, y: 0.9, head: DEFAULT_HEAD, body: DEFAULT_BODY, color: 0x9ec8e8, me: true }]
+  // 만난 사람(인연 페르소나) — 실사진 + 인연과 동일 프로필.
+  PLAZA_PERSONAS.forEach((p, i) => {
+    const spot = HERO_SPOTS[i % HERO_SPOTS.length]
+    out.push({
+      id: `persona-${p.id}`,
+      personaId: p.id,
+      name: p.name,
+      role: p.prov[0]?.sub ?? '같은 결혼식 하객',
+      photoUrl: p.photos[0]?.url,
+      x: spot.x,
+      y: spot.y,
+      head: HEAD_POOL[i % HEAD_POOL.length],
+      body: RECOLOR_BODY,
+      color: COLORS[i % COLORS.length],
+    })
+  })
+  // 익명 하객(라운지 군중 시각화).
   for (let i = 0; i < n; i++) {
     const left = rng() < 0.5
     const x = left ? 0.06 + rng() * 0.34 : 0.6 + rng() * 0.34

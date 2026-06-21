@@ -17,6 +17,7 @@ import { MatchOverlay } from '../components/inyeon/MatchOverlay'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { chulsooProfile } from '../components/profile/fixture'
+import { profileForPersona } from '../components/profile/personaProfiles'
 import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
 import { ChatScreen } from '../components/inyeon/ChatScreen'
 
@@ -157,7 +158,7 @@ export function InyeonPage() {
       <ProfileSheet
         open={profileMoiId != null}
         onOpenChange={(o) => !o && setProfileMoiId(null)}
-        data={chulsooProfile}
+        data={profileMoiForSheet ? profileForPersona(profileMoiForSheet) : chulsooProfile}
         context="inyeon"
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}

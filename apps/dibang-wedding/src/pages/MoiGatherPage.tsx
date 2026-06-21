@@ -11,8 +11,11 @@ import { moiPlazaMachine } from '../machines/moiPlaza.machine'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
 import { PLAZA_CROWD, CROWD_BY_ID } from '../components/moi-gather/data'
+import { POOL } from '../components/inyeon/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
+import type { ProfileData } from '../components/profile/types'
 import { chulsooProfile } from '../components/profile/fixture'
+import { profileForPersonaId, makeGuestProfile } from '../components/profile/personaProfiles'
 
 // 모이 색 → 사진 placeholder hue (실사진 전).
 function colorToHue(hex: number): number {
@@ -51,15 +54,25 @@ export function MoiGatherPage() {
   }, [toast])
 
   const profileMoi = profileMoiId ? CROWD_BY_ID[profileMoiId] : null
-  // 공유 프로필 fixture에 클릭한 모이 이름만 덮어 placeholder(데이터는 철수 fixture 공통).
-  const profileData = profileMoi ? { ...chulsooProfile, subject: profileMoi.name } : chulsooProfile
+  // 인물별 실제 프로필: 나=철수 sim 산출 / 만난 사람(personaId)=인연과 동일 프로필 / 익명 하객=생성.
+  const persona = profileMoi?.personaId != null ? POOL.find((p) => p.id === profileMoi.personaId) ?? null : null
+  const profileData: ProfileData = !profileMoi
+    ? chulsooProfile
+    : profileMoi.me
+      ? chulsooProfile
+      : profileMoi.personaId != null
+        ? profileForPersonaId(profileMoi.personaId)
+        : makeGuestProfile(profileMoi.id, profileMoi.name, colorToHue(profileMoi.color))
   const profileMeeting = profileMoi
     ? {
-        photoHue: colorToHue(profileMoi.color),
-        hook: profileMoi.me ? '나의 모이 · 광장의 나' : `${profileMoi.role}`,
-        prov: [{ emoji: '💍', text: '같은 결혼식에서 만난 모이', sub: profileMoi.role, tag: '오프라인' }],
-        mutualCount: profileMoi.me ? 0 : 4,
-        balLabel: '높음',
+        photoHue: persona?.photos[0]?.hue ?? colorToHue(profileMoi.color),
+        photoUrl: profileMoi.photoUrl,
+        hook: profileMoi.me ? '나의 모이 · 광장의 나' : persona ? persona.hook : profileMoi.role,
+        prov: persona
+          ? persona.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: '오프라인 · 같은 결혼식' }))
+          : [{ emoji: '💍', text: '이 결혼식에서 만난 모이', sub: profileMoi.role, tag: '오프라인' }],
+        mutualCount: profileMoi.me ? 0 : persona ? persona.mutualCount : 4,
+        balLabel: profileData.trustRange.label,
       }
     : undefined
 
