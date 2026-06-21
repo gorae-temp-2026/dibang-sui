@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { useSelector } from '@xstate/react'
 import { ArrowLeft, Gift, Lock, Play, Send, X } from 'lucide-react'
-import { DM_COST, MOI_MEM, seedDm } from './data'
+import { DM_COST, MOI_MEM } from './data'
 import type { DmMsg, Moi } from './types'
 import type { Note } from '../../hooks/useNotes'
 import type { MoiItemOnChain } from '@gorae/sui-sdk'
@@ -21,7 +21,6 @@ interface ChatScreenProps {
   pool: Moi[]
   matchedIds: number[]
   chatOpen: Record<number, boolean>
-  dms: Record<number, DmMsg[]>
   dmRoomId: number | null
   memoryId: number | null
   ownedOnchainItems: MoiItemOnChain[]
@@ -42,7 +41,6 @@ export function ChatScreen({
   pool,
   matchedIds,
   chatOpen,
-  dms,
   ownedOnchainItems,
   suiBalance,
   onPurchase,
@@ -140,7 +138,6 @@ export function ChatScreen({
         <DmRoom
           moiId={dmRoomId}
           pool={pool}
-          msgs={dms[dmRoomId] ?? seedDm()}
           notes={(() => {
             const m = moiById(dmRoomId)
             const addr = m && (m as Moi & { suiAddress?: string }).suiAddress
@@ -182,7 +179,7 @@ export function ChatScreen({
   )
 }
 
-function DmRoom({ moiId, pool, msgs, notes, myAddress, giftLog, onchainGifts, onSend, onClose, onOpenProfile, onOpenGift }: { moiId: number; pool: Moi[]; msgs: DmMsg[]; notes: Note[]; myAddress: string | null; giftLog: GiftEvent[]; onchainGifts: OnchainGiftEntry[]; onSend: (t: string) => void; onClose: () => void; onOpenProfile: () => void; onOpenGift: () => void }) {
+function DmRoom({ moiId, pool, notes, myAddress, giftLog, onchainGifts, onSend, onClose, onOpenProfile, onOpenGift }: { moiId: number; pool: Moi[]; notes: Note[]; myAddress: string | null; giftLog: GiftEvent[]; onchainGifts: OnchainGiftEntry[]; onSend: (t: string) => void; onClose: () => void; onOpenProfile: () => void; onOpenGift: () => void }) {
   const [text, setText] = useState('')
   const m = pool.find((p) => p.id === moiId)
   if (!m) return null
@@ -207,23 +204,16 @@ function DmRoom({ moiId, pool, msgs, notes, myAddress, giftLog, onchainGifts, on
         </button>
       </header>
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-4">
-        {notes.length > 0 && (
-          <div className="mx-auto max-w-[85%] rounded-xl bg-[#F8C57A]/10 px-3 py-2 text-center text-[10.5px] text-[#F8C57A]">🔗 온체인 쪽지 {notes.length}건</div>
+        {notes.length === 0 && (
+          <div className="mx-auto max-w-[85%] rounded-xl bg-white/[0.04] px-3 py-2 text-center text-[10.5px] leading-relaxed text-white/45">
+            쪽지를 보내면 온체인(Walrus)에 저장돼요
+          </div>
         )}
         {notes.map((note, i) =>
           note.from === myAddress ? (
             <div key={`n${i}`} className="ml-auto max-w-[78%] rounded-2xl rounded-br-md bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] px-3.5 py-2 text-[13px] text-white">{note.text}</div>
           ) : (
             <div key={`n${i}`} className="mr-auto max-w-[78%] rounded-2xl rounded-bl-md bg-white/[0.08] px-3.5 py-2 text-[13px] text-white">{note.text}</div>
-          ),
-        )}
-        {msgs.map((msg, i) =>
-          msg.sys ? (
-            <div key={i} className="mx-auto max-w-[85%] rounded-xl bg-white/[0.04] px-3 py-2 text-center text-[10.5px] leading-relaxed text-white/45">{msg.sys}</div>
-          ) : msg.me ? (
-            <div key={i} className="ml-auto max-w-[78%] rounded-2xl rounded-br-md bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] px-3.5 py-2 text-[13px] text-white">{msg.me}</div>
-          ) : (
-            <div key={i} className="mr-auto max-w-[78%] rounded-2xl rounded-bl-md bg-white/[0.08] px-3.5 py-2 text-[13px] text-white">{msg.them}</div>
           ),
         )}
         {giftLog.map((g) => (

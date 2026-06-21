@@ -170,7 +170,6 @@ export function InyeonPage() {
             pool={pool}
             matchedIds={matchedIds}
             chatOpen={chatOpen}
-            dms={dms}
             dmRoomId={dmRoomId}
             memoryId={memoryId}
             ownedOnchainItems={ownedOnchainItems}
