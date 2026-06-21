@@ -11,6 +11,7 @@ module dibang_wedding::event;
 
 use sui::clock::Clock;
 use sui::event;
+use dibang_wedding::signal;
 
 // === Errors ===
 const EInvalidEventType: u64 = 0;
@@ -101,7 +102,13 @@ public fun new_event(event_type: u8, creator_role_id: u8, clock: &Clock, ctx: &m
 public fun participate(ev: &Event, role_id: u8, clock: &Clock, ctx: &mut TxContext): ID {
     assert!(role_id <= ROLE_MAX, EInvalidRole);
     assert!(is_self_claimable(role_id), ENotSelfClaimable);
-    mint_participation(object::id(ev), ev.event_type, ctx.sender(), role_id, clock, ctx)
+    let id = mint_participation(object::id(ev), ev.event_type, ctx.sender(), role_id, clock, ctx);
+    // 웨딩 참석 = CS(참가자→혼주) 신호 온체인 분류·발행. (인연 매칭은 accept_ium이 양방향으로 발행.)
+    if (ev.event_type == EVENT_WEDDING) {
+        let sigs = signal::attendance_signals(ctx.sender(), ev.creator);
+        signal::emit_signals(&sigs, object::id(ev), clock);
+    };
+    id
 }
 
 /// 이벤트 생성자가 타인에게 임의 역할(공동 혼주·주례 등 권위 역할 포함)을 부여한다.

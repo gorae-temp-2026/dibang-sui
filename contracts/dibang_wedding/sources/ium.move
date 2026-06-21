@@ -13,6 +13,7 @@ module dibang_wedding::ium;
 use sui::clock::Clock;
 use sui::event;
 use dibang_wedding::event as gathering;
+use dibang_wedding::signal;
 
 // === Errors ===
 
@@ -78,6 +79,10 @@ public fun accept_ium(ev: &gathering::Event, req: IumRequest, clock: &Clock, ctx
     // 수신자가 매칭 이벤트에 RECEIVER로 참가(soulbound Participation). IumRequest 소유가 게이트이므로
     // self-claimable participate가 아니라 패키지-내부 mint로 발행한다(C-IUM1: 제3자 RECEIVER 자임 차단).
     gathering::mint_participation_for(ev, receiver, gathering::role_receiver(), clock, ctx);
+
+    // 매칭 확정 = 상호 관계 → 양방향 CS(initiator↔receiver) 온체인 분류·발행(인덱서/credit.ts·DeFi 입력).
+    let sigs = signal::match_signals(initiator, receiver);
+    signal::emit_signals(&sigs, event_id, clock);
 
     event::emit(IumAccepted { event_id, initiator, receiver });
     id.delete();
