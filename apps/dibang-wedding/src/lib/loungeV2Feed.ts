@@ -13,6 +13,7 @@ import {
   WARMTH_BASE,
   WARMTH_CAP,
   WARMTH_WEIGHT,
+  WARMTH_STEPS,
   type LogRow,
   type StoryGroup,
 } from '../types/lounge-v2';
@@ -73,7 +74,7 @@ const ACTION_PHRASE: Record<string, string> = {
 
 /** FeedItem → 모이는 중 로그 한 줄 */
 export function toLogRow(item: FeedItem): LogRow {
-  const kind = FEED_TYPE_TO_LOG[item.type];
+  const kind = FEED_TYPE_TO_LOG[item.type] ?? 'feed';
   const d = data(item);
   return {
     id: item.id,
@@ -81,7 +82,8 @@ export function toLogRow(item: FeedItem): LogRow {
     label: LOG_LABEL[kind],
     actorName: feedActorName(item),
     relation: relationText(d),
-    message: ACTION_PHRASE[kind],
+    // 라운지 알림(event)은 자리·선물명이 제각각 → data.event_text 커스텀 문구 우선.
+    message: str(d.event_text) || ACTION_PHRASE[kind] || '',
     createdAt: item.created_at,
   };
 }

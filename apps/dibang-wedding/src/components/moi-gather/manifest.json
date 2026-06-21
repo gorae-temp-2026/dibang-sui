@@ -209,47 +209,56 @@
     {
       "file": "accessories/flower_crown.png",
       "ko": "화관",
-      "yone": 15
+      "yone": 15,
+      "anchor": "top"
     },
     {
       "file": "accessories/tiara.png",
       "ko": "티아라",
-      "yone": 25
+      "yone": 25,
+      "anchor": "forehead"
     },
     {
       "file": "accessories/bow_tie.png",
       "ko": "보타이",
-      "yone": 12
+      "yone": 12,
+      "anchor": "neck"
     },
     {
       "file": "accessories/glasses.png",
       "ko": "안경",
-      "yone": 12
+      "yone": 12,
+      "anchor": "eyes"
     },
     {
       "file": "accessories/sunglasses.png",
       "ko": "선글라스",
-      "yone": 18
+      "yone": 18,
+      "anchor": "eyes"
     },
     {
       "file": "accessories/party_hat.png",
       "ko": "고깔모자",
-      "yone": 10
+      "yone": 10,
+      "anchor": "top"
     },
     {
       "file": "accessories/heart_glasses.png",
       "ko": "하트선글라스",
-      "yone": 16
+      "yone": 16,
+      "anchor": "eyes"
     },
     {
       "file": "accessories/wings.png",
       "ko": "천사날개",
-      "yone": 30
+      "yone": 30,
+      "anchor": "back"
     },
     {
       "file": "accessories/corsage.png",
       "ko": "코르사주",
-      "yone": 14
+      "yone": 14,
+      "anchor": "chest"
     }
   ],
   "_note": "기본 입장 모이=원본 SVG+옷 랜덤색. 합성=heads(neck_y=278)+bodies(어깨~256, 머리 neck를 collar에 겹쳐 배치). 손그림 톤 통일. 가격=요네."

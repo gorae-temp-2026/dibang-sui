@@ -6,7 +6,7 @@ import { useMachine, useSelector } from '@xstate/react'
 import { giftActor } from '../machines/gift.machine'
 import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
-import { POOL, TIER_META } from '../components/inyeon/data'
+import { POOL, TIER_META, MOI_INTRO } from '../components/inyeon/data'
 import type { Moi } from '../components/inyeon/types'
 import { SwipeDeck } from '../components/inyeon/SwipeDeck'
 import { InyeonRail } from '../components/inyeon/InyeonRail'
@@ -15,7 +15,9 @@ import { IeumSheet } from '../components/inyeon/IeumSheet'
 import { MatchOverlay } from '../components/inyeon/MatchOverlay'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
+import { useT } from '../lib/i18n'
 import { chulsooProfile } from '../components/profile/fixture'
+import { chulsooPlazaProfile } from '../components/profile/personaProfiles'
 import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
 import { ChatScreen } from '../components/inyeon/ChatScreen'
 
@@ -23,6 +25,7 @@ const moiById = (id: number | null) => (id == null ? null : POOL.find((m) => m.i
 
 export function InyeonPage() {
   const [state, send] = useMachine(inyeonMachine)
+  const t = useT()
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
 
   const {
@@ -42,6 +45,7 @@ export function InyeonPage() {
         photoHue: profileMoiForSheet.photos[0]?.hue ?? 210,
         photoUrl: profileMoiForSheet.photos[0]?.url,
         hook: profileMoiForSheet.hook,
+        intro: MOI_INTRO[profileMoiForSheet.id],
         prov: profileMoiForSheet.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: TIER_META[p.tier].label })),
         mutualCount: profileMoiForSheet.mutualCount,
         balLabel: profileMoiForSheet.balLabel,
@@ -60,7 +64,7 @@ export function InyeonPage() {
         >
           <SlidersHorizontal className="h-[18px] w-[18px]" />
         </button>
-        <div className="flex-1 text-[19px] font-extrabold tracking-tight text-white">디방인연</div>
+        <div className="flex-1 text-[19px] font-extrabold tracking-tight text-white">{t('inyeon.brand')}</div>
         <div className="rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
           🪙 {yone.toLocaleString()}
         </div>
@@ -78,7 +82,7 @@ export function InyeonPage() {
               onUnlock={(id) => send({ type: 'UNLOCK_PHOTOS', id })}
               onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
               onSwipeNext={() => send({ type: 'SWIPE_NEXT' })}
-              onOpenDetail={(id) => send({ type: 'OPEN_DETAIL', id })}
+              onOpenProfile={(id) => send({ type: 'OPEN_PROFILE', id })}
               onReset={() => send({ type: 'RESET_DECK' })}
             />
           </div>
@@ -150,11 +154,14 @@ export function InyeonPage() {
         onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
         onOpenFull={(id) => send({ type: 'OPEN_PROFILE', id })}
       />
+      {/* 내 전체 프로필 — 내 거라 항상 공개(revealed)·풀페이지. chulsooPlazaProfile=가족·만난사람 노드 포함. */}
       <ProfileSheet
         open={myProfileOpen}
         onOpenChange={(o) => send({ type: o ? 'OPEN_MY_PROFILE' : 'CLOSE_MY_PROFILE' })}
-        data={chulsooProfile}
+        data={chulsooPlazaProfile}
         context="inyeon"
+        revealed
+        presentation="page"
       />
       {/* 다른 모이 프로필(카드 상세·받은이음·채팅에서 진입) — 이음 전 익명 + 이음 CTA. */}
       <ProfileSheet
@@ -162,6 +169,7 @@ export function InyeonPage() {
         onOpenChange={(o) => !o && send({ type: 'CLOSE_PROFILE' })}
         data={chulsooProfile}
         context="inyeon"
+        presentation="page"
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
         onIeum={profileMoiId != null ? () => send({ type: 'OPEN_IEUM', id: profileMoiId }) : undefined}
@@ -170,57 +178,62 @@ export function InyeonPage() {
   )
 }
 
-// 내 프로필 — 신뢰잔액(Moi Credit 재료)이 데모 핵심이라 정적으로 표시. 편집/업로드는 TODO.
-// "내 전체 프로필" → 공유 ProfileSheet(⑤): ① 연결 그래프 + ② signal sunburst + Moi Credit raw→층→공식.
+// 내 프로필 — 앱엔 정성·1층 활동만(절대 신용·신뢰잔액 숫자 노출 금지). 정확 Moi Credit은 온체인.
+// 신뢰잔액(2층 상대값)은 '타인 프로필의 나와의 시그널'에만 등장 — 자기 프로필엔 없음.
+// "내 전체 프로필" → 공유 ProfileSheet(⑤, 정성). 정확 신용은 온체인 오브젝트 링크로.
 function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
+  const t = useT()
+  const stats: [string, string][] = [
+    ['38', t('me.ieum')],
+    ['12', t('me.events')],
+    ['24', t('me.contrib')],
+  ]
   return (
     <div className="h-full overflow-y-auto px-5 pb-6 pt-5">
       <div className="text-center">
         <div className="mx-auto h-24 w-24 rounded-full bg-cover bg-center" style={{ backgroundImage: 'url(/assets/inyeon-photos/my-profile.jpg)' }} />
         <div className="mt-3 text-xl font-extrabold text-white">유상</div>
-        <div className="mt-0.5 text-xs text-white/50">모이 #1024 · 서울</div>
+        <div className="mt-0.5 text-xs text-white/50">{t('me.handle')}</div>
       </div>
 
+      {/* 내가 쌓은 것 = 1층 활동(카운트만). 절대 신용 숫자(신뢰잔액·Moi Credit) 없음. */}
       <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-        <div className="flex items-center text-[13px] font-bold text-white">
-          🪙 내 신뢰잔액
-          <span className="ml-auto text-[10.5px] font-medium text-white/45">Moi Credit 재료</span>
-        </div>
-        <div className="mt-2.5 flex items-baseline gap-1.5">
-          <b className="text-[32px] font-black tracking-tight text-white">724</b>
-          <span className="text-xs text-white/50">/ 신뢰 점수</span>
-        </div>
-        <div className="mt-3.5 flex gap-2.5">
-          {[
-            ['38', '이음'],
-            ['12', '함께한 이벤트'],
-            ['상위 9%', '네트워크 중심성'],
-          ].map(([v, l]) => (
+        <div className="text-[13px] font-bold text-white">🌱 {t('me.builtUp')}</div>
+        <div className="mt-3 flex gap-2.5">
+          {stats.map(([v, l]) => (
             <div key={l} className="flex-1 rounded-xl bg-white/[0.05] py-2.5 text-center">
               <b className="block text-[17px] font-extrabold text-white">{v}</b>
               <span className="text-[10px] text-white/50">{l}</span>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-[10.5px] leading-relaxed text-white/45">
-          이음·이벤트 참여·기여가 신뢰 attestation으로 쌓여 신뢰잔액이 돼요. 이 잔액이 Moi Credit(온체인 신용)의
-          재료입니다. ※ 타인에겐 익명(범위)으로만 보여요.
-        </p>
+        <p className="mt-3 text-[10.5px] leading-relaxed text-white/45">{t('me.activityNote')}</p>
+      </div>
+
+      {/* 크레딧 = 정성(좋음/보통)만. 정확값은 온체인. */}
+      <div className="mt-3 flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+        <span className="shrink-0 rounded-full bg-[#3FAE6E]/20 px-3 py-1 text-[13px] font-extrabold text-[#6fe0a0]">🪙 {t('me.creditLabel')} · {t('profile.creditGood')}</span>
+        <span className="text-[10px] leading-snug text-white/45">{t('profile.creditOnchain')}</span>
       </div>
 
       <button
         type="button"
         onClick={onOpenProfile}
-        className="mt-3 w-full rounded-2xl border border-[#F8C57A]/40 bg-white/[0.05] py-3 text-[13px] font-bold text-[#F8C57A]"
+        className="mt-3 w-full rounded-2xl border border-white/12 bg-white/[0.05] py-3 text-[13px] font-bold text-white"
       >
-        🔭 내 전체 프로필 · Moi Credit 분석 보기
+        🔭 {t('me.viewFull')}
+      </button>
+      <button
+        type="button"
+        onClick={() => window.open('https://suiscan.xyz/testnet', '_blank', 'noopener,noreferrer')}
+        className="mt-2 w-full rounded-2xl border border-[#F8C57A]/40 bg-[#F8C57A]/[0.08] py-3 text-[13px] font-bold text-[#F8C57A]"
+      >
+        ⛓ {t('me.checkOnchain')}
       </button>
 
       <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-        <div className="text-[13px] font-bold text-white">✍️ 인연 소개글 · 노출 설정</div>
-        <p className="mt-1.5 text-[10.5px] leading-relaxed text-white/45">
-          추가 사진 업로드 · 소개글 · 매칭 풀 노출 토글 — TODO(②). 대표 사진은 Setting에서 변경.
-        </p>
+        <div className="text-[13px] font-bold text-white">{t('me.editTitle')}</div>
+        <p className="mt-1.5 text-[10.5px] leading-relaxed text-white/45">{t('me.editHint')}</p>
       </div>
     </div>
   )

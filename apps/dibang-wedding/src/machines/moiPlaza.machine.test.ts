@@ -1,8 +1,8 @@
 /**
  * 모이가모인곳(④) 광장 머신 — 샵 경제 로직 단위 테스트(손그림 에셋 카탈로그).
- *  - 구매 = 요네 차감(1회) + 자동 배치(인테리어)/장착(헤어·옷·액세서리 슬롯).
+ *  - 구매 = 요네 차감(1회) + '내 아이템'(owned)으로만 이동(즉시 착용/배치 안 함).
+ *  - 착용(EQUIP)/배치(PLACE)는 내 아이템에서 확정 — 무료 토글. 인테리어=다중 구매·배치(보유 수 한도, uid).
  *  - 기본 헤어·옷(무료)은 시작부터 보유·장착. 요네 부족 시 guard 차단.
- *  - 배치/제거·장착/해제 토글은 무료.
  * ※ 캔버스(MoiPlazaCanvas, PixiJS)는 jsdom 비대상 → 타입체크+빌드로 검증(profile.test 선례).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
@@ -17,7 +17,7 @@ async function buy(actor: Actor<typeof moiPlazaMachine>, itemId: string) {
   await vi.advanceTimersByTimeAsync(600)
 }
 
-describe('moiPlaza 머신 (샵 경제)', () => {
+describe('moiPlaza 머신 (샵 경제 · 인벤토리)', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
@@ -30,30 +30,49 @@ describe('moiPlaza 머신 (샵 경제)', () => {
     expect(c.placed).toEqual([])
   })
 
-  it('옷(바디) 구매 → 요네 차감 + 자동 장착(body)', async () => {
+  it('구매 = 내 아이템(owned)으로만 이동(즉시 착용 안 함) + 요네 차감', async () => {
     const a = createActor(moiPlazaMachine).start()
     await buy(a, 'suit')
     const c = a.getSnapshot().context
     expect(c.yone).toBe(START_YONE_PLAZA - price('suit'))
-    expect(c.equipped.body).toBe('suit')
+    expect(c.owned).toContain('suit')
+    expect(c.equipped.body).toBe('casual') // 구매만으론 장착 안 됨(확정 필요)
   })
 
-  it('헤어 구매 → 자동 장착(head)', async () => {
+  it('구매 후 EQUIP로 착용(옷·헤어·액세서리)', async () => {
     const a = createActor(moiPlazaMachine).start()
+    await buy(a, 'suit')
+    a.send({ type: 'EQUIP', itemId: 'suit' })
     await buy(a, 'chu_buzz')
-    expect(a.getSnapshot().context.equipped.head).toBe('chu_buzz')
-  })
-
-  it('액세서리 구매 → 자동 장착(acc)', async () => {
-    const a = createActor(moiPlazaMachine).start()
+    a.send({ type: 'EQUIP', itemId: 'chu_buzz' })
     await buy(a, 'flower_crown')
-    expect(a.getSnapshot().context.equipped.acc).toBe('flower_crown')
+    a.send({ type: 'EQUIP', itemId: 'flower_crown' })
+    const c = a.getSnapshot().context
+    expect(c.equipped.body).toBe('suit')
+    expect(c.equipped.head).toBe('chu_buzz')
+    expect(c.equipped.acc).toBe('flower_crown')
   })
 
-  it('인테리어 구매 → 자동 배치', async () => {
+  it('인테리어 구매 후 PLACE로 배치(uid 인스턴스)', async () => {
     const a = createActor(moiPlazaMachine).start()
     await buy(a, 'fountain')
-    expect(a.getSnapshot().context.placed.some((p) => p.itemId === 'fountain')).toBe(true)
+    expect(a.getSnapshot().context.placed).toEqual([]) // 구매만으론 배치 안 됨
+    a.send({ type: 'PLACE', itemId: 'fountain' })
+    const placed = a.getSnapshot().context.placed
+    expect(placed.length).toBe(1)
+    expect(placed[0].itemId).toBe('fountain')
+    expect(placed[0].uid).toBeTruthy()
+  })
+
+  it('인테리어 다중 구매·다중 배치(버진로드 여러 개, 보유 수 한도)', async () => {
+    const a = createActor(moiPlazaMachine).start()
+    await buy(a, 'aisle_runner')
+    await buy(a, 'aisle_runner')
+    expect(a.getSnapshot().context.owned.filter((i) => i === 'aisle_runner').length).toBe(2)
+    a.send({ type: 'PLACE', itemId: 'aisle_runner' })
+    a.send({ type: 'PLACE', itemId: 'aisle_runner' })
+    a.send({ type: 'PLACE', itemId: 'aisle_runner' }) // 보유 2개 한도 → 3번째 무시
+    expect(a.getSnapshot().context.placed.filter((p) => p.itemId === 'aisle_runner').length).toBe(2)
   })
 
   it('요네 부족 → 구매 차단(guard), 잔액·보유 불변', async () => {
@@ -68,22 +87,22 @@ describe('moiPlaza 머신 (샵 경제)', () => {
     expect(a.getSnapshot().context.yone).toBe(before)
   })
 
-  it('이미 보유한 것 재구매 차단(중복 차감 없음)', async () => {
+  it('착용류(옷) 보유 시 재구매 차단(중복 차감 없음)', async () => {
     const a = createActor(moiPlazaMachine).start()
-    await buy(a, 'cake')
+    await buy(a, 'suit')
     const after = a.getSnapshot().context.yone
-    await buy(a, 'cake')
+    await buy(a, 'suit') // 옷=1개 한도, 재구매 차단
     expect(a.getSnapshot().context.yone).toBe(after)
   })
 
-  it('배치/제거 토글은 무료', async () => {
+  it('배치(PLACE)/제거(REMOVE uid) 토글은 무료', async () => {
     const a = createActor(moiPlazaMachine).start()
     await buy(a, 'chair')
     const yoneAfterBuy = a.getSnapshot().context.yone
-    a.send({ type: 'REMOVE', itemId: 'chair' })
-    expect(a.getSnapshot().context.placed.some((p) => p.itemId === 'chair')).toBe(false)
     a.send({ type: 'PLACE', itemId: 'chair' })
-    expect(a.getSnapshot().context.placed.some((p) => p.itemId === 'chair')).toBe(true)
+    const uid = a.getSnapshot().context.placed[0].uid
+    a.send({ type: 'REMOVE', uid })
+    expect(a.getSnapshot().context.placed.length).toBe(0)
     expect(a.getSnapshot().context.yone).toBe(yoneAfterBuy)
   })
 
@@ -114,7 +133,7 @@ describe('moiPlaza 머신 (샵 경제)', () => {
     a.send({ type: 'SHOW_TOAST', message: '첫 토스트' })
     await vi.advanceTimersByTimeAsync(2000)
     a.send({ type: 'SHOW_TOAST', message: '둘째 토스트' }) // 타이머 재시작
-    await vi.advanceTimersByTimeAsync(2000) // 첫 예약(총 2600)이 살아있으면 사라졌을 시점
+    await vi.advanceTimersByTimeAsync(2000)
     expect(a.getSnapshot().context.toast).toBe('둘째 토스트') // 재시작돼 유지
     await vi.advanceTimersByTimeAsync(700)
     expect(a.getSnapshot().context.toast).toBeNull()

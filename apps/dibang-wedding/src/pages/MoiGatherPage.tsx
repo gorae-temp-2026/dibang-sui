@@ -10,7 +10,7 @@ import { ArrowLeft, ShoppingBag } from 'lucide-react'
 import { moiPlazaMachine } from '../machines/moiPlaza.machine'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
-import { PLAZA_CROWD, CROWD_BY_ID } from '../components/moi-gather/data'
+import { PLAZA_CROWD, CROWD_BY_ID, PLAZA_WEDDING } from '../components/moi-gather/data'
 import { POOL } from '../components/inyeon/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import type { ProfileData } from '../components/profile/types'
@@ -18,7 +18,8 @@ import { profileForPersonaId, makeGuestProfile, plazaPartnerIds, chulsooPlazaPro
 import { warmthStep } from '../lib/loungeV2Feed'
 
 // 데모 시드 온기(라운지 38.6°) → 단일축 단계. 실시간 풀 계산은 로드맵(핸드오프).
-const PLAZA_WARMTH_STEP = warmthStep(38.6)
+const PLAZA_WARMTH = 38.6
+const PLAZA_WARMTH_STEP = warmthStep(PLAZA_WARMTH)
 
 // 모이 색 → 사진 placeholder hue (실사진 전).
 function colorToHue(hex: number): number {
@@ -38,9 +39,14 @@ export function MoiGatherPage() {
   const [state, send] = useMachine(moiPlazaMachine)
   const [shopOpen, setShopOpen] = useState(false)
   const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
+  // 첫 입장 온보딩 토스트(잠깐 떴다 사라짐). 세션당 1회.
+  const [onboard, setOnboard] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setOnboard(false), 5200)
+    return () => clearTimeout(t)
+  }, [])
 
   const { yone, owned, placed, equipped, pendingItemId, error, toast } = state.context
-  const placedIds = placed.map((p) => p.itemId)
   const giftReceived = useSelector(giftActor, (s) => s.context.received)
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
   // 받은 선물 → 광장 보유로 부여(꾸미기 장착·배치 가능). gift actor 브리지.
@@ -91,8 +97,12 @@ export function MoiGatherPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[15px] font-extrabold text-white">모이가 모인곳 · 광장</div>
-          <div className="truncate text-[11px] text-white/55">김수영 · 박소율 웨딩라운지 · 모이 {PLAZA_CROWD.length}</div>
+          <div className="truncate text-[14.5px] font-extrabold text-white">{PLAZA_WEDDING.groom} · {PLAZA_WEDDING.bride} 웨딩라운지</div>
+          <div className="truncate text-[10px] text-white/50">혼주 · 신랑측 {PLAZA_WEDDING.groomFather}·{PLAZA_WEDDING.groomMother} · 신부측 {PLAZA_WEDDING.brideFather}·{PLAZA_WEDDING.brideMother}</div>
+        </div>
+        <div className="flex flex-col items-center rounded-full bg-white/10 px-2.5 py-1 backdrop-blur">
+          <span className="text-[7.5px] font-bold uppercase tracking-wide text-white/45">우리의 온기</span>
+          <span className="text-[12px] font-extrabold leading-none text-[#F8A24A]">{PLAZA_WARMTH}°</span>
         </div>
         <div className="rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
           🪙 {yone.toLocaleString()}
@@ -113,17 +123,20 @@ export function MoiGatherPage() {
           equipped={equipped}
           crowd={PLAZA_CROWD}
           onMoiClick={setProfileMoiId}
-          onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
+          onMovePlaced={(uid, x, y) => send({ type: 'MOVE', uid, x, y })}
           partnersOf={plazaPartnerIds}
           warmthStep={PLAZA_WARMTH_STEP}
         />
 
-        {/* 조작 힌트 */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
-          <span className="rounded-full border border-white/12 bg-[#0c1a2e]/70 px-3.5 py-1.5 text-[11px] font-medium text-white/60 backdrop-blur">
-            모이를 누르면 이음망이 보여요 · ⓘ로 프로필 · 드래그·핀치로 둘러보기
-          </span>
-        </div>
+        {/* 첫 입장 온보딩 토스트(잠깐 떴다 사라짐) */}
+        {onboard && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-5 z-10 flex justify-center px-6">
+            <div className="rounded-2xl border border-white/12 bg-[#0c1a2e]/85 px-4 py-2.5 text-center backdrop-blur">
+              <div className="text-[11px] font-medium text-white/75">모이를 누르면 이음망이 보여요 · ⓘ로 프로필 · 드래그·핀치로 둘러보기</div>
+              <div className="mt-1 text-[10.5px] font-medium text-[#F8C57A]">모이들과 상호작용하면 우리의 온기가 높아져요 ♨</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 토스트 */}
@@ -141,13 +154,13 @@ export function MoiGatherPage() {
         onOpenChange={setShopOpen}
         yone={yone}
         owned={owned}
-        placedIds={placedIds}
+        placed={placed}
         equipped={equipped}
         pendingItemId={pendingItemId}
         error={error}
         onPurchase={(id) => send({ type: 'PURCHASE', itemId: id })}
         onPlace={(id) => send({ type: 'PLACE', itemId: id })}
-        onRemove={(id) => send({ type: 'REMOVE', itemId: id })}
+        onRemove={(uid) => send({ type: 'REMOVE', uid })}
         onEquip={(id) => send({ type: 'EQUIP', itemId: id })}
         onUnequip={(slot) => send({ type: 'UNEQUIP', slot })}
         onCharge={() => send({ type: 'CHARGE' })}

@@ -9,15 +9,18 @@ import type { FeedItem, FeedItemType } from '@gorae/contracts';
 /** 모이는 중 로그 행의 활동 종류
  *  memory: Memory Domain Split 후 추가된 라운지 V2 "온기" 게시물 (text + 0/1 photo).
  *  feed:   레거시 GuestbookMessage(LIVE 축하메세지) — 현장 QR 전용으로 책임 환원. */
-export type LogKind = 'checkin' | 'enter' | 'post' | 'feed' | 'memory';
+export type LogKind = 'checkin' | 'enter' | 'post' | 'feed' | 'memory' | 'event';
 
-/** feed type → 로그 종류 매핑 (핸드오프 §4-6 규칙) */
-export const FEED_TYPE_TO_LOG: Record<FeedItemType, LogKind> = {
+/** feed type → 로그 종류 매핑 (핸드오프 §4-6 규칙).
+ *  FeedItemType(서버 생성타입) 완전성 유지 + 'lounge_event'(클라 데모 알림: 들러리 선정·디방화환 선물)는
+ *  contracts 무수정 원칙상 string 확장으로 허용한다(devFixtures가 as-cast로 주입). */
+export const FEED_TYPE_TO_LOG: Record<FeedItemType, LogKind> & Record<string, LogKind> = {
   guestbook_entry: 'checkin',
   lounge_check_in: 'enter',
   host_announcement: 'post',
   guestbook_message: 'feed',
   memory: 'memory',
+  lounge_event: 'event',
 };
 
 /** 로그 종류별 표시 라벨 */
@@ -27,6 +30,7 @@ export const LOG_LABEL: Record<LogKind, string> = {
   post: 'Post',
   feed: 'Message',
   memory: 'Memory',
+  event: 'Event',
 };
 
 // 우리의 온기 = 이 라운지(이벤트) 내 기여 행동의 가중합(network contribution).
@@ -41,6 +45,7 @@ export const WARMTH_WEIGHT: Record<LogKind, number> = {
   post: 0.3, // 공지 = CS
   feed: 0.4, // 축하메시지 = CS
   memory: 0.4, // 메모리 = CS
+  event: 0, // 들러리 선정·선물 알림 = 피드 표기 전용(온기 가중은 EM 정식 연결 시 — 데모 38.6° 유지)
 };
 /** 단일축 단계식 — 온기를 N단계로(공간 링·밝기 반응). 정밀 °는 KPI 텍스트. */
 export const WARMTH_STEPS = 5;
