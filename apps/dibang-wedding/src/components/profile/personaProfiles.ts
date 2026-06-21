@@ -119,7 +119,8 @@ function build(seed: number, o: ProfileSeed): ProfileData {
   const links: ProfileLink[] = []
   const neigh = (o.neighborIds ?? []).map((pid) => {
     const cm = CROWD_BY_ID[pid]
-    return { id: pid, label: cm?.name ?? '모이', hue: cm ? hueOf(cm.color) : Math.floor(r() * 360) }
+    // 광장 ego = 이 결혼식에서 만난 사람 → here 강조(나머지 추가 노드는 더 넓은 네트워크).
+    return { id: pid, label: cm?.name ?? '모이', hue: cm ? hueOf(cm.color) : Math.floor(r() * 360), here: true }
   })
   neigh.forEach((nd) => {
     nodes.push(nd)
@@ -236,7 +237,7 @@ function buildChulsooPlaza(): ProfileData {
   heroIds().forEach((hid) => {
     const cm = CROWD_BY_ID[hid]
     if (!cm || have.has(hid)) return
-    addNodes.push({ id: hid, label: cm.name, hue: hueOf(cm.color) })
+    addNodes.push({ id: hid, label: cm.name, hue: hueOf(cm.color), here: true }) // 이 결혼식에서 만난 사람 = 광장 ego
     addLinks.push({ source: selfNodeId, target: hid, type: '승급', value: 3 }) // 오프라인 이음(승급)
   })
   return { ...base, graph: { nodes: [...base.graph.nodes, ...addNodes], links: [...base.graph.links, ...addLinks] } }

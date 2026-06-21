@@ -103,6 +103,9 @@ describe('광장 ego 네트워크(하이라이트 인터랙션)', () => {
       // 프로필 그래프 중 광장 실재 노드 = 광장 선과 정확히 일치
       const inPlaza = profile.graph.nodes.filter((n) => !n.self && CROWD_BY_ID[n.id]).map((n) => n.id).sort()
       expect(inPlaza).toEqual([...partners].sort())
+      // here(이 결혼식에서 만난 사람) 강조 집합 = 광장 선과 동일
+      const hereIds = profile.graph.nodes.filter((n) => n.here).map((n) => n.id).sort()
+      expect(hereIds).toEqual([...partners].sort())
     }
   })
 
@@ -110,11 +113,11 @@ describe('광장 ego 네트워크(하이라이트 인터랙션)', () => {
     expect(plazaPartnerIds('c0')).not.toEqual(plazaPartnerIds('c1'))
   })
 
-  it('철수 augmented 프로필 그래프에 광장 hero 포함(광장과 일치)', () => {
-    const ids = plazaPartnerIds('me')
-    const gids = new Set(chulsooPlazaProfile.graph.nodes.map((n) => n.id))
-    ids.forEach((id) => expect(gids.has(id)).toBe(true))
-    // 실데이터 점수 불변
-    expect(chulsooPlazaProfile.moiCredit.score).toBe(834)
+  it('철수 = 전체망 유지(많은 노드) + here(이 결혼식에서 만난 사람) = 광장 hero와 일치', () => {
+    const partners = plazaPartnerIds('me')
+    const here = chulsooPlazaProfile.graph.nodes.filter((n) => n.here).map((n) => n.id).sort()
+    expect(here).toEqual([...partners].sort()) // 강조 집합 = 광장 선
+    expect(chulsooPlazaProfile.graph.nodes.length).toBeGreaterThan(10) // 전체 신뢰 네트워크 유지
+    expect(chulsooPlazaProfile.moiCredit.score).toBe(834) // 실데이터 불변
   })
 })

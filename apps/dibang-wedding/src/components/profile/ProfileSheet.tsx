@@ -102,6 +102,12 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
           <p className="mt-1.5 text-[10px] text-white/40">
             {offline ? '실명 네트워크' : '누구와 이음됐는지 (익명)'} · 강한 이웃 {data.graph.nodes.length - 1}명
           </p>
+          {data.graph.nodes.some((n) => n.here) && (
+            <p className="mt-1 flex items-center gap-1.5 text-[10px] text-white/45">
+              <span className="inline-block h-2 w-2 flex-shrink-0 rounded-full ring-2 ring-[#F8C57A]" />
+              {offline ? '이 결혼식에서 만난 사람' : '직접 이어진 사람'} · 나머지는 더 넓은 신뢰 네트워크
+            </p>
+          )}
         </Section>
 
         <Section title="② 우리 signal (2층 fold)">

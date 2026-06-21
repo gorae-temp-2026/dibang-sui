@@ -16,8 +16,7 @@ import { IeumSheet } from '../components/inyeon/IeumSheet'
 import { MatchOverlay } from '../components/inyeon/MatchOverlay'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
-import { chulsooProfile } from '../components/profile/fixture'
-import { profileForPersona } from '../components/profile/personaProfiles'
+import { profileForPersona, chulsooPlazaProfile } from '../components/profile/personaProfiles'
 import { ReceivedScreen } from '../components/inyeon/ReceivedScreen'
 import { ChatScreen } from '../components/inyeon/ChatScreen'
 
@@ -153,12 +152,12 @@ export function InyeonPage() {
           setProfileMoiId(id)
         }}
       />
-      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} data={chulsooProfile} context="inyeon" />
+      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} data={chulsooPlazaProfile} context="inyeon" />
       {/* 다른 모이 프로필(카드 상세·받은이음·채팅에서 진입) — 이음 전 익명 + 이음 CTA. */}
       <ProfileSheet
         open={profileMoiId != null}
         onOpenChange={(o) => !o && setProfileMoiId(null)}
-        data={profileMoiForSheet ? profileForPersona(profileMoiForSheet) : chulsooProfile}
+        data={profileMoiForSheet ? profileForPersona(profileMoiForSheet) : chulsooPlazaProfile}
         context="inyeon"
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}

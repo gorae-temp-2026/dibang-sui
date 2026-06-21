@@ -7,6 +7,8 @@ export interface ProfileNode {
   /** 사진 플레이스홀더 색상(hue 0~360). 실제는 모이 대표 사진. */
   hue: number
   self?: boolean
+  /** 이 결혼식(광장)에서 만난 사람 = 광장 ego와 동일 집합. 그래프에서 강조 표시(나머지는 더 넓은 네트워크). */
+  here?: boolean
 }
 
 export interface ProfileLink {
