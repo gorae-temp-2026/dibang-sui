@@ -76,7 +76,8 @@ export function useOnchainHostActions() {
     () => executeOnchain(buildCreateMoiTx({ recipient: requireAddress() })),
     [executeOnchain, requireAddress],
   )
-  // 샵 아이템 = SUI 결제 '구매'(결정#6). 무료 mint 폐기 — buildPurchaseItemTx가 가스에서 가격 분리 결제.
+  // 샵 아이템 = Payment Kit SUI 결제 '구매'(결정#6). 무료 mint 폐기 — buildPurchaseItemTx가 coinWithBalance로
+  // sponsor-safe 결제(가스 분리 금지) + moi::purchase_item(registry, nonce, …). 호출자가 registryId·nonce 제공.
   const purchaseItem = useCallback(
     (p: Omit<PurchaseItemParams, 'owner'>) =>
       executeOnchain(buildPurchaseItemTx({ ...p, owner: requireAddress() })),

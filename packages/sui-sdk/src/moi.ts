@@ -6,7 +6,7 @@
  * equip_item 은 소유한 Moi·MoiItem을 입력으로 받아 아이템을 아바타에 부착한다.
  */
 
-import { Transaction } from '@mysten/sui/transactions';
+import { Transaction, coinWithBalance } from '@mysten/sui/transactions';
 import { moveTarget } from './constants';
 
 export interface CreateMoiParams {
@@ -20,8 +20,10 @@ export interface PurchaseItemParams {
   slot: string;
   /** 발행한 아이템 NFT를 받을 주소(보통 구매자 본인). */
   owner: string;
-  /** 결제(SUI)를 받을 시스템 treasury 주소. */
-  treasury: string;
+  /** dibang 샵 Payment Kit PaymentRegistry 오브젝트 ID(결제·중복방지·treasury 적립). 1회 생성·설정된 registry. */
+  registryId: string;
+  /** 결제 고유키(중복 결제 방지) — 매 구매마다 고유값(예: crypto.randomUUID()). */
+  nonce: string;
   /** 아이템 가격(MIST). 기본=컨트랙트 moi::ITEM_PRICE. */
   priceMist?: bigint;
 }
@@ -52,23 +54,26 @@ export function buildCreateMoiTx(params: CreateMoiParams): Transaction {
 }
 
 /**
- * 샵 아이템 **구매**(SUI 결제 게이트, 결정#6). 가스 코인에서 가격만큼 분리해 결제하고,
- * moi::purchase_item(payment, treasury, …)으로 발행받은 MoiItem을 owner에게 전송한다.
- * mint_item은 봉인(public(package))됐으므로 외부는 이 게이트만 통과한다 — 발행 비용이 gift-CS 시빌 내성을 만든다.
+ * 샵 아이템 **구매**(Mysten Payment Kit 결제 게이트, 결정#6 "Sui in SDK 기반").
+ * moi::purchase_item이 내부에서 payment_kit::process_registry_payment로 결제(registry 적립=treasury·중복방지·receipt) +
+ * mint 한다. 결제 코인은 **`coinWithBalance`로 유저 본인 SUI에서 소싱** — `splitCoins(tx.gas)` 금지(sponsor가 거부,
+ * SUI_SDK.md §Sponsored CRITICAL). 발행받은 MoiItem을 owner에게 전송. mint_item은 public(package) 봉인 = 이 게이트만 통과.
  */
 export function buildPurchaseItemTx(params: PurchaseItemParams): Transaction {
   const tx = new Transaction();
   const price = params.priceMist ?? MOI_ITEM_PRICE_MIST;
-  // 가스 코인에서 정확히 price만큼 분리 → 결제 Coin<SUI>.
-  const [payment] = tx.splitCoins(tx.gas, [price]);
+  // sponsor-safe: 가스(sponsor 코인) 분리 금지 → 유저 본인 SUI에서 가격만큼 선택. setSender는 실행 플로우가 설정.
+  const payment = coinWithBalance({ balance: price });
   const item = tx.moveCall({
     target: moveTarget('moi', 'purchase_item'),
     arguments: [
+      tx.object(params.registryId),
+      tx.pure.string(params.nonce),
       payment,
-      tx.pure.address(params.treasury),
       tx.pure.string(params.name),
       tx.pure.string(params.itemType),
       tx.pure.string(params.slot),
+      tx.object.clock(),
     ],
   });
   tx.transferObjects([item], params.owner);

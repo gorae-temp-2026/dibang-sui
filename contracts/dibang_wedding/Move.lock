@@ -19,5 +19,11 @@ deps = { MoveStdlib = "MoveStdlib" }
 [pinned.testnet.dibang_wedding]
 source = { root = true }
 use_environment = "testnet"
+manifest_digest = "2C440920325E9FD4805A4B76737AD3186D66144A738E154DE240877399E53228"
+deps = { payment_kit = "payment_kit", std = "MoveStdlib", sui = "Sui" }
+
+[pinned.testnet.payment_kit]
+source = { git = "https://github.com/MystenLabs/sui-payment-kit.git", subdir = ".", rev = "34464974de849975872cc67f02715a98db3112ba" }
+use_environment = "testnet"
 manifest_digest = "5745706258F61D6CE210904B3E6AE87A73CE9D31A6F93BE4718C442529332A87"
 deps = { std = "MoveStdlib", sui = "Sui" }

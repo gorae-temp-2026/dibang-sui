@@ -10,6 +10,8 @@ use sui::event;
 use sui::vec_map::{Self, VecMap};
 use sui::coin::Coin;
 use sui::sui::SUI;
+use sui::clock::Clock;
+use payment_kit::payment_kit::{Self, PaymentRegistry};
 
 // === Errors ===
 
@@ -105,19 +107,26 @@ public(package) fun mint_item(
     item
 }
 
-/// 샵 아이템 **구매** — SUI 결제 게이트(결정#6). `payment`(≥ ITEM_PRICE)를 `treasury`(시스템)로 보내고
-/// MoiItem을 발행해 반환한다(PTB가 구매자에게 transfer). 무료 발행(mint_item)은 봉인됐고 외부는 이 게이트만 통과한다.
-/// 구매는 **시장 거래(MP·즉시청산)**일 뿐 신뢰 신호가 아니다(§3-G) — 발행 비용이 gift-CS 신호의 시빌 내성을 만든다.
+/// 샵 아이템 **구매** — Mysten Payment Kit 결제 게이트(결정#6 "Sui in SDK 기반"). `payment`(≥ ITEM_PRICE)를
+/// `payment_kit::process_registry_payment`로 결제 → registry-managed funds(=온체인 treasury) 적립 +
+/// PaymentRecord(중복방지) + PaymentReceipt(증명) 발행 후 MoiItem을 발행해 반환한다(PTB가 구매자에게 transfer).
+/// 무료 발행(mint_item)은 public(package) 봉인 — 외부는 이 게이트만 통과한다. 발행 비용(SUI)이 gift-CS 시빌 내성을 만든다(§3-G·L8).
+/// nonce는 결제 고유키(중복 결제 방지). receiver=none → managed funds 설정된 registry로 귀속.
 public fun purchase_item(
+    registry: &mut PaymentRegistry,
+    nonce: String,
     payment: Coin<SUI>,
-    treasury: address,
     name: String,
     item_type: String,
     slot: String,
+    clock: &Clock,
     ctx: &mut TxContext,
 ): MoiItem {
     assert!(payment.value() >= ITEM_PRICE, EInsufficientPayment);
-    transfer::public_transfer(payment, treasury); // 결제 → 시스템(treasury). MP, 신뢰 신호 아님.
+    let amount = payment.value();
+    // payment_kit nonce는 std::ascii::String — uuid라 ascii 보장. (string::String → ascii)
+    let receipt = payment_kit::process_registry_payment<SUI>(registry, nonce.to_ascii(), amount, payment, option::none(), clock, ctx);
+    let _ = receipt; // PaymentReceipt: copy,drop,store — 이벤트로도 발행됨. 게이트 목적상 소비.
     mint_item(name, item_type, slot, ctx)
 }
 
@@ -162,11 +171,11 @@ public fun item_slot(item: &MoiItem): String { item.slot }
 use sui::test_scenario as ts;
 #[test_only]
 use std::unit_test::{assert_eq, destroy};
+#[test_only]
+use sui::clock;
 
 #[test_only]
 const USER: address = @0x6;
-#[test_only]
-const TREASURY: address = @0x7;
 
 #[test_only]
 /// 단위 테스트용 — Moi를 반환한다(production `create_moi`는 sender에게 transfer).
@@ -240,31 +249,50 @@ fun unequip_empty_slot_fails() {
     destroy(moi);
 }
 
-// === purchase_item (SUI 결제 게이트, 결정#6) ===
+// === purchase_item (Payment Kit 결제 게이트, 결정#6) ===
+
+#[test_only]
+/// payment_kit를 초기화(default registry 공유 + cap→USER)하고 managed funds=true(=registry 적립)로 설정한
+/// PaymentRegistry를 take해 반환한다. 호출 후 scenario는 USER tx2. 끝에 ts::return_shared 필요.
+fun setup_payment_registry(scenario: &mut ts::Scenario): PaymentRegistry {
+    payment_kit::init_for_testing(scenario.ctx());
+    scenario.next_tx(USER);
+    let mut registry = scenario.take_shared<PaymentRegistry>();
+    let cap = scenario.take_from_sender<payment_kit::RegistryAdminCap>();
+    payment_kit::set_config_registry_managed_funds(&mut registry, &cap, true, scenario.ctx());
+    scenario.return_to_sender(cap);
+    registry
+}
 
 #[test]
-fun purchase_item_mints_and_pays_treasury() {
+fun purchase_item_mints_via_payment_kit() {
     let mut scenario = ts::begin(USER);
-    // 정확히 가격만큼 SUI 결제 → 아이템 발행 + 결제는 treasury로.
+    let mut registry = setup_payment_registry(&mut scenario);
+
+    // 정확히 가격만큼 SUI 결제 → Payment Kit 결제(registry 적립) + 아이템 발행.
+    let clk = clock::create_for_testing(scenario.ctx());
     let payment = sui::coin::mint_for_testing<sui::sui::SUI>(ITEM_PRICE, scenario.ctx());
-    let item = purchase_item(payment, TREASURY, b"Hat".to_string(), b"head".to_string(), b"head_slot".to_string(), scenario.ctx());
+    let item = purchase_item(&mut registry, b"nonce-1".to_string(), payment, b"Hat".to_string(), b"head".to_string(), b"head_slot".to_string(), &clk, scenario.ctx());
     assert_eq!(item.name, b"Hat".to_string());
     assert_eq!(item.slot, b"head_slot".to_string());
     destroy(item);
 
-    // treasury가 결제(ITEM_PRICE)를 받았는지 확인.
-    scenario.next_tx(TREASURY);
-    let paid = scenario.take_from_sender<sui::coin::Coin<sui::sui::SUI>>();
-    assert_eq!(paid.value(), ITEM_PRICE);
-    destroy(paid);
+    clock::destroy_for_testing(clk);
+    ts::return_shared(registry);
     scenario.end();
 }
 
 #[test, expected_failure(abort_code = EInsufficientPayment)]
 fun purchase_item_insufficient_payment_fails() {
     let mut scenario = ts::begin(USER);
+    let mut registry = setup_payment_registry(&mut scenario);
+
+    let clk = clock::create_for_testing(scenario.ctx());
     let payment = sui::coin::mint_for_testing<sui::sui::SUI>(ITEM_PRICE - 1, scenario.ctx());
-    let item = purchase_item(payment, TREASURY, b"Hat".to_string(), b"head".to_string(), b"head_slot".to_string(), scenario.ctx());
+    let item = purchase_item(&mut registry, b"nonce-2".to_string(), payment, b"Hat".to_string(), b"head".to_string(), b"head_slot".to_string(), &clk, scenario.ctx());
     destroy(item); // 미도달 — EInsufficientPayment
+
+    clock::destroy_for_testing(clk);
+    ts::return_shared(registry);
     scenario.end();
 }
