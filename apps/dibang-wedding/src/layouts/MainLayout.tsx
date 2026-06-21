@@ -1,9 +1,15 @@
 import { Outlet, NavLink } from 'react-router';
 
-function HeartIcon({ className }: { className?: string }) {
+// 하단 네비 4탭 — Inyeon · Event list · My event · Setting (디방 통합 목업 260620 SSOT).
+// 2026-06-20 통합: 기존 3탭(나의 결혼식·참여한 결혼식·설정)에 Inyeon(유니버스) 신규 추가.
+// QR·DM 탭은 nav에서 제외(핸드오프 §2-1) — /qr·/dm 라우트 자체는 App.tsx에 유지, DM은 Inyeon으로 흡수.
+// 라벨은 통합 목업 기준 영문 표기.
+
+function InyeonIcon({ className }: { className?: string }) {
   return (
     <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
     </svg>
   );
 }
@@ -19,18 +25,13 @@ function GridIcon({ className }: { className?: string }) {
   );
 }
 
-function QrIcon({ className }: { className?: string }) {
+function HeartIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="2" width="8" height="8" rx="1" />
-      <rect x="14" y="2" width="8" height="8" rx="1" />
-      <rect x="2" y="14" width="8" height="8" rx="1" />
-      <path d="M14 14h2v2h-2zM20 14h2v2h-2zM14 20h2v2h-2zM20 20h2v2h-2zM17 17h2v2h-2z" />
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   );
 }
-
-// TEMP: ChatIcon 제거 — DM 탭 숨김 (issue #28), DM 기능 완성 시 git history에서 복구
 
 function SettingsIcon({ className }: { className?: string }) {
   return (
@@ -54,14 +55,12 @@ export function MainLayout() {
       <nav className="fixed bottom-0 inset-x-0 z-50">
         <div className="max-w-lg mx-auto relative">
           <div className="bg-white border-t border-line pt-2.5 pb-5">
-            {/* TEMP: DM 탭(#28)·QR 탭(2026-05-29 QA) 숨김으로 현재 가시 탭 3개 → grid-cols-3.
-                DM 기능 완성 + QR 노출 시 grid-cols-5로 복구 (issue #47) */}
-            <div className="grid grid-cols-3">
-              <NavLink to="/my-wedding" className={({ isActive }) => navLinkClass(isActive)}>
+            <div className="grid grid-cols-4">
+              <NavLink to="/inyeon" className={({ isActive }) => navLinkClass(isActive)}>
                 {({ isActive }) => (
                   <>
-                    <HeartIcon className={isActive ? 'text-navy' : 'text-gray-400'} />
-                    <span>나의 결혼식</span>
+                    <InyeonIcon className={isActive ? 'text-navy' : 'text-gray-400'} />
+                    <span>Inyeon</span>
                   </>
                 )}
               </NavLink>
@@ -70,32 +69,25 @@ export function MainLayout() {
                 {({ isActive }) => (
                   <>
                     <GridIcon className={isActive ? 'text-navy' : 'text-gray-400'} />
-                    <span>참여한 결혼식</span>
+                    <span>Event list</span>
                   </>
                 )}
               </NavLink>
 
-              {/* QA 2026-05-29: 축의 QR 탭 일단 숨김(없애는 건 아니고 추후 앱 출시 시 노출). */}
-              {false && (
-              <NavLink to="/qr" className={({ isActive }) => navLinkClass(isActive)}>
+              <NavLink to="/my-wedding" className={({ isActive }) => navLinkClass(isActive)}>
                 {({ isActive }) => (
                   <>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isActive ? 'bg-navy text-white' : 'bg-sky/20 text-sky'}`}>
-                      <QrIcon className={isActive ? 'text-white' : 'text-sky'} />
-                    </div>
-                    <span>QR</span>
+                    <HeartIcon className={isActive ? 'text-navy' : 'text-gray-400'} />
+                    <span>My event</span>
                   </>
                 )}
               </NavLink>
-              )}
-
-              {/* TEMP: DM NavLink 제거 — issue #28, DM 기능 완성 시 git history에서 복구 (라우트 /dm 자체는 유지) */}
 
               <NavLink to="/settings" className={({ isActive }) => navLinkClass(isActive)}>
                 {({ isActive }) => (
                   <>
                     <SettingsIcon className={isActive ? 'text-navy' : 'text-gray-400'} />
-                    <span>설정</span>
+                    <span>Setting</span>
                   </>
                 )}
               </NavLink>

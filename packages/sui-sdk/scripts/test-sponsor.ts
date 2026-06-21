@@ -46,7 +46,7 @@ function createdId(res: SuiTransactionBlockResponse, suffix: string): string {
 
 async function main() {
   if (!existsSync(KEY_PATH)) {
-    console.error('.test-keypair 없음 — 먼저 test-testnet.ts를 실행해 자금된 키를 만드세요.');
+    console.error('.test-keypair 없음 — 자금된 ed25519 키를 scripts/.test-keypair에 두세요(sponsor 가스 지불용).');
     process.exit(1);
   }
   const sponsor = Ed25519Keypair.fromSecretKey(readFileSync(KEY_PATH, 'utf-8').trim());
@@ -61,16 +61,7 @@ async function main() {
   // 1) sponsor가 결혼식 생성(자기 가스로) → 라운지 확보
   console.log('\n[1] sponsor가 결혼식 생성');
   const rWedding = await executeAndAssert(client, {
-    transaction: buildCreateWeddingTx({
-      owner: sponsor.toSuiAddress(),
-      groomName: 'SponsorTest',
-      brideName: 'Bride',
-      date: '2026-10-01',
-      time: '12:00',
-      venueName: 'Hall',
-      venueAddress: 'Seoul',
-      loungeName: 'Sponsor Lounge',
-    }),
+    transaction: buildCreateWeddingTx({ owner: sponsor.toSuiAddress() }), // 익명 앵커(결정#2 — 표시정보 인자 없음)
     signer: sponsor,
   });
   const weddingId = createdId(rWedding, '::wedding::Wedding');
@@ -81,11 +72,10 @@ async function main() {
   console.log('\n[2] 자금 없는 사용자가 sponsor 대납으로 RSVP 제출');
   const tx = buildSubmitRsvpTx({
     loungeId,
-    recipientSlot: 'groom',
-    guestName: 'SponsoredGuest',
-    attendance: 'attending',
+    recipientSlot: 0, // groom (§1-6 u8)
+    attendance: 0, // attending
     companionCount: 1,
-    meal: 'yes',
+    meal: 0, // yes
   });
   const txKindBytes = toBase64(await tx.build({ client, onlyTransactionKind: true }));
   const { sponsoredBytes, sponsorSignature } = await createSponsoredTransaction({

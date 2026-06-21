@@ -1,48 +1,48 @@
 /**
- * ium 모듈 PTB 빌더.
+ * ium 모듈 PTB 빌더 (이음 = 인연 매칭, 2단계 합의).
  *
- * create_ium 은 공유 IumRegistry(설정에서 ID 주입)와 함께 호출해 Ium(NFT)을 반환하므로
- * owner에게 transfer 한다. revoke_ium 은 보유한 Ium을 소비한다.
+ * request_ium: 신청자가 매칭 INYEON Event 생성(자신=INITIATOR) + IumRequest를 상대에게 전달.
+ * accept_ium: 수신자가 소유한 IumRequest로 RECEIVER 참가 → 매칭 확정 + 양방향 CS 신호 발행.
+ * (구 create_ium/revoke_ium + 전역 IumRegistry는 컨트랙트에서 제거됨 — cutover로 빌더도 삭제. PII 없음.)
  */
 
 import { Transaction } from '@mysten/sui/transactions';
-import { moveTarget, getConfig } from './constants';
+import { moveTarget } from './constants';
 
-export interface CreateIumParams {
+export interface RequestIumParams {
+  /** 이음을 신청할 상대 지갑 주소. */
   toUser: string;
-  relationType: string;
-  label: string;
-  /** 생성한 Ium을 받을 주소(보통 호출자 본인 = from_user). */
-  owner: string;
 }
 
-export interface RevokeIumParams {
-  iumId: string;
+export interface AcceptIumParams {
+  /** request_ium이 만든 매칭 INYEON Event ID. */
+  eventId: string;
+  /** 수신자가 소유한 IumRequest 객체 ID(소유=수락 권한). */
+  requestId: string;
 }
 
-/** 신뢰 관계 생성 + Ium을 owner에게 전송. */
-export function buildCreateIumTx(params: CreateIumParams): Transaction {
+/**
+ * 이음 신청 — `request_ium(to_user, clock)`. 매칭 INYEON Event 생성(신청자=INITIATOR) + IumRequest를
+ * to_user에게 전달. relationType·label(PII) 없음(오프체인).
+ */
+export function buildRequestIumTx(params: RequestIumParams): Transaction {
   const tx = new Transaction();
-  const ium = tx.moveCall({
-    target: moveTarget('ium', 'create_ium'),
-    arguments: [
-      tx.object(getConfig().iumRegistryId),
-      tx.pure.address(params.toUser),
-      tx.pure.string(params.relationType),
-      tx.pure.string(params.label),
-      tx.object.clock(),
-    ],
+  tx.moveCall({
+    target: moveTarget('ium', 'request_ium'),
+    arguments: [tx.pure.address(params.toUser), tx.object.clock()],
   });
-  tx.transferObjects([ium], params.owner);
   return tx;
 }
 
-/** 신뢰 관계 취소 (보유한 Ium 소비, 레지스트리에서 쌍 제거). */
-export function buildRevokeIumTx(params: RevokeIumParams): Transaction {
+/**
+ * 이음 수락 — `accept_ium(ev, req, clock)`. 수신자가 RECEIVER로 참가해 매칭 확정 → 양방향 CS 신호 발행.
+ * req(IumRequest)는 수신자 소유(소유=게이트).
+ */
+export function buildAcceptIumTx(params: AcceptIumParams): Transaction {
   const tx = new Transaction();
   tx.moveCall({
-    target: moveTarget('ium', 'revoke_ium'),
-    arguments: [tx.object(getConfig().iumRegistryId), tx.object(params.iumId)],
+    target: moveTarget('ium', 'accept_ium'),
+    arguments: [tx.object(params.eventId), tx.object(params.requestId), tx.object.clock()],
   });
   return tx;
 }

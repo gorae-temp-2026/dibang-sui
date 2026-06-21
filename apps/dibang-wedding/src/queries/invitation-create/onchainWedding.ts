@@ -5,31 +5,10 @@
  *
  * 실제 생성 경로(InvitationCreatePage → useSaveInvitation)에서 쓰이는 유틸이다. DEV 패널 아님.
  */
-import { createJsonRpcClient, type CreateWeddingParams, type SuiNetwork } from '@gorae/sui-sdk';
-import type { InvitationFormState } from '../../hooks/invitation-create/useInvitationForm';
+import { createJsonRpcClient, type SuiNetwork } from '@gorae/sui-sdk';
 
-/** 폼 상태 → 온체인 createWedding 인자(owner는 useOnchainHostActions가 주입하므로 제외). */
-export function toCreateWeddingParams(
-  state: InvitationFormState,
-): Omit<CreateWeddingParams, 'owner'> {
-  const groom = state.groomName.trim() || '신랑';
-  const bride = state.brideName.trim() || '신부';
-  return {
-    groomName: state.groomName,
-    brideName: state.brideName,
-    groomFatherName: state.groomFatherName || undefined,
-    groomMotherName: state.groomMotherName || undefined,
-    brideFatherName: state.brideFatherName || undefined,
-    brideMotherName: state.brideMotherName || undefined,
-    date: state.date,
-    time: state.time,
-    venueName: state.venueName,
-    venueAddress: state.venueAddress,
-    venueHall: state.venueHall || undefined,
-    // 폼에 라운지명 입력이 없으므로 신랑♥신부 규칙으로 생성.
-    loungeName: `${groom}♥${bride} 라운지`,
-  };
-}
+// 결정#2: 온체인 create_wedding은 익명 앵커만(이름·예식장 인자 없음) — 폼→온체인 이름 매퍼(toCreateWeddingParams) 제거.
+// 표시정보는 Supabase(weddingReq)로만 저장된다. 여기선 발행된 오브젝트 ID 추출만 담당.
 
 export interface WeddingObjectIds {
   weddingId: string;

@@ -1,0 +1,380 @@
+{
+  "subject": "철수",
+  "asOf": "Y10",
+  "moiCredit": {
+    "value": 0.834,
+    "score": 834,
+    "tier": "AAA",
+    "rank": 8,
+    "total": 300,
+    "onchain": true
+  },
+  "trace": {
+    "L1_raw": {
+      "부조": 4,
+      "이음": 79,
+      "대화": 26,
+      "선물": 14,
+      "total": 329
+    },
+    "L2_fold": {
+      "부조EM": 20,
+      "증여EM": 10,
+      "topTies": [
+        {
+          "p": "권하람",
+          "t": 1.62
+        },
+        {
+          "p": "김시지",
+          "t": 1.42
+        },
+        {
+          "p": "김시윤",
+          "t": 1.12
+        },
+        {
+          "p": "신서채",
+          "t": 1.07
+        },
+        {
+          "p": "강하시",
+          "t": 1.07
+        }
+      ]
+    },
+    "L3_phi": {
+      "부조": 0.923,
+      "CS": 0.573,
+      "이행": 1,
+      "op": "reversed-giving PageRank / authority / node, d=0.85"
+    },
+    "L4_integrate": {
+      "W": {
+        "부조": 0.5,
+        "cs": 0.3,
+        "이행": 0.2
+      },
+      "formula": "0.5·부조 + 0.3·CS + 0.2·이행",
+      "value": 0.834
+    }
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "철수",
+        "label": "철수",
+        "hue": 352,
+        "self": true
+      },
+      {
+        "id": "김건주",
+        "label": "김건주",
+        "hue": 168
+      },
+      {
+        "id": "윤시준",
+        "label": "윤시준",
+        "hue": 160
+      },
+      {
+        "id": "황하지",
+        "label": "황하지",
+        "hue": 273
+      },
+      {
+        "id": "장하연",
+        "label": "장하연",
+        "hue": 197
+      },
+      {
+        "id": "권하람",
+        "label": "권하람",
+        "hue": 272
+      },
+      {
+        "id": "서은아",
+        "label": "서은아",
+        "hue": 64
+      },
+      {
+        "id": "정수예",
+        "label": "정수예",
+        "hue": 125
+      },
+      {
+        "id": "안솔건",
+        "label": "안솔건",
+        "hue": 48
+      },
+      {
+        "id": "송람수",
+        "label": "송람수",
+        "hue": 45
+      },
+      {
+        "id": "이시람",
+        "label": "이시람",
+        "hue": 212
+      },
+      {
+        "id": "김시윤",
+        "label": "김시윤",
+        "hue": 152
+      },
+      {
+        "id": "권민채",
+        "label": "권민채",
+        "hue": 44
+      },
+      {
+        "id": "김서윤",
+        "label": "김서윤",
+        "hue": 144
+      },
+      {
+        "id": "신서채",
+        "label": "신서채",
+        "hue": 256
+      },
+      {
+        "id": "강하시",
+        "label": "강하시",
+        "hue": 273
+      },
+      {
+        "id": "최서시",
+        "label": "최서시",
+        "hue": 292
+      },
+      {
+        "id": "김시지",
+        "label": "김시지",
+        "hue": 100
+      },
+      {
+        "id": "이시도",
+        "label": "이시도",
+        "hue": 324
+      },
+      {
+        "id": "장건채",
+        "label": "장건채",
+        "hue": 309
+      },
+      {
+        "id": "신준아",
+        "label": "신준아",
+        "hue": 284
+      },
+      {
+        "id": "김서시",
+        "label": "김서시",
+        "hue": 128
+      },
+      {
+        "id": "송채도",
+        "label": "송채도",
+        "hue": 1
+      }
+    ],
+    "links": [
+      {
+        "source": "철수",
+        "target": "김건주",
+        "type": "부조",
+        "value": 1
+      },
+      {
+        "source": "철수",
+        "target": "윤시준",
+        "type": "부조",
+        "value": 1
+      },
+      {
+        "source": "철수",
+        "target": "황하지",
+        "type": "부조",
+        "value": 1
+      },
+      {
+        "source": "철수",
+        "target": "장하연",
+        "type": "부조",
+        "value": 1
+      },
+      {
+        "source": "철수",
+        "target": "권하람",
+        "type": "선물",
+        "value": 1.62
+      },
+      {
+        "source": "철수",
+        "target": "서은아",
+        "type": "선물",
+        "value": 0.79
+      },
+      {
+        "source": "철수",
+        "target": "정수예",
+        "type": "선물",
+        "value": 1
+      },
+      {
+        "source": "철수",
+        "target": "안솔건",
+        "type": "선물",
+        "value": 0.52
+      },
+      {
+        "source": "철수",
+        "target": "송람수",
+        "type": "선물",
+        "value": 0.67
+      },
+      {
+        "source": "철수",
+        "target": "이시람",
+        "type": "선물",
+        "value": 1
+      },
+      {
+        "source": "철수",
+        "target": "김시윤",
+        "type": "선물",
+        "value": 1.12
+      },
+      {
+        "source": "철수",
+        "target": "권민채",
+        "type": "선물",
+        "value": 0.52
+      },
+      {
+        "source": "철수",
+        "target": "김서윤",
+        "type": "선물",
+        "value": 1.02
+      },
+      {
+        "source": "철수",
+        "target": "신서채",
+        "type": "승급",
+        "value": 1.07
+      },
+      {
+        "source": "철수",
+        "target": "강하시",
+        "type": "승급",
+        "value": 1.07
+      },
+      {
+        "source": "철수",
+        "target": "최서시",
+        "type": "승급",
+        "value": 0.92
+      },
+      {
+        "source": "철수",
+        "target": "김시지",
+        "type": "승급",
+        "value": 1.42
+      },
+      {
+        "source": "철수",
+        "target": "이시도",
+        "type": "승급",
+        "value": 0.92
+      },
+      {
+        "source": "철수",
+        "target": "장건채",
+        "type": "승급",
+        "value": 0.92
+      },
+      {
+        "source": "철수",
+        "target": "신준아",
+        "type": "승급",
+        "value": 0.92
+      },
+      {
+        "source": "철수",
+        "target": "김서시",
+        "type": "승급",
+        "value": 0.92
+      },
+      {
+        "source": "철수",
+        "target": "송채도",
+        "type": "승급",
+        "value": 1.07
+      }
+    ]
+  },
+  "signal": {
+    "name": "우리",
+    "children": [
+      {
+        "name": "EM",
+        "children": [
+          {
+            "name": "부조",
+            "value": 20
+          },
+          {
+            "name": "선물",
+            "value": 10
+          }
+        ]
+      },
+      {
+        "name": "CS",
+        "children": [
+          {
+            "name": "참석",
+            "value": 4
+          },
+          {
+            "name": "이음",
+            "value": 15.6
+          },
+          {
+            "name": "대화",
+            "value": 3.9
+          },
+          {
+            "name": "모임",
+            "value": 0
+          }
+        ]
+      },
+      {
+        "name": "AR",
+        "children": [
+          {
+            "name": "관계",
+            "value": 1,
+            "stub": true
+          }
+        ]
+      },
+      {
+        "name": "MP",
+        "children": [
+          {
+            "name": "거래",
+            "value": 0.2,
+            "stub": true
+          }
+        ]
+      }
+    ]
+  },
+  "trustRange": {
+    "tier": "AAA",
+    "label": "상위 추정",
+    "anon": true
+  }
+}

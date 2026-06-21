@@ -1,16 +1,20 @@
-/// CashGift 도메인 — 축의금을 온체인으로 기록한다. 결혼식마다 하나의 모금함
-/// (`CashGiftVault`, 공유 오브젝트)에 SUI를 모으고, 송금마다 영수증 격(`CashGiftRecord`)
-/// 오브젝트와 이벤트를 남긴다. 인출은 `WeddingCap` 보유자(호스트)만 가능하다.
+/// CashGift 도메인 — 축의금을 온체인으로 처리한다. 결혼식마다 하나의 모금함
+/// (`CashGiftVault`, 공유 오브젝트)에 실제 SUI를 모은다. 부조 행위는 보편 액션 원장
+/// (`ledger::ActionRecord`, soulbound)에 GIVE_MONEY로 기록되고, 해석(부조/EM/CS)은 오프체인 project가 한다.
+///
+/// 신원-불가지(MASTER_DIRECTIVE): 이름·관계 같은 PII는 온체인에 담지 않는다. (구식 send_gift+CashGiftRecord는
+/// PII 평문 + key+store(transfer 가능) 위반이라 제거하고 `give`로 일원화했다.)
 module dibang_wedding::cash_gift;
 
-use std::string::String;
 use sui::balance::{Self, Balance};
 use sui::clock::Clock;
 use sui::coin::Coin;
 use sui::event;
 use sui::sui::SUI;
 use dibang_wedding::wedding::{Self, Wedding, WeddingCap};
-use dibang_wedding::utils;
+use dibang_wedding::ledger;
+// 도메인 이벤트 모듈은 프레임워크 sui::event와 이름이 겹쳐 gathering으로 alias.
+use dibang_wedding::event as gathering;
 
 // === Errors ===
 
@@ -20,16 +24,8 @@ const EWrongCap: u64 = 0;
 const EZeroAmount: u64 = 1;
 /// 모금함 잔액보다 많이 인출하려 함.
 const EInsufficientBalance: u64 = 2;
-/// 게스트 이름이 최대 글자 수를 초과함.
-const EGuestNameTooLong: u64 = 3;
-/// 관계 분류 문자열이 최대 글자 수를 초과함.
-const ERelationTooLong: u64 = 4;
-
-// === Constants ===
-
-const MAX_GUEST_NAME_CHARS: u64 = 10;
-/// 관계 분류는 짧은 라벨(친구/직장/가족 등)이므로 길이를 제한해 저장 남용을 막는다.
-const MAX_RELATION_CHARS: u64 = 30;
+/// 하객의 참가(Participation)가 이 결혼식의 이벤트가 아님.
+const EWrongEvent: u64 = 3;
 
 // === Structs ===
 
@@ -40,32 +36,11 @@ public struct CashGiftVault has key {
     balance: Balance<SUI>,
 }
 
-/// 개별 축의금 송금 기록. `key + store`라 영수증으로 보관·전송할 수 있다.
-public struct CashGiftRecord has key, store {
-    id: UID,
-    wedding_id: ID,
-    guest_name: String,
-    recipient_slot: String,
-    relation_category: String,
-    amount: u64,
-    created_at: u64,
-}
-
 // === Events ===
 
 public struct VaultCreated has copy, drop {
     wedding_id: ID,
     vault_id: ID,
-}
-
-public struct CashGiftSent has copy, drop {
-    record_id: ID,
-    wedding_id: ID,
-    guest_name: String,
-    recipient_slot: String,
-    relation_category: String,
-    amount: u64,
-    created_at: u64,
 }
 
 public struct CashGiftWithdrawn has copy, drop {
@@ -94,47 +69,29 @@ public fun create_vault(wedding: &mut Wedding, cap: &WeddingCap, ctx: &mut TxCon
     transfer::share_object(vault);
 }
 
-/// 축의금을 보낸다. `coin` 전액이 모금함에 입금되고, 송금 기록(`CashGiftRecord`)을
-/// 반환해 PTB가 송금인에게 영수증으로 전달하거나 합성하도록 한다.
-public fun send_gift(
+/// 부조 — 실제 SUI를 모금함에 입금하고, 그 행위를 보편 액션 원장에 GIVE_MONEY로 기록한다(soulbound).
+/// 하객(participation)은 이 결혼식 이벤트(wedding.event_id)에 참가했어야 하고, 대상은 혼주(primary host).
+/// 해석(부조/EM/CS)은 저장 안 함 — project가 (GIVE_MONEY × WEDDING × 하객→혼주)로 계산. 원장 레코드 ID 반환.
+/// 이름·관계 같은 PII는 받지 않는다(신원-불가지 지갑 그래프).
+public fun give(
     vault: &mut CashGiftVault,
+    wedding: &Wedding,
+    participation: &gathering::Participation,
     coin: Coin<SUI>,
-    guest_name: String,
-    recipient_slot: String,
-    relation_category: String,
     clock: &Clock,
     ctx: &mut TxContext,
-): CashGiftRecord {
-    wedding::assert_valid_recipient_slot(&recipient_slot);
-    assert!(utils::utf8_char_count(&guest_name) <= MAX_GUEST_NAME_CHARS, EGuestNameTooLong);
-    assert!(utils::utf8_char_count(&relation_category) <= MAX_RELATION_CHARS, ERelationTooLong);
-
+): ID {
+    assert!(vault.wedding_id == object::id(wedding), EWrongCap);
+    // 하객의 역할이 *이 결혼식의 이벤트*에서 온 것이어야 부조 방향(하객→혼주)이 올바르게 귀속된다.
+    assert!(gathering::participation_event_id(participation) == wedding::event_id(wedding), EWrongEvent);
     let amount = coin.value();
     assert!(amount > 0, EZeroAmount);
 
     vault.balance.join(coin.into_balance());
 
-    let record = CashGiftRecord {
-        id: object::new(ctx),
-        wedding_id: vault.wedding_id,
-        guest_name,
-        recipient_slot,
-        relation_category,
-        amount,
-        created_at: clock.timestamp_ms(),
-    };
-
-    event::emit(CashGiftSent {
-        record_id: object::id(&record),
-        wedding_id: vault.wedding_id,
-        guest_name: record.guest_name,
-        recipient_slot: record.recipient_slot,
-        relation_category: record.relation_category,
-        amount,
-        created_at: record.created_at,
-    });
-
-    record
+    let host = wedding::primary_host(wedding);
+    // role/event는 ledger가 participation에서 파생(방향 위조 차단). amount는 raw(결정#1 평문).
+    ledger::log(participation, ledger::action_give_money(), option::some(host), amount, option::none(), clock, ctx)
 }
 
 /// 호스트가 모금함에서 축의금을 인출한다. 인출한 `Coin<SUI>`를 반환해
@@ -158,9 +115,6 @@ public fun withdraw(
 
 public fun vault_balance(vault: &CashGiftVault): u64 { vault.balance.value() }
 public fun vault_wedding_id(vault: &CashGiftVault): ID { vault.wedding_id }
-public fun record_amount(record: &CashGiftRecord): u64 { record.amount }
-public fun record_recipient_slot(record: &CashGiftRecord): String { record.recipient_slot }
-public fun record_guest_name(record: &CashGiftRecord): String { record.guest_name }
 
 // === Tests ===
 
@@ -196,23 +150,22 @@ fun setup_vault(scenario: &mut ts::Scenario) {
 }
 
 #[test_only]
-/// (GUEST tx 가정) 모금함에 `amount` 만큼 송금한다.
-fun send_amount(scenario: &mut ts::Scenario, amount: u64) {
+/// 테스트용 직접 입금 — withdraw 등 잔액 의존 테스트의 펀딩. (실 부조 경로는 give 테스트가 검증.)
+fun deposit_for_testing(scenario: &mut ts::Scenario, amount: u64) {
     let mut vault = scenario.take_shared<CashGiftVault>();
-    let clock = clock::create_for_testing(scenario.ctx());
     let coin = coin::mint_for_testing<SUI>(amount, scenario.ctx());
-    let record = send_gift(
-        &mut vault,
-        coin,
-        b"Hong".to_string(),
-        b"groom".to_string(),
-        b"friend".to_string(),
-        &clock,
-        scenario.ctx(),
-    );
-    transfer::public_transfer(record, GUEST);
-    clock::destroy_for_testing(clock);
+    vault.balance.join(coin.into_balance());
     ts::return_shared(vault);
+}
+
+#[test_only]
+/// (GUEST tx 가정) 하객이 결혼식 이벤트에 GUEST로 참가한다(부조 전 단계).
+fun participate_as_guest(scenario: &mut ts::Scenario) {
+    let ev = scenario.take_shared<gathering::Event>();
+    let clk = clock::create_for_testing(scenario.ctx());
+    gathering::participate(&ev, gathering::role_guest(), &clk, scenario.ctx());
+    clock::destroy_for_testing(clk);
+    ts::return_shared(ev);
 }
 
 #[test]
@@ -233,20 +186,59 @@ fun create_vault_links_to_wedding() {
 }
 
 #[test]
-fun send_gift_increases_balance() {
+fun give_deposits_and_logs_action() {
     let mut scenario = ts::begin(HOST);
     setup_wedding(&mut scenario);
     scenario.next_tx(HOST);
     setup_vault(&mut scenario);
 
     scenario.next_tx(GUEST);
-    send_amount(&mut scenario, 1000);
+    participate_as_guest(&mut scenario);
 
-    scenario.next_tx(HOST);
-    let vault = scenario.take_shared<CashGiftVault>();
-    assert_eq!(vault_balance(&vault), 1000);
+    // 하객이 부조: 실제 SUI 입금 + GIVE_MONEY 원장 기록(한 트랜잭션).
+    scenario.next_tx(GUEST);
+    let mut vault = scenario.take_shared<CashGiftVault>();
+    let wedding = scenario.take_shared<Wedding>();
+    let part = scenario.take_from_sender<gathering::Participation>();
+    let clk = clock::create_for_testing(scenario.ctx());
+    let coin = coin::mint_for_testing<SUI>(100_000, scenario.ctx());
+    let rec_id = give(&mut vault, &wedding, &part, coin, &clk, scenario.ctx());
+    assert_eq!(vault_balance(&vault), 100_000); // 실제 SUI 입금됨
+    clock::destroy_for_testing(clk);
+    scenario.return_to_sender(part);
+    ts::return_shared(wedding);
     ts::return_shared(vault);
+
+    // 원장에 부조 액션이 soulbound로 남고, 방향(하객→혼주)이 파생됐는지.
+    scenario.next_tx(GUEST);
+    let rec = scenario.take_from_sender_by_id<ledger::ActionRecord>(rec_id);
+    assert_eq!(rec.action_type(), ledger::action_give_money());
+    assert_eq!(rec.actor(), GUEST);
+    assert_eq!(rec.record_role_id(), gathering::role_guest());
+    assert_eq!(rec.target(), option::some(HOST));
+    assert_eq!(rec.amount(), 100_000);
+    scenario.return_to_sender(rec);
     scenario.end();
+}
+
+#[test, expected_failure(abort_code = EZeroAmount)]
+fun give_zero_fails() {
+    let mut scenario = ts::begin(HOST);
+    setup_wedding(&mut scenario);
+    scenario.next_tx(HOST);
+    setup_vault(&mut scenario);
+
+    scenario.next_tx(GUEST);
+    participate_as_guest(&mut scenario);
+
+    scenario.next_tx(GUEST);
+    let mut vault = scenario.take_shared<CashGiftVault>();
+    let wedding = scenario.take_shared<Wedding>();
+    let part = scenario.take_from_sender<gathering::Participation>();
+    let clk = clock::create_for_testing(scenario.ctx());
+    let coin = coin::mint_for_testing<SUI>(0, scenario.ctx());
+    give(&mut vault, &wedding, &part, coin, &clk, scenario.ctx()); // EZeroAmount
+    abort
 }
 
 #[test]
@@ -257,7 +249,7 @@ fun withdraw_decreases_balance() {
     setup_vault(&mut scenario);
 
     scenario.next_tx(GUEST);
-    send_amount(&mut scenario, 1000);
+    deposit_for_testing(&mut scenario, 1000);
 
     scenario.next_tx(HOST);
     {
@@ -293,68 +285,6 @@ fun withdraw_with_wrong_cap_fails() {
     scenario.end();
 }
 
-#[test, expected_failure(abort_code = ERelationTooLong)]
-fun relation_too_long_fails() {
-    let mut scenario = ts::begin(HOST);
-    setup_wedding(&mut scenario);
-    scenario.next_tx(HOST);
-    setup_vault(&mut scenario);
-
-    scenario.next_tx(GUEST);
-    let mut vault = scenario.take_shared<CashGiftVault>();
-    let clock = clock::create_for_testing(scenario.ctx());
-    let coin = coin::mint_for_testing<SUI>(1000, scenario.ctx());
-
-    // 31글자 > 30
-    let mut relation = b"".to_string();
-    let mut i = 0u64;
-    while (i < 31) { relation.append(b"a".to_string()); i = i + 1; };
-
-    let record = send_gift(
-        &mut vault,
-        coin,
-        b"Hong".to_string(),
-        b"groom".to_string(),
-        relation,
-        &clock,
-        scenario.ctx(),
-    );
-
-    // 미도달 — 컴파일 위한 소비.
-    destroy(record);
-    clock::destroy_for_testing(clock);
-    ts::return_shared(vault);
-    scenario.end();
-}
-
-#[test, expected_failure(abort_code = EZeroAmount)]
-fun send_zero_gift_fails() {
-    let mut scenario = ts::begin(HOST);
-    setup_wedding(&mut scenario);
-    scenario.next_tx(HOST);
-    setup_vault(&mut scenario);
-
-    scenario.next_tx(GUEST);
-    let mut vault = scenario.take_shared<CashGiftVault>();
-    let clock = clock::create_for_testing(scenario.ctx());
-    let coin = coin::mint_for_testing<SUI>(0, scenario.ctx());
-    let record = send_gift(
-        &mut vault,
-        coin,
-        b"Hong".to_string(),
-        b"groom".to_string(),
-        b"friend".to_string(),
-        &clock,
-        scenario.ctx(),
-    );
-
-    // 미도달 — 컴파일 위한 소비.
-    destroy(record);
-    clock::destroy_for_testing(clock);
-    ts::return_shared(vault);
-    scenario.end();
-}
-
 #[test, expected_failure(abort_code = EInsufficientBalance)]
 fun withdraw_too_much_fails() {
     let mut scenario = ts::begin(HOST);
@@ -363,7 +293,7 @@ fun withdraw_too_much_fails() {
     setup_vault(&mut scenario);
 
     scenario.next_tx(GUEST);
-    send_amount(&mut scenario, 1000);
+    deposit_for_testing(&mut scenario, 1000);
 
     scenario.next_tx(HOST);
     let mut vault = scenario.take_shared<CashGiftVault>();

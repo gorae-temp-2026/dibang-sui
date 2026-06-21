@@ -1,8 +1,11 @@
+// ⚠️ TRANSITIONAL(전환기) — 아키텍처 의도: 온체인(Sui) = 신뢰/Wedding 데이터의 SSOT, DB(Go/Supabase)는 보조.
+// 이 파일이 DB(Supabase) 먼저 저장 후 온체인을 dual-write로 얹는 건 *전환기*일 뿐 "DB 우선"이 아니다.
+// 목표(미완): 앱을 온체인(RPC/indexer) 읽기로 이관. 트러스트 진실은 온체인에서 확인. 상세: CLAUDE.md 상단 SSOT 배너.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createWedding, updateInvitation, updateWeddingSuiIds } from '@gorae/contracts/sdk.gen';
 import { getMyWeddingsQueryKey } from '@gorae/contracts/@tanstack/react-query.gen';
 import type { CreateWeddingRequest, UpdateInvitationRequest } from '@gorae/contracts';
-import type { CreateWeddingParams, SuiNetwork } from '@gorae/sui-sdk';
+import type { SuiNetwork } from '@gorae/sui-sdk';
 import { useOnchainHostActions } from '../../hooks/useOnchainHostActions';
 import { useZkLogin } from '../../providers/ZkLoginProvider';
 import { env } from '../../env';
@@ -11,8 +14,6 @@ import { extractWeddingObjectIds, type WeddingObjectIds } from './onchainWedding
 export interface SaveInvitationPayload {
   weddingReq: CreateWeddingRequest;
   invitationReq: UpdateInvitationRequest;
-  /** 온체인 createWedding 인자(owner 제외 — hook이 주입). 폼에서 toCreateWeddingParams로 생성. */
-  onchainParams: Omit<CreateWeddingParams, 'owner'>;
 }
 
 export function useSaveInvitation() {
@@ -21,7 +22,7 @@ export function useSaveInvitation() {
   const { isAuthenticated } = useZkLogin();
 
   return useMutation({
-    mutationFn: async ({ weddingReq, invitationReq, onchainParams }: SaveInvitationPayload) => {
+    mutationFn: async ({ weddingReq, invitationReq }: SaveInvitationPayload) => {
       // Step 1: Supabase createWedding → weddingId 확보 (D0-1: Supabase 먼저)
       const { data: wedding } = await createWedding({
         body: weddingReq,
@@ -51,7 +52,7 @@ export function useSaveInvitation() {
       if (isAuthenticated) {
         try {
           const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
-          const digest = await createWeddingOnchain(onchainParams);
+          const digest = await createWeddingOnchain();
           const ids = await extractWeddingObjectIds(digest, network);
           // C10-1: 축의 Vault 생성(capId로) → vaultId 추출. 실패해도 wedding/lounge는 저장(흐름 유지).
           let vaultId = '';

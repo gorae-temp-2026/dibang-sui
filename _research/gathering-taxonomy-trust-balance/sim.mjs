@@ -124,39 +124,59 @@ console.log(`③ 민수-지훈 대여 net= ${대여잔액(fin,'민수','지훈')
 console.log(`④ 민수-태호 부조 net= ${부조잔액(fin,'민수','태호')}, 대여 net= ${대여잔액(fin,'민수','태호')} (두 장부 분리 — 합산 안 됨)`);
 
 // ============================================================
-// 3층. 신용 전파 (L3) — 자원별 PageRank + 행동 신호 + 합산
-// 결정(first-cut, 임의·근사): 무방향 전파 · default→이행점수 0.2 · 비중 부조0.5·CS0.3·이행0.2
+// 3층. 신용 전파 (Φ) — PHI-5 유방향 가중 전이 연산자  (구 '무방향 PageRank' 교체)
+// PHI-1 방향(베푼 쪽 적립·신용영향 recipient→giver) + PHI-4 베이스(EM 아벨군·이행=node).
+//   부조 = reversed-giving PageRank(기여자 적립) / CS = 유방향 authority(보조) / 이행 = node 직접.
+//   음수(배신·default)는 전파행렬서 제외(클리핑) — default=이행 node, 배신(CS<0)=직접 페널티(PHI-5.2).
+//   손잡이: 감쇠 d=0.85 · 사전신뢰 시드 p(기본 균등) · correlation discounting(미적용 — §5).
+//   검증(PHI-5.4): 부동점 수렴 · 결합법칙(순서무관) · 초기벡터 강건성 · 직관 — 모두 통과.
 // ============================================================
-console.log('\n\n========== 3층. 신용 전파 ==========');
+console.log('\n\n========== 3층. 신용 전파 (Φ, PHI-5 유방향) ==========');
 const N = PEOPLE.length;
 
-// L3-1. 자원별 동질 그래프 분리(무방향 가중) — 부조·CS. (대여는 sparse → 행동신호로 L3-3)
-function buildGraphs(st){
-  const 부조={}, csG={}; PEOPLE.forEach(p=>{부조[p]={};csG[p]={};});
-  const add=(G,a,b,w)=>{ if(w<=0)return; G[a][b]=(G[a][b]||0)+w; G[b][a]=(G[b][a]||0)+w; };
-  for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){ const a=PEOPLE[i],b=PEOPLE[j];
-    add(부조,a,b, Math.abs(부조잔액(st,a,b)));        // 부조: |net|(무방향)
-    add(csG,a,b, csTie(st,a,b)+csTie(st,b,a));         // CS: 양방향 유대 합
+// L3-1. 유방향 가중 그래프: give[g][h]=g가 h에게 준 부조(원자료, 미청산·불가) / cs[a][b]=a→b 유대(음수 클리핑).
+function buildDirected(st){
+  const give={}, cs={}; PEOPLE.forEach(p=>{give[p]={};cs[p]={};});
+  for(const a of PEOPLE) for(const b of PEOPLE){ if(a===b) continue;
+    const g = st.EM[k(a,b,'돈','불가')]||0; if(g>0) give[a][b]=g;   // a가 b에게 준 부조(유방향 원자료)
+    const t = csTie(st,a,b);               if(t>0) cs[a][b]=t;      // a→b 유대(음수=배신은 클리핑)
   }
-  return {부조, cs:csG};
+  return {give, cs};
 }
-// L3-2. PageRank(무방향 가중, 텔레포트 d=0.85). 고립(degree0)은 텔레포트 baseline만.
-function pagerank(G, d=0.85, iters=200){
-  let s={}; PEOPLE.forEach(p=>s[p]=1/N);
-  const deg=p=>Object.values(G[p]).reduce((x,y)=>x+y,0);
+// L3-2. 부조 전이(Φ): reversed-giving PageRank — '베푼 쪽 적립, 신용영향 recipient→giver'(PHI-1).
+//   π_g = (1-d)·p_g + d·Σ_h ( give[g][h]/recv[h] )·π_h.  recv[h]=h가 받은 총액. (dangling→시드 재분배)
+function propGiver(give,{d=0.85,iters=500,seed=null,init=null,tol=1e-13}={}){
+  const recv={}; PEOPLE.forEach(h=>recv[h]=0);
+  for(const g of PEOPLE) for(const h of PEOPLE) if(give[g][h]) recv[h]+=give[g][h];
+  const p = seed || Object.fromEntries(PEOPLE.map(x=>[x,1/N]));        // teleport=사전신뢰 시드(손잡이)
+  let s = init ? {...init} : Object.fromEntries(PEOPLE.map(x=>[x,1/N])), conv=iters;
   for(let it=0;it<iters;it++){
-    let dangling=0; PEOPLE.forEach(p=>{ if(deg(p)===0) dangling+=s[p]; });
+    let dang=0; for(const h of PEOPLE) if(recv[h]===0) dang+=s[h];     // 아무에게도 안 받은 노드 → 시드로 재분배
     const nx={};
-    for(const a of PEOPLE){ let inflow=0;
-      for(const b of PEOPLE){ if(!G[b][a]) continue; inflow += (G[b][a]/deg(b))*s[b]; }
-      nx[a] = (1-d)/N + d*(inflow + dangling/N);
+    for(const g of PEOPLE){ let inflow=0;
+      for(const h of PEOPLE){ if(recv[h]>0 && give[g][h]) inflow += (give[g][h]/recv[h])*s[h]; }
+      nx[g] = (1-d)*p[g] + d*(inflow + dang*p[g]);
     }
-    s=nx;
+    const delta=Math.max(...PEOPLE.map(x=>Math.abs(nx[x]-s[x]))); s=nx;
+    if(delta<tol){ conv=it+1; break; }
   }
-  return s;
+  return {score:s, iters:conv};
 }
-// L3-3. 행동 신호 → 이행 점수(네트워크 아닌 노드 직접). 대여 기록 기반.
-//   first-cut: 갚음=1.0, default=0.2, 기록없음=0.7(중립). ※ 값 임의 — 정식은 금액·비율·데이터 보정.
+// L3-3. CS 전이(보조): 유방향 authority PageRank(유대 받는 쪽 적립). tie a→b.
+function propAuthority(G,{d=0.85,iters=500,tol=1e-13}={}){
+  const out={}; PEOPLE.forEach(g=>out[g]=Object.values(G[g]).reduce((x,y)=>x+y,0));
+  let s=Object.fromEntries(PEOPLE.map(x=>[x,1/N])), conv=iters;
+  for(let it=0;it<iters;it++){
+    let dang=0; for(const g of PEOPLE) if(out[g]===0) dang+=s[g];
+    const nx={};
+    for(const b of PEOPLE){ let inf=0; for(const a of PEOPLE){ if(out[a]>0 && G[a][b]) inf+=(G[a][b]/out[a])*s[a]; }
+      nx[b]=(1-d)/N + d*(inf + dang/N); }
+    const delta=Math.max(...PEOPLE.map(x=>Math.abs(nx[x]-s[x]))); s=nx;
+    if(delta<tol){ conv=it+1; break; }
+  }
+  return {score:s, iters:conv};
+}
+// L3-4. 이행(node 직접): 갚음=1.0 / default=0.2 / 무기록=0.7. (first-cut 페널티 — PHI-3/데이터 보정 대상)
 function 이행Scores(){
   const loans={}, repays={}, defaulted={};
   for(const [,type,p] of TIMELINE){
@@ -166,25 +186,25 @@ function 이행Scores(){
   for(const {borrower} of DEFAULTS) defaulted[borrower]=true;
   const out={};
   for(const p of PEOPLE){
-    if(!loans[p]) out[p]=0.7;                               // 기록 없음 = 중립
-    else if(defaulted[p]) out[p]=0.2;                       // default
-    else out[p]= (repays[p]||0)>=loans[p] ? 1.0 : 0.5;      // 다 갚음=1.0
+    if(!loans[p]) out[p]=0.7;
+    else if(defaulted[p]) out[p]=0.2;
+    else out[p]= (repays[p]||0)>=loans[p] ? 1.0 : 0.5;
   }
   return out;
 }
-// L3-4. 점수 합산(각 자원 0~1 정규화 후 가중합). 비중=용도별 정책(예시).
+// L3-5. 합산(각 자원 0~1 정규화 후 가중합). 비중=용도별 정책(PHI-2 소관, 예시값).
 const norm = s => { const m=Math.max(...Object.values(s))||1; const o={}; for(const p of PEOPLE)o[p]=s[p]/m; return o; };
-const G = buildGraphs(fin);
-const 부조점수 = norm(pagerank(G.부조));
-const cs점수   = norm(pagerank(G.cs));
-const 이행점수 = 이행Scores();
+const Gd = buildDirected(fin);
+const r부조 = propGiver(Gd.give), rCS = propAuthority(Gd.cs);
+const 부조점수 = norm(r부조.score), cs점수 = norm(rCS.score), 이행점수 = 이행Scores();
 const W3 = {부조:0.5, cs:0.3, 이행:0.2};
 const 최종 = {}; for(const p of PEOPLE) 최종[p] = W3.부조*부조점수[p] + W3.cs*cs점수[p] + W3.이행*이행점수[p];
 
-// L3-5. 출력 — 순위 + 자원별 분해(왜 그 점수인지)
-console.log(`결정(first-cut): 무방향 · default→이행0.2 · 비중 부조${W3.부조}·CS${W3.cs}·이행${W3.이행}`);
+// L3-6. 출력 — 순위 + 자원별 분해
+console.log(`연산자: 부조=유방향 reversed-giving PageRank(기여자 적립) · CS=유방향 authority · 이행=node. 감쇠 d=0.85, 시드 균등.`);
+console.log(`수렴: 부조 ${r부조.iters}회 · CS ${rCS.iters}회 만에 부동점(tol 1e-13). 비중 부조${W3.부조}·CS${W3.cs}·이행${W3.이행}.`);
 console.log('순위. 이름 : 최종신용  (부조 / CS / 이행)');
 Object.entries(최종).sort((a,b)=>b[1]-a[1]).forEach(([p,v],i)=>
   console.log(`  ${i+1}. ${p} : ${v.toFixed(3)}  (${부조점수[p].toFixed(2)} / ${cs점수[p].toFixed(2)} / ${이행점수[p].toFixed(2)})`));
-console.log('\n해석: 부조·CS=망 중심성(PageRank), 이행=대여 행동. 지훈은 default로 이행 0.2.');
+console.log('\n해석: 부조=베푼 쪽이 받은 쪽 신용을 기여몫만큼 물려받음(PHI-1). 영희는 큰 부조를 *받았지만* 베풂은 중간 → 구(무방향)보다 하락. 민수는 최대 기여자라 1위. 지훈은 default로 이행 0.2.');
 console.log('=== 끝 ===');

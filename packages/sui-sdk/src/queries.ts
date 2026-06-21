@@ -1,3 +1,5 @@
+// ✅ 이 파일 = 온체인(Sui) 읽기 = 트러스트/Wedding 데이터의 SSOT 경로. 앱이 DB 대신 *이 쿼리들*로 읽도록 이관하는 게 목표(미완).
+//    현재 앱이 전환기로 DB(Go/Supabase)에서 읽는 건 "DB 우선"이 아니라 미완 이관. 상세: _architecture/SUI_CONTRACT_DESIGN_DIRECTION §SSOT 선언.
 /**
  * 온체인 데이터 조회 함수.
  *
@@ -49,25 +51,16 @@ function optString(v: unknown): string | null {
 export interface WeddingOnChain {
   id: string;
   status: string;
-  groomName: string;
-  brideName: string;
-  groomFatherName: string | null;
-  groomMotherName: string | null;
-  brideFatherName: string | null;
-  brideMotherName: string | null;
-  date: string;
-  time: string;
-  venueName: string;
-  venueAddress: string;
-  venueHall: string | null;
   hosts: string[];
   vaultId: string | null;
+  /** 이 결혼식을 관통하는 신뢰 그래프 이벤트(gathering::Event) ID. */
+  eventId: string;
 }
+// 표시 콘텐츠(신랑·신부·부모 이름, 날짜·시간·예식장)는 *온체인에 없다*(결정#2) — 앱 API/Supabase(weddings)에서 조회.
 
 export interface WeddingLoungeOnChain {
   id: string;
   weddingId: string;
-  name: string;
 }
 
 export interface CashGiftVaultOnChain {
@@ -84,15 +77,6 @@ export interface MoiItemOnChain {
   slot: string;
 }
 
-export interface IumOnChain {
-  id: string;
-  fromUser: string;
-  toUser: string;
-  relationType: string;
-  label: string;
-  createdAt: number;
-}
-
 // === 오브젝트 조회 ===
 
 /** Wedding 공유 오브젝트 조회. */
@@ -106,19 +90,10 @@ export async function getWedding(
   return {
     id: weddingId,
     status: asString(f.status),
-    groomName: asString(f.groom_name),
-    brideName: asString(f.bride_name),
-    groomFatherName: optString(f.groom_father_name),
-    groomMotherName: optString(f.groom_mother_name),
-    brideFatherName: optString(f.bride_father_name),
-    brideMotherName: optString(f.bride_mother_name),
-    date: asString(f.date),
-    time: asString(f.time),
-    venueName: asString(f.venue_name),
-    venueAddress: asString(f.venue_address),
-    venueHall: optString(f.venue_hall),
-    hosts: Array.isArray(f.host_addresses) ? (f.host_addresses as unknown[]).map(asString) : [],
+    // 새 컨트랙트(§1-5): primary_host만 온체인 저장. 공동혼주는 Cap 보유자(getOwnedWeddingCapIds 등 별도 조회).
+    hosts: [asString(f.primary_host)],
     vaultId: optString(f.vault_id),
+    eventId: asString(f.event_id),
   };
 }
 
@@ -130,7 +105,7 @@ export async function getWeddingLounge(
   const res = await client.getObject({ id: loungeId, options: { showContent: true } });
   const f = objectFields(res);
   if (!f) return null;
-  return { id: loungeId, weddingId: asString(f.wedding_id), name: asString(f.name) };
+  return { id: loungeId, weddingId: asString(f.wedding_id) };
 }
 
 /** 축의금 모금함 조회(잔액 포함). Balance<SUI>는 fields.balance에 u64 문자열로 온다. */
@@ -190,29 +165,6 @@ export async function getOwnedMoiItems(
   return items;
 }
 
-/** 주소가 소유한 Ium(신뢰 관계) 목록. */
-export async function getOwnedIums(
-  client: SuiJsonRpcClient,
-  owner: string,
-): Promise<IumOnChain[]> {
-  const objs = await listOwnedByType(client, owner, moveTarget('ium', 'Ium'));
-  const items: IumOnChain[] = [];
-  for (const res of objs) {
-    const f = objectFields(res);
-    if (f && res.data) {
-      items.push({
-        id: res.data.objectId,
-        fromUser: asString(f.from_user),
-        toUser: asString(f.to_user),
-        relationType: asString(f.relation_type),
-        label: asString(f.label),
-        createdAt: asNumber(f.created_at),
-      });
-    }
-  }
-  return items;
-}
-
 /** 주소가 소유한 WeddingCap의 오브젝트 ID 목록(호스트가 자신의 Cap을 찾을 때). */
 export async function getOwnedWeddingCapIds(
   client: SuiJsonRpcClient,
@@ -224,33 +176,17 @@ export async function getOwnedWeddingCapIds(
 
 // === 이벤트 조회 타입 ===
 
-export interface GuestbookFeedItem {
-  entryId: string;
-  loungeId: string;
-  author: string;
-  guestName: string;
-  message: string;
-}
-
 export interface RsvpEvent {
   weddingId: string;
   submitter: string;
-  recipientSlot: string;
-  guestName: string;
-  attendance: string;
+  /** u8 코드(§1-6): groom=0·bride=1·groom_father=2·groom_mother=3·bride_father=4·bride_mother=5. 라벨은 오프체인. */
+  recipientSlot: number;
+  /** u8: attending=0, absent=1. */
+  attendance: number;
   companionCount: number;
-  meal: string;
+  /** u8: yes=0, no=1, undecided=2. */
+  meal: number;
   submittedAt: number;
-}
-
-export interface CashGiftEvent {
-  recordId: string;
-  weddingId: string;
-  guestName: string;
-  recipientSlot: string;
-  relationCategory: string;
-  amount: bigint;
-  createdAt: number;
 }
 
 /**
@@ -280,27 +216,6 @@ async function queryAllEvents(
   return out;
 }
 
-/** 라운지의 방명록 피드(GuestbookEntryCreated 이벤트 → lounge_id 필터). */
-export async function getGuestbookFeed(
-  client: SuiJsonRpcClient,
-  loungeId: string,
-): Promise<GuestbookFeedItem[]> {
-  const events = await queryAllEvents(client, moveTarget('guestbook', 'GuestbookEntryCreated'));
-  const out: GuestbookFeedItem[] = [];
-  for (const e of events) {
-    const p = e.parsedJson as Record<string, unknown>;
-    if (asString(p.lounge_id) !== loungeId) continue;
-    out.push({
-      entryId: asString(p.entry_id),
-      loungeId: asString(p.lounge_id),
-      author: asString(p.author),
-      guestName: asString(p.guest_name),
-      message: asString(p.message),
-    });
-  }
-  return out;
-}
-
 /** 결혼식의 RSVP 현황(RsvpSubmitted 이벤트 → wedding_id 필터). */
 export async function getRsvpEvents(
   client: SuiJsonRpcClient,
@@ -314,36 +229,105 @@ export async function getRsvpEvents(
     out.push({
       weddingId: asString(p.wedding_id),
       submitter: asString(p.submitter),
-      recipientSlot: asString(p.recipient_slot),
-      guestName: asString(p.guest_name),
-      attendance: asString(p.attendance),
+      recipientSlot: asNumber(p.recipient_slot),
+      attendance: asNumber(p.attendance),
       companionCount: asNumber(p.companion_count),
-      meal: asString(p.meal),
+      meal: asNumber(p.meal),
       submittedAt: asNumber(p.submitted_at),
     });
   }
   return out;
 }
 
-/** 결혼식의 축의금 현황(CashGiftSent 이벤트 → wedding_id 필터). */
-export async function getCashGiftEvents(
-  client: SuiJsonRpcClient,
-  weddingId: string,
-): Promise<CashGiftEvent[]> {
-  const events = await queryAllEvents(client, moveTarget('cash_gift', 'CashGiftSent'));
-  const out: CashGiftEvent[] = [];
-  for (const e of events) {
+// === 신뢰 → 신용 이벤트 조회 (credit.ts 입력 경로) ===
+// 컨트랙트가 emit하는 raw 신호를 credit.ts가 소비하는 shape로 가져온다(온체인 raw → 오프체인 신용, 결정#12).
+// ⚠️ queryAllEvents 전역 스캔 한계 동일 — 프로덕션은 전용 인덱서. amount는 number(부조 범위 안전; >2^53 주의).
+
+/** ledger::ActionLogged — 보편 액션 원장(부조·방명록·초대·선물·이음수락). credit.ts ActionLoggedEvent와 동형. */
+export interface ActionLoggedQuery {
+  eventId: string;
+  actionType: number;
+  actor: string;
+  target: string | null;
+  roleId: number;
+  amount: number;
+  ts: number;
+}
+
+export async function getActionLoggedEvents(client: SuiJsonRpcClient): Promise<ActionLoggedQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('ledger', 'ActionLogged'));
+  return events.map((e) => {
     const p = e.parsedJson as Record<string, unknown>;
-    if (asString(p.wedding_id) !== weddingId) continue;
-    out.push({
-      recordId: asString(p.record_id),
-      weddingId: asString(p.wedding_id),
-      guestName: asString(p.guest_name),
-      recipientSlot: asString(p.recipient_slot),
-      relationCategory: asString(p.relation_category),
-      amount: BigInt(asString(p.amount ?? '0')),
-      createdAt: asNumber(p.created_at),
-    });
-  }
-  return out;
+    return {
+      eventId: asString(p.event_id),
+      actionType: asNumber(p.action_type),
+      actor: asString(p.actor),
+      target: optString(p.target),
+      roleId: asNumber(p.role_id),
+      amount: asNumber(p.amount),
+      ts: asNumber(p.created_at_ms),
+    };
+  });
+}
+
+/** event::EventCreated — 이벤트 인스턴스(event_type·creator). credit.ts EventCreatedEvent와 동형. */
+export interface EventCreatedQuery {
+  eventId: string;
+  eventType: number;
+  creator: string;
+}
+
+export async function getEventCreatedEvents(client: SuiJsonRpcClient): Promise<EventCreatedQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('event', 'EventCreated'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return { eventId: asString(p.event_id), eventType: asNumber(p.event_type), creator: asString(p.creator) };
+  });
+}
+
+/** event::Participated — 참가(역할). credit.ts ParticipatedEvent와 동형(참석 CS 입력). */
+export interface ParticipatedQuery {
+  eventId: string;
+  participant: string;
+  roleId: number;
+}
+
+export async function getParticipatedEvents(client: SuiJsonRpcClient): Promise<ParticipatedQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('event', 'Participated'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return { eventId: asString(p.event_id), participant: asString(p.participant), roleId: asNumber(p.role_id) };
+  });
+}
+
+/**
+ * signal::SignalEmitted — **온체인에서 분류된 신호**(부조/유대, kind). credit.ts의 주 입력.
+ * 분류=온체인 SSOT이므로 credit은 이걸 fold→Φ만 하면 됨(action/event/role 재분류 불필요).
+ * 한 액션이 여러 SignalEmitted를 낼 수 있음(fan-out). magnitude=EM 금액/CS 1.
+ */
+export interface SignalQuery {
+  eventId: string;
+  kind: number;
+  /** 원천 행위(action_type / 참석=5 / 매칭=2) — 오프체인 행위별 CS 차등 가중용. */
+  source: number;
+  from: string;
+  to: string;
+  magnitude: number;
+  ts: number;
+}
+
+export async function getSignalEvents(client: SuiJsonRpcClient): Promise<SignalQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('signal', 'SignalEmitted'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return {
+      eventId: asString(p.event_id),
+      kind: asNumber(p.kind),
+      source: asNumber(p.source),
+      from: asString(p.from),
+      to: asString(p.to),
+      magnitude: asNumber(p.magnitude),
+      ts: asNumber(p.created_at_ms),
+    };
+  });
 }

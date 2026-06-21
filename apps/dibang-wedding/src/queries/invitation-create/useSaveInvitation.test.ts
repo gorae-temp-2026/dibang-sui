@@ -72,21 +72,11 @@ const weddingReq = {
   slug: 's',
 }
 
-const onchainParams = {
-  groomName: 'g',
-  brideName: 'b',
-  date: '2026-01-01',
-  time: '12:00',
-  venueName: 'v',
-  venueAddress: 'a',
-  loungeName: 'g♥b 라운지',
-}
-
 describe('useSaveInvitation', () => {
   it('미인증 + invitationReq 빈 → createWedding만, updateInvitation·온체인 미호출, suiIds null', async () => {
     createWedding.mockResolvedValue({ data: { id: 'w-1', invitations: [{ id: 'inv-1' }] } })
     const { result } = renderHook(() => useSaveInvitation(), { wrapper: createQueryWrapper() })
-    const res = await result.current.mutateAsync({ weddingReq, invitationReq: {}, onchainParams })
+    const res = await result.current.mutateAsync({ weddingReq, invitationReq: {} })
     expect(createWedding).toHaveBeenCalledWith({ body: weddingReq, throwOnError: true })
     expect(updateInvitation).not.toHaveBeenCalled()
     expect(createWeddingOnchain).not.toHaveBeenCalled()
@@ -98,7 +88,7 @@ describe('useSaveInvitation', () => {
     createWedding.mockResolvedValue({ data: { id: 'w-2', invitations: [{ id: 'inv-2' }] } })
     updateInvitation.mockResolvedValue({ data: null })
     const { result } = renderHook(() => useSaveInvitation(), { wrapper: createQueryWrapper() })
-    await result.current.mutateAsync({ weddingReq, invitationReq: { cover_image: 'https://a/c.jpg' }, onchainParams })
+    await result.current.mutateAsync({ weddingReq, invitationReq: { cover_image: 'https://a/c.jpg' } })
     expect(updateInvitation).toHaveBeenCalledWith({
       path: { weddingId: 'w-2', invitationId: 'inv-2' },
       body: { cover_image: 'https://a/c.jpg' },
@@ -110,7 +100,7 @@ describe('useSaveInvitation', () => {
     createWedding.mockResolvedValue({ data: { id: 'w-3', invitations: [] } })
     updateInvitation.mockResolvedValue({ data: null })
     const { result } = renderHook(() => useSaveInvitation(), { wrapper: createQueryWrapper() })
-    await result.current.mutateAsync({ weddingReq, invitationReq: { gallery_photos: ['x'] }, onchainParams })
+    await result.current.mutateAsync({ weddingReq, invitationReq: { gallery_photos: ['x'] } })
     expect(updateInvitation).toHaveBeenCalledWith({
       path: { weddingId: 'w-3', invitationId: '' },
       body: { gallery_photos: ['x'] },
@@ -127,8 +117,8 @@ describe('useSaveInvitation', () => {
       .mockResolvedValueOnce({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '' })
       .mockResolvedValueOnce({ weddingId: '', loungeId: '', capId: '', vaultId: '0xV' })
     const { result } = renderHook(() => useSaveInvitation(), { wrapper: createQueryWrapper() })
-    const res = await result.current.mutateAsync({ weddingReq, invitationReq: {}, onchainParams })
-    expect(createWeddingOnchain).toHaveBeenCalledWith(onchainParams)
+    const res = await result.current.mutateAsync({ weddingReq, invitationReq: {} })
+    expect(createWeddingOnchain).toHaveBeenCalledWith()
     expect(createVaultOnchain).toHaveBeenCalledWith({ weddingId: '0xW', capId: '0xC' })
     expect(updateWeddingSuiIds).toHaveBeenCalledWith({
       path: { weddingId: 'w-5' },
@@ -144,7 +134,7 @@ describe('useSaveInvitation', () => {
     createWedding.mockResolvedValue({ data: { id: 'w-6', invitations: [{ id: 'i' }] } })
     createWeddingOnchain.mockRejectedValue(new Error('onchain fail'))
     const { result } = renderHook(() => useSaveInvitation(), { wrapper: createQueryWrapper() })
-    const res = await result.current.mutateAsync({ weddingReq, invitationReq: {}, onchainParams })
+    const res = await result.current.mutateAsync({ weddingReq, invitationReq: {} })
     expect(res.wedding).toEqual({ id: 'w-6', invitations: [{ id: 'i' }] })
     expect(res.suiIds).toBeNull()
   })
@@ -156,7 +146,7 @@ describe('useSaveInvitation', () => {
     })
     const invalidate = vi.spyOn(client, 'invalidateQueries')
     const { result } = renderHook(() => useSaveInvitation(), { wrapper: createQueryWrapper(client) })
-    await result.current.mutateAsync({ weddingReq, invitationReq: {}, onchainParams })
+    await result.current.mutateAsync({ weddingReq, invitationReq: {} })
     await waitFor(() =>
       expect(invalidate).toHaveBeenCalledWith({ queryKey: ['myWeddings'] }),
     )

@@ -1,0 +1,88 @@
+# MASTER DIRECTIVE — 10시간 끊임없는 개선 루프 (매 작업 시작 시 재독 필수)
+
+> **이 파일은 매 작업·매 태스크 시작 때마다 새로 읽는다. 한 번 읽고 끝이 아니다.**
+> compaction을 두려워하지 않는다. 길을 잃으면 이 파일 + `SUI_CONTRACT_DESIGN_DIRECTION.md` + `AGENT_BRIEFING_PROTOCOL.md` + 메모리를 다시 읽고 복귀한다.
+>
+> ⚠️ **SSOT: 온체인(Sui)이 신뢰·Wedding 데이터의 단일 진실원천.** DB(Supabase/Go API)는 표시콘텐츠·캐시 **보조**. 현재 앱 DB-first는 **전환기** — 코드 보고 "이 프로젝트 DB 우선"이라 오해 금지(이전 세션이 그렇게 틀림). **앱 온체인-읽기 이관이 명시 목표(미완, Task #43).**
+
+---
+
+## 1. 사용자 원본 지시 (verbatim — 절대 수정 금지)
+
+> 척추 상세 설계부터 선물/자산 레이어를 넘어 현재 프로젝트를 전부 담고 관통하는 컨트랙트와 hook 설계를 해야 해. 정답이 없어서 더 어려운 것이고, 그 만큼 정신 바짝 차리고 설계해야 해. compaction이 나도 다시 프로젝트 공부하고 논리적으로 어긋난 것은 없는지 수백가지 관점에서 개선할 수 있는 부분을 개선해야 하고, 딴 길로 빠지면 안 돼. 귀찮아하면 안 되고, 누락이 있으면 안 돼.
+>
+> 1 move 컨트랙트 초안 설계 및 리뷰 및 개선 /sui-dev-skills 읽고 sui 의 특성을 잘 반영
+> 2 초안을 더 개선하는 관점에서 다시 재분석 및 재리서치 및 논리적 모순 발견 및 개선
+> 3 컨트랙트 기반으로 sui의 특성과 현재 프로젝트 방향성과 기능을 구현할 수 있는 hook 개발 및 리팩토링
+> 4 최종 목적지를 향해 컨트랙트의 부족함 없는지 파악 후 개선 및 hook 개선
+> ..
+>
+> 이렇게 점진적으로 끊임없이 개선하는 작업을 10시간 동안 진행해야 함.
+>
+> 80구현 -> 120 구현 -> 140 구현 -> 150구현 -> 155구현 -> 158구현
+>
+> 이렇듯 한 발자국이라도 조금이라도 더 개선하기 위한 방향으로 끊임없이 루프를 돌려야 한다.
+>
+> 하나의 큰 작업은 여러 개의 세부적인 태스크로 쪼개지며, 작업이 끝날 때마다 opus에게 검증 및 피드백을 요청하는데 okay 사인이 나올 때까지 반복하며 okay 사인 이후에 새로 작업을 정의(안 한게 있으면 그것을 하고, 구현이 다 끝났다고 생각이 들면 더 개선할 수 있는 부분을 찾아서 개선한다)해서 진행한다. opus에게 검증 및 피드백을 요청할 때는 해당 검증 opus 또한 현재 이 프로젝트, 코드, 메모리 모든 맥락을 안 상태에서 2~30만 토큰의 맥락을 가진 상태에서 피드백을 한다. 섣불리 그럴싸한 피드백을 하지 않게 조심해야 한다.
+>
+> 10분마다 현재 작업 잘 하고 있는지 체크하는 loop를 등록할 건데 이는 loop 한 번에 하나의 작업 또는 태스크를 하라는 뜻이 아니라 중간에 핑계대고 멈추지 않도록 하는 부가적인 장치라고 이해하면 된다.
+>
+> 이 사용자의 프롬프트의 원본을 파일로 남기고, 매 작업이 시작할 때 마다 매 번 새로 읽는다. 한 번 읽었다고 끝이 아니라 매 작업마다 읽는다. compaction을 두려워하지 않는다. 10시간 동안 계속 진행한다. 핑계는 없다. 끊임없는 개선만이 너의 임무다.
+
+---
+
+## 2. 운영 프로토콜 (위 지시에서 도출 — 매번 이대로 돈다)
+
+**루프 한 사이클:**
+1. **재독** — 이 파일 + `SUI_CONTRACT_DESIGN_DIRECTION.md`(현재 설계·결정) + 필요한 코드/연구. (compaction 후엔 `_onboarding/VISION-AND-INTENT`·`08`·`06`·메모리도.)
+2. **작업 정의** — 현재 사이클의 한 발자국(미구현분 우선 / 다 됐으면 개선점 발굴). 큰 작업이면 세부 태스크로 쪼갬(TaskCreate).
+3. **구현/개선** — Move는 TDD(`sui move test` red→green), hook/프론트는 `tsc --noEmit`+`pnpm build`+테스트. Sui 특성 반영(/sui-dev-skills). 결정·가드레일(§아래) 준수.
+4. **opus 검증 — OK까지 반복.** 검증 opus는 `AGENT_BRIEFING_PROTOCOL.md §7`로 **완전 온보딩(20~30만 토큰)** 후 적대 리뷰. OK 안 나오면 반영→재검증. 섣부른 그럴싸한 피드백 경계.
+5. **반영 후 다음 작업 정의** → 1로. **끊임없이 한 발자국씩(80→120→…→158).**
+
+**절대 준수(가드레일 — 어기면 길 잃은 것):**
+- 설계 = 컨트랙트 로직 중심. 운영영역(sponsor·가스최적화·zkLogin·메인넷상금) 설계 드라이버 금지. ([[design-scope-contract-logic-first]])
+- 컨트랙트 = **신원-불가지 지갑 그래프**(이름·성별·채팅·사진·사람정보 전부 오프체인).
+- 확정 결정: #1 amount 평문 / #2 inyeon target 평문·콘텐츠 오프체인 / #4 범위=전체·부조 우선 / #12 신용=오프체인.
+- 원칙: raw 액션 저장·해석은 오프체인 / SBT=key-only+transfer / per-node(전역레지스트리 X) / capability / role=fold 방향 / 돈=실제 SUI / 범주론=오프체인 함자(over-claim 금지).
+- 깊이 우선: 부조로 척추(ledger) 닫고 → 신호 확장. 누락·축소·핑계 금지.
+
+**상태의 단일 출처(SSOT for this sprint):** 진행/결정은 `SUI_CONTRACT_DESIGN_DIRECTION.md`에, 작업 추적은 TaskList에, 코드는 `contracts/dibang_wedding/sources/*.move` + `apps/dibang-wedding/src/**`. 새 결정·교훈은 즉시 해당 문서/메모리에 persist(다음 사이클이 파일로 복원 가능하게).
+
+---
+
+## 3. 진척 로그 (사이클마다 한 줄 append — "무엇을 한 발 더 갔나")
+
+- 2026-06-20: 루프 시작. 결정 #1/#2/#4/#12 확정, inyeon-frontend 머지(gift/asset 레이어), 설계 v2 + 샵·선물 §3-G 반영. → Step 1(척추 ledger/event TDD) 착수 예정.
+- 2026-06-20: Step 1 척추 1차 — `event.move`(Event+Participation, 방향 원천) + `ledger.move`(ActionRecord soulbound, log=public(package), settles/role 포함) 작성. `sui move test` 40/40 통과(신규 4). → opus 적대 검증(OK까지) 진행 중.
+- 2026-06-20: opus 검증 NOT-OK → C1(role/event를 actor 소유 Participation에서 파생·위조차단)·C3(participate 권위역할 self 금지·assign_role 생성자 게이트·경계검증) 수정. `ledger`는 `event`를 `gathering`으로 alias(sui::event 충돌 회피). `sui move test` 43/43(신규 7). C2(wedding↔Event 통합)는 다음 증분(cash_gift→ledger 부조) 결정으로 보류: **wedding::create_wedding이 gathering::Event(WEDDING) 생성·링크, 그 event_id를 부조의 event_id로**. → opus 재검증(SendMessage 재사용) 중.
+- 2026-06-21: opus 재검증 **OK** — 척추(event+ledger) C1·C3·I1 코드로 닫힘, 잔여 Critical 없음. 척추 커밋. /loop(10분) 등록(job 8c535498). **다음 증분 = 부조 루프**: ①C2(wedding이 Event(WEDDING) 생성·링크) → ②cash_gift::give(실제 SUI + ledger::log(GIVE_MONEY)) PTB 통합 → ③participate 유니크(특히 inyeon)·settles 양끝 일치 assert. 신뢰(부조)→원장 한 흐름 온체인 검증 목표.
+- 2026-06-21: **부조 루프 닫힘** — C2 구현(wedding::create_wedding이 gathering::Event(WEDDING) 생성·링크, Wedding.event_id+primary_host, create_default_for_testing 내부 clock으로 호출처 무수정) + cash_gift::give(실제 SUI vault 입금 + ledger::log(GIVE_MONEY), 방향=하객 Participation 파생, target=혼주, event_id 일치 assert). `sui move test` 45/45. 신뢰(부조+SUI)→원장 한 흐름 온체인 검증 완료. **남음:** participate 유니크(특히 inyeon RECEIVER/INITIATOR)·settles 양끝 일치 assert·send_gift(PII·key+store) 정리·신호 확장(이음·선물·방명록). → opus 재검증.
+- 2026-06-21: 부조 증분 opus 재검증 **OK**(3겹 정합 assert 충분·방향 파생·tx 경합 0). 커밋 59d5c91/d717c26. **다음 발자국 = send_gift 정리 증분**(task #23 follow-up): send_gift+CashGiftRecord+CashGiftSent(PII 평문·key+store) 제거→give 일원화, 테스트 deposit_for_testing로 교체. 그 뒤 participate 유니크 → 신호 확장(이음 ium→ledger, 선물 gift→ledger).
+- 2026-06-21: **send_gift 정리 완료** — cash_gift의 send_gift+CashGiftRecord+CashGiftSent(평문 PII guest_name/relation·key+store=transfer 가능) 제거, 부조는 give(ledger)로 일원화. 미사용 import(String·utils)·상수·에러 정리, 테스트 deposit_for_testing 펀딩 + give_zero_fails 추가. `sui move test` 43/43. VISION §7·결정#2·SBT 위반 제거. 커밋 0788f99. opus 회귀확인 **OK**(PII/SBT 잔존 0·give 무회귀·deposit_for_testing test-only).
+- 2026-06-21: **guestbook 신호확장** — GuestbookEntry(key+store·평문 guest_name·message 본문) 제거 → guestbook::write(wedding, participation)가 ledger WRITE_MESSAGE만 기록(본문·이름 오프체인, 결정#2). 부조 패턴 일치. `sui move test` 40/40. 또 하나 위반 제거 + 신호 확장(부조+방명록). **인사이트:** participate(GUEST Participation+Participated emit)가 이미 출석(ATTEND) 신호 → 별도 ATTEND 액션 불필요(인덱서가 Participated 읽음). participate 유니크는 shared Event df 경합 우려라 wedding은 permissive 유지·1:1은 inyeon에서 per-node. 커밋 e8d012d. opus 회귀확인 **OK**.
+- 2026-06-21: **ium 리팩터(인연 매칭) — 진단 #1 결함 제거.** 전역 IumRegistry 삭제(단일 shared object 직렬화 chokepoint 해소·병렬성 회복) + Ium key+store 객체·PII(relation_type/label) 제거. 매칭 = request_ium(INYEON Event 생성+신청자 INITIATOR Participation+IumRequest를 수신자에 transfer) → accept_ium(수신자 자기 IumRequest+Event로 RECEIVER 참가, 요청 소비). **인사이트: 매칭=관계형성=이벤트 자체** → CS 엣지는 Event(INYEON)+양측 Participation으로 인덱서 도출, 별도 ActionRecord 불요(매칭 안의 후속 액션(선물·대화)만 원장에). 한마디 오프체인. `sui move test` 40/40. → opus full 검증(novel). 커밋 28d9dd3.
+- 2026-06-21: ium full 검증 **NOT-OK**(C-IUM1: ROLE_RECEIVER/INITIATOR가 self-claimable이라 제3자가 매칭 Event에 직접 participate→방향위조 V4 inyeon 경로 재개. 인덱서 필터로 불충분 — C가 실제 RECEIVER Participation 보유→ledger participant==sender 통과). **수정:** event::is_self_claimable=GUEST만(INITIATOR/RECEIVER 제외) + `public(package) mint_participation_for` 추가, ium::accept_ium이 그걸로 RECEIVER 발행(IumRequest 소유=게이트, typed-진입함수 패턴 정합). cannot_self_claim_receiver red→green. `sui move test` 41/41. 1·3·4(레지스트리 제거 무손실·매칭=Event 모델·EWrongEvent)는 OK. → opus 재검증. 커밋 67209b5. opus 재검증 **OK**(stray RECEIVER/INITIATOR 완전 차단, IumRequest 게이트 유일).
+- 2026-06-21: **gift→ledger 신호확장** — gift.move: gift(participation, item:MoiItem, recipient)가 MoiItem public_transfer(자산 이동) + ledger GIFT(target=recipient, amount=0) 한 tx. 방향 participation 파생, event-agnostic(인연/웨딩). 증여 EM은 부조 전파 제외(인덱서/Φ, MOICREDIT_AUDIT). `sui move test` 42/42. **인연 액션셋 완성(매칭+선물).** → opus 확인 OK. 커밋 c8a490d.
+- 2026-06-21: **INVITE 신호확장** — wedding::invite(wedding, host_participation, guest)가 ledger INVITE(target=guest) 기록. wedding-action-catalog "디방의 본질"(가장 직접적 사전 관계 신호 CS○★) 구현. HOST 역할·event 일치 assert. 이름·연락처 오프체인. `sui move test` 43/43. **웨딩 신호셋 완성(초대·부조·방명록·참석) + 인연(매칭·선물).** → opus 확인. **다음 발자국 = Step3 SDK 재정렬(packages/sui-sdk 6파일 stale 일괄)**: give/write/invite/request_ium/accept_ium/gift/participate 빌더 + create_wedding(+clock) 정렬, 구식(create_ium/send_gift/write_entry/IumRegistry) 제거. tsc green. (+ 잔여 moi.owner·rsvp enum.)
+- 2026-06-21: INVITE 검증 **OK**(role==HOST + participant==sender 이중 게이트, HOST 위조 불가). 커밋 e3af615.
+- 2026-06-21: **크레딧 리더 — 신뢰→신용 코어(Step3 hook)**. apps/dibang-wedding/src/lib/credit.ts: 온체인 raw(ActionLogged + EventCreated) → project(부조 EM=GIVE_MONEY@WEDDING 하객→혼주 / CS=WRITE_MESSAGE·INVITE·ACCEPT_IUM·GIFT) → fold(give[g][h]·tie[a][b]) → Φ(09 PHI-5: 부조=reversed-giving PageRank 베푼 쪽 적립·상대 신용 가중 / CS=in-tie) → 가중합 0.5/0.3/0.2(이행 무기록 0.7) → 지갑별 신용. decision#12 오프체인. **인사이트:** teleport 기준선 위 *초과분*으로 부조 표현 → 비-기여자=0(전원-만점 퇴화 방지). vitest 5/5(베푼쪽 적립·CS·선물 CS-only·맥락 가드·빈입력), tsc 0. **컨트랙트 event → 신용 한 흐름 데모.** → opus full 검증 **OK**(PHI-5 정합·초과분 표현 수용, Critical 없음). 커밋 df150ae.
+- 2026-06-21: 크레딧 Important I1/I3 반영 — I1: ParticipatedEvent 입력 추가 → 참석=CS(참가자→혼주, 혼주 자기 제외). EventCreatedEvent에 creator 추가. I3: 자기엣지(actor==target) fold에서 제거(§8 V4 자기거래 농사 차단). vitest 7/7, tsc 0. → opus 확인 **OK**(참석 CS 방향·자기제외·회귀 없음, 참석 EM 환산은 07이 미룬 항목). 커밋 0bb9e83.
+- 2026-06-21: **SDK 크레딧 쿼리 추가(additive, 파급 0)** — queries.ts에 getActionLoggedEvents/getEventCreatedEvents/getParticipatedEvents(credit.ts 동형 shape) + WeddingOnChain.eventId. 컨트랙트 event 필드(event_id/action_type/actor/target/role_id/amount/created_at_ms·event_type/creator·participant)와 일치. **온체인→신용 읽기 경로 완성.** SDK typecheck 0. 커밋 b949880. **발견(앱경계 위반):** guest-web이 buildWriteEntryTx/buildSendGiftTx 사용(온체인이 익명퍼널에 — §2·L2 위반). SDK 빌더 정렬은 이 경계 수정과 함께 별도 큰 작업. **다음:** 토이 DeFi(신용→대출, 오라클 재진입 #12) / SDK 빌더 정렬+guest-web 경계 / CS authority PageRank.
+- 2026-06-21: **CS authority PageRank 정밀화** — credit.ts CS를 flat in-tie → authority PageRank(PHI-5 정식: 유대받는 쪽 적립 + 고신뢰자에게 받을수록↑, 유대의 질 반영). 부조와 동일 기준선 초과분(비-유대자=0). authority>flat 구별 테스트(hub→x vs z→y). vitest 8/8, tsc 0. → opus 확인 **OK**(다섯 신호 actor→target 방향 정합·표준 PageRank·회귀 없음; ACCEPT_IUM 양방향은 후행 I-CS1). 커밋 53d5f89.
+- 2026-06-21: **[보안/PII] rsvp.move guest_name 제거** — RsvpSubmitted 이벤트가 사람 이름(guest_name) 평문 온체인 emit(결정#2/§3 위반, cash_gift/guestbook/ium와 동일 유형 — 누락됐던 모듈)을 발견·제거. submitter(주소)만 남기고 이름은 오프체인 매핑(신원-불가지). EGuestNameTooLong/MAX_GUEST_NAME_CHARS/utils import 정리, 에러 재번호. queries.ts RsvpEvent.guestName 제거(소비처 0·tsc 0). gift.move 미사용 Wedding import 정리(경고 0). `sui move test` 43/43, SDK·앱 tsc 0. → opus 검증: rsvp.move 자체 **OK**(PII 완전 제거·잔여 PII 없음·테스트 일관)이나 **NOT-OK(C-Q1)** — queries.ts에 동일 유형 누락 발견. 커밋 e9dcf46.
+- 2026-06-21: **[보안/PII] C-Q1 정리** — queries.ts에 *이미 온체인에서 삭제된* 이벤트를 읽는 죽은 코드 + PII 필드 참조: getGuestbookFeed(GuestbookEntryCreated·guest_name·message)·getCashGiftEvents(CashGiftSent·guest_name·relation_category). rsvp와 동일 유형 누락이 SDK에 있던 것. 두 함수+타입(GuestbookFeedItem·CashGiftEvent) 제거. **+ 내가 추가 발견:** getOwnedIums/IumOnChain도 삭제된 `Ium` 구조체 조회 + relation_type/label(PII)라 동일 유형 → 함께 제거. 소비처는 앱 0, test-testnet.ts(구컨트랙트 전면 stale, tsconfig `src`만 검사라 미검사)만. queries.ts 죽은-PII/삭제구조 참조 **완전 0**, SDK typecheck 0. 방명록 피드·부조 현황은 이제 ledger getActionLoggedEvents 경로로 일원화. → opus 재검증 **OK**(죽은 PII 리더 3종 제거·남은 6쿼리 현존/비PII·회귀 없음). 커밋 5387aa0+f44ed28.
+- 2026-06-21: ⚑ **[사용자 결정 필요] Wedding 구조체 이름 온체인 보유** — 리뷰어가 C-Q1 검증 중 기록: getWedding이 groom_name/bride_name/부모 이름·예식장을 읽음 = Wedding struct가 *사람 이름을 평문 온체인 보유*(wedding.move:36-45). 결정#2("모든 사람 관련 정보 오프체인")와 긴장. 단 이름/예식장 → 오프체인 이전은 **중앙 Wedding 객체 대수술**(create_wedding/update_wedding 시그니처·getWedding·앱 청첩장 표시 전부 파급)이라 자율 루프에서 단독 강행 안 함. 설계 논점(공개 청첩장 콘텐츠 vs 사람 PII)도 있어 **사용자 확인 후 진행**. 리뷰어도 §7 잔여·별도 결정으로 분류(블로킹 Critical 아님).
+- 2026-06-21: **I-CS1 — ACCEPT_IUM 양방향 CS** — 인연 매칭은 상호 관계인데 raw ACCEPT_IUM이 단방향(receiver→initiator)이라 initiator만 적립하던 것을, fold에서 양방향 엣지(receiver↔initiator)로 펴서 둘 다 CS authority 적립(accept=상호 유대 해석을 오프체인 project에서). 구별 테스트(단방향이면 receiver=0). vitest 9/9, tsc 0. → opus 확인 **OK**(ACCEPT_IUM에만 격리·raw 단방향 보존·07 비대칭 보존). 커밋 aa0c981.
+- 2026-06-21: **전체 통합 적대 리뷰(Step2/4)** — 개별 증분이 못 본 cross-cutting **Critical 2건** 발견: **C1[인연→신용 단절]** credit.ts ACCEPT_IUM 분기가 **dead**(ium은 §3-F대로 ledger 미기록→ACCEPT_IUM ActionLogged 영영 없음)→인연 CS가 신용에 0/반쪽(참석 루프 누수) 기여. **C2[참석 경로]** ATTEND log 진입점 없음+RSVP 미연결(참석=Participated 일원화가 의도→문서화 필요). +Imp settles dead(이행축 raw 미수집, DeFi 보류). 빌드·단위 다 초록인데 세로 파이프라인이 안 흐르던 것.
+- 2026-06-21: **Critical1 수정** — credit.ts가 인연 매칭 CS를 **Participated에서 도출**(INYEON: creator=initiator↔receiver 양방향) + dead ACCEPT_IUM switch case 제거 + 참석 루프 **event_type 분기**(웨딩 참가자→혼주 단방향 / 인연 양방향, M2 동시 해소). 테스트 Participated 기반 교체 + ACCEPT_IUM-ActionLogged 무신호 회귀가드. vitest 10/10, tsc 0. **인연→신용 파이프라인 실제 연결.** + 설계 doc §10-A as-built 동기화(2026-06-21). → opus 재검증 **OK**(Critical1·M2 닫힘·웨딩 회귀 없음; C2·settles는 문서화로 충분 판정). 커밋 f3bcaa9.
+- 2026-06-21: **발행 계약 명문화 + cross-module e2e 테스트(M3)** — C2/settles는 검증서 "코드 불필요, 문서화로 충분"(참석=Participated 일원화·RSVP=의사/로지스틱스라 신용신호 아님·ATTEND vestigial / 답례=부조 양방향으로 이미 도출되니 settles 불요, settles는 대여상환 전용·#12 DeFi 시 활성). ledger.move에 **발행 계약 주석**(실 emit=GIVE_MONEY/WRITE_MESSAGE/INVITE/GIFT만; REQUEST_IUM/ACCEPT_IUM/ATTEND 예비·미emit, 인연·참석은 Participated에서 도출) + design doc §10-A ⑥에 이행축/settles 보류 사유. `contracts/tests/integration.move` 신규: 한 웨딩 Event에 invite+participate+give+write가 일관 event_id·역할로 쌓임 검증(Critical1이 숨었던 통합 테스트 공백 메움). `sui move test` 44/44(경고 0). 커밋 6646d27.
+- 2026-06-21: **TS e2e 크레딧 테스트** — credit.test.ts에 현실 다신호 시나리오(웨딩: 초대×2+부조×2+방명록+참석×3, 인연: alice↔bob 매칭) 한 번에 creditFromEvents fold: 부조 서열(guest1>guest2)·혼주 CS>0(방명록·참석 받음)·하객 초대 CS>0·**인연 양쪽 CS>0(Critical1 회귀가드 — 인연→신용 실제 기여)**·전 신용 0~1. Move e2e의 TS 짝 = 통합 결함 양면(컨트랙트 발행 + 신용 fold) 방어. vitest 11/11, tsc 0. 커밋 0906ea0.
+- 2026-06-21: **guest-web 경계 조사 + moi 점검 + 교훈 기록.** ⚑guest-web: zkLogin(ZkLoginProvider)+온체인 액션(useOnchainActions: writeGuestbook/sendCashGift/submitRsvp)이 InvitationPage·게스트플로우에 연결 = §2/L2 **명백 위반** + 빌더 stale로 runtime-broken → **사용자 결정 대기**(온체인 유지 vs §2대로 익명 복귀; SDK 빌더 정렬도 guest-web 소비라 여기 묶임). moi: mint_item 무료·무게이트 public → **gift-CS 시빌 농사 벡터** 발견(샵/YONE 그린필드라 게이팅은 시기상조) → moi.move 주석 + L8 문서화. Critical1 cross-module 교훈 **L7** + good-case 기록. `sui move build` OK. → 2차 통합 적대 리뷰(시빌/게이밍 표면) 진행 중.
+- 2026-06-21: **2차 통합 리뷰 결과** — Critical 0. Important 3: ①**wash 부조**(A↔B 순환, reversed-giving이 상호루프 증폭, §8 b/c 미구현) ②**참석-스팸**(무게이트 participate→혼주 CS, authority가 out=1 가짜 풀파워 통과 못막음; invite-스팸은 out정규화로 막힘) ③gift농사(L8 연장). 발행 계약 contract↔credit 1:1 정합 재확인(dead/누락 0). less-reviewed 모듈 권한 정상(assign_role 중복 무가드는 §8 Φ 몫). **#1 wash 차단 구현(추천 최고 레버리지):** `netGiveGraph`로 부조 그래프를 net(상호 엣지 min 상쇄)으로 변환 후 reversed-giving — **07 EM 아벨군(net=give−recv) 정의 정합 + A↔B wash 자동 0 + 정직 비대칭 차액 보존**(단일 변경으로 시빌+모델충실도 동시↑). wash·비대칭 테스트. vitest 13/13, tsc 0. → opus 확인 **OK**(2자 wash 닫힘·정직 비대칭 보존·07 EM net 정합·recv 일관; 3자+ 순환은 §8 c 후순위가 타당 — 시빌비용↑·정직 삼각호혜 오탐 위험). 커밋 4d14a00.
+- 2026-06-21: **§8 시빌 방어 구현 현황 명문화** — SUI_CONTRACT_DESIGN_DIRECTION §8-A 추가: ✅V4 자기엣지·V2 합의·V3 wash(2자 net) 완료 / ⏳후순위(§8 c, DeFi 담보 전 실데이터 튜닝): 3자+ 순환 wash·참석-스팸·gift농사 = correlation discounting/클러스터 상한 + 샵 비용 게이트(정직 삼각호혜 오탐 위험이라 데이터 없이 안 막음). 원칙 재확인: DeFi는 raw 카운트 불신, 담보 전 정식 discounting 필수.
+- 2026-06-21: **★사용자 결정 확정(AskUserQuestion):** A=Wedding 이름·예식장 **오프체인 이전**(결정#2 엄격). B=guest-web 온체인 **유지**(현 구현 인정)→SDK write 빌더 신규 컨트랙트로 정렬 필요.
+- 2026-06-21: **결정A 1부 — wedding.move 익명 앵커 슬림화.** Wedding에서 신랑/신부/부모 이름·date/time·예식장 11필드 제거(앵커=event_id·status·host_addresses·vault_id만), WeddingLounge.name 제거, update_wedding(표시수정용→오프체인) 제거(EWrongCap은 add_host 테스트로 보존), WeddingCreated 이름 제거. create_default_for_testing가 테스트 호출처(cash_gift·guestbook·rsvp·gift·integration) 무수정 보호. queries.ts WeddingOnChain/WeddingLoungeOnChain 표시필드 제거. **핵심: 앱 이름은 자체 API/Supabase(weddings 테이블·useInvitationForm)에서 옴 — SDK 온체인 getWedding 소비처 0, 양 앱 tsc 0으로 무파손 확인.** sui move test 43/43, SDK·양앱 tsc 0. → opus 검증: 컨트랙트·읽기는 **OK**이나 **NOT-OK** — SDK 쓰기 빌더 누락(C-Q1 유형 재발). 커밋 81740a3.
+- 2026-06-21: **결정A 2부 — SDK 쓰기 빌더 정렬(검증 NOT-OK 해소).** 검증이 잡음: wedding.ts buildCreateWeddingTx가 제거된 11인자(+PII 평문 이름)를 push, buildUpdateWeddingTx가 삭제된 update_wedding 호출 → 런타임 abort + PII 온체인行(결정A가 SDK 계층 미반영). 수정: buildCreateWeddingTx를 슬림(create_wedding(clock)만·owner transfer·PII 0)으로 재작성, buildUpdateWeddingTx/UpdateWeddingParams 제거, CreateWeddingParams={owner}. 캐스케이드: useOnchainHostActions(createWedding 무인자·updateWedding 제거), onchainWedding(toCreateWeddingParams 제거), useSaveInvitation(onchainParams 제거·createWeddingOnchain() 무인자), InvitationCreatePage·test. **이름은 Supabase(weddingReq Step1)에만 — 온체인 createWedding=익명 앵커.** (useUpdateWedding은 API라 무관, 온체인 updateWedding은 미사용이었음.) SDK·dibang-wedding tsc 0, useSaveInvitation 6/6, Move 43/43. → opus 재검증 **OK**(결정A 3계층 일관·create 경로 PII 0; ium/give/write/invite 빌더는 결정B 보류 stale 인지). 커밋 0f0d930.
+- 2026-06-21: **결정B 빌더 정렬 시작 — rsvp 슬라이스.** buildSubmitRsvpTx에서 guest_name 제거(rsvp.move가 드롭) + SubmitRsvpParams·guest-web SubmitRsvpInput·InvitationPage submitRsvp 호출 정리. **마지막 PII-push 빌더 제거 — 이제 어떤 SDK 빌더도 평문 이름을 온체인에 안 보냄.** rsvp는 lounge 기반이라 참가-먼저 불필요(가장 단순 슬라이스). SDK·guest-web tsc 0. **다음(체크리스트, tsc 못 잡음):** give/write 빌더(참가-먼저: 게스트가 event::participate로 Participation 보유 후 give/write가 참조 — 별도 tx) / ium buildCreateIumTx·buildRevokeIumTx → request_ium/accept_ium / constants iumRegistryId 제거(IumRegistry 삭제됨).
+- 2026-06-21: **★사용자 결정#6 확정 — 샵/아이템 = SUI 결제 '구매' 게이트.** 모든 결제·비용 = **SUI 직접**(YONE(Coin<YONE>) 전환은 후순위). 샵 아이템은 **무료 발행(mint_item public·무게이트) 폐기 → Sui payment SDK 기반 SUI 결제 '구매'로 mint를 게이트**한다(`moi::purchase_item(payment: Coin<SUI>, …): MoiItem` + `mint_item` public(package) 봉인). SUI 결제 게이트가 서야 **gift-CS 신뢰 가능**(§8 c gift농사 차단과 연결). **기록만(구현 아님):** moi.move 캐비엇·gift.move 포인터·sui-sdk/moi.ts(buildMintItemTx→buildPurchaseItemTx TODO)·moiPlaza.machine(mock buyItem 주석)·SUI_CONTRACT_DESIGN_DIRECTION(§3-E·§3-G·결정#6 §6) 갱신. **TODO(구현):** moi.move purchase_item(SUI 결제) + mint_item 봉인 + sui-sdk buildPurchaseItemTx + moiPlaza onchain 연결.

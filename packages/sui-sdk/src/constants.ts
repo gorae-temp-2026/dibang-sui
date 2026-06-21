@@ -12,15 +12,12 @@ export interface SuiContractConfig {
   network: SuiNetwork;
   /** dibang_wedding Move 패키지 ID */
   packageId: string;
-  /** ium::IumRegistry 공유 오브젝트 ID (create_ium / revoke_ium 에 필요) */
-  iumRegistryId: string;
 }
 
-/** testnet 배포 기본값 (2026-06-17, digest HCrF8Cw1...). */
+/** testnet 배포 기본값 (2026-06-21 cutover — 신뢰그래프+신호+add_host primary 게이트, digest CEhq5tz1...). 구 0x6bb8 대체. */
 export const TESTNET_CONFIG: SuiContractConfig = {
   network: 'testnet',
-  packageId: '0x6bb83eef329013a1ca5a6a50a3f5eb1cac5bc84f0d2f6510e2dff10c8566dc95',
-  iumRegistryId: '0xea55a36a6f96c6929c484cd0ad21efb09ad4f54f012630d9eeba69898edd3ab5',
+  packageId: '0x258e9a29572e4a3729257299a85cda52f8415c25b92d7576b863fb3d9b0731ee',
 };
 
 let activeConfig: SuiContractConfig = { ...TESTNET_CONFIG };

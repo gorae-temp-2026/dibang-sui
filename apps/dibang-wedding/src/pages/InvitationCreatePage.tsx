@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams, Link } from 'react-router';
 import { useMachine } from '@xstate/react';
 import { DibangWordmark } from '@gorae/invitation-ui';
 import { useInvitationForm, toCreateWeddingRequest, toUpdateInvitationRequest } from '../hooks/invitation-create/useInvitationForm';
-import { toCreateWeddingParams } from '../queries/invitation-create/onchainWedding';
 import { useSaveInvitation } from '../queries/invitation-create/useSaveInvitation';
 import { useAddInvitation } from '../queries/invitation-create/useAddInvitation';
 import { useInvitationImageUpload } from '../hooks/invitation-create/useInvitationImageUpload';
@@ -137,7 +136,6 @@ export function InvitationCreatePage() {
         {
           weddingReq: toCreateWeddingRequest(state, me?.id),
           invitationReq: toUpdateInvitationRequest(state),
-          onchainParams: toCreateWeddingParams(state),
         },
         { onSuccess: () => send({ type: 'SAVE_SUCCESS' }), onError },
       );

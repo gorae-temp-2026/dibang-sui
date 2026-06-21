@@ -9,20 +9,21 @@ import {
   updateMarketingConsentMutation,
 } from '@gorae/contracts/@tanstack/react-query.gen';
 import { useAuth } from '../providers/AuthContext';
+import { useZkLogin } from '../providers/ZkLoginProvider';
 import { useSignOut } from '../queries/auth/useSignOut';
 
 export function SettingsPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const zk = useZkLogin();
   const signOut = useSignOut();
   const queryClient = useQueryClient();
+  // 마케팅 동의 — 서버값 derived + 사용자 토글 override 패턴 (set-state-in-effect 회피, React 19 룰).
+  const { data: me } = useQuery(getMeOptions());
 
   const meta = session?.user?.user_metadata;
-  const userName = meta?.display_name ?? meta?.name ?? session?.user?.email ?? '알 수 없음';
-
-  // 마케팅 동의 — 서버값 derived + 사용자 토글 override 패턴.
-  // set-state-in-effect 회피 (React 19 룰, WeddingMemoryBookCuratePage와 동형).
-  const { data: me } = useQuery(getMeOptions());
+  // 세션 우선, 없으면 getMe 폴백(dev 로그인우회 프리뷰 = 철수 fixture에서 이름 표시).
+  const userName = meta?.display_name ?? meta?.name ?? session?.user?.email ?? me?.name ?? '알 수 없음';
   const [userOverride, setUserOverride] = useState<boolean | null>(null);
   const marketing = userOverride ?? me?.marketing_agreed ?? false;
 
@@ -48,9 +49,16 @@ export function SettingsPage() {
   };
 
   // useSignOut 훅 사용 (라운드 1 1-B). supabase 직접 호출 제거.
+  // DEV 지갑 로그인은 Supabase 세션이 아니라 dev 키페어(sessionStorage) 기반이라
+  // supabase signOut만으론 안 풀린다. zk.logout()으로 dev 키페어까지 정리해야
+  // zk.isAuthenticated가 false가 되어 /login에서 /my-wedding으로 튕기지 않고
+  // useApiAuthSync가 X-Dev-Auth 헤더도 제거한다.
   const handleLogout = () => {
     signOut.mutate(undefined, {
-      onSuccess: () => navigate('/login'),
+      onSuccess: () => {
+        zk.logout();
+        navigate('/login');
+      },
     });
   };
 

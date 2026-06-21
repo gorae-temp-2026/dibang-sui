@@ -1,3 +1,6 @@
+// ⚠️ TRANSITIONAL(전환기) — 아키텍처 의도: 온체인(Sui) = 신뢰/Wedding SSOT, DB(Go/Supabase)는 보조.
+// 온체인 쓰기를 DB 흐름과 best-effort dual-write하는 건 *전환기*일 뿐 "DB 우선" 아님. 목표(미완): 앱 온체인-읽기 이관.
+// 상세: CLAUDE.md 상단 SSOT 배너 / _architecture/SUI_CONTRACT_DESIGN_DIRECTION §SSOT 선언.
 /**
  * 호스트 온체인 액션 훅 (dibang-wedding).
  *
@@ -11,7 +14,6 @@
 import { useCallback } from 'react'
 import {
   buildCreateWeddingTx,
-  buildUpdateWeddingTx,
   buildAddHostTx,
   buildCreateVaultTx,
   buildWithdrawTx,
@@ -19,14 +21,13 @@ import {
   buildMintItemTx,
   buildEquipItemTx,
   buildUnequipItemTx,
-  buildCreateIumTx,
-  buildRevokeIumTx,
-  type CreateWeddingParams,
-  type UpdateWeddingParams,
+  buildRequestIumTx,
+  buildAcceptIumTx,
   type WithdrawParams,
   type MintItemParams,
   type UnequipItemParams,
-  type CreateIumParams,
+  type RequestIumParams,
+  type AcceptIumParams,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 
@@ -39,14 +40,10 @@ export function useOnchainHostActions() {
   }, [address])
 
   // === Wedding ===
+  // create_wedding은 익명 앵커만 생성(표시정보 인자 없음, 결정#2) — 이름·예식장은 Supabase에 별도 저장.
   const createWedding = useCallback(
-    (p: Omit<CreateWeddingParams, 'owner'>) =>
-      executeOnchain(buildCreateWeddingTx({ ...p, owner: requireAddress() })),
+    () => executeOnchain(buildCreateWeddingTx({ owner: requireAddress() })),
     [executeOnchain, requireAddress],
-  )
-  const updateWedding = useCallback(
-    (p: UpdateWeddingParams) => executeOnchain(buildUpdateWeddingTx(p)),
-    [executeOnchain],
   )
   const addHost = useCallback(
     (p: { weddingId: string; capId: string; newHost: string }) =>
@@ -85,20 +82,19 @@ export function useOnchainHostActions() {
     [executeOnchain, requireAddress],
   )
 
-  // === Ium 신뢰관계 ===
-  const createIum = useCallback(
-    (p: Omit<CreateIumParams, 'owner'>) =>
-      executeOnchain(buildCreateIumTx({ ...p, owner: requireAddress() })),
-    [executeOnchain, requireAddress],
+  // === Ium 인연 매칭 (2단계 합의: 신청 request_ium → 상대가 수락 accept_ium) ===
+  // relationType·label(PII)은 온체인에 안 보낸다(결정#2) — 오프체인 저장.
+  const requestIum = useCallback(
+    (p: RequestIumParams) => executeOnchain(buildRequestIumTx(p)),
+    [executeOnchain],
   )
-  const revokeIum = useCallback(
-    (p: { iumId: string }) => executeOnchain(buildRevokeIumTx(p)),
+  const acceptIum = useCallback(
+    (p: AcceptIumParams) => executeOnchain(buildAcceptIumTx(p)),
     [executeOnchain],
   )
 
   return {
     createWedding,
-    updateWedding,
     addHost,
     createVault,
     withdraw,
@@ -106,7 +102,7 @@ export function useOnchainHostActions() {
     mintItem,
     equipItem,
     unequipItem,
-    createIum,
-    revokeIum,
+    requestIum,
+    acceptIum,
   }
 }

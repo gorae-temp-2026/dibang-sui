@@ -1,0 +1,62 @@
+# SDK 빌더 ↔ 컨트랙트 드리프트 감사 (2026-06-21)
+
+## 결론(1줄) — ★정정됨 (2026-06-21 라이브 RPC 확인)
+SDK 빌더는 **현재 배포된 canonical 패키지 `0x6bb8`(구 API)와 일치**한다 → **앱은 지금 깨지지 않는다.** (RPC `sui_getNormalizedMoveModule`로 0x6bb8 확인: `ium::create_ium`/`revoke_ium`, `cash_gift::send_gift`(+record_guest_name 등 PII), `guestbook::write_entry`/`claim_entry` **존재**, `signal` 모듈 **없음**.)
+드리프트는 **빌더 ↔ 새 컨트랙트**(signal.move·give·request/accept·decision A 등 — *테스트 패키지 0x32654에만* 배포, canonical 아님) 사이다. 따라서 정렬(#64)은 *라이브 버그 수정이 아니라* **새 컨트랙트 canonical 배포(cutover)의 선결 작업**: 새 컨트랙트를 0x6bb8 대체로 배포하는 순간 빌더·앱이 깨지므로 **배포 + SDK 빌더 + 앱 호출부 + 흐름**을 한 묶음으로 정렬해야 한다.
+
+> ⚠️ **이전 판 정정:** 본 문서 표/섹션의 "실행 시 abort / 유저 대면 버그(NetworkPage)"는 **새 컨트랙트 배포 기준**이며, *현재 deployed canonical(0x6bb8) 기준으론 틀렸음*(앱 정상 동작). 아래 표의 "영향"은 모두 *cutover 후 기준*으로 읽을 것.
+
+`moveTarget('mod','fn')`은 문자열이라 `tsc`가 못 잡는다(런타임에만 터짐) — 이 프로젝트의 반복 결함(C-Q1, wedding-builder)과 같은 부류. cutover 시 이 드리프트가 표면화된다.
+
+## 드리프트 표
+
+| SDK 빌더 | 호출 타깃(stale) | 컨트랙트 실제 | PII | 앱 호출부 | 영향 |
+|---|---|---|---|---|---|
+| `cash-gift.ts` `buildSendGiftTx` | `cash_gift::send_gift`(guestName·slot·relation) | **없음** — `give(vault, wedding, participation, coin, clock)` | 이름·관계 전달(결정#2 위반) | guest-web `useOnchainActions.sendCashGift` | 실행 시 abort(send_gift 부재) |
+| `guestbook.ts` `buildWriteEntryTx` | `guestbook::write_entry`(loungeId·guestName·message) | **없음** — `write(wedding, participation, clock)` | 이름·본문 전달 | guest-web `useOnchainActions.writeGuestbook` | 실행 시 abort |
+| `guestbook.ts` `buildClaimEntryTx` | `guestbook::claim_entry` | **없음**(GuestbookEntry 객체 자체 제거) | — | (test 하네스) | 실행 시 abort |
+| `ium.ts` `buildCreateIumTx` | `ium::create_ium`(relationType·label) | **없음** — `request_ium(to_user, clock)`→`accept_ium(ev, req, clock)` | 관계라벨 전달 | dibang-wedding `useOnchainHostActions.createIum` | 실행 시 abort |
+| `ium.ts` `buildRevokeIumTx` | `ium::revoke_ium` | **없음**(전역 IumRegistry 제거, revoke 개념 없음) | — | dibang-wedding `useOnchainHostActions.revokeIum` | 실행 시 abort |
+
+## 이미 정렬된 빌더(정상)
+- `wedding.ts` `buildCreateWeddingTx` — 익명 `create_wedding(clock)`→Cap (결정A 반영). ✓
+- `rsvp.ts` `buildSubmitRsvpTx` — guest_name 제거 (결정B 슬라이스). ✓
+- `cash-gift.ts` `buildCreateVaultTx`/`buildWithdrawTx`, `wedding.ts` `buildAddHostTx`, `moi.ts` 전부 — 컨트랙트와 일치. ✓
+
+## 왜 발생했나
+컨트랙트가 결정#2(PII 제거)·결정A(익명 Wedding)·send_gift→give 일원화·ium 리팩터(전역 레지스트리 제거, 매칭=request/accept)·guestbook write 슬림화로 바뀌는 동안, **SDK 빌더는 rsvp만 따라갔다**. 빌더는 문자열 타깃이라 빌드가 통과해 드리프트가 숨었다.
+
+## 컨트랙트 측은 정상(실증)
+`packages/sui-sdk/scripts/test-signals-testnet.ts`가 testnet 신규 배포 pkg에서 **올바른** 호출(`give`/`write`/`request_ium`/`accept_ium`)을 직접 moveCall로 실행 → 정상 동작 + SignalEmitted 발행 확인. 즉 **고칠 곳은 컨트랙트가 아니라 SDK 빌더 + 앱 호출부**다.
+
+## 수정 레시피(흐름 변경 동반 — 블라인드 금지)
+단순 rename이 아니다. 새 함수들은 **하객의 `Participation`을 인자로 요구**(참가-먼저)한다:
+1. **give:** `buildGiveTx({vaultId, weddingId, participationId, amount})` → `give(vault, wedding, participation, coin=split, clock)`. PII 제거. 호출부(guest-web)는 하객이 먼저 `participate`로 GUEST Participation을 얻은 뒤 give. 영수증 객체 없음(반환은 ActionRecord id).
+2. **write:** `buildWriteTx({weddingId, participationId})` → `write(wedding, participation, clock)`. 본문·이름은 오프체인(DB). claim_entry 제거.
+3. **ium:** `buildRequestIumTx({toUser})` + `buildAcceptIumTx({eventId, requestId})` → request_ium/accept_ium. relationType·label은 오프체인. revoke 빌더 제거.
+4. 앱 호출부(guest-web `useOnchainActions`, dibang-wedding `useOnchainHostActions`) 동반 수정 + `tsc`.
+5. **주의:** guest-web 온체인 경계(§2)·전환기 DB-first 흐름에 닿으므로, **dev 서버 + dev-bypass로 흐름 검증**하며 진행(거짓 완료 방지). testnet 실호출 패턴은 test-signals-testnet.ts 참고.
+
+## 진행 상황 (2026-06-21)
+- **빌더 슬라이스 완료·testnet 실증:** `buildGiveTx`·`buildWriteTx`·`buildRequestIumTx`·`buildAcceptIumTx`(현행 컨트랙트 정합, PII 없음) 추가 + `test-signals-testnet.ts`가 이들을 써 실 testnet에서 4종 신호 발행·조회 검증(커밋 f0bd3a7). stale 빌더는 경고헤더로 유지(호출부 마이그레이션 전까지).
+- **남음:** 앱 호출부 마이그레이션(아래 경계 충돌 결정 후).
+
+## ★ 경계 충돌 발견 (app-caller 슬라이스의 선결 결정)
+새 `give`/`write`는 **actor의 `Participation`(=온체인 신원)을 인자로 요구**한다(참가-먼저, 방향 위조 차단 C1). 그런데 **guest-web = 비로그인 익명 퍼널(§2 — 온체인 신원 안 붙임)**이라 guest-web의 `sendCashGift`/`writeGuestbook` 온체인 쓰기는 **in-place 마이그레이션 불가**(줄 Participation이 없음).
+→ 선결 결정 필요(둘 중 1): **(A) 온체인 쓰기를 dibang-wedding(로그인 본체)으로 이동** — §2 정합, 권장. **(B) guest-web에 sponsored-익명 신원 부여** — §2와 충돌, 비권장.
+이 결정 전엔 app-caller 슬라이스(특히 guest-web)를 진행하지 말 것.
+
+### dibang-wedding ium도 단순 정렬 불가 (유저 대면 버그 + UX 재설계)
+`NetworkPage.tsx`가 `useOnchainHostActions.createIum({toUser, relationType, label})`를 **실제 호출**한다(라이브 확인: dev-bypass→/network에 toUser·관계유형·라벨 입력 + "Ium 생성"). **현재 canonical 0x6bb8엔 `create_ium`이 있어 지금은 동작**(라이브 버그 아님 — 앞 정정). 단 새 컨트랙트엔 create_ium 부재 → **cutover 후 깨짐**. 새 모델은 **2-step(request_ium→상대가 accept_ium) + relationType/label은 PII라 오프체인**. 즉 NetworkPage의 1-step+PII UI와 근본적으로 불일치 → **UX 재설계**(요청/수락 2단 흐름 + relationType/label 오프체인 저장 위치 결정 + 수락측 UI) 필요. 빌더(buildRequestIumTx/buildAcceptIumTx)는 준비됨. **UI 변경이라 dev 서버+dev-bypass+Playwright 검증 필수**(전역 규칙) → 헤드리스 블라인드 수정 금지.
+
+## 후속
+- 이 정렬은 #43(온체인 읽기/쓰기 이관)과 묶어, 앱 실행 검증 가능한 환경에서 도메인별로(give→write→ium) 슬라이스 진행 권장.
+- 구 하네스 `test-testnet.ts`도 같은 드리프트(컴파일조차 안 됨 — buildCreateWeddingTx에 groomName 전달) → 정렬 시 함께 재작성/폐기.
+
+## ✅ CUTOVER 완료 (2026-06-21) — 드리프트 해소
+"한 번에" 지시로 일괄 진행. C1(Cap-per-host)·C2(u8 enum) 컨트랙트 구조 정리 + 새 canonical 배포 + SDK 구빌더 제거·신빌더 정렬 + 앱 호출부(dibang ium 2-step, guest-web give/write 제거·rsvp u8) 정렬. 커밋 c5d4b10·195a1d1·11dc3a6·67fcbdc·184e718.
+- **최종 canonical = `0x258e9a29…31ee`** (digest CEhq5tz1). 1차 배포(0x9c9b)에 opus 적대 리뷰 HIGH(add_host가 인출권 무제한 확산)를 반영해 **add_host를 primary_host 전용 게이트**로 고친 뒤 재배포한 결과다. 구 0x6bb8 → (0x9c9b) → 0x258e.
+- **opus cutover 리뷰 4건 전부 반영:** HIGH(add_host primary 게이트, 재배포) · MEDIUM(test-sponsor.ts 시그니처 정렬 / .env.testnet.sui 패키지ID·IumRegistry 갱신) · LOW(ZkLoginProvider·env.ts 죽은 iumRegistryId 제거).
+- **검증:** Move 49/49 · SDK·양앱 tsc 0 · 양앱 build OK · testnet e2e(새 pkg, 4종 신호+읽기층) · **라이브 앱**(dev-bypass→NetworkPage→이음 신청→request_ium 성공, digest `8tBP92ES…`).
+- **★ 교훈(다음 cutover 필수):** 앱 패키지ID는 `constants.ts` 기본값이 아니라 **`.env`의 `VITE_SUI_PACKAGE_ID`**가 startup `configureSui`로 주입한다(`.env`→`.env.localhost` 심링크, gitignore). .env 교체 + **dev 서버 재시작**해야 새 패키지가 먹는다(Vite는 .env HMR 안 함). 안 그러면 구 패키지로 가 `FunctionNotFound`.
+- **남은 §2 과제:** guest-web이 zkLogin/executeOnchain을 갖는 것 자체의 §2(익명 퍼널) 정합은 별도(이번 cutover는 give/write만 제거, RSVP·zkLogin 유지).

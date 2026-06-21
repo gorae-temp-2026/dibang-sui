@@ -9,6 +9,7 @@
 | 세션 시작일 | session_id | 트랜스크립트 jsonl (파일명 = 대화 UUID) | 비고 |
 |---|---|---|---|
 | 2026-06-10 ~ 06-15 | `local_8e0c5d0d-27f6-4523-9250-1c1a84180a5d` | `5e62f147-a2e0-49fc-a6d9-6e665c57046d.jsonl` | 모임 택소노미 1층 완성·17축 v2·05 H8~H11·2층 입구 설계. ARCHIVE 세션2 전문이 여기서 추출됨 |
+| 2026-06-15 ~ 06-17 | `local_8e0c5d0d-27f6-4523-9250-1c1a84180a5d` | `cfaad372-4320-4415-b535-adc2e8303d16.jsonl` | 세션3 후반 + enriched category 문답·금융/신용 대비 검토(FIN 5도메인+2검증, `finance-credit-review/`)·PHI-4(베이스)·PHI-1(방향)·PHI-5(전이 연산자)·CAT-1(국소 합성) 결정. **ARCHIVE 세션4 전문이 여기서 추출됨.** 여러 번 compaction — 전 구간이 이 파일에 누적됨 |
 
 ## 경로 규칙 (host = 사용자 맥OS)
 
