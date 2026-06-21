@@ -8,6 +8,7 @@
 ///   (아무에게나 선물해 점수 농사 차단). 이 제외는 *인덱서/Φ*가 하고, 온체인은 raw GIFT만 남긴다.
 /// - event-agnostic: giver의 participation이 event 컨텍스트(인연 매칭/웨딩 등)를 제공.
 /// - 구매(샵, 나→시스템)·장착/배치는 신호가 아님(§3-G) — 그건 moi/moiPlaza의 자산/꾸미기 연산.
+///   단 구매는 결정#6(2026-06-21)대로 **SUI 결제로 게이트**돼야 한다(무료 발행이면 gift-CS 농사 → moi.move 참조).
 module dibang_wedding::gift;
 
 use sui::clock::Clock;

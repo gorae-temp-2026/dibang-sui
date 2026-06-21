@@ -79,10 +79,14 @@ public fun create_moi(recipient: address, ctx: &mut TxContext) {
 
 /// 아이템을 발행해 반환한다. PTB가 호출자에게 transfer 한다.
 ///
-/// ⚠️ 현재 `public` + 무료·무게이트(샵 경제 그린필드, YONE=결정#6 대기) — 누구나 MoiItem을 무한 발행 가능.
+/// ⚠️ 현재 `public` + 무료·무게이트(임시) — 누구나 MoiItem을 무한 발행 가능.
 /// gift::gift가 MoiItem 이전 + GIFT(CS 신호)를 찍으므로 **무료 발행 + 선물 = CS 시빌 농사** 벡터다(L8).
-/// §3-G가 의도한 "구매=SUI/YONE 비용"으로 샵이 발행을 게이트하기 전까지 **gift-CS는 신뢰하면 안 된다**
-/// (인덱서/Φ가 gift-CS 할인 또는 mint를 public(package)로 봉인+샵 모듈 경유로 전환). 신호 무결성=행위 비용.
+///
+/// ★ 결정#6 확정(2026-06-21): 모든 결제·비용 = **SUI 직접 결제**(YONE(Coin<YONE>) 전환은 후순위).
+///   샵 아이템은 **무료 발행을 폐기**하고, **Sui payment SDK 기반 SUI 결제 '구매'로 mint를 게이트**한다 —
+///   `purchase_item(payment: Coin<SUI>, …): MoiItem` 형태로 결제를 받고, `mint_item`은 `public(package)`로
+///   봉인해 샵/구매 모듈 경유로만 발행. SUI 결제 게이트가 서야 **gift-CS를 신뢰**할 수 있다(행위 비용=신호 무결성).
+///   TODO(샵 구매 로직): `purchase_item`(SUI 결제 게이트) 도입 + `mint_item` 봉인 + sui-sdk buildPurchaseItemTx.
 public fun mint_item(
     name: String,
     item_type: String,

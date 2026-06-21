@@ -62,7 +62,8 @@ export const moiPlazaMachine = setup({
     },
   },
   actors: {
-    // mock 결제/요네 차감 확정. 백엔드 연결 시 실제 결제·attestation actor로 교체.
+    // mock 결제/요네 차감 확정. 결정#6(2026-06-21): 실 구매 = SUI 직접 결제(Sui payment SDK·Coin<SUI>),
+    // YONE 전환은 후순위. 온체인 연결 시 sui-sdk buildPurchaseItemTx(SUI 결제→mint 게이트)로 교체.
     buyItem: fromPromise(async () => {
       await new Promise((resolve) => setTimeout(resolve, 500))
       return { ok: true }

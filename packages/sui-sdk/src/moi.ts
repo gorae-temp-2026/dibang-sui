@@ -44,7 +44,12 @@ export function buildCreateMoiTx(params: CreateMoiParams): Transaction {
   return tx;
 }
 
-/** 아이템 발행 + owner에게 전송. */
+/**
+ * 아이템 발행 + owner에게 전송.
+ * TODO(결정#6, 2026-06-21): '발행'이 아니라 'SUI 결제 구매'여야 한다. Sui payment SDK로 Coin<SUI>
+ *   입력을 받아 moi::purchase_item(payment, …)을 호출하는 buildPurchaseItemTx로 전환(무료 mint는 임시).
+ *   YONE(Coin<YONE>) 전환은 후순위 — 지금은 모든 결제=SUI 직접.
+ */
 export function buildMintItemTx(params: MintItemParams): Transaction {
   const tx = new Transaction();
   const item = tx.moveCall({
