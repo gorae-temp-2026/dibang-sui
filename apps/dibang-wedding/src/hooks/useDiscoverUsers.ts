@@ -18,20 +18,21 @@ function toMoi(user: DiscoveredUser, idx: number): Moi {
     name: `${user.address.slice(0, 6)}…${user.address.slice(-4)}`,
     photos: [{ hue: addrNum % 360 }],
     online: false,
-    tier: user.degree <= 2 ? 0 : user.degree <= 4 ? 1 : 2,
+    tier: user.sharedEventIds.length > 0 ? 0 : user.degree <= 6 ? 1 : 2,
     deg: user.degree,
-    hook: user.degree === 1 ? '함께 참여한 결혼식이 있어요'
-      : user.degree <= 3 ? `${user.degree}다리 건너 아는 사이에요`
-      : '새로운 인연이에요',
+    hook: user.sharedEventIds.length > 0 ? '함께 참여한 결혼식이 있어요'
+      : user.degree <= 6 ? '아는 사람을 통해 닿은 인연이에요'
+      : '새로운 인연',
     mutualCount: user.mutualCount,
     prov: user.sharedEventIds.length > 0
       ? [{ emoji: '💒', text: '함께 참여한 결혼식', sub: `${user.sharedEventIds.length}개`, tier: 0 as const }]
-      : [],
+      : user.degree <= 6 ? [{ emoji: '🤝', text: '아는 사람을 통해 연결', sub: `${user.degree}다리`, tier: 1 as const }]
+      : [{ emoji: '✨', text: '새로운 인연', tier: 2 as const }],
     balLabel: user.degree <= 2 ? '높음' : user.degree <= 4 ? '보통' : '낮음',
     barsF: Math.max(0, 5 - user.degree),
     net: user.mutualCount,
     // 실 데이터 확장 필드(Moi 타입에 없지만 런타임에 접근 가능)
-    ...(({ suiAddress: user.address, suiMoiId: user.moiId }) as Record<string, string>),
+    ...(({ suiAddress: user.address, suiMoiId: user.moiId, ieumCount: 0 }) as Record<string, unknown>),
   }
 }
 
@@ -59,11 +60,20 @@ export function useDiscoverUsers() {
     ])
       .then(([discovered, iumEvents, acceptedEvents, ownedRequests]) => {
         const moiList = discovered.map(toMoi)
+        // 이음 성사 수 채우기(IumAccepted에서 유저별 카운트)
+        for (const m of moiList) {
+          const addr = (m as Moi & { suiAddress?: string }).suiAddress
+          if (addr) {
+            const count = acceptedEvents.filter(e => e.initiator === addr || e.receiver === addr).length;
+            (m as Moi & { ieumCount?: number }).ieumCount = count
+          }
+        }
         setUsers(moiList)
 
         // 수락된 이음의 eventId 집합 (이미 매칭 성사된 것 필터용)
         const acceptedEventIds = new Set(acceptedEvents.map((a) => a.eventId))
 
+        console.log('[useDiscoverUsers] accepted:', acceptedEvents.length, 'acceptedEventIds:', [...acceptedEventIds])
         // 내가 보낸 이음 (수락된 건 제외)
         const mySent = iumEvents.filter((e) => e.initiator === address && !acceptedEventIds.has(e.eventId))
         setSentMoiIds(mySent.map((s) => {
@@ -93,9 +103,10 @@ export function useDiscoverUsers() {
         const matched = acceptedEvents
           .filter((a) => a.initiator === address || a.receiver === address)
           .map((a) => a.initiator === address ? a.receiver : a.initiator)
+        console.log('[useDiscoverUsers] matchedAddresses:', matched, 'sentPending:', mySent.length)
         setMatchedAddresses(matched)
       })
-      .catch(() => {})
+      .catch((err) => { console.error('[useDiscoverUsers] error:', err) })
       .finally(() => setLoading(false))
   }, [address, refreshKey])
 

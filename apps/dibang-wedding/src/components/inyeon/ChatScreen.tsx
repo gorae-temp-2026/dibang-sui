@@ -5,8 +5,8 @@
 import { useState } from 'react'
 import { useSelector } from '@xstate/react'
 import { ArrowLeft, Gift, Lock, Play, Send, X } from 'lucide-react'
-import { DM_COST, MOI_MEM } from './data'
-import type { DmMsg, Moi } from './types'
+import { MOI_MEM } from './data'
+import type { Moi } from './types'
 import type { Note } from '../../hooks/useNotes'
 import type { MoiItemOnChain } from '@gorae/sui-sdk'
 import type { OnchainGiftEntry } from '../../hooks/useGiftLog'
@@ -26,6 +26,7 @@ interface ChatScreenProps {
   ownedOnchainItems: MoiItemOnChain[]
   suiBalance: number
   onPurchase: (name: string, itemType: string, slot: string) => Promise<void>
+  onSendOnchainGift: (recipientAddress: string) => Promise<void>
   onOpenDmRoom: (id: number) => void
   onCloseDmRoom: () => void
   onOpenMemory: (id: number) => void
@@ -44,6 +45,7 @@ export function ChatScreen({
   ownedOnchainItems,
   suiBalance,
   onPurchase,
+  onSendOnchainGift,
   dmRoomId,
   memoryId,
   onOpenDmRoom,
@@ -66,10 +68,17 @@ export function ChatScreen({
 
   const moiById = (id: number) => pool.find((m) => m.id === id)
 
-  const sendGift = (toId: number, itemId: string) => {
+  const sendGift = async (toId: number, itemId: string) => {
     const m = moiById(toId)
     const suiAddress = m && (m as Moi & { suiAddress?: string }).suiAddress
     giftActor.send({ type: 'SEND_GIFT', itemId, toId: suiAddress ?? String(toId), toName: m?.name ?? '상대' })
+    if (suiAddress) {
+      try {
+        await onSendOnchainGift(suiAddress)
+      } catch (e) {
+        console.error('[gift] onchain gift failed:', e)
+      }
+    }
   }
 
   const matched = matchedIds.map(moiById).filter((m): m is NonNullable<typeof m> => !!m)
@@ -109,7 +118,7 @@ export function ChatScreen({
       <div className="space-y-2">
         {matched.map((m) => {
           const open = !!chatOpen[m.id]
-          const cost = DM_COST[m.tier]
+          const cost = m.tier === 0 ? 0 : m.tier === 1 ? 0.001 : 0.005
           return (
             <div key={m.id} className={cn('flex items-center gap-3 rounded-2xl border p-3', open ? 'border-white/8 bg-white/[0.04]' : 'border-white/8 bg-white/[0.02]')}>
               <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }}>
@@ -120,13 +129,13 @@ export function ChatScreen({
                   {m.name}
                   {open && <span className="rounded bg-[#F8C57A]/20 px-1.5 py-0.5 text-[9px] font-extrabold text-[#F8C57A]">이음</span>}
                 </div>
-                <div className="text-[11.5px] text-white/45">{open ? '대화를 시작해보세요' : `이음 수락됨 · 대화 열기 🪙${cost}`}</div>
+                <div className="text-[11.5px] text-white/45">{open ? '대화를 시작해보세요' : `이음 수락됨 · 대화 열기 💧${cost} SUI`}</div>
               </div>
               {open ? (
                 <button type="button" onClick={() => onOpenDmRoom(m.id)} className="rounded-lg bg-white/[0.08] px-3 py-2 text-[11.5px] font-bold text-white">열기</button>
               ) : (
                 <button type="button" onClick={() => onOpenDmRoom(m.id)} className="flex items-center gap-1 rounded-lg bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] px-3 py-2 text-[11.5px] font-extrabold text-white">
-                  <Lock className="h-3 w-3" /> 🪙{cost}
+                  <Lock className="h-3 w-3" /> 💧{cost} SUI
                 </button>
               )}
             </div>

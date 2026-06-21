@@ -35,8 +35,10 @@ export function InyeonPage() {
   const { items: ownedOnchainItems, refetch: refetchItems } = useOwnedItems()
   const { balanceSui, refetch: refetchBalance } = useSuiBalance()
   const zk = useZkLogin()
+  const { data: myStats } = useMyCreditStats(zk.address ?? undefined)
+  const myCreditScore = myStats?.score ?? 0
   const noteActions = useNotes()
-  const { gifts: onchainGiftLog } = useGiftLog()
+  const { gifts: onchainGiftLog, refetch: refetchGiftLog } = useGiftLog()
   const { users: discoveredUsers, incoming: discoveredIncoming, sentMoiIds, matchedAddresses, loading: discoverLoading, refetch: refetchDiscover } = useDiscoverUsers()
   const pool = discoveredUsers
   const moiById = (id: number | null) => (id == null ? null : pool.find((m) => m.id === id) ?? null)
@@ -117,8 +119,8 @@ export function InyeonPage() {
           <SlidersHorizontal className="h-[18px] w-[18px]" />
         </button>
         <div className="flex-1 text-[19px] font-extrabold tracking-tight text-white">디방인연</div>
-        <div className="rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
-          🪙 {yone.toLocaleString()}
+        <div className="rounded-full bg-gradient-to-br from-[#4DA2FF] to-[#2E7BD6] px-3 py-1.5 text-xs font-extrabold text-white">
+          💧 {balanceSui.toFixed(3)} SUI
         </div>
       </header>
 
@@ -186,6 +188,35 @@ export function InyeonPage() {
               refetchItems()
               refetchBalance()
             }}
+            onSendOnchainGift={async (recipientAddress) => {
+              const { createJsonRpcClient, getParticipationForEvent, getIumAcceptedEvents, buildPurchaseAndGiftTx, getConfig } = await import('@gorae/sui-sdk')
+              const config = getConfig()
+              const client = createJsonRpcClient((config.network as 'testnet') ?? 'testnet')
+              const addr = zk.address
+              if (!addr) throw new Error('로그인 필요')
+              const accepted = await getIumAcceptedEvents(client)
+              const myMatch = accepted.find(a =>
+                (a.initiator === addr && a.receiver === recipientAddress) ||
+                (a.receiver === addr && a.initiator === recipientAddress)
+              )
+              if (!myMatch) throw new Error('이음 매칭을 찾을 수 없음')
+              const part = await getParticipationForEvent(client, addr, myMatch.eventId)
+              if (!part) throw new Error('Participation을 찾을 수 없음')
+              // 한 PTB: purchase_item → gift (구매+선물 동시)
+              const tx = buildPurchaseAndGiftTx({
+                participationId: part.id,
+                recipient: recipientAddress,
+                registryId: config.shopRegistryId!,
+                nonce: crypto.randomUUID(),
+                name: 'Gift Item',
+                itemType: 'gift',
+                slot: 'gift',
+              })
+              await zk.executeOnchain(tx)
+              refetchItems()
+              refetchBalance()
+              refetchGiftLog()
+            }}
             onOpenDmRoom={(id) => send({ type: 'OPEN_DM_ROOM', id })}
             onCloseDmRoom={() => send({ type: 'CLOSE_DM_ROOM' })}
             onOpenMemory={(id) => send({ type: 'OPEN_MEMORY', id })}
@@ -252,14 +283,17 @@ export function InyeonPage() {
       <ProfileSheet
         open={myProfileOpen}
         onOpenChange={(o) => send({ type: o ? 'OPEN_MY_PROFILE' : 'CLOSE_MY_PROFILE' })}
-        data={buildProfileFromMoi(null)}
+        data={buildProfileFromMoi(null, { creditScore: myCreditScore })}
         context="inyeon"
       />
       {/* 다른 모이 프로필(카드 상세·받은이음·채팅에서 진입) — 이음 전 익명 + 이음 CTA. */}
       <ProfileSheet
         open={profileMoiId != null}
         onOpenChange={(o) => !o && send({ type: 'CLOSE_PROFILE' })}
-        data={buildProfileFromMoi(profileMoiForSheet)}
+        data={buildProfileFromMoi(profileMoiForSheet, {
+          ieumCount: (profileMoiForSheet as Moi & { ieumCount?: number })?.ieumCount ?? 0,
+          creditScore: myCreditScore,
+        })}
         context="inyeon"
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
