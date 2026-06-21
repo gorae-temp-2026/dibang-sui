@@ -4,6 +4,8 @@
 // 나머지는 오프라인 마스킹 이름. prod 연결 0(데모 목업).
 
 const PHOTO = '/assets/inyeon-photos'
+/** 손그림 모이 head 에셋 경로 — 실사진 없는(또는 깨진) 들러리·후보 얼굴 fallback. */
+export const MOI_HEAD_BASE = '/assets/moi/heads'
 
 export type Team = 'groomsman' | 'bridesmaid'
 export type Medal = 'bestman' | 'maid'
@@ -19,8 +21,10 @@ export interface RoleSlot {
   name?: string
   team?: Team
   hearts?: number
-  /** 인연 페르소나 실사진(매칭된 자리만). */
+  /** 인연 페르소나 실사진(persona-{id}.png 규칙·매칭된 자리만). 없거나 깨지면 손그림 head fallback. */
   photoUrl?: string
+  /** 손그림 모이 얼굴(head 에셋 id) — 실사진 미매칭/깨짐 시 표시. */
+  head?: string
   /** 인연 페르소나 연결(POOL id) — 라운지=인연 동일 인물. */
   personaId?: number
   // ── 진행중(pending) ──
@@ -31,24 +35,25 @@ export interface RoleSlot {
 
 // 마감된 자리 — 축가(Bestman)·사회·부케순이(Maid)·축무×3·축의대(신랑×2·신부).
 // 하린=축가(Bestman) · 서아=부케순이(Maid) · 하늘=축무 → tier0 페르소나 매칭(실명·실사진).
+// 실사진 = 이 결혼식 참석 페르소나 몇 명(하린·서아·하늘)만. 나머지는 손그림 모이 얼굴(head).
 export const ROLE_SLOTS_DONE: RoleSlot[] = [
-  { id: 'song', label: '축가', status: 'done', medal: 'bestman', name: '하린', team: 'groomsman', hearts: 47, photoUrl: `${PHOTO}/g1.jpg`, personaId: 207 },
-  { id: 'mc', label: '사회', status: 'done', name: '이○근', team: 'groomsman', hearts: 28 },
-  { id: 'bouquet', label: '부케순이', status: 'done', medal: 'maid', name: '서아', team: 'bridesmaid', hearts: 63, photoUrl: `${PHOTO}/a1.jpg`, personaId: 201 },
-  { id: 'dance1', label: '축무', status: 'done', name: '하늘', team: 'bridesmaid', hearts: 38, photoUrl: `${PHOTO}/c1.jpg`, personaId: 203 },
-  { id: 'dance2', label: '축무', status: 'done', name: '박○지', team: 'bridesmaid', hearts: 31 },
-  { id: 'dance3', label: '축무', status: 'done', name: '정○서', team: 'bridesmaid', hearts: 23 },
-  { id: 'cash-g1', label: '축의대(신랑측)', status: 'done', name: '조○세', team: 'groomsman', hearts: 19 },
-  { id: 'cash-g2', label: '축의대(신랑측)', status: 'done', name: '조○민', team: 'groomsman', hearts: 16 },
-  { id: 'cash-b1', label: '축의대(신부측)', status: 'done', name: '송○진', team: 'bridesmaid', hearts: 24 },
+  { id: 'song', label: '축가', status: 'done', medal: 'bestman', name: '하린', team: 'groomsman', hearts: 47, photoUrl: `${PHOTO}/g1.jpg`, head: 'chu_default', personaId: 207 },
+  { id: 'mc', label: '사회', status: 'done', name: '이○근', team: 'groomsman', hearts: 28, head: 'chu_sport' },
+  { id: 'bouquet', label: '부케순이', status: 'done', medal: 'maid', name: '서아', team: 'bridesmaid', hearts: 63, photoUrl: `${PHOTO}/a1.jpg`, head: 'yh_pigtail', personaId: 201 },
+  { id: 'dance1', label: '축무', status: 'done', name: '하늘', team: 'bridesmaid', hearts: 38, photoUrl: `${PHOTO}/c1.jpg`, head: 'yh_bob', personaId: 203 },
+  { id: 'dance2', label: '축무', status: 'done', name: '박○지', team: 'bridesmaid', hearts: 31, head: 'yh_bob' },
+  { id: 'dance3', label: '축무', status: 'done', name: '정○서', team: 'bridesmaid', hearts: 23, head: 'yh_pigtail' },
+  { id: 'cash-g1', label: '축의대(신랑측)', status: 'done', name: '조○세', team: 'groomsman', hearts: 19, head: 'chu_buzz' },
+  { id: 'cash-g2', label: '축의대(신랑측)', status: 'done', name: '조○민', team: 'groomsman', hearts: 16, head: 'chu_shaggy' },
+  { id: 'cash-b1', label: '축의대(신부측)', status: 'done', name: '송○진', team: 'bridesmaid', hearts: 24, head: 'yh_bob' },
 ]
 
 // 진행중 자리 — 후보자 모집 + 지원 마감 카운트다운.
 export const ROLE_SLOTS_PENDING: RoleSlot[] = [
-  { id: 'bag', label: '가방순이', status: 'pending', candidates: 3, deadline: '2026-08-22T22:00:00+09:00' },
-  { id: 'flower', label: '화동', status: 'pending', candidates: 1, deadline: '2026-08-22T22:00:00+09:00' },
-  { id: 'after', label: '뒷풀이 리더', status: 'pending', candidates: 2, deadline: '2026-08-29T22:00:00+09:00' },
-  { id: 'cash-b2', label: '축의대(신부측)', status: 'pending', candidates: 1, deadline: '2026-08-22T22:00:00+09:00' },
+  { id: 'bag', label: '가방순이', status: 'pending', candidates: 3, deadline: '2026-08-22T22:00:00+09:00', head: 'yh_pigtail' },
+  { id: 'flower', label: '화동', status: 'pending', candidates: 1, deadline: '2026-08-22T22:00:00+09:00', head: 'chu_default' },
+  { id: 'after', label: '뒷풀이 리더', status: 'pending', candidates: 2, deadline: '2026-08-29T22:00:00+09:00', head: 'chu_sport' },
+  { id: 'cash-b2', label: '축의대(신부측)', status: 'pending', candidates: 1, deadline: '2026-08-22T22:00:00+09:00', head: 'yh_bob' },
 ]
 
 export const TEAM_LABEL: Record<Team, string> = { groomsman: 'Groomsman', bridesmaid: 'Bridesmaid' }

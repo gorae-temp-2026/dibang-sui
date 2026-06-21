@@ -1,6 +1,7 @@
 // 들러리 · 선물 · 참여(MAKERS) — 하객↔하객 네트워크 기여(핸드오프 §4). 라운지 레일 액션.
 // SSOT: 모이가모인곳_v2.0.html gift 탭 정합 — 들러리 자리 그리드 · 43/100인치 디방화환 · 결제 마감 카운트다운.
 // 들러리 일부 담당 = tier0 인연 페르소나(서아·하늘·하린) 매칭 → 라운지=인연 동일 인물(실명·실사진).
+import { useState } from 'react'
 import { Clock } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet'
 import {
@@ -12,6 +13,7 @@ import {
   MEDAL_LABEL,
   timeUntil,
   VENDORS,
+  MOI_HEAD_BASE,
   type RoleSlot,
 } from './giftData'
 
@@ -29,6 +31,24 @@ function teamClass(team?: string) {
   return team === 'groomsman' ? 'bg-lng-blue/10 text-lng-blue' : 'bg-lng-pink text-lng-pink-ink'
 }
 
+// 들러리 얼굴 — 실사진(페르소나) 우선, 없거나 깨지면 손그림 모이 head로 fallback.
+function MoiFace({ slot, dashed }: { slot: RoleSlot; dashed?: boolean }) {
+  const [failed, setFailed] = useState(false)
+  const headUrl = `${MOI_HEAD_BASE}/${slot.head ?? 'chu_default'}.png`
+  const usePhoto = !!slot.photoUrl && !failed
+  return (
+    <div className={`h-11 w-11 overflow-hidden rounded-full bg-lng-surface ring-2 ring-white ${dashed ? 'outline-dashed outline-1 outline-lng-navy/25' : ''}`}>
+      <img
+        src={usePhoto ? slot.photoUrl : headUrl}
+        alt={slot.name ?? '모이'}
+        onError={() => setFailed(true)}
+        className={usePhoto ? 'h-full w-full object-cover' : 'h-full w-full object-contain p-[3px]'}
+        draggable={false}
+      />
+    </div>
+  )
+}
+
 function DoneSlot({ slot }: { slot: RoleSlot }) {
   return (
     <div className="rounded-2xl border border-lng-line bg-white px-2 py-2 text-center">
@@ -40,14 +60,8 @@ function DoneSlot({ slot }: { slot: RoleSlot }) {
         )}
       </div>
       <div className="flex min-h-[26px] items-center justify-center text-[10.5px] font-bold leading-tight text-lng-navy">{slot.label}</div>
-      <div className="mx-auto my-1.5 h-11 w-11">
-        {slot.photoUrl ? (
-          <img src={slot.photoUrl} alt={slot.name} className="h-11 w-11 rounded-full object-cover shadow-sm ring-2 ring-white" />
-        ) : (
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-lng-pink text-[15px] font-bold text-lng-pink-ink ring-2 ring-white">
-            {slot.name?.charAt(0)}
-          </div>
-        )}
+      <div className="my-1.5 flex justify-center">
+        <MoiFace slot={slot} />
       </div>
       <div className="truncate text-[12px] font-bold text-lng-ink">{slot.name}</div>
       {slot.team && (
@@ -65,9 +79,11 @@ function PendingSlot({ slot }: { slot: RoleSlot }) {
   return (
     <div className="rounded-2xl border border-dashed border-lng-navy/30 bg-lng-surface px-2.5 py-2.5 text-center">
       <div className="flex min-h-[18px] items-center justify-center text-[11px] font-bold leading-tight text-lng-navy">{slot.label}</div>
-      <div className="relative mx-auto my-1.5 flex h-11 w-11 items-center justify-center rounded-full border-2 border-dashed border-lng-navy/25 text-[18px] text-lng-muted">
-        ?
-        <span className="absolute -bottom-1 -right-1 text-[14px]">✋</span>
+      <div className="my-1.5 flex justify-center">
+        <div className="relative">
+          <MoiFace slot={slot} dashed />
+          <span className="absolute -bottom-1 -right-1 text-[14px]">✋</span>
+        </div>
       </div>
       <div className="text-[10.5px] text-lng-muted">후보자 {slot.candidates}명</div>
       {cd && (
@@ -170,7 +186,7 @@ function MakersSection() {
 export function GiftSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" showClose className="border-lng-line bg-white text-lng-ink">
+      <SheetContent side="bottom" showClose className="border-lng-line bg-white text-lng-ink scrollbar-hide">
         <SheetHeader>
           <SheetTitle className="text-lng-navy">들러리 · 선물</SheetTitle>
           <SheetDescription className="text-lng-muted">하객끼리 함께 축하해요 — 우리의 네트워크가 결혼식을 채워요.</SheetDescription>
