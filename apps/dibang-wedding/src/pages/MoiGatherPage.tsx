@@ -2,15 +2,18 @@
 // PixiJS placeholder 시스템: 샵 구매→요네 차감→자동 배치/장착 · 아이템 드래그 · 모이 클릭→공유 프로필.
 // 모이 클릭 = 디방인연과 동일 ProfileSheet, 단 context='lounge'(③ 오프라인 = 이름·소속·전체 네트워크 공개).
 // 에셋(투명 PNG) 부재라 캐릭터·아이템은 컬러 도형 placeholder — 에셋 나오면 슬롯 교체(에셋스펙 §4).
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { useMachine, useSelector } from '@xstate/react'
+import { fromPromise } from 'xstate'
+import { getConfig } from '@gorae/sui-sdk'
 import { giftActor } from '../machines/gift.machine'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
 import { moiPlazaMachine } from '../machines/moiPlaza.machine'
+import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
-import { PLAZA_CROWD, CROWD_BY_ID, PLAZA_WEDDING } from '../components/moi-gather/data'
+import { PLAZA_CROWD, CROWD_BY_ID, PLAZA_WEDDING, type ShopItem } from '../components/moi-gather/data'
 import { POOL } from '../components/inyeon/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import type { ProfileData } from '../components/profile/types'
@@ -36,7 +39,34 @@ function colorToHue(hex: number): number {
 
 export function MoiGatherPage() {
   const navigate = useNavigate()
-  const [state, send] = useMachine(moiPlazaMachine)
+  const { purchaseItem } = useOnchainHostActions()
+  // 샵 구매 = 온체인 Payment Kit 결제(buildPurchaseItemTx)를 buyItem actor로 주입(STATE_MANAGEMENT §4).
+  // 미인증/패키지 미배포면 actor가 throw → 머신이 error로 처리(요네 mock 폐기, SUI 결제로 전환).
+  const plazaMachine = useMemo(
+    () =>
+      moiPlazaMachine.provide({
+        actors: {
+          buyItem: fromPromise<{ ok: boolean }, { item: ShopItem | null }>(async ({ input }) => {
+            if (input.item) {
+              const registryId = getConfig().shopRegistryId
+              if (!registryId) throw new Error('샵 결제 레지스트리가 설정되지 않았습니다')
+              await purchaseItem({
+                registryId,
+                nonce: crypto.randomUUID(),
+                name: input.item.name,
+                itemType: input.item.category,
+                slot: input.item.slot ?? input.item.category,
+                // 가격 = 일단 flat 0.001 SUI(priceMist 생략 → 빌더가 컨트랙트 ITEM_PRICE 기본 사용). 결정 2026-06-22.
+                // 아이템별 가격(UI 숫자→MIST)은 Move 하한 assert 완화 후(추후·재배포).
+              })
+            }
+            return { ok: true }
+          }),
+        },
+      }),
+    [purchaseItem],
+  )
+  const [state, send] = useMachine(plazaMachine)
   const [shopOpen, setShopOpen] = useState(false)
   const [profileMoiId, setProfileMoiId] = useState<string | null>(null)
   // 첫 입장 온보딩 토스트(잠깐 떴다 사라짐). 세션당 1회.

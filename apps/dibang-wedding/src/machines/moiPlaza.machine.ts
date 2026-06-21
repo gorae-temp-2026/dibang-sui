@@ -3,7 +3,7 @@
 // ★구매 = '내 아이템'(owned)으로만 이동(즉시 착용/배치 안 함) — 착용/배치는 내 아이템에서 확정.
 //   인테리어·소품 = 다중 구매·다중 배치(placed 인스턴스 uid, 보유 수 한도). 헤어·옷·액세서리 = 1개(전환·착용).
 import { setup, assign, fromPromise, raise, cancel } from 'xstate'
-import { ITEM_BY_ID, SHOP, START_YONE_PLAZA, CHARGE_AMOUNT, DEFAULT_HEAD, DEFAULT_BODY, type EquipSlot } from '../components/moi-gather/data'
+import { ITEM_BY_ID, SHOP, START_YONE_PLAZA, CHARGE_AMOUNT, DEFAULT_HEAD, DEFAULT_BODY, type EquipSlot, type ShopItem } from '../components/moi-gather/data'
 
 // 무료 기본(헤어·옷) = 시작부터 보유 → 기본으로 자유 전환.
 const DEFAULT_OWNED = SHOP.filter((s) => s.isDefault).map((s) => s.id)
@@ -69,9 +69,9 @@ export const moiPlazaMachine = setup({
     },
   },
   actors: {
-    // mock 결제/요네 차감 확정. 결정#6(2026-06-21): 실 구매 = SUI 직접 결제(Sui payment SDK·Coin<SUI>),
-    // YONE 전환은 후순위. 온체인 연결 시 sui-sdk buildPurchaseItemTx(SUI 결제→mint 게이트)로 교체.
-    buyItem: fromPromise(async () => {
+    // 온체인 결제 게이트(결정#6) — 컴포넌트가 .provide()로 buildPurchaseItemTx 호출 actor를 주입(STATE_MANAGEMENT §4).
+    // 기본은 mock(미주입/데모). input.item으로 무엇을 사는지 전달 — 성공 시 머신이 owned로 이동.
+    buyItem: fromPromise<{ ok: boolean }, { item: ShopItem | null }>(async () => {
       await new Promise((resolve) => setTimeout(resolve, 500))
       return { ok: true }
     }),
@@ -168,6 +168,7 @@ export const moiPlazaMachine = setup({
     purchasing: {
       invoke: {
         src: 'buyItem',
+        input: ({ context }) => ({ item: context.pendingItemId ? ITEM_BY_ID[context.pendingItemId] ?? null : null }),
         onDone: {
           target: 'idle',
           actions: assign(({ context }) => {
