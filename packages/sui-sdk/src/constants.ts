@@ -12,16 +12,12 @@ export interface SuiContractConfig {
   network: SuiNetwork;
   /** dibang_wedding Move 패키지 ID */
   packageId: string;
-  /** ium::IumRegistry 공유 오브젝트 ID (create_ium / revoke_ium 에 필요) */
-  iumRegistryId: string;
 }
 
 /** testnet 배포 기본값 (2026-06-21 cutover — 신뢰그래프+신호 컨트랙트, digest 84fwKgkth...). 구 0x6bb8(구 API) 대체. */
 export const TESTNET_CONFIG: SuiContractConfig = {
   network: 'testnet',
   packageId: '0x9c9b4bda0e4a548246ea67fbf129d80592f5c41e1ed8c6ff59c767bf5f96748e',
-  // vestigial — ium 리팩터(전역 IumRegistry 제거)로 미사용. 구 stale 빌더 제거(C4) 시 함께 정리.
-  iumRegistryId: '0xea55a36a6f96c6929c484cd0ad21efb09ad4f54f012630d9eeba69898edd3ab5',
 };
 
 let activeConfig: SuiContractConfig = { ...TESTNET_CONFIG };

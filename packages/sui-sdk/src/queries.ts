@@ -90,7 +90,8 @@ export async function getWedding(
   return {
     id: weddingId,
     status: asString(f.status),
-    hosts: Array.isArray(f.host_addresses) ? (f.host_addresses as unknown[]).map(asString) : [],
+    // 새 컨트랙트(§1-5): primary_host만 온체인 저장. 공동혼주는 Cap 보유자(getOwnedWeddingCapIds 등 별도 조회).
+    hosts: [asString(f.primary_host)],
     vaultId: optString(f.vault_id),
     eventId: asString(f.event_id),
   };
@@ -178,10 +179,13 @@ export async function getOwnedWeddingCapIds(
 export interface RsvpEvent {
   weddingId: string;
   submitter: string;
-  recipientSlot: string;
-  attendance: string;
+  /** u8 코드(§1-6): groom=0·bride=1·groom_father=2·groom_mother=3·bride_father=4·bride_mother=5. 라벨은 오프체인. */
+  recipientSlot: number;
+  /** u8: attending=0, absent=1. */
+  attendance: number;
   companionCount: number;
-  meal: string;
+  /** u8: yes=0, no=1, undecided=2. */
+  meal: number;
   submittedAt: number;
 }
 
@@ -225,10 +229,10 @@ export async function getRsvpEvents(
     out.push({
       weddingId: asString(p.wedding_id),
       submitter: asString(p.submitter),
-      recipientSlot: asString(p.recipient_slot),
-      attendance: asString(p.attendance),
+      recipientSlot: asNumber(p.recipient_slot),
+      attendance: asNumber(p.attendance),
       companionCount: asNumber(p.companion_count),
-      meal: asString(p.meal),
+      meal: asNumber(p.meal),
       submittedAt: asNumber(p.submitted_at),
     });
   }
