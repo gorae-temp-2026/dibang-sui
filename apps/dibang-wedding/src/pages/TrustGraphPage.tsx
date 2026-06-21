@@ -1,82 +1,132 @@
 /**
- * 전체 신뢰 네트워크 그래프 — 로그인 불필요. 온체인 이벤트(SignalEmitted + Participated)만 읽어서
- * 패키지 구성원 전체의 연결 관계 + 가중치를 force-directed 그래프로 시각화.
+ * 전체 신뢰 네트워크 그래프 — 로그인 불필요.
+ * 온체인 이벤트(SignalEmitted + Participated + IumAccepted)로 구성.
+ * 우측 세로 타임라인 슬라이더 + 노드 클릭 프로필 패널.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
-import { createJsonRpcClient, getSignalEvents, getParticipatedEvents, getMoiCreatedEvents, configureSui, type SuiNetwork } from '@gorae/sui-sdk'
+import { createJsonRpcClient, getSignalEvents, getParticipatedEvents, getMoiCreatedEvents, getIumAcceptedEvents, configureSui, type SuiNetwork } from '@gorae/sui-sdk'
 import { env } from '../env'
 
-interface GNode { id: string; label: string; hue: number; signalCount: number }
+interface RawEdge { from: string; to: string; value: number; kind: string; ts: number }
+interface GNode { id: string; label: string; hue: number; signalCount: number; iumCount: number }
 interface GLink { source: string; target: string; value: number; kind: string }
 
+function buildGraph(rawEdges: RawEdge[], allAddresses: Set<string>, iumMap: Map<string, string[]>, maxTs: number) {
+  const filtered = rawEdges.filter((e) => e.ts <= maxTs)
+  const nodeSet = new Set<string>(allAddresses)
+  const edgeMap = new Map<string, { value: number; kind: string }>()
+  const signalCountMap = new Map<string, number>()
+
+  for (const e of filtered) {
+    const key = [e.from, e.to].sort().join('|')
+    const existing = edgeMap.get(key)
+    edgeMap.set(key, { value: (existing?.value ?? 0) + e.value, kind: existing?.kind && !existing.kind.includes(e.kind) ? `${existing.kind}+${e.kind}` : e.kind })
+    signalCountMap.set(e.from, (signalCountMap.get(e.from) ?? 0) + 1)
+    signalCountMap.set(e.to, (signalCountMap.get(e.to) ?? 0) + 1)
+  }
+
+  const nodes: GNode[] = [...nodeSet].map((addr) => ({
+    id: addr,
+    label: `${addr.slice(0, 6)}…${addr.slice(-4)}`,
+    hue: parseInt(addr.slice(2, 6), 16) % 360,
+    signalCount: signalCountMap.get(addr) ?? 0,
+    iumCount: iumMap.get(addr)?.length ?? 0,
+  }))
+  const links: GLink[] = [...edgeMap.entries()].map(([key, v]) => {
+    const [src, tgt] = key.split('|')
+    return { source: src!, target: tgt!, value: v.value, kind: v.kind }
+  })
+  return { nodes, links }
+}
+
 export function TrustGraphPage() {
-  const [nodes, setNodes] = useState<GNode[]>([])
-  const [links, setLinks] = useState<GLink[]>([])
+  const [rawEdges, setRawEdges] = useState<RawEdge[]>([])
+  const [allAddresses, setAllAddresses] = useState<Set<string>>(new Set())
+  const [iumMap, setIumMap] = useState<Map<string, string[]>>(new Map())
+  const [timeRange, setTimeRange] = useState<[number, number]>([0, Date.now()])
+  const [sliderValue, setSliderValue] = useState(100)
+  const [selectedNode, setSelectedNode] = useState<GNode | null>(null)
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({ nodes: 0, edges: 0, signals: 0 })
 
   useEffect(() => {
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
     if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID })
     const client = createJsonRpcClient(network)
 
-    Promise.all([getSignalEvents(client), getParticipatedEvents(client), getMoiCreatedEvents(client)])
-      .then(([signals, participations, moiEvents]) => {
-        const nodeSet = new Set<string>()
-        const edgeMap = new Map<string, { value: number; kind: string }>()
-        const signalCountMap = new Map<string, number>()
+    Promise.all([getSignalEvents(client), getParticipatedEvents(client), getMoiCreatedEvents(client), getIumAcceptedEvents(client)])
+      .then(([signals, participations, moiEvents, iumAccepted]) => {
+        const addrs = new Set<string>()
+        const edges: RawEdge[] = []
+        let minTs = Infinity
+        let maxTs = 0
 
-        // 신호(from→to) = 직접 연결
         for (const s of signals) {
-          nodeSet.add(s.from)
-          nodeSet.add(s.to)
-          const key = [s.from, s.to].sort().join('|')
-          const existing = edgeMap.get(key)
-          const kind = s.kind === 1 ? 'EM' : 'CS'
-          edgeMap.set(key, { value: (existing?.value ?? 0) + s.magnitude, kind: existing?.kind ? `${existing.kind}+${kind}` : kind })
-          signalCountMap.set(s.from, (signalCountMap.get(s.from) ?? 0) + 1)
-          signalCountMap.set(s.to, (signalCountMap.get(s.to) ?? 0) + 1)
+          addrs.add(s.from); addrs.add(s.to)
+          const ts = s.ts
+          if (ts < minTs) minTs = ts
+          if (ts > maxTs) maxTs = ts
+          edges.push({ from: s.from, to: s.to, value: s.magnitude, kind: s.kind === 1 ? 'EM' : 'CS', ts })
         }
 
-        // 참가(같은 이벤트 = 간접 연결)
-        const byEvent = new Map<string, string[]>()
+        const byEvent = new Map<string, { members: string[]; ts: number }>()
         for (const p of participations) {
-          if (!byEvent.has(p.eventId)) byEvent.set(p.eventId, [])
-          byEvent.get(p.eventId)!.push(p.participant)
-          nodeSet.add(p.participant)
+          addrs.add(p.participant)
+          if (!byEvent.has(p.eventId)) byEvent.set(p.eventId, { members: [], ts: 0 })
+          byEvent.get(p.eventId)!.members.push(p.participant)
         }
-        for (const members of byEvent.values()) {
+        for (const { members } of byEvent.values()) {
           for (let i = 0; i < members.length; i++) {
             for (let j = i + 1; j < members.length; j++) {
-              const key = [members[i]!, members[j]!].sort().join('|')
-              if (!edgeMap.has(key)) edgeMap.set(key, { value: 1, kind: 'event' })
+              edges.push({ from: members[i]!, to: members[j]!, value: 1, kind: 'event', ts: minTs || Date.now() })
             }
           }
         }
 
-        // Moi 소유자도 노드에 추가
-        for (const m of moiEvents) nodeSet.add(m.owner)
+        for (const m of moiEvents) addrs.add(m.owner)
 
-        const nodeArr: GNode[] = [...nodeSet].map((addr) => ({
-          id: addr,
-          label: `${addr.slice(0, 6)}…${addr.slice(-4)}`,
-          hue: parseInt(addr.slice(2, 6), 16) % 360,
-          signalCount: signalCountMap.get(addr) ?? 0,
-        }))
+        // 이음 매핑
+        const im = new Map<string, string[]>()
+        for (const a of iumAccepted) {
+          if (!im.has(a.initiator)) im.set(a.initiator, [])
+          im.get(a.initiator)!.push(a.receiver)
+          if (!im.has(a.receiver)) im.set(a.receiver, [])
+          im.get(a.receiver)!.push(a.initiator)
+        }
 
-        const linkArr: GLink[] = [...edgeMap.entries()].map(([key, v]) => {
-          const [src, tgt] = key.split('|')
-          return { source: src!, target: tgt!, value: v.value, kind: v.kind }
-        })
+        if (minTs === Infinity) minTs = Date.now() - 86400000
+        if (maxTs === 0) maxTs = Date.now()
 
-        setNodes(nodeArr)
-        setLinks(linkArr)
-        setStats({ nodes: nodeArr.length, edges: linkArr.length, signals: signals.length })
+        setRawEdges(edges)
+        setAllAddresses(addrs)
+        setIumMap(im)
+        setTimeRange([minTs, maxTs])
+        setSliderValue(100)
         setLoading(false)
       })
       .catch((e) => { console.error(e); setLoading(false) })
   }, [])
+
+  const currentMaxTs = timeRange[0] + (timeRange[1] - timeRange[0]) * (sliderValue / 100)
+  const { nodes, links } = useMemo(() => buildGraph(rawEdges, allAddresses, iumMap, currentMaxTs), [rawEdges, allAddresses, iumMap, currentMaxTs])
+
+  const selectedConnections = useMemo(() => {
+    if (!selectedNode) return []
+    return links
+      .filter((l) => {
+        const src = typeof l.source === 'string' ? l.source : (l.source as unknown as GNode).id
+        const tgt = typeof l.target === 'string' ? l.target : (l.target as unknown as GNode).id
+        return src === selectedNode.id || tgt === selectedNode.id
+      })
+      .map((l) => {
+        const src = typeof l.source === 'string' ? l.source : (l.source as unknown as GNode).id
+        const tgt = typeof l.target === 'string' ? l.target : (l.target as unknown as GNode).id
+        const other = src === selectedNode.id ? tgt : src
+        return { address: other, label: `${other.slice(0, 6)}…${other.slice(-4)}`, kind: l.kind, value: l.value }
+      })
+  }, [selectedNode, links])
+
+  const iumPartners = selectedNode ? (iumMap.get(selectedNode.id) ?? []) : []
 
   if (loading) {
     return (
@@ -86,26 +136,86 @@ export function TrustGraphPage() {
     )
   }
 
+  const tsLabel = new Date(currentMaxTs).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+
   return (
-    <div className="relative h-screen w-screen bg-[#0A1626]">
+    <div className="relative h-screen w-screen overflow-hidden bg-[#0A1626]">
+      {/* 좌상단 통계 */}
       <div className="absolute left-4 top-4 z-10 rounded-xl bg-black/50 px-4 py-3 backdrop-blur">
         <h1 className="text-lg font-bold text-white">신뢰 네트워크 그래프</h1>
-        <p className="mt-1 text-xs text-white/50">
-          {stats.nodes}명 · {stats.edges}개 연결 · {stats.signals}개 신호
-        </p>
+        <p className="mt-1 text-xs text-white/50">{nodes.length}명 · {links.length}개 연결</p>
+        <p className="mt-0.5 text-[10px] text-white/40">{tsLabel} 기준</p>
         <div className="mt-2 flex gap-3 text-[10px]">
           <span className="text-[#D4687A]">● EM(부조)</span>
           <span className="text-[#5B89B3]">● CS(유대)</span>
-          <span className="text-white/40">● event(참가)</span>
+          <span className="text-white/40">● 참가</span>
         </div>
       </div>
+
+      {/* 우측 세로 타임라인 슬라이더 */}
+      <div className="absolute right-4 top-1/2 z-10 flex -translate-y-1/2 flex-col items-center gap-2">
+        <span className="text-[9px] text-white/40">최신</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={sliderValue}
+          onChange={(e) => setSliderValue(Number(e.target.value))}
+          className="h-[200px] cursor-pointer accent-[#F8C57A]"
+          style={{ writingMode: 'vertical-lr', direction: 'rtl' }}
+        />
+        <span className="text-[9px] text-white/40">초기</span>
+      </div>
+
+      {/* 노드 클릭 프로필 패널 */}
+      {selectedNode && (
+        <div className="absolute bottom-4 left-4 z-10 w-80 rounded-xl bg-black/70 p-4 backdrop-blur">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full" style={{ background: `hsl(${selectedNode.hue}, 60%, 55%)` }} />
+              <div>
+                <p className="text-sm font-bold text-white">{selectedNode.label}</p>
+                <p className="text-[10px] text-white/40">신호 {selectedNode.signalCount}건 · 이음 {selectedNode.iumCount}명</p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setSelectedNode(null)} className="text-white/50 text-xs">✕</button>
+          </div>
+
+          {iumPartners.length > 0 && (
+            <div className="mt-3">
+              <p className="text-[10px] font-bold text-[#F8C57A]">🔗 이음 상대</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {iumPartners.map((addr) => (
+                  <span key={addr} className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/70">{addr.slice(0, 6)}…{addr.slice(-4)}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedConnections.length > 0 && (
+            <div className="mt-3 max-h-32 overflow-y-auto">
+              <p className="text-[10px] font-bold text-white/60">연결</p>
+              {selectedConnections.map((c) => (
+                <div key={c.address} className="mt-1 flex items-center justify-between text-[10px]">
+                  <span className="text-white/70">{c.label}</span>
+                  <span className={c.kind.includes('EM') ? 'text-[#D4687A]' : c.kind.includes('CS') ? 'text-[#5B89B3]' : 'text-white/30'}>
+                    {c.kind} · {c.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 그래프 */}
       <ForceGraph2D
         graphData={{ nodes, links }}
         width={typeof window !== 'undefined' ? window.innerWidth : 800}
         height={typeof window !== 'undefined' ? window.innerHeight : 600}
         backgroundColor="#0A1626"
-        nodeLabel={(n: GNode) => `${n.label}\n신호 ${n.signalCount}건`}
-        nodeColor={(n: GNode) => `hsl(${n.hue}, 60%, 55%)`}
+        onNodeClick={(node: GNode) => setSelectedNode(node)}
+        nodeColor={(n: GNode) => selectedNode?.id === n.id ? '#F8C57A' : `hsl(${n.hue}, 60%, 55%)`}
         nodeVal={(n: GNode) => Math.max(2, n.signalCount + 1)}
         linkColor={(l: GLink) => l.kind.includes('EM') ? '#D4687A' : l.kind.includes('CS') ? '#5B89B3' : 'rgba(255,255,255,0.12)'}
         linkWidth={(l: GLink) => Math.min(4, Math.log2(l.value + 1) + 0.5)}
@@ -113,16 +223,17 @@ export function TrustGraphPage() {
         linkDirectionalParticleWidth={2}
         nodeCanvasObject={(node: GNode & { x?: number; y?: number }, ctx: CanvasRenderingContext2D) => {
           if (node.x == null || node.y == null) return
+          const isSelected = selectedNode?.id === node.id
           const r = Math.max(4, Math.sqrt(node.signalCount + 1) * 3)
           ctx.beginPath()
           ctx.arc(node.x, node.y, r, 0, 2 * Math.PI)
-          ctx.fillStyle = `hsl(${node.hue}, 60%, 55%)`
+          ctx.fillStyle = isSelected ? '#F8C57A' : `hsl(${node.hue}, 60%, 55%)`
           ctx.fill()
-          ctx.strokeStyle = 'rgba(255,255,255,0.3)'
-          ctx.lineWidth = 0.5
+          if (isSelected) { ctx.strokeStyle = '#F8C57A'; ctx.lineWidth = 2 }
+          else { ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 0.5 }
           ctx.stroke()
-          ctx.fillStyle = 'rgba(255,255,255,0.7)'
-          ctx.font = '3px sans-serif'
+          ctx.fillStyle = isSelected ? '#F8C57A' : 'rgba(255,255,255,0.7)'
+          ctx.font = `${isSelected ? 'bold ' : ''}3px sans-serif`
           ctx.textAlign = 'center'
           ctx.fillText(node.label, node.x, node.y + r + 4)
         }}
