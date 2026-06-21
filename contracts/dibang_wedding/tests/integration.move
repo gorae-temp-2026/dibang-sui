@@ -97,3 +97,18 @@ fun wedding_signals_share_one_event_and_roles() {
     clock::destroy_for_testing(clk);
     scenario.end();
 }
+
+#[test]
+/// 안티-드리프트(적대 리뷰 CRITICAL급 예방): signal.move는 ledger/event 상수를 u8 *미러*로 둔다(순환 회피).
+/// 그 값이 바뀌면 signal 분류가 조용히 어긋난다. 여기서 실제 상수값을 핀 — 미러 동기가 깨지면 이 테스트가 깨져
+/// signal.move 미러 갱신이 필요함을 알린다(빌드/유닛이 못 잡던 결함을 테스트로 전환).
+fun signal_mirror_constants_pinned() {
+    assert_eq!(ledger::action_give_money(), 0);
+    assert_eq!(ledger::action_accept_ium(), 2);
+    assert_eq!(ledger::action_gift(), 3);
+    assert_eq!(ledger::action_write_message(), 4);
+    assert_eq!(ledger::action_attend(), 5);
+    assert_eq!(ledger::action_invite(), 6);
+    assert_eq!(gathering::event_wedding(), 0);
+    assert_eq!(gathering::role_guest(), 1);
+}
