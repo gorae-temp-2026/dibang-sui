@@ -5,16 +5,14 @@
 import { useState } from 'react'
 import { useMachine, useSelector } from '@xstate/react'
 import { giftActor } from '../machines/gift.machine'
-import { SlidersHorizontal, Lock } from 'lucide-react'
+import { SlidersHorizontal } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
-import { POOL, TIER_META } from '../components/inyeon/data'
-import type { Moi } from '../components/inyeon/types'
+import { POOL } from '../components/inyeon/data'
 import { SwipeDeck } from '../components/inyeon/SwipeDeck'
 import { InyeonRail } from '../components/inyeon/InyeonRail'
 import { FilterSheet } from '../components/inyeon/FilterSheet'
 import { IeumSheet } from '../components/inyeon/IeumSheet'
 import { MatchOverlay } from '../components/inyeon/MatchOverlay'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../components/ui/sheet'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import { profileForPersona, chulsooPlazaProfile } from '../components/profile/personaProfiles'
 import { useT } from '../lib/i18n'
@@ -29,7 +27,6 @@ export function InyeonPage() {
   const [state, send] = useMachine(inyeonMachine)
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
   const [filterOpen, setFilterOpen] = useState(false)
-  const [detailId, setDetailId] = useState<number | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileMoiId, setProfileMoiId] = useState<number | null>(null)
 
@@ -39,7 +36,6 @@ export function InyeonPage() {
     .filter(([, v]) => v)
     .map(([k]) => Number(k))
   const ieumOpen = state.matches('composing') || state.matches('sending')
-  const detailMoi = moiById(detailId)
   const activeMoi = moiById(activeId)
   const profileMoiForSheet = moiById(profileMoiId)
   const profileMeeting = profileMoiForSheet
@@ -83,7 +79,7 @@ export function InyeonPage() {
               onUnlock={(id) => send({ type: 'UNLOCK_PHOTOS', id })}
               onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
               onSwipeNext={() => send({ type: 'SWIPE_NEXT' })}
-              onOpenDetail={(id) => setDetailId(id)}
+              onOpenProfile={(id) => setProfileMoiId(id)}
               onReset={() => send({ type: 'RESET_DECK' })}
             />
           </div>
@@ -143,25 +139,15 @@ export function InyeonPage() {
           send({ type: 'NAV', screen: 'chat' })
         }}
       />
-      <DetailSheet
-        moi={detailMoi}
-        onClose={() => setDetailId(null)}
-        onIeum={(id) => {
-          setDetailId(null)
-          send({ type: 'OPEN_IEUM', id })
-        }}
-        onOpenFull={(id) => {
-          setDetailId(null)
-          setProfileMoiId(id)
-        }}
-      />
-      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} data={chulsooPlazaProfile} context="inyeon" />
-      {/* 다른 모이 프로필(카드 상세·받은이음·채팅에서 진입) — 이음 전 익명 + 이음 CTA. */}
+      {/* 내 전체 프로필 — 풀페이지 확장(T5) */}
+      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} data={chulsooPlazaProfile} context="inyeon" presentation="page" />
+      {/* 다른 모이 프로필(카드 사진 탭·받은이음·채팅에서 진입) — 풀페이지 확장 + 이음 CTA. */}
       <ProfileSheet
         open={profileMoiId != null}
         onOpenChange={(o) => !o && setProfileMoiId(null)}
         data={profileMoiForSheet ? profileForPersona(profileMoiForSheet) : chulsooPlazaProfile}
         context="inyeon"
+        presentation="page"
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
         onIeum={
@@ -232,62 +218,5 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
         </p>
       </div>
     </div>
-  )
-}
-
-// 프로필 상세 (경량) — 이음 전 익명 단계. 전체 신뢰네트워크 그래프·signal sunburst는 ⑤ 공유 프로필에서.
-function DetailSheet({ moi, onClose, onIeum, onOpenFull }: { moi: Moi | null; onClose: () => void; onIeum: (id: number) => void; onOpenFull: (id: number) => void }) {
-  return (
-    <Sheet open={!!moi} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom">
-        {moi && (
-          <>
-            <SheetHeader>
-              <SheetTitle>{TIER_META[moi.tier].label}</SheetTitle>
-            </SheetHeader>
-            <div
-              className="mb-3 h-40 rounded-2xl bg-cover bg-[center_18%]"
-              style={
-                moi.photos[0]?.url
-                  ? { backgroundImage: `url(${moi.photos[0].url})` }
-                  : { background: `linear-gradient(150deg, hsl(${moi.photos[0]?.hue ?? 210} 52% 34%), hsl(${((moi.photos[0]?.hue ?? 210) + 36) % 360} 48% 16%))` }
-              }
-            />
-            <div className="space-y-2">
-              {moi.prov.map((p) => (
-                <div key={p.text} className="flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-3 py-2.5">
-                  <span className="text-lg">{p.emoji}</span>
-                  <div className="min-w-0">
-                    <b className="text-[13px] font-bold text-white">{p.text}</b>
-                    {p.sub && <span className="block text-[11px] text-white/50">{p.sub}</span>}
-                  </div>
-                </div>
-              ))}
-              <div className="flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-3 py-2.5 text-[12px] text-white/70">
-                🤝 공통으로 아는 사람 {moi.mutualCount}명 · 신뢰 {moi.balLabel}
-              </div>
-              <div className="flex items-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-3 py-2.5 text-[11px] text-white/45">
-                <Lock className="h-4 w-4 flex-shrink-0" />
-                이름·소속·전체 신뢰네트워크는 이음 후 공개돼요. (전체 그래프·signal은 ⑤ 공유 프로필)
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpenFull(moi.id)}
-              className="mt-4 w-full rounded-2xl border border-[#F8C57A]/40 bg-white/[0.04] py-3 text-[13px] font-bold text-[#F8C57A]"
-            >
-              🔭 전체 프로필 · 신뢰 네트워크 보기
-            </button>
-            <button
-              type="button"
-              onClick={() => onIeum(moi.id)}
-              className="mt-2.5 w-full rounded-2xl bg-gradient-to-br from-[#1E3A5F] to-[#2d6a9e] py-3.5 text-[14.5px] font-extrabold text-white"
-            >
-              이음 신청하기
-            </button>
-          </>
-        )}
-      </SheetContent>
-    </Sheet>
   )
 }

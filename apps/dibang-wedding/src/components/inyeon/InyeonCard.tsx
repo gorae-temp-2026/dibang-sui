@@ -1,7 +1,7 @@
 // 디방인연 스와이프 카드 — 익명 단계(이음 전). 목업 .swcard 이식.
 // 사진 갤러리(좌우 탭) + 대표포함 2장 무료/3장째 요네 게이트 + 티어/접속/hook/공통친구/익명 신뢰막대.
-// 이름은 미노출(이음 후 공개). 액션(넘기기/이음)·"프로필 보기 ▾"는 맨 위 카드에서만.
-import { ChevronDown, Lock, Share2, Users, X } from 'lucide-react'
+// 이름은 미노출(이음 후 공개). 카드(사진) 탭 → 바로 프로필(풀페이지). 액션(넘기기/이음)은 맨 위 카드만.
+import { Lock, Share2, Users, X } from 'lucide-react'
 import type { Moi } from './types'
 import { FREE_PHOTOS, PHOTO_COST } from './data'
 import { useT } from '../../lib/i18n'
@@ -21,7 +21,7 @@ interface InyeonCardProps {
   onUnlock: () => void
   onIeum: () => void
   onPass: () => void
-  onOpenDetail: () => void
+  onOpenProfile: () => void
 }
 
 export function InyeonCard({
@@ -34,7 +34,7 @@ export function InyeonCard({
   onUnlock,
   onIeum,
   onPass,
-  onOpenDetail,
+  onOpenProfile,
 }: InyeonCardProps) {
   const t = useT()
   const locked = photoIdx >= FREE_PHOTOS && !unlocked
@@ -42,8 +42,10 @@ export function InyeonCard({
 
   return (
     <div
+      onClick={isTop ? onOpenProfile : undefined}
       className={cn(
         'absolute inset-0 overflow-hidden rounded-3xl bg-[#222] shadow-[0_20px_48px_rgba(0,0,0,0.5)] select-none',
+        isTop && 'cursor-pointer',
         depth === 1 && 'scale-[0.94] translate-y-4',
         depth === 2 && 'scale-[0.88] translate-y-8 opacity-60',
       )}
@@ -69,13 +71,13 @@ export function InyeonCard({
             type="button"
             aria-label="이전 사진"
             className="absolute bottom-[34%] left-0 top-0 z-[3] w-[42%] cursor-pointer"
-            onClick={() => onPhotoNav(-1)}
+            onClick={(e) => { e.stopPropagation(); onPhotoNav(-1) }}
           />
           <button
             type="button"
             aria-label="다음 사진"
             className="absolute bottom-[34%] right-0 top-0 z-[3] w-[42%] cursor-pointer"
-            onClick={() => onPhotoNav(1)}
+            onClick={(e) => { e.stopPropagation(); onPhotoNav(1) }}
           />
         </>
       )}
@@ -102,7 +104,7 @@ export function InyeonCard({
       {locked && isTop && (
         <button
           type="button"
-          onClick={onUnlock}
+          onClick={(e) => { e.stopPropagation(); onUnlock() }}
           className="absolute left-1/2 top-1/2 z-[5] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 rounded-2xl border border-white/25 bg-[#0d1621]/55 px-5 py-4 text-white backdrop-blur"
         >
           <Lock className="h-5 w-5" />
@@ -129,7 +131,7 @@ export function InyeonCard({
             <button
               type="button"
               aria-label={t('inyeon.pass')}
-              onClick={onPass}
+              onClick={(e) => { e.stopPropagation(); onPass() }}
               className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-white/35 bg-[#141e2d]/50 text-white shadow-lg backdrop-blur transition active:scale-90"
             >
               <X className="h-5 w-5" />
@@ -137,19 +139,12 @@ export function InyeonCard({
             <button
               type="button"
               aria-label={t('inyeon.ieum')}
-              onClick={onIeum}
+              onClick={(e) => { e.stopPropagation(); onIeum() }}
               className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] text-white shadow-lg transition active:scale-90"
             >
               <Share2 className="h-[22px] w-[22px]" />
             </button>
           </div>
-          <button
-            type="button"
-            onClick={onOpenDetail}
-            className="absolute bottom-0 left-1/2 z-[6] flex -translate-x-1/2 items-center gap-1 rounded-t-2xl border border-b-0 border-white/20 bg-[#0d1621]/60 px-5 py-2 text-[11px] font-bold text-white backdrop-blur"
-          >
-            {t('inyeon.viewProfile')} <ChevronDown className="h-3.5 w-3.5" />
-          </button>
         </>
       )}
     </div>

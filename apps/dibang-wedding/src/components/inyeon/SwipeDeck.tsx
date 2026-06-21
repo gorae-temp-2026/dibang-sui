@@ -39,7 +39,7 @@ interface SwipeDeckProps {
   onUnlock: (id: number) => void
   onIeum: (id: number) => void
   onSwipeNext: () => void
-  onOpenDetail: (id: number) => void
+  onOpenProfile: (id: number) => void
   onReset: () => void
 }
 
@@ -51,7 +51,7 @@ export function SwipeDeck({
   onUnlock,
   onIeum,
   onSwipeNext,
-  onOpenDetail,
+  onOpenProfile,
   onReset,
 }: SwipeDeckProps) {
   const t = useT()
@@ -91,7 +91,7 @@ export function SwipeDeck({
             onUnlock={() => onUnlock(id)}
             onIeum={() => onIeum(id)}
             onPass={onSwipeNext}
-            onOpenDetail={() => onOpenDetail(id)}
+            onOpenProfile={() => onOpenProfile(id)}
           />
         )
         if (depth === 0) {
