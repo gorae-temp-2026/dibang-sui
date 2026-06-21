@@ -16,7 +16,7 @@ import { useCreateGuestbookEntryMutation } from '../../queries/guestFlow/useCrea
 import { useCreateGuestbookMessageMutation } from '../../queries/guestFlow/useCreateGuestbookMessageMutation';
 import { useCreateCashGiftMutation } from '../../queries/guestFlow/useCreateCashGiftMutation';
 import { useZkLogin } from '../../providers/ZkLoginProvider';
-import { buildParticipateTx, getWedding, createJsonRpcClient, configureSui, type SuiNetwork } from '@gorae/sui-sdk';
+import { buildParticipateTx, buildGiveTx, getWedding, getParticipationForEvent, createJsonRpcClient, configureSui, type SuiNetwork } from '@gorae/sui-sdk';
 import { env } from '../../env';
 
 type GuestFlowState = StateFrom<typeof guestFlowMachine>;
@@ -86,10 +86,30 @@ export function useGuestFlowSubmitter(
         guestbook_entry_id: c.guestbookEntryId ?? undefined,
       },
       {
-        // cutover(2026-06-21): 온체인 부조(give)는 하객 Participation(온체인 신원, 참가-먼저)을 요구한다.
-        // guest-web은 §2(비로그인 익명 퍼널)라 그 흐름이 없어 여기서 온체인 give를 하지 않는다 — Supabase 저장만(전환기).
-        // 온체인 부조는 로그인 본체(dibang-wedding)에서 처리. (구 sendCashGift 제거.)
-        onSuccess: (data) => send({ type: 'TRANSFER_SUCCESS', cashGiftId: data.id }),
+        onSuccess: (data) => {
+          send({ type: 'TRANSFER_SUCCESS', cashGiftId: data.id });
+          // 온체인 부조(give) — zkLogin 인증 시 participate → give fire-and-forget.
+          if (zk.isAuthenticated && wedding) {
+            const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
+            if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID });
+            const client = createJsonRpcClient(net);
+            getWedding(client, wedding.id)
+              .then(async (w) => {
+                if (!w?.eventId || !w?.vaultId || !zk.address) return;
+                // 1) participate(아직 안 했으면)
+                let partId = (await getParticipationForEvent(client, zk.address, w.eventId))?.id;
+                if (!partId) {
+                  await zk.executeOnchain(buildParticipateTx({ eventId: w.eventId, roleId: 1 }));
+                  partId = (await getParticipationForEvent(client, zk.address, w.eventId))?.id;
+                }
+                if (!partId) return;
+                // 2) give(SUI 전송)
+                const amount = BigInt(c.amount) * 1_000_000n; // 원 → MIST(데모 환산)
+                await zk.executeOnchain(buildGiveTx({ vaultId: w.vaultId, weddingId: wedding.id, participationId: partId, amount }));
+              })
+              .catch((e) => console.error('[give] onchain failed:', e));
+          }
+        },
         onError: (error) => send({ type: 'TRANSFER_ERROR', error: (error as Error).message }),
       },
     );
