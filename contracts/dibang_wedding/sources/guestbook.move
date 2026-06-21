@@ -10,6 +10,7 @@ module dibang_wedding::guestbook;
 use sui::clock::Clock;
 use dibang_wedding::wedding::{Self, Wedding};
 use dibang_wedding::ledger;
+use dibang_wedding::trust_matrix;
 // 도메인 이벤트 모듈은 프레임워크 sui::event와 이름이 겹쳐 gathering으로 alias.
 use dibang_wedding::event as gathering;
 
@@ -26,13 +27,14 @@ const EWrongEvent: u64 = 0;
 public fun write(
     wedding: &Wedding,
     participation: &gathering::Participation,
+    matrix: &mut trust_matrix::TrustMatrix,
     clock: &Clock,
     ctx: &mut TxContext,
 ): ID {
     assert!(gathering::participation_event_id(participation) == wedding::event_id(wedding), EWrongEvent);
     let host = wedding::primary_host(wedding);
     // role/event는 ledger가 participation에서 파생(방향 위조 차단). amount=0(돈 없음), 본문 오프체인.
-    ledger::log(participation, ledger::action_write_message(), option::some(host), 0, option::none(), clock, ctx)
+    ledger::log(participation, ledger::action_write_message(), option::some(host), 0, option::none(), matrix, clock, ctx)
 }
 
 // === Tests ===
@@ -42,7 +44,7 @@ use sui::test_scenario as ts;
 #[test_only]
 use sui::clock;
 #[test_only]
-use std::unit_test::assert_eq;
+use std::unit_test::{assert_eq, destroy};
 
 #[test_only]
 const HOST: address = @0xA;
@@ -59,7 +61,9 @@ fun write_logs_message_action() {
     scenario.next_tx(GUEST);
     let ev = scenario.take_shared<gathering::Event>();
     let clk0 = clock::create_for_testing(scenario.ctx());
-    gathering::participate(&ev, gathering::role_guest(), &clk0, scenario.ctx());
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    gathering::participate(&ev, gathering::role_guest(), &mut cs_mtx, &clk0, scenario.ctx());
+    destroy(cs_mtx);
     clock::destroy_for_testing(clk0);
     ts::return_shared(ev);
 
@@ -67,8 +71,12 @@ fun write_logs_message_action() {
     scenario.next_tx(GUEST);
     let wedding = scenario.take_shared<Wedding>();
     let part = scenario.take_from_sender<gathering::Participation>();
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
     let clk = clock::create_for_testing(scenario.ctx());
-    let rec_id = write(&wedding, &part, &clk, scenario.ctx());
+    let rec_id = write(&wedding, &part, &mut mtx, &clk, scenario.ctx());
+    // 배선 검증: 방명록 CS가 매트릭스에 반영(받는 쪽 HOST authority↑).
+    assert_eq!(trust_matrix::pi_of(&mtx, HOST), 138_750_000);
+    destroy(mtx);
     clock::destroy_for_testing(clk);
     scenario.return_to_sender(part);
     ts::return_shared(wedding);

@@ -14,6 +14,7 @@ use sui::clock::Clock;
 use sui::event;
 use dibang_wedding::event as gathering;
 use dibang_wedding::signal;
+use dibang_wedding::trust_matrix;
 
 // === Errors ===
 
@@ -71,7 +72,13 @@ public fun request_ium(to_user: address, clock: &Clock, ctx: &mut TxContext): ID
 
 /// 이음 수락 — 수신자가 자기 소유 `IumRequest` + 매칭 Event로 RECEIVER로 참가해 매칭을 확정한다.
 /// 확정된 매칭 = INYEON Event + 양측 Participation(INITIATOR/RECEIVER) = CS 엣지(인덱서가 도출).
-public fun accept_ium(ev: &gathering::Event, req: IumRequest, clock: &Clock, ctx: &mut TxContext) {
+public fun accept_ium(
+    ev: &gathering::Event,
+    req: IumRequest,
+    matrix: &mut trust_matrix::TrustMatrix,
+    clock: &Clock,
+    ctx: &mut TxContext,
+) {
     let receiver = ctx.sender();
     let IumRequest { id, event_id, initiator, created_at: _ } = req;
     assert!(object::id(ev) == event_id, EWrongEvent);
@@ -83,6 +90,8 @@ public fun accept_ium(ev: &gathering::Event, req: IumRequest, clock: &Clock, ctx
     // 매칭 확정 = 상호 관계 → 양방향 CS(initiator↔receiver) 온체인 분류·발행(인덱서/credit.ts·DeFi 입력).
     let sigs = signal::match_signals(initiator, receiver);
     signal::emit_signals(&sigs, event_id, clock);
+    // 온체인 집계 배선(#40): 양방향 CS 2개를 CS 매트릭스에 반영·재전파.
+    trust_matrix::apply_classified(matrix, &sigs);
 
     event::emit(IumAccepted { event_id, initiator, receiver });
     id.delete();
@@ -100,7 +109,7 @@ use sui::test_scenario as ts;
 #[test_only]
 use sui::clock;
 #[test_only]
-use std::unit_test::assert_eq;
+use std::unit_test::{assert_eq, destroy};
 
 #[test_only]
 const ALICE: address = @0xA1; // initiator
@@ -146,7 +155,13 @@ fun accept_confirms_match_with_both_participations() {
     scenario.next_tx(BOB);
     let ev = scenario.take_shared<gathering::Event>();
     let req = scenario.take_from_sender<IumRequest>();
-    accept_ium(&ev, req, &clk, scenario.ctx());
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    accept_ium(&ev, req, &mut mtx, &clk, scenario.ctx());
+    // 배선: 매칭(양방향 CS 2개)이 CS 매트릭스에 반영 — 양측 대칭 authority, 기본선 초과.
+    assert_eq!(trust_matrix::node_count(&mtx), 2);
+    assert_eq!(trust_matrix::pi_of(&mtx, ALICE), trust_matrix::pi_of(&mtx, BOB));
+    assert!(trust_matrix::pi_of(&mtx, ALICE) > 75_000_000);
+    destroy(mtx);
     ts::return_shared(ev);
 
     // BOB에게 RECEIVER Participation(매칭 확정 = 양측 참가).
@@ -183,6 +198,7 @@ fun accept_wrong_event_fails() {
     scenario.next_tx(BOB);
     let other_ev = scenario.take_shared_by_id<gathering::Event>(other_event_id);
     let req = scenario.take_from_sender<IumRequest>();
-    accept_ium(&other_ev, req, &clk, scenario.ctx());
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    accept_ium(&other_ev, req, &mut mtx, &clk, scenario.ctx());
     abort
 }

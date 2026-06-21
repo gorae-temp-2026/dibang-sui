@@ -12,6 +12,7 @@ module dibang_wedding::event;
 use sui::clock::Clock;
 use sui::event;
 use dibang_wedding::signal;
+use dibang_wedding::trust_matrix;
 
 // === Errors ===
 const EInvalidEventType: u64 = 0;
@@ -99,14 +100,16 @@ public fun new_event(event_type: u8, creator_role_id: u8, clock: &Clock, ctx: &m
 
 /// 타인이 self-claimable 역할(하객 GUEST)로 참가 → 본인에게 soulbound Participation.
 /// 권위 역할(혼주·주례)은 assign_role로만, 매칭 역할(신청자·수신자)은 ium 게이트 후 mint_participation_for로만(ENotSelfClaimable).
-public fun participate(ev: &Event, role_id: u8, clock: &Clock, ctx: &mut TxContext): ID {
+public fun participate(ev: &Event, role_id: u8, matrix: &mut trust_matrix::TrustMatrix, clock: &Clock, ctx: &mut TxContext): ID {
     assert!(role_id <= ROLE_MAX, EInvalidRole);
     assert!(is_self_claimable(role_id), ENotSelfClaimable);
     let id = mint_participation(object::id(ev), ev.event_type, ctx.sender(), role_id, clock, ctx);
-    // 웨딩 참석 = CS(참가자→혼주) 신호 온체인 분류·발행. (인연 매칭은 accept_ium이 양방향으로 발행.)
+    // 웨딩 참석 = CS(참가자→혼주) 신호 온체인 분류·발행 + 매트릭스 반영(#50). (인연 매칭은 accept_ium이 양방향.)
+    // matrix는 WEDDING 참석 시에만 쓰임(INYEON GUEST 참가 등은 신호 없음) — CS 매트릭스를 받는다.
     if (ev.event_type == EVENT_WEDDING) {
         let sigs = signal::attendance_signals(ctx.sender(), ev.creator);
         signal::emit_signals(&sigs, object::id(ev), clock);
+        trust_matrix::apply_classified(matrix, &sigs);
     };
     id
 }
@@ -185,7 +188,7 @@ use sui::test_scenario as ts;
 #[test_only]
 use sui::clock;
 #[test_only]
-use std::unit_test::assert_eq;
+use std::unit_test::{assert_eq, destroy};
 
 #[test_only]
 const HOST: address = @0xA1;
@@ -228,7 +231,12 @@ fun guest_self_participates() {
 
     scenario.next_tx(GUEST);
     let ev = scenario.take_shared<Event>();
-    participate(&ev, ROLE_GUEST, &clk, scenario.ctx());
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    participate(&ev, ROLE_GUEST, &mut cs_mtx, &clk, scenario.ctx());
+    // 배선: 참석 CS(참가자→혼주)가 매트릭스에 반영 — 받는 쪽 혼주 authority↑.
+    assert_eq!(trust_matrix::pi_of(&cs_mtx, HOST), 138_750_000);
+    assert_eq!(trust_matrix::pi_of(&cs_mtx, GUEST), 75_000_000);
+    destroy(cs_mtx);
     ts::return_shared(ev);
 
     scenario.next_tx(GUEST);
@@ -250,7 +258,8 @@ fun guest_cannot_self_claim_host() {
 
     scenario.next_tx(GUEST);
     let ev = scenario.take_shared<Event>();
-    participate(&ev, ROLE_HOST, &clk, scenario.ctx()); // 권위 역할 self 선언 → abort
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    participate(&ev, ROLE_HOST, &mut cs_mtx, &clk, scenario.ctx()); // 권위 역할 self 선언 → abort
     abort
 }
 
@@ -263,7 +272,8 @@ fun cannot_self_claim_receiver() {
     // 제3자가 IumRequest 없이 매칭 이벤트에 RECEIVER로 자임 → 차단(C-IUM1).
     scenario.next_tx(STRANGER);
     let ev = scenario.take_shared<Event>();
-    participate(&ev, ROLE_RECEIVER, &clk, scenario.ctx());
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    participate(&ev, ROLE_RECEIVER, &mut cs_mtx, &clk, scenario.ctx());
     abort
 }
 

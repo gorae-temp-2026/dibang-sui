@@ -22,6 +22,8 @@ const PERF_NO_RECORD = 0.7
 /** 온체인에서 분류·발행된 신호(signal::SignalEmitted 미러). credit의 유일 입력 — 분류는 이미 끝났다. */
 export interface SignalEvent {
   kind: number
+  /** 자원 식별(EM 돈=0, CS=0). (kind, resource_id) = 온체인 TrustMatrix 타입 키 미러. signal.move 결정#43. 옵셔널: 구 이벤트 호환. */
+  resource_id?: number
   /** 원천 행위(action_type / 참석=5 / 매칭=2). 행위별 CS 차등 가중의 재료 — 분류가 출처를 버리지 않게 보존. 현재는 평탄 적용(가중 튜닝 후행). */
   source: number
   from: string

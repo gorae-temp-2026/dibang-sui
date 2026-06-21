@@ -19,6 +19,7 @@ use sui::event;
 // 도메인 이벤트 모듈은 프레임워크 sui::event와 이름이 겹쳐 gathering으로 alias.
 use dibang_wedding::event as gathering;
 use dibang_wedding::ledger;
+use dibang_wedding::trust_matrix;
 
 // === Errors ===
 
@@ -128,12 +129,13 @@ public fun invite(
     wedding: &Wedding,
     host_participation: &gathering::Participation,
     guest: address,
+    matrix: &mut trust_matrix::TrustMatrix,
     clock: &Clock,
     ctx: &mut TxContext,
 ): ID {
     assert!(gathering::participation_event_id(host_participation) == wedding.event_id, EWrongEvent);
     assert!(gathering::role_id(host_participation) == gathering::role_host(), ENotHost);
-    ledger::log(host_participation, ledger::action_invite(), option::some(guest), 0, option::none(), clock, ctx)
+    ledger::log(host_participation, ledger::action_invite(), option::some(guest), 0, option::none(), matrix, clock, ctx)
 }
 
 // === Recipient slot 검증 (cash_gift, rsvp 가 재사용) ===
@@ -184,7 +186,7 @@ public fun primary_host(wedding: &Wedding): address { wedding.primary_host }
 #[test_only]
 use sui::test_scenario as ts;
 #[test_only]
-use std::unit_test::assert_eq;
+use std::unit_test::{assert_eq, destroy};
 
 #[test_only]
 const HOST: address = @0xA;
@@ -264,8 +266,12 @@ fun invite_logs_host_to_guest() {
     let wedding = scenario.take_shared<Wedding>();
     // 혼주는 create_wedding(new_event)에서 HOST Participation을 받았다.
     let host_part = scenario.take_from_sender<gathering::Participation>();
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
     let clk = sui::clock::create_for_testing(scenario.ctx());
-    let rec_id = invite(&wedding, &host_part, @0x6171, &clk, scenario.ctx());
+    let rec_id = invite(&wedding, &host_part, @0x6171, &mut mtx, &clk, scenario.ctx());
+    // 배선: 초대 CS가 매트릭스에 반영(받는 쪽 하객 authority↑).
+    assert_eq!(trust_matrix::pi_of(&mtx, @0x6171), 138_750_000);
+    destroy(mtx);
     sui::clock::destroy_for_testing(clk);
     scenario.return_to_sender(host_part);
     ts::return_shared(wedding);

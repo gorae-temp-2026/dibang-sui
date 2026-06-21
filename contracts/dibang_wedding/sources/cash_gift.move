@@ -13,6 +13,7 @@ use sui::event;
 use sui::sui::SUI;
 use dibang_wedding::wedding::{Self, Wedding, WeddingCap};
 use dibang_wedding::ledger;
+use dibang_wedding::trust_matrix;
 // 도메인 이벤트 모듈은 프레임워크 sui::event와 이름이 겹쳐 gathering으로 alias.
 use dibang_wedding::event as gathering;
 
@@ -78,6 +79,7 @@ public fun give(
     wedding: &Wedding,
     participation: &gathering::Participation,
     coin: Coin<SUI>,
+    matrix: &mut trust_matrix::TrustMatrix,
     clock: &Clock,
     ctx: &mut TxContext,
 ): ID {
@@ -91,7 +93,7 @@ public fun give(
 
     let host = wedding::primary_host(wedding);
     // role/event는 ledger가 participation에서 파생(방향 위조 차단). amount는 raw(결정#1 평문).
-    ledger::log(participation, ledger::action_give_money(), option::some(host), amount, option::none(), clock, ctx)
+    ledger::log(participation, ledger::action_give_money(), option::some(host), amount, option::none(), matrix, clock, ctx)
 }
 
 /// 호스트가 모금함에서 축의금을 인출한다. 인출한 `Coin<SUI>`를 반환해
@@ -162,7 +164,10 @@ fun deposit_for_testing(scenario: &mut ts::Scenario, amount: u64) {
 fun participate_as_guest(scenario: &mut ts::Scenario) {
     let ev = scenario.take_shared<gathering::Event>();
     let clk = clock::create_for_testing(scenario.ctx());
-    gathering::participate(&ev, gathering::role_guest(), &clk, scenario.ctx());
+    // 참석 CS는 별도 CS 매트릭스로(여기 테스트는 부조 EM만 단언 → throwaway).
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    gathering::participate(&ev, gathering::role_guest(), &mut cs_mtx, &clk, scenario.ctx());
+    destroy(cs_mtx);
     clock::destroy_for_testing(clk);
     ts::return_shared(ev);
 }
@@ -200,9 +205,14 @@ fun give_deposits_and_logs_action() {
     let wedding = scenario.take_shared<Wedding>();
     let part = scenario.take_from_sender<gathering::Participation>();
     let clk = clock::create_for_testing(scenario.ctx());
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_em(), 0, scenario.ctx());
     let coin = coin::mint_for_testing<SUI>(100_000, scenario.ctx());
-    let rec_id = give(&mut vault, &wedding, &part, coin, &clk, scenario.ctx());
+    let rec_id = give(&mut vault, &wedding, &part, coin, &mut mtx, &clk, scenario.ctx());
     assert_eq!(vault_balance(&vault), 100_000); // 실제 SUI 입금됨
+    // 배선 검증: 부조가 EM 매트릭스에 자동 반영(베푼 GUEST↑, 받은 HOST=기본선).
+    assert_eq!(trust_matrix::pi_of(&mtx, GUEST), 138_750_000);
+    assert_eq!(trust_matrix::pi_of(&mtx, HOST), 75_000_000);
+    destroy(mtx);
     clock::destroy_for_testing(clk);
     scenario.return_to_sender(part);
     ts::return_shared(wedding);
@@ -235,8 +245,9 @@ fun give_zero_fails() {
     let wedding = scenario.take_shared<Wedding>();
     let part = scenario.take_from_sender<gathering::Participation>();
     let clk = clock::create_for_testing(scenario.ctx());
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_em(), 0, scenario.ctx());
     let coin = coin::mint_for_testing<SUI>(0, scenario.ctx());
-    give(&mut vault, &wedding, &part, coin, &clk, scenario.ctx()); // EZeroAmount
+    give(&mut vault, &wedding, &part, coin, &mut mtx, &clk, scenario.ctx()); // EZeroAmount
     abort
 }
 

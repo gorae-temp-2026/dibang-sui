@@ -12,13 +12,14 @@ use sui::test_scenario as ts;
 use sui::clock;
 use sui::coin;
 use sui::sui::SUI;
-use std::unit_test::assert_eq;
+use std::unit_test::{assert_eq, destroy};
 use dibang_wedding::wedding::{Self, Wedding};
 use dibang_wedding::event as gathering;
 use dibang_wedding::ledger::{Self, ActionRecord};
 use dibang_wedding::cash_gift::{Self, CashGiftVault};
 use dibang_wedding::guestbook;
 use dibang_wedding::signal;
+use dibang_wedding::trust_matrix;
 
 const HOST: address = @0xA;
 const GUEST: address = @0xB;
@@ -37,7 +38,10 @@ fun wedding_signals_share_one_event_and_roles() {
     cash_gift::create_vault(&mut wedding, &cap, scenario.ctx());
     let host_part = scenario.take_from_sender<gathering::Participation>();
     let clk = clock::create_for_testing(scenario.ctx());
-    let invite_id = wedding::invite(&wedding, &host_part, GUEST, &clk, scenario.ctx());
+    // 배선용 타입별 매트릭스(EM-money, CS). 한 결혼식의 부조→EM, 초대·방명록→CS로 흐른다.
+    let mut em_mtx = trust_matrix::new_for_testing(trust_matrix::kind_em(), 0, scenario.ctx());
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    let invite_id = wedding::invite(&wedding, &host_part, GUEST, &mut cs_mtx, &clk, scenario.ctx());
     let wedding_event_id = wedding::event_id(&wedding);
     scenario.return_to_sender(host_part);
     ts::return_shared(wedding);
@@ -45,7 +49,8 @@ fun wedding_signals_share_one_event_and_roles() {
     // 3) 하객이 참가(GUEST Participation — 출석 신호의 원천).
     scenario.next_tx(GUEST);
     let ev = scenario.take_shared<gathering::Event>();
-    gathering::participate(&ev, gathering::role_guest(), &clk, scenario.ctx());
+    // 참석 CS도 같은 CS 매트릭스로(초대·방명록과 함께 누적).
+    gathering::participate(&ev, gathering::role_guest(), &mut cs_mtx, &clk, scenario.ctx());
     ts::return_shared(ev);
 
     // 4) 하객이 부조(GIVE_MONEY, 실제 SUI) + 방명록(WRITE_MESSAGE) — 같은 GUEST participation 체인.
@@ -54,11 +59,17 @@ fun wedding_signals_share_one_event_and_roles() {
     let mut vault = scenario.take_shared<CashGiftVault>();
     let guest_part = scenario.take_from_sender<gathering::Participation>();
     let coin = coin::mint_for_testing<SUI>(100_000, scenario.ctx());
-    let give_id = cash_gift::give(&mut vault, &wedding, &guest_part, coin, &clk, scenario.ctx());
-    let write_id = guestbook::write(&wedding, &guest_part, &clk, scenario.ctx());
+    let give_id = cash_gift::give(&mut vault, &wedding, &guest_part, coin, &mut em_mtx, &clk, scenario.ctx());
+    let write_id = guestbook::write(&wedding, &guest_part, &mut cs_mtx, &clk, scenario.ctx());
     scenario.return_to_sender(guest_part);
     ts::return_shared(vault);
     ts::return_shared(wedding);
+
+    // 배선 확인: 부조→EM 매트릭스에 자동 반영(베푼 GUEST↑). CS 매트릭스엔 초대+방명록 2엣지(노드 2).
+    assert_eq!(trust_matrix::pi_of(&em_mtx, GUEST), 138_750_000);
+    assert_eq!(trust_matrix::node_count(&cs_mtx), 2);
+    destroy(em_mtx);
+    destroy(cs_mtx);
 
     // 5a) 혼주 INVITE 레코드: event_id 일치 · HOST 역할 · target=하객.
     scenario.next_tx(HOST);

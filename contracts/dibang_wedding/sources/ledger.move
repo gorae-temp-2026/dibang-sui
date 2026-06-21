@@ -15,6 +15,7 @@ module dibang_wedding::ledger;
 
 use dibang_wedding::event as gathering;
 use dibang_wedding::signal::{Self, Signal};
+use dibang_wedding::trust_matrix;
 use sui::clock::Clock;
 use sui::event;
 
@@ -97,6 +98,7 @@ public(package) fun log(
     target: Option<address>,
     amount: u64,
     settles: Option<ID>,
+    matrix: &mut trust_matrix::TrustMatrix,
     clock: &Clock,
     ctx: &mut TxContext,
 ): ID {
@@ -125,6 +127,8 @@ public(package) fun log(
     let id = object::id(&rec);
     // 분류된 신호를 SignalEmitted로 발행(인덱서/credit.ts 입력) — fan-out 만큼.
     signal::emit_signals(&rec.signals, event_id, clock);
+    // 온체인 집계 배선(#40): 분류된 신호를 타입별 TrustMatrix에 반영(매트릭스 타입에 맞는 것만 적용·재전파).
+    trust_matrix::apply_classified(matrix, &rec.signals);
     event::emit(ActionLogged {
         record_id: id,
         event_id,
@@ -170,7 +174,7 @@ use sui::test_scenario as ts;
 #[test_only]
 use sui::clock;
 #[test_only]
-use std::unit_test::assert_eq;
+use std::unit_test::{assert_eq, destroy};
 
 #[test_only]
 const HOST: address = @0xA1;
@@ -187,13 +191,16 @@ fun log_derives_role_and_event_from_participation() {
     // 하객이 GUEST로 참가.
     scenario.next_tx(GUEST);
     let ev = scenario.take_shared<gathering::Event>();
-    gathering::participate(&ev, gathering::role_guest(), &clk, scenario.ctx());
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    gathering::participate(&ev, gathering::role_guest(), &mut cs_mtx, &clk, scenario.ctx());
+    destroy(cs_mtx);
     ts::return_shared(ev);
 
     // 하객이 자기 Participation으로 부조(GIVE_MONEY, 대상=혼주) 기록.
     scenario.next_tx(GUEST);
     let part = scenario.take_from_sender<gathering::Participation>();
-    let rec_id = log(&part, ACTION_GIVE_MONEY, option::some(HOST), 100_000, option::none(), &clk, scenario.ctx());
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_em(), 0, scenario.ctx());
+    let rec_id = log(&part, ACTION_GIVE_MONEY, option::some(HOST), 100_000, option::none(), &mut mtx, &clk, scenario.ctx());
     scenario.return_to_sender(part);
 
     scenario.next_tx(GUEST);
@@ -208,6 +215,7 @@ fun log_derives_role_and_event_from_participation() {
     assert!(rec.settles().is_none());
 
     scenario.return_to_sender(rec);
+    destroy(mtx);
     clock::destroy_for_testing(clk);
     scenario.end();
 }
@@ -220,14 +228,17 @@ fun log_null_target_and_settles_link() {
 
     scenario.next_tx(GUEST);
     let ev = scenario.take_shared<gathering::Event>();
-    gathering::participate(&ev, gathering::role_guest(), &clk, scenario.ctx());
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    gathering::participate(&ev, gathering::role_guest(), &mut cs_mtx, &clk, scenario.ctx());
+    destroy(cs_mtx);
     ts::return_shared(ev);
 
     scenario.next_tx(GUEST);
     let part = scenario.take_from_sender<gathering::Participation>();
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_em(), 0, scenario.ctx());
     // 참석(대상 없음) → 이후 부조가 그것을 청산 링크.
-    let first = log(&part, ACTION_ATTEND, option::none(), 0, option::none(), &clk, scenario.ctx());
-    let second = log(&part, ACTION_GIVE_MONEY, option::some(HOST), 50_000, option::some(first), &clk, scenario.ctx());
+    let first = log(&part, ACTION_ATTEND, option::none(), 0, option::none(), &mut mtx, &clk, scenario.ctx());
+    let second = log(&part, ACTION_GIVE_MONEY, option::some(HOST), 50_000, option::some(first), &mut mtx, &clk, scenario.ctx());
     scenario.return_to_sender(part);
 
     scenario.next_tx(GUEST);
@@ -238,6 +249,7 @@ fun log_null_target_and_settles_link() {
 
     scenario.return_to_sender(r1);
     scenario.return_to_sender(r2);
+    destroy(mtx);
     clock::destroy_for_testing(clk);
     scenario.end();
 }

@@ -32,6 +32,13 @@ const KIND_BUSU: u8 = 1;
 /// 유대(CS) — magnitude=1. 초대·방명록·선물·참석·매칭. 행위 구분은 source로.
 const KIND_CS: u8 = 2;
 
+// === Resource id (자원 — EM에서만 의미, CS는 0) ===
+// (kind, resource_id) = TrustMatrix 타입 키. 결정#43: 다자원 EM 대비해 1층 신호에 자원을 싣는다.
+/// 돈(축의금 등). 현재 유일 EM 자원. 노동·시간·정보 등은 후속 resource id로 확장.
+const RESOURCE_MONEY: u8 = 0;
+/// CS·자원 무관 신호의 resource_id(0). 가독성용.
+const RESOURCE_NONE: u8 = 0;
+
 // === 미러 상수 (ledger.move action_type / event.move event_type·role 와 동기 — append-only) ===
 const A_GIVE_MONEY: u8 = 0;
 const A_ACCEPT_IUM: u8 = 2;
@@ -47,6 +54,9 @@ const R_GUEST: u8 = 1;
 /// 신호 한 개(값 타입 — 객체 아님). copy+drop+store: 반환·emit·ActionRecord 저장에 쓰임.
 public struct Signal has copy, drop, store {
     kind: u8,
+    /// 자원 식별 — 같은 kind 안에서 합성 불가한 자원을 가른다(EM 돈=0, 노동·시간… 후속). CS는 0(자원 무관).
+    /// (kind, resource_id) = TrustMatrix 타입 키. 결정#43.
+    resource_id: u8,
     /// 이 신호를 만든 원천 행위(action_type 또는 참석=ATTEND·매칭=ACCEPT_IUM). 오프체인 차등 가중용.
     source: u8,
     from: address,
@@ -61,6 +71,7 @@ public struct Signal has copy, drop, store {
 public struct SignalEmitted has copy, drop {
     event_id: ID,
     kind: u8,
+    resource_id: u8,
     source: u8,
     from: address,
     to: address,
@@ -70,11 +81,12 @@ public struct SignalEmitted has copy, drop {
 
 // === Constructors / Views ===
 
-public fun new_signal(kind: u8, source: u8, from: address, to: address, magnitude: u64): Signal {
-    Signal { kind, source, from, to, magnitude }
+public fun new_signal(kind: u8, resource_id: u8, source: u8, from: address, to: address, magnitude: u64): Signal {
+    Signal { kind, resource_id, source, from, to, magnitude }
 }
 
 public fun kind(s: &Signal): u8 { s.kind }
+public fun resource_id(s: &Signal): u8 { s.resource_id }
 public fun source(s: &Signal): u8 { s.source }
 public fun from(s: &Signal): address { s.from }
 public fun to(s: &Signal): address { s.to }
@@ -83,6 +95,7 @@ public fun magnitude(s: &Signal): u64 { s.magnitude }
 public fun kind_none(): u8 { KIND_NONE }
 public fun kind_busu(): u8 { KIND_BUSU }
 public fun kind_cs(): u8 { KIND_CS }
+public fun resource_money(): u8 { RESOURCE_MONEY }
 
 // === Classification (project) — 순수 함수, 한 액션 → 0~N 신호 ===
 
@@ -104,9 +117,11 @@ public fun project_action(
     let to = *target.borrow();
     if (actor == to) return out; // 자기엣지(자기거래 농사) 제외 — 온체인 per-action 가능
     if (action_type == A_GIVE_MONEY && event_type == E_WEDDING && role_id == R_GUEST && amount > 0) {
-        out.push_back(new_signal(KIND_BUSU, action_type, actor, to, amount));
+        // 부조(EM) = 돈 자원.
+        out.push_back(new_signal(KIND_BUSU, RESOURCE_MONEY, action_type, actor, to, amount));
     } else if (action_type == A_WRITE_MESSAGE || action_type == A_INVITE || action_type == A_GIFT) {
-        out.push_back(new_signal(KIND_CS, action_type, actor, to, 1));
+        // 유대(CS) = 자원 무관(0).
+        out.push_back(new_signal(KIND_CS, RESOURCE_NONE, action_type, actor, to, 1));
     };
     out
 }
@@ -115,8 +130,8 @@ public fun project_action(
 public fun match_signals(initiator: address, receiver: address): vector<Signal> {
     let mut out = vector<Signal>[];
     if (initiator == receiver) return out;
-    out.push_back(new_signal(KIND_CS, A_ACCEPT_IUM, receiver, initiator, 1));
-    out.push_back(new_signal(KIND_CS, A_ACCEPT_IUM, initiator, receiver, 1));
+    out.push_back(new_signal(KIND_CS, RESOURCE_NONE, A_ACCEPT_IUM, receiver, initiator, 1));
+    out.push_back(new_signal(KIND_CS, RESOURCE_NONE, A_ACCEPT_IUM, initiator, receiver, 1));
     out
 }
 
@@ -124,7 +139,7 @@ public fun match_signals(initiator: address, receiver: address): vector<Signal> 
 public fun attendance_signals(participant: address, creator: address): vector<Signal> {
     let mut out = vector<Signal>[];
     if (participant == creator) return out;
-    out.push_back(new_signal(KIND_CS, A_ATTEND, participant, creator, 1));
+    out.push_back(new_signal(KIND_CS, RESOURCE_NONE, A_ATTEND, participant, creator, 1));
     out
 }
 
@@ -140,6 +155,7 @@ public fun emit_signals(signals: &vector<Signal>, event_id: ID, clock: &Clock) {
         event::emit(SignalEmitted {
             event_id,
             kind: s.kind,
+            resource_id: s.resource_id,
             source: s.source,
             from: s.from,
             to: s.to,
