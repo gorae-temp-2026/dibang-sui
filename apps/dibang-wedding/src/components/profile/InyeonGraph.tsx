@@ -4,8 +4,8 @@ import { useMemo } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 import type { ProfileData } from './types'
 
-interface GNode { id: string; label: string; hue: number; self?: boolean }
-interface GLink { source: string; target: string; type: string; value: number }
+interface GNode { id: string; label: string; hue: number; self?: boolean; here?: boolean; x?: number; y?: number }
+interface GLink { source: string; target: string | GNode; type: string; value: number }
 
 const REL_COLOR: Record<string, string> = { 부조: '#D4687A', 선물: '#F8C57A', 승급: '#5AA3D6', 이음: '#87CEEB' }
 
@@ -23,11 +23,36 @@ export function InyeonGraph({ data, size = 250 }: { data: ProfileData; size?: nu
         graphData={graphData}
         backgroundColor="#0c1a2e"
         nodeRelSize={5}
-        nodeVal={(n) => ((n as GNode).self ? 6 : 2)}
-        nodeColor={(n) => ((n as GNode).self ? '#ffffff' : `hsl(${(n as GNode).hue} 62% 58%)`)}
+        nodeVal={(n) => ((n as GNode).self ? 6 : (n as GNode).here ? 4 : 1.5)}
+        nodeColor={(n) => {
+          const g = n as GNode
+          if (g.self) return '#ffffff'
+          // here(이 결혼식에서 만난 사람) = 선명, 나머지(더 넓은 네트워크) = 흐리게.
+          return g.here ? `hsl(${g.hue} 72% 62%)` : `hsl(${g.hue} 24% 42%)`
+        }}
         nodeLabel={(n) => (n as GNode).label}
-        linkColor={(l) => REL_COLOR[(l as GLink).type] ?? 'rgba(255,255,255,0.22)'}
-        linkWidth={(l) => Math.max(0.6, (l as GLink).value)}
+        // here 노드에 골드 링(광장에서 선이 가는 상대 = 동일 집합).
+        nodeCanvasObjectMode={(n) => ((n as GNode).here ? 'after' : undefined)}
+        nodeCanvasObject={(n, ctx, scale) => {
+          const g = n as GNode
+          if (!g.here || g.x == null || g.y == null) return
+          const r = 7 / scale
+          ctx.beginPath()
+          ctx.arc(g.x, g.y, r, 0, 2 * Math.PI)
+          ctx.strokeStyle = '#F8C57A'
+          ctx.lineWidth = 2 / scale
+          ctx.stroke()
+        }}
+        linkColor={(l) => {
+          const t = (l as GLink).target
+          const here = typeof t === 'object' && (t as GNode).here
+          return here ? REL_COLOR[(l as GLink).type] ?? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)'
+        }}
+        linkWidth={(l) => {
+          const t = (l as GLink).target
+          const here = typeof t === 'object' && (t as GNode).here
+          return here ? Math.max(1.2, (l as GLink).value) : 0.6
+        }}
         enableZoomInteraction={false}
         enablePanInteraction={false}
         cooldownTicks={80}

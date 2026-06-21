@@ -7,6 +7,8 @@ export interface ProfileNode {
   /** 사진 플레이스홀더 색상(hue 0~360). 실제는 모이 대표 사진. */
   hue: number
   self?: boolean
+  /** 이 결혼식(광장)에서 만난 사람 = 광장 ego와 동일 집합. 그래프에서 강조 표시(나머지는 더 넓은 네트워크). */
+  here?: boolean
 }
 
 export interface ProfileLink {
@@ -53,8 +55,10 @@ export interface MeetingContext {
   photoHue: number
   /** 대표 사진 실제 url(있으면 우선). */
   photoUrl?: string
-  /** 후크 카피 — "함께 참여한 결혼식이 있어요" 류. */
+  /** 후크 카피 — 정성 closeness("가까운 인연" 류). */
   hook: string
+  /** 인연 소개글(bio) — 프로필 '소개글' 섹션(맨 위). */
+  intro?: string
   /** 어디서 마주쳤나 — 출처 + 관계 태그. */
   prov: { emoji: string; text: string; sub?: string; tag?: string }[]
   mutualCount: number

@@ -6,11 +6,12 @@ import { hierarchy, partition, type HierarchyRectangularNode } from 'd3-hierarch
 import { arc } from 'd3-shape'
 import type { SignalNode } from './types'
 
+// Fiske 관계모델(RMT): EM 호혜(동등 맞춤) / CS 유대(공동 공유) / AR 위계(서열·권위) / MP 거래(시장 가격).
 const AXIS_COLOR: Record<string, string> = {
-  EM: '#D4687A', // 경제(부조·증여)
-  CS: '#5B89B3', // 사회(참석·이음·대화)
-  AR: '#B8884A', // 관계(표시만)
-  MP: '#9999AD', // 시장(스텁)
+  EM: '#D4687A', // 호혜 — 동등 맞춤(부조·답례·선물)
+  CS: '#5B89B3', // 유대 — 공동 공유(함께함·나눔·대화)
+  AR: '#B8884A', // 위계 — 서열·권위(선후배·멘토링)
+  MP: '#9999AD', // 거래 — 시장 가격(스텁)
 }
 
 export function SignalSunburst({ data, size = 200 }: { data: SignalNode; size?: number }) {

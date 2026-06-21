@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useMachine } from '@xstate/react';
-import { Maximize2 } from 'lucide-react';
+import { Maximize } from 'lucide-react';
 import type { FeedItem } from '@gorae/contracts';
 import { toLogRow, liveMessageText, timeAgo } from '../../lib/loungeV2Feed';
 import { maskGuestName } from '../../lib/guestLabel';
@@ -62,20 +62,10 @@ export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebra
           LIVE
         </span>
         <span className="text-[14px] font-medium tracking-[0.02em] text-lng-muted">축하메세지</span>
-        {onOpenDisplay && (
-          <button
-            type="button"
-            onClick={onOpenDisplay}
-            aria-label="현장 디스플레이 전체보기"
-            className="ml-auto flex items-center gap-1 rounded-full border border-[rgba(135,166,200,0.3)] bg-[rgba(255,255,255,0.6)] px-2.5 py-1 text-[12px] font-semibold text-[#3A5673] backdrop-blur"
-          >
-            <Maximize2 className="h-3.5 w-3.5" /> 전체보기
-          </button>
-        )}
       </div>
 
       {!hasMsgs ? (
-        <div className="flex items-start gap-[14px] rounded-2xl border border-[rgba(135,166,200,0.18)] bg-[rgba(255,255,255,0.50)] px-[22px] py-[24px] backdrop-blur-[8px]">
+        <div className="relative flex items-start gap-[14px] rounded-2xl border border-[rgba(135,166,200,0.18)] bg-[rgba(255,255,255,0.50)] px-[22px] py-[24px] backdrop-blur-[8px]">
           <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-[rgba(135,166,200,0.14)] text-[#4A6E99]">
             <QrIcon />
           </span>
@@ -83,6 +73,11 @@ export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebra
             결혼식 당일, 현장의 <strong className="font-semibold text-[#3A5673]">QR을 스캔</strong>하고 축하메시지를 남겨주세요.
             <span className="mt-[6px] block text-[14px] text-lng-muted">식 종료 후 신랑신부에게 모아서 전달됩니다.</span>
           </p>
+          {onOpenDisplay && (
+            <button type="button" onClick={onOpenDisplay} aria-label="현장 디스플레이 전체보기" className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/40 text-white backdrop-blur">
+              <Maximize className="h-4 w-4" />
+            </button>
+          )}
         </div>
       ) : (
         <div className="relative min-h-[160px] overflow-hidden rounded-2xl border border-[rgba(135,166,200,0.18)] bg-[rgba(255,255,255,0.40)] px-6 pb-14 pt-6 backdrop-blur-[12px]">
@@ -101,9 +96,14 @@ export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebra
             )}
             <span className="font-semibold text-[#28384C]">{maskGuestName(liveMsgs[safeIdx].name, hostNames)}</span>
           </p>
-          <p className="absolute bottom-[18px] right-6 m-0 text-[14px] tracking-[0.01em] text-[#8DA5BE]">
+          <p className="absolute bottom-[18px] right-12 m-0 text-[14px] tracking-[0.01em] text-[#8DA5BE]">
             {timeAgo(liveMsgs[safeIdx].createdAt)}
           </p>
+          {onOpenDisplay && (
+            <button type="button" onClick={onOpenDisplay} aria-label="현장 디스플레이 전체보기" className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/40 text-white backdrop-blur">
+              <Maximize className="h-4 w-4" />
+            </button>
+          )}
         </div>
       )}
     </section>

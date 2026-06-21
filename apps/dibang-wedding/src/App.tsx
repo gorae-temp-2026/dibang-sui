@@ -24,6 +24,8 @@ import { WeddingMemoryBookCuratePage } from './pages/WeddingMemoryBookCuratePage
 import { OnboardingConsentPage } from './pages/OnboardingConsentPage'
 // [비활성] NetworkPage 전체 주석처리 — dev 스캐폴드(비서비스). 진짜 자리는 InyeonPage(태스크 #24).
 // import { NetworkPage } from './pages/NetworkPage'
+import { SignalGuidePage } from './pages/SignalGuidePage'
+import { MoiCreditGuidePage } from './pages/MoiCreditGuidePage'
 import { OnboardingGate } from './components/OnboardingGate'
 import { isDevBypass } from './dev/devBypass' // DEV 전용 로그인 우회(프로덕션 import.meta.env.DEV=false로 제거)
 
@@ -58,6 +60,8 @@ function App() {
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
       {/* [비활성] NetworkPage(dev 스캐폴드) 주석처리: <Route path="/network" element={<AuthGuard><OnboardingGate><NetworkPage /></OnboardingGate></AuthGuard>} /> */}
+      <Route path="/guide/signal" element={<AuthGuard><OnboardingGate><SignalGuidePage /></OnboardingGate></AuthGuard>} />
+      <Route path="/guide/moi-credit" element={<AuthGuard><OnboardingGate><MoiCreditGuidePage /></OnboardingGate></AuthGuard>} />
       <Route path="/invitation/create" element={<AuthGuard><OnboardingGate><InvitationCreatePage /></OnboardingGate></AuthGuard>} />
       <Route path="/invitation/edit/:weddingId" element={<AuthGuard><OnboardingGate><InvitationEditPage /></OnboardingGate></AuthGuard>} />
       <Route path="/lounge/:loungeId/enter" element={<AuthGuard><OnboardingGate><LoungeCheckInGatePage /></OnboardingGate></AuthGuard>} />

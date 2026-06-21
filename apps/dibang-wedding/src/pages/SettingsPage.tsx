@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router';
-import { useState } from 'react';
+import { useState, useRef, type ChangeEvent } from 'react';
 import { useMachine } from '@xstate/react';
 import { settingsMachine } from '../machines/settings.machine';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from '@xstate/react';
+import { Coins, Plus, ChevronRight } from 'lucide-react';
 import {
   getMeOptions,
   getMeQueryKey,
@@ -11,9 +13,28 @@ import {
 import { useAuth } from '../providers/AuthContext';
 import { useZkLogin } from '../providers/ZkLoginProvider';
 import { useSignOut } from '../queries/auth/useSignOut';
+import { giftActor } from '../machines/gift.machine';
+import { YoneChargeSheet } from '../components/settings/YoneChargeSheet';
+import { useT, useLangStore, type Lang } from '../lib/i18n';
+import { useInyeonProfile, fileToProfileDataUrl } from '../stores/inyeonProfile';
 
 export function SettingsPage() {
   const navigate = useNavigate();
+  const t = useT();
+  const lang = useLangStore((s) => s.lang);
+  const setLang = useLangStore((s) => s.setLang);
+  const photoUrl = useInyeonProfile((s) => s.photoUrl);
+  const setPhotoUrl = useInyeonProfile((s) => s.setPhotoUrl);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handlePickPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    const url = await fileToProfileDataUrl(f);
+    setPhotoUrl(url);
+    send({ type: 'SHOW_TOAST', msg: t('settings.saved') });
+  };
   const { session } = useAuth();
   const zk = useZkLogin();
   const signOut = useSignOut();
@@ -30,13 +51,16 @@ export function SettingsPage() {
   // 저장 진행 + 토스트(2초 자동닫힘) flow는 머신(settings).
   const [state, send] = useMachine(settingsMachine);
   const toast = state.matches({ toast: 'visible' }) ? state.context.toastMsg : null;
+  // 요네 잔액 = 전역 요네 지갑(giftActor — 선물·꾸미기 공유). 충전 시트로 적립.
+  const yone = useSelector(giftActor, (s) => s.context.yone);
+  const [chargeOpen, setChargeOpen] = useState(false);
 
   const marketingMutation = useMutation({
     ...updateMarketingConsentMutation(),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: getMeQueryKey() });
       send({ type: 'SAVE_DONE' });
-      send({ type: 'SHOW_TOAST', msg: '변경되었습니다' });
+      send({ type: 'SHOW_TOAST', msg: t('settings.saved') });
     },
     onError: () => send({ type: 'SAVE_ERROR' }),
   });
@@ -64,17 +88,97 @@ export function SettingsPage() {
 
   return (
     <div className="px-6 py-8">
-      <h1 className="text-[28px] font-semibold text-navy mb-6">설정</h1>
+      <h1 className="text-[28px] font-semibold text-navy mb-6">{t('settings.title')}</h1>
 
       <div className="rounded-xl border border-line bg-white p-5 mb-4">
-        <p className="text-sm text-muted mb-1">현재 로그인</p>
+        <p className="text-sm text-muted mb-1">{t('settings.currentLogin')}</p>
         <p className="text-lg font-semibold text-navy">{userName}</p>
       </div>
 
+      {/* 디방인연 대표 사진 — 전 화면 공통(프로필·이음 신청·채팅). 업로드=축소 data URL 저장. */}
       <div className="rounded-xl border border-line bg-white p-5 mb-4">
-        <p className="text-base font-semibold text-navy mb-3">약관·동의</p>
+        <p className="text-base font-semibold text-navy mb-3">{t('settings.profilePhoto')}</p>
+        <div className="flex items-center gap-4">
+          <div
+            className="h-16 w-16 flex-shrink-0 rounded-full bg-cover bg-center ring-1 ring-line"
+            style={{ backgroundImage: `url(${photoUrl})` }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-navy hover:bg-gray-50 transition-colors"
+          >
+            {t('settings.changePhoto')}
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handlePickPhoto} className="hidden" />
+        </div>
+        <p className="mt-3 text-xs text-muted">{t('settings.profilePhotoHint')}</p>
+      </div>
+
+      {/* 언어 설정 — ko/en (데모 핵심 범위: 네비·인연·Setting) */}
+      <div className="rounded-xl border border-line bg-white p-5 mb-4">
+        <p className="text-base font-semibold text-navy mb-3">{t('settings.language')}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {(['ko', 'en'] as Lang[]).map((l) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => setLang(l)}
+              className={`rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors ${
+                lang === l ? 'border-navy bg-navy text-white' : 'border-line bg-white text-navy hover:bg-gray-50'
+              }`}
+            >
+              {l === 'ko' ? '한국어' : 'English'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 요네 지갑 — 잔액 + Sui 충전 진입 */}
+      <div className="rounded-xl border border-line bg-white p-5 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F8C57A]/20 text-xl">🐚</div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-muted">{t('settings.myYone')}</p>
+            <p className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-navy tabular-nums">{yone.toLocaleString()}</span>
+              <span className="text-sm text-muted">{t('settings.yoneUnit')}</span>
+            </p>
+          </div>
+          <button
+            onClick={() => setChargeOpen(true)}
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+          >
+            <Plus className="h-4 w-4" /> {t('settings.charge')}
+          </button>
+        </div>
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted">
+          <Coins className="h-3.5 w-3.5 text-[#E8A865]" /> {t('settings.chargeHint')}
+        </p>
+      </div>
+
+      {/* 알아보기 — 시그널·모이크레딧 설명 페이지(프로필 상세 설명 이전처) */}
+      <div className="rounded-xl border border-line bg-white p-2 mb-4">
+        {[
+          { label: t('settings.guideSignal'), to: '/guide/signal' },
+          { label: t('settings.guideCredit'), to: '/guide/moi-credit' },
+        ].map((g) => (
+          <button
+            key={g.to}
+            type="button"
+            onClick={() => navigate(g.to)}
+            className="flex w-full items-center justify-between rounded-lg px-3 py-3.5 text-left hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-base font-medium text-navy">{g.label}</span>
+            <ChevronRight className="h-5 w-5 text-muted" />
+          </button>
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-line bg-white p-5 mb-4">
+        <p className="text-base font-semibold text-navy mb-3">{t('settings.terms')}</p>
         <label className="flex items-center justify-between cursor-pointer">
-          <span className="text-base text-navy">마케팅 정보 수신 동의</span>
+          <span className="text-base text-navy">{t('settings.marketing')}</span>
           <input
             type="checkbox"
             checked={marketing}
@@ -92,8 +196,10 @@ export function SettingsPage() {
         onClick={handleLogout}
         className="w-full rounded-xl border border-line bg-white px-5 py-3.5 text-base font-semibold text-red-500 hover:bg-red-50 transition-colors"
       >
-        로그아웃
+        {t('settings.logout')}
       </button>
+
+      <YoneChargeSheet open={chargeOpen} onOpenChange={setChargeOpen} />
     </div>
   );
 }

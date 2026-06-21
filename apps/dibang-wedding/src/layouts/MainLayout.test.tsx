@@ -26,20 +26,21 @@ function renderNav(initialPath = '/inyeon') {
 }
 
 describe('MainLayout 하단 네비 4탭', () => {
-  it('Inyeon · Event list · My event · Setting 4탭을 노출한다', () => {
+  // 기본 언어 = ko → 라벨 인연/이벤트 리스트/나의 이벤트/설정 (i18n, en은 Inyeon/Event list/…).
+  it('4탭(인연·이벤트 리스트·나의 이벤트·설정)을 노출한다', () => {
     renderNav()
-    expect(screen.getByText('Inyeon')).toBeInTheDocument()
-    expect(screen.getByText('Event list')).toBeInTheDocument()
-    expect(screen.getByText('My event')).toBeInTheDocument()
-    expect(screen.getByText('Setting')).toBeInTheDocument()
+    expect(screen.getByText('인연')).toBeInTheDocument()
+    expect(screen.getByText('이벤트 리스트')).toBeInTheDocument()
+    expect(screen.getByText('나의 이벤트')).toBeInTheDocument()
+    expect(screen.getByText('설정')).toBeInTheDocument()
   })
 
   it('각 탭이 올바른 경로로 연결된다', () => {
     renderNav()
-    expect(screen.getByRole('link', { name: 'Inyeon' })).toHaveAttribute('href', '/inyeon')
-    expect(screen.getByRole('link', { name: 'Event list' })).toHaveAttribute('href', '/wedding-list')
-    expect(screen.getByRole('link', { name: 'My event' })).toHaveAttribute('href', '/my-wedding')
-    expect(screen.getByRole('link', { name: 'Setting' })).toHaveAttribute('href', '/settings')
+    expect(screen.getByRole('link', { name: '인연' })).toHaveAttribute('href', '/inyeon')
+    expect(screen.getByRole('link', { name: '이벤트 리스트' })).toHaveAttribute('href', '/wedding-list')
+    expect(screen.getByRole('link', { name: '나의 이벤트' })).toHaveAttribute('href', '/my-wedding')
+    expect(screen.getByRole('link', { name: '설정' })).toHaveAttribute('href', '/settings')
   })
 
   it('QR·DM 탭은 nav에 노출하지 않는다', () => {

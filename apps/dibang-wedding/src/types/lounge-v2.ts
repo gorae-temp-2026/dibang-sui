@@ -29,16 +29,21 @@ export const LOG_LABEL: Record<LogKind, string> = {
   memory: 'Memory',
 };
 
-/** 온기(체온°) 계산 가중치 — 핸드오프 §3 공식 */
+// 우리의 온기 = 이 라운지(이벤트) 내 기여 행동의 가중합(network contribution).
+// Moi Credit과 1·2층 가중치 공유(개인=Moi Credit / 모임=우리의 온기). 행동 tier:
+//   부조·들러리선물=큰 EM / 선물=중 / 방명록·축하메시지·메모리·체크인=CS / 이음·하트=소.
+// 현재 피드 신호는 CS 계열(메시지·메모리·공지)+체크인만 도달 → 아래 가중치(시드 38.6° 유지).
 export const WARMTH_BASE = 36.5;
 export const WARMTH_CAP = 100;
 export const WARMTH_WEIGHT: Record<LogKind, number> = {
-  checkin: 0.1,
-  enter: 0.1,
-  post: 0.3,
-  feed: 0.4,
-  memory: 0.4,
+  checkin: 0.1, // 체크인 = 소
+  enter: 0.1, // 입장 = 소
+  post: 0.3, // 공지 = CS
+  feed: 0.4, // 축하메시지 = CS
+  memory: 0.4, // 메모리 = CS
 };
+/** 단일축 단계식 — 온기를 N단계로(공간 링·밝기 반응). 정밀 °는 KPI 텍스트. */
+export const WARMTH_STEPS = 5;
 
 /** 모이는 중 로그 한 줄 */
 export interface LogRow {

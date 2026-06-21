@@ -11,8 +11,14 @@ import { moiPlazaMachine } from '../machines/moiPlaza.machine'
 import { MoiPlazaCanvas } from '../components/moi-gather/MoiPlazaCanvas'
 import { ShopSheet } from '../components/moi-gather/ShopSheet'
 import { PLAZA_CROWD, CROWD_BY_ID } from '../components/moi-gather/data'
+import { POOL } from '../components/inyeon/data'
 import { ProfileSheet } from '../components/profile/ProfileSheet'
-import { chulsooProfile } from '../components/profile/fixture'
+import type { ProfileData } from '../components/profile/types'
+import { profileForPersonaId, makeGuestProfile, plazaPartnerIds, chulsooPlazaProfile } from '../components/profile/personaProfiles'
+import { warmthStep } from '../lib/loungeV2Feed'
+
+// 데모 시드 온기(라운지 38.6°) → 단일축 단계. 실시간 풀 계산은 로드맵(핸드오프).
+const PLAZA_WARMTH_STEP = warmthStep(38.6)
 
 // 모이 색 → 사진 placeholder hue (실사진 전).
 function colorToHue(hex: number): number {
@@ -43,15 +49,25 @@ export function MoiGatherPage() {
   }, [giftReceived, send])
 
   const profileMoi = profileMoiId ? CROWD_BY_ID[profileMoiId] : null
-  // 공유 프로필 fixture에 클릭한 모이 이름만 덮어 placeholder(데이터는 철수 fixture 공통).
-  const profileData = profileMoi ? { ...chulsooProfile, subject: profileMoi.name } : chulsooProfile
+  // 인물별 실제 프로필: 나=철수 sim 산출 / 만난 사람(personaId)=인연과 동일 프로필 / 익명 하객=생성.
+  const persona = profileMoi?.personaId != null ? POOL.find((p) => p.id === profileMoi.personaId) ?? null : null
+  const profileData: ProfileData = !profileMoi
+    ? chulsooPlazaProfile
+    : profileMoi.me
+      ? chulsooPlazaProfile
+      : profileMoi.personaId != null
+        ? profileForPersonaId(profileMoi.personaId)
+        : makeGuestProfile(profileMoi.id, profileMoi.name, colorToHue(profileMoi.color))
   const profileMeeting = profileMoi
     ? {
-        photoHue: colorToHue(profileMoi.color),
-        hook: profileMoi.me ? '나의 모이 · 광장의 나' : `${profileMoi.role}`,
-        prov: [{ emoji: '💍', text: '같은 결혼식에서 만난 모이', sub: profileMoi.role, tag: '오프라인' }],
-        mutualCount: profileMoi.me ? 0 : 4,
-        balLabel: '높음',
+        photoHue: persona?.photos[0]?.hue ?? colorToHue(profileMoi.color),
+        photoUrl: profileMoi.photoUrl,
+        hook: profileMoi.me ? '나의 모이 · 광장의 나' : persona ? persona.hook : profileMoi.role,
+        prov: persona
+          ? persona.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: '오프라인 · 같은 결혼식' }))
+          : [{ emoji: '💍', text: '이 결혼식에서 만난 모이', sub: profileMoi.role, tag: '오프라인' }],
+        mutualCount: profileMoi.me ? 0 : persona ? persona.mutualCount : 4,
+        balLabel: profileData.trustRange.label,
       }
     : undefined
 
@@ -98,12 +114,14 @@ export function MoiGatherPage() {
           crowd={PLAZA_CROWD}
           onMoiClick={setProfileMoiId}
           onMovePlaced={(itemId, x, y) => send({ type: 'MOVE', itemId, x, y })}
+          partnersOf={plazaPartnerIds}
+          warmthStep={PLAZA_WARMTH_STEP}
         />
 
         {/* 조작 힌트 */}
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
           <span className="rounded-full border border-white/12 bg-[#0c1a2e]/70 px-3.5 py-1.5 text-[11px] font-medium text-white/60 backdrop-blur">
-            모이를 누르면 프로필 · 드래그/핀치로 광장 둘러보기 · 데코는 끌어서 배치
+            모이를 누르면 이음망이 보여요 · ⓘ로 프로필 · 드래그·핀치로 둘러보기
           </span>
         </div>
       </div>

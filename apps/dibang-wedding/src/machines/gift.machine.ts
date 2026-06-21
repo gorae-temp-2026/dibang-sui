@@ -35,7 +35,7 @@ export const giftMachine = setup({
     events:
       | { type: 'SEND_GIFT'; itemId: string; toId: string; toName: string }
       | { type: 'RECEIVE_GIFT'; itemId: string; fromId: string; fromName: string }
-      | { type: 'CHARGE' }
+      | { type: 'CHARGE'; amount?: number }
       | { type: 'DISMISS_ERROR' }
   },
   guards: {
@@ -78,7 +78,8 @@ export const giftMachine = setup({
         seq: ({ context }) => context.seq + 1,
       }),
     },
-    CHARGE: { actions: assign({ yone: ({ context }) => context.yone + 100 }) },
+    // 요네 충전 — 금액 지정(설정 'Sui로 충전') 또는 기본 +100(채팅 인라인 충전). 결제 자체는 화폐라 신호 제외.
+    CHARGE: { actions: assign({ yone: ({ context, event }) => context.yone + (event.type === 'CHARGE' ? (event.amount ?? 100) : 0) }) },
     DISMISS_ERROR: { actions: assign({ error: () => null }) },
   },
   initial: 'idle',
