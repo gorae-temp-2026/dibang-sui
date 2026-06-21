@@ -20,7 +20,12 @@ export interface RevokeIumParams {
   iumId: string;
 }
 
-/** 신뢰 관계 생성 + Ium을 owner에게 전송. */
+/**
+ * ⚠️ STALE — 실행 시 abort. `ium::create_ium`/전역 IumRegistry는 제거됨 → 매칭 = `request_ium(to_user, clock)`→
+ * `accept_ium(ev, req, clock)`(2단계 핸드오프). relationType·label(PII)도 전달. 사용 금지.
+ * 레시피: _audit/2026-06-21-sdk-contract-drift/SUMMARY.md.
+ * (구) 신뢰 관계 생성 + Ium을 owner에게 전송.
+ */
 export function buildCreateIumTx(params: CreateIumParams): Transaction {
   const tx = new Transaction();
   const ium = tx.moveCall({
@@ -37,7 +42,11 @@ export function buildCreateIumTx(params: CreateIumParams): Transaction {
   return tx;
 }
 
-/** 신뢰 관계 취소 (보유한 Ium 소비, 레지스트리에서 쌍 제거). */
+/**
+ * ⚠️ STALE — 실행 시 abort. `ium::revoke_ium`/IumRegistry 제거됨(전역 레지스트리 폐기 → revoke 개념 없음).
+ * 사용 금지. 레시피: _audit/2026-06-21-sdk-contract-drift/SUMMARY.md.
+ * (구) 신뢰 관계 취소 (보유한 Ium 소비, 레지스트리에서 쌍 제거).
+ */
 export function buildRevokeIumTx(params: RevokeIumParams): Transaction {
   const tx = new Transaction();
   tx.moveCall({

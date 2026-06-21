@@ -43,7 +43,11 @@ export function buildCreateVaultTx(params: CreateVaultParams): Transaction {
   return tx;
 }
 
-/** 축의금 송금: 가스에서 금액 분리 → 모금함 입금 → 영수증을 owner에게 전송. */
+/**
+ * ⚠️ STALE — 실행 시 abort. `cash_gift::send_gift`는 컨트랙트에서 제거됨 → `give(vault, wedding, participation, coin, clock)`.
+ * 이름·관계(PII)도 전달(결정#2 위반). 사용 금지. 정렬 레시피: _audit/2026-06-21-sdk-contract-drift/SUMMARY.md.
+ * (구) 축의금 송금: 가스에서 금액 분리 → 모금함 입금 → 영수증을 owner에게 전송.
+ */
 export function buildSendGiftTx(params: SendGiftParams): Transaction {
   const tx = new Transaction();
   // 단일 분리 코인은 TransactionResult를 그대로 Coin 인자로 사용.

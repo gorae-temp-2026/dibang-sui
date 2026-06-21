@@ -21,7 +21,11 @@ export interface ClaimEntryParams {
   recipient: string;
 }
 
-/** 방명록 작성 + 생성된 GuestbookEntry를 owner에게 전송. */
+/**
+ * ⚠️ STALE — 실행 시 abort. `guestbook::write_entry`는 제거됨 → `write(wedding, participation, clock)`.
+ * 이름·본문(PII)도 전달. 본문·이름은 오프체인. 사용 금지. 레시피: _audit/2026-06-21-sdk-contract-drift/SUMMARY.md.
+ * (구) 방명록 작성 + 생성된 GuestbookEntry를 owner에게 전송.
+ */
 export function buildWriteEntryTx(params: WriteEntryParams): Transaction {
   const tx = new Transaction();
   const entry = tx.moveCall({
@@ -37,7 +41,11 @@ export function buildWriteEntryTx(params: WriteEntryParams): Transaction {
   return tx;
 }
 
-/** 보유한 방명록 항목을 지정 주소로 전달. */
+/**
+ * ⚠️ STALE — 실행 시 abort. `guestbook::claim_entry` 및 GuestbookEntry 객체 자체가 제거됨(방명록=원장 신호로 일원화).
+ * 사용 금지. 레시피: _audit/2026-06-21-sdk-contract-drift/SUMMARY.md.
+ * (구) 보유한 방명록 항목을 지정 주소로 전달.
+ */
 export function buildClaimEntryTx(params: ClaimEntryParams): Transaction {
   const tx = new Transaction();
   tx.moveCall({
