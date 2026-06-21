@@ -2,7 +2,7 @@
  * 쪽지(DM) hook — Walrus 저장 + Sui NoteSent 이벤트로 비동기 쪽지.
  * Seal 암호화는 후속(현재 평문으로 Walrus 저장 → NoteSent 이벤트).
  */
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   createJsonRpcClient,
   walrusStore,
@@ -11,6 +11,7 @@ import {
   buildSendNoteTx,
   getNoteSentEvents,
   type SuiNetwork,
+  moveTarget,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
@@ -55,22 +56,62 @@ export function useNotes() {
 
   useEffect(() => { fetchNotes() }, [fetchNotes])
 
-  const sendNote = useCallback(
-    async (to: string, text: string, noteBoxId?: string) => {
-      if (!address) throw new Error('로그인 필요')
-      let boxId = noteBoxId
-      if (!boxId) {
-        const digest = await executeOnchain(buildCreateNoteBoxTx({ other: to }))
-        // NoteBoxCreated 이벤트에서 ID 추출 — 간단히 digest 사용(실제로는 objectChanges에서 추출)
-        boxId = digest
+  // 상대별 NoteBox ID 캐시(한 번 만들면 계속 사용)
+  const noteBoxCache = useRef<Record<string, string>>({})
+
+  const findOrCreateNoteBox = useCallback(
+    async (to: string): Promise<string> => {
+      if (noteBoxCache.current[to]) return noteBoxCache.current[to]
+      // 기존 NoteBoxCreated 이벤트에서 찾기
+      const client = createJsonRpcClient(network)
+      const events = await client.queryEvents({
+        query: { MoveEventType: moveTarget('note', 'NoteBoxCreated') },
+        limit: 50,
+      })
+      for (const e of events.data) {
+        const p = e.parsedJson as Record<string, unknown>
+        const a = String(p.participant_a ?? '')
+        const b = String(p.participant_b ?? '')
+        if ((a === address && b === to) || (a === to && b === address)) {
+          const boxId = String(p.note_box_id ?? '')
+          noteBoxCache.current[to] = boxId
+          return boxId
+        }
       }
+      // 없으면 생성
+      await executeOnchain(buildCreateNoteBoxTx({ other: to }))
+      // 생성 후 이벤트에서 ID 회수
+      const events2 = await client.queryEvents({
+        query: { MoveEventType: moveTarget('note', 'NoteBoxCreated') },
+        limit: 50,
+        order: 'descending',
+      })
+      for (const e of events2.data) {
+        const p = e.parsedJson as Record<string, unknown>
+        const a = String(p.participant_a ?? '')
+        const b = String(p.participant_b ?? '')
+        if ((a === address && b === to) || (a === to && b === address)) {
+          const boxId = String(p.note_box_id ?? '')
+          noteBoxCache.current[to] = boxId
+          return boxId
+        }
+      }
+      throw new Error('NoteBox 생성 후 ID를 찾을 수 없습니다')
+    },
+    [address, network, executeOnchain],
+  )
+
+  const sendNote = useCallback(
+    async (to: string, text: string) => {
+      if (!address) throw new Error('로그인 필요')
+      const boxId = await findOrCreateNoteBox(to)
       const blob = new TextEncoder().encode(text)
       const blobId = await walrusStore(blob)
       const blobIdBytes = new TextEncoder().encode(blobId)
       await executeOnchain(buildSendNoteTx({ noteBoxId: boxId, to, blobId: blobIdBytes }))
       await fetchNotes()
     },
-    [address, executeOnchain, fetchNotes],
+    [address, executeOnchain, fetchNotes, findOrCreateNoteBox],
   )
 
   return { notes, loading, sendNote, refetch: fetchNotes }
