@@ -266,7 +266,7 @@ utils.move     유지
 
 **남은 후속(적대 리뷰 — 정직 기록):**
 1. **참석·매칭 신호 stored 미보존(emit-only)** — 현재는 classify 함수 재현으로 trustless 충족. DeFi *직접* 읽기 완전 대칭 원하면 `Participation.signals` 또는 매칭 SBT 보존(후속).
-2. **신용 파이프라인 앱 미배선** — `getSignalEvents→creditFromSignals`가 화면/훅에 아직 안 붙음(테스트만 소비). = §10-A 온체인-읽기 이관 과제와 동일.
+2. **신용 UI 표시 = 회귀 게이트(중요·비자명).** *데이터층은 배선·실증 완료* — `useCredit`·`useOnchainWedding`·`useOnchainVault`·`signalBreakdownFor`(온체인 신호→신용/구조/행위분해) + testnet 실호출 검증. **그러나 신용 화면 `MoiCreditPanel`(ProfileData)은 의도된 *시뮬 쇼케이스*(chulsoo 픽스처)**다 — 지금 온체인 `useCredit`로 갈아끼우면 유저 온체인 활동이 없어 화면이 0/빈값이 되는 **회귀**. 올바른 이관 = 실 온체인 활동이 쌓이면 `ProfileData.moiCredit.onchain` 플래그로 *온체인 우선 · 목 fallback* 전환(데이터 전엔 목 유지). **다음 세션은 픽스처를 무심코 온체인으로 갈아끼우지 말 것**(회귀). 데모용 실데이터는 `scripts/test-signals-testnet.ts`의 지갑들에만 존재.
 3. **행위별 CS 차등 가중**(source 활용) = 모델 07/08 확정 후. 현재 CS 평탄(magnitude=1).
 4. **vestigial** ACTION_ATTEND/REQUEST_IUM/ACCEPT_IUM 상수 정리 + `log`의 ATTEND 모호성 제거.
 5. **amount=number** — 부조 MIST는 이 도메인서 2^53 아래라 정확. 초대형 부조 도입 시 bigint 재검토.
