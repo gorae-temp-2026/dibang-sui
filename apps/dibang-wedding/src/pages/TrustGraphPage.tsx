@@ -46,8 +46,8 @@ export function TrustGraphPage() {
   const [rawEdges, setRawEdges] = useState<RawEdge[]>([])
   const [allAddresses, setAllAddresses] = useState<Set<string>>(new Set())
   const [iumMap, setIumMap] = useState<Map<string, string[]>>(new Map())
-  const [timeRange, setTimeRange] = useState<[number, number]>([0, Date.now()])
-  const [sliderValue, setSliderValue] = useState(100)
+  const [timeSteps, setTimeSteps] = useState<number[]>([])
+  const [sliderValue, setSliderValue] = useState(50)
   const [selectedNode, setSelectedNode] = useState<(GNode & { screenX?: number; screenY?: number }) | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -106,17 +106,27 @@ export function TrustGraphPage() {
         if (minTs === Infinity) minTs = Date.now() - 86400000
         if (maxTs === 0) maxTs = Date.now()
 
+        // 50분위수 타임스텝(이벤트 수 균등 분할)
+        const sortedTs = edges.map((e) => e.ts).sort((a, b) => a - b)
+        const steps: number[] = []
+        for (let i = 0; i <= 50; i++) {
+          const idx = Math.min(Math.floor((i / 50) * sortedTs.length), sortedTs.length - 1)
+          steps.push(sortedTs[idx] ?? maxTs)
+        }
+        // 중복 제거 + 마지막은 maxTs 보장
+        if (steps.length > 0) steps[steps.length - 1] = maxTs
+
         setRawEdges(edges)
         setAllAddresses(addrs)
         setIumMap(im)
-        setTimeRange([minTs, maxTs])
-        setSliderValue(100)
+        setTimeSteps(steps)
+        setSliderValue(50)
         setLoading(false)
       })
       .catch((e) => { console.error(e); setLoading(false) })
   }, [])
 
-  const currentMaxTs = timeRange[0] + (timeRange[1] - timeRange[0]) * (sliderValue / 100)
+  const currentMaxTs = timeSteps[sliderValue] ?? (timeSteps[timeSteps.length - 1] ?? Date.now())
   const { nodes, links } = useMemo(() => buildGraph(rawEdges, allAddresses, iumMap, currentMaxTs), [rawEdges, allAddresses, iumMap, currentMaxTs])
 
   const selectedConnections = useMemo(() => {
@@ -217,7 +227,8 @@ export function TrustGraphPage() {
         <input
           type="range"
           min={0}
-          max={100}
+          max={50}
+          step={1}
           value={sliderValue}
           onChange={(e) => setSliderValue(Number(e.target.value))}
           className="h-[200px] cursor-pointer accent-[#F8C57A]"
