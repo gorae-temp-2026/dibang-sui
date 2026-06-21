@@ -6,7 +6,7 @@ import { useMachine, useSelector } from '@xstate/react'
 import { giftActor } from '../machines/gift.machine'
 import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
-import { POOL, TIER_META } from '../components/inyeon/data'
+import { POOL, TIER_META, MOI_INTRO } from '../components/inyeon/data'
 import type { Moi } from '../components/inyeon/types'
 import { SwipeDeck } from '../components/inyeon/SwipeDeck'
 import { InyeonRail } from '../components/inyeon/InyeonRail'
@@ -43,6 +43,7 @@ export function InyeonPage() {
         photoHue: profileMoiForSheet.photos[0]?.hue ?? 210,
         photoUrl: profileMoiForSheet.photos[0]?.url,
         hook: profileMoiForSheet.hook,
+        intro: MOI_INTRO[profileMoiForSheet.id],
         prov: profileMoiForSheet.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: TIER_META[p.tier].label })),
         mutualCount: profileMoiForSheet.mutualCount,
         balLabel: profileMoiForSheet.balLabel,
@@ -79,7 +80,7 @@ export function InyeonPage() {
               onUnlock={(id) => send({ type: 'UNLOCK_PHOTOS', id })}
               onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
               onSwipeNext={() => send({ type: 'SWIPE_NEXT' })}
-              onOpenProfile={(id) => send({ type: 'OPEN_DETAIL', id })}
+              onOpenProfile={(id) => send({ type: 'OPEN_PROFILE', id })}
               onReset={() => send({ type: 'RESET_DECK' })}
             />
           </div>
@@ -166,6 +167,7 @@ export function InyeonPage() {
         onOpenChange={(o) => !o && send({ type: 'CLOSE_PROFILE' })}
         data={chulsooProfile}
         context="inyeon"
+        presentation="page"
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
         onIeum={profileMoiId != null ? () => send({ type: 'OPEN_IEUM', id: profileMoiId }) : undefined}
