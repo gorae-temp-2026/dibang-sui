@@ -12,9 +12,9 @@ import { z } from 'zod'
 export const env = createEnv({
   clientPrefix: 'VITE_',
   client: {
-    // Supabase (필수)
-    VITE_SUPABASE_URL: z.string().url(),
-    VITE_SUPABASE_ANON_KEY: z.string().min(1),
+    // Supabase (배포 시 필수 — 로컬 trust-graph 등은 미설정 허용)
+    VITE_SUPABASE_URL: z.string().url().optional(),
+    VITE_SUPABASE_ANON_KEY: z.string().min(1).optional(),
 
     // 외부 URL (선택 — 미설정 시 코드 측 fallback)
     VITE_API_BASE_URL: z.string().url().optional(),
