@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Chulsoo — Moi Credit (live, real sim data)</title>
+<style>
+  :root{ --navy:#1E3A5F; --navydk:#0F2138; --sky:#87CEEB; --ivory:#FDFBF7; --gold:#E0A93C; --line:#5FB0E6; --red:#E5736B; --muted:#7E93AB; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:radial-gradient(120% 120% at 70% 0%, #16314f 0%, var(--navydk) 60%);color:var(--ivory);
+       font-family:'Pretendard Variable',-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;
+       display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .wrap{width:1120px;max-width:96vw;padding:32px 42px;}
+  .top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:12px;}
+  .ttl{font-size:14px;letter-spacing:3px;color:var(--sky);text-transform:uppercase;}
+  .name{font-family:Georgia,serif;font-size:30px;font-weight:700;margin-top:4px;}
+  .sub{font-size:12.5px;color:var(--muted);margin-top:3px;}
+  .valbox{text-align:right;}
+  .val{font-size:60px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+  .val small{font-size:21px;color:var(--muted);font-weight:600;}
+  .tier{display:inline-block;margin-top:6px;background:linear-gradient(135deg,#E0A93C,#f3cf7e);color:#3a2a06;
+        font-weight:800;font-size:14px;padding:3px 12px;border-radius:999px;letter-spacing:1px;}
+  .delta{font-size:14px;margin-top:6px;font-variant-numeric:tabular-nums;}
+  canvas{display:block;width:100%;height:430px;}
+  .cap{margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+  .cap p{font-size:13.5px;color:#C8D6E6;line-height:1.5;}
+  .cap b{color:var(--ivory);}
+  .src{font-size:11px;color:#5e759a;margin-top:4px;}
+  button{background:var(--navy);color:#fff;border:1px solid #34577e;border-radius:10px;
+         padding:9px 18px;font-size:13px;cursor:pointer;white-space:nowrap;}
+  button:hover{background:#2a4d72;filter:brightness(1.12);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="ttl">Moi Credit · on-chain</div>
+      <div class="name">Chulsoo</div>
+      <div class="sub">A living credit — it moves like a stock</div>
+    </div>
+    <div class="valbox">
+      <div class="val"><span id="val">—</span><small>/1000</small></div>
+      <div class="tier" id="tier">—</div>
+      <div class="delta" id="delta"></div>
+    </div>
+  </div>
+  <canvas id="c"></canvas>
+  <div class="cap">
+    <div>
+      <p><b>Not fixed.</b> Your position in a living trust network — as people join and relationships form, it shifts over time. The exact current value always lives on-chain.</p>
+      <p class="src">Real data — recomputed from <b>sim-demo-260621.mjs</b> (seed 42 · 1,000 people · ~64.5k records · 10 yrs) at each checkpoint.</p>
+    </div>
+    <button onclick="play()">▶ Replay</button>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+const valEl=document.getElementById('val'), tierEl=document.getElementById('tier'), deltaEl=document.getElementById('delta');
+let W,H,DPR;
+function size(){ DPR=window.devicePixelRatio||1; W=cv.clientWidth; H=cv.clientHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+window.addEventListener('resize',()=>{size();draw(progress);});
+
+// ===== REAL sim-computed Moi Credit time-series (30 checkpoints, 2016→2025) =====
+const pts=[651,652,662,671,679,683,651,639,649,752,752,755,758,763,765,767,771,775,779,783,786,792,798,801,803,812,815,820,823,824];
+const events=[
+  {i:6,  t:'took a loan — fulfillment ▼',      up:0},
+  {i:9,  t:'loan repaid → 1.0',                up:1},
+  {i:18, t:'network grows → connections deepen',up:2},
+  {i:29, t:'now · AAA',                        up:1},
+];
+const years=[{i:0,y:'2016'},{i:5,y:'2018'},{i:11,y:'2020'},{i:17,y:'2022'},{i:23,y:'2024'}];
+const yMin=620, yMax=850;
+const padL=58, padR=26, padT=24, padB=42;
+function X(i){ return padL + (W-padL-padR) * (i/(pts.length-1)); }
+function Y(v){ return padT + (H-padT-padB) * (1 - (v-yMin)/(yMax-yMin)); }
+function tierFor(v){ return v>=800?'AAA': v>=700?'AA': v>=600?'A':'BBB'; }
+
+let progress=0, raf=null, start=0;
+function draw(p){
+  ctx.clearRect(0,0,W,H);
+  ctx.font='11px sans-serif'; ctx.textBaseline='middle';
+  for(let g=650; g<=800; g+=50){ const y=Y(g);
+    ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.fillStyle='#6b82a0'; ctx.textAlign='right'; ctx.fillText(g, padL-8, y); }
+  ctx.textAlign='center'; ctx.fillStyle='#6b82a0';
+  years.forEach(yr=> ctx.fillText(yr.y, X(yr.i), H-16));
+
+  const n = 1 + (pts.length-1)*p;
+  const last = Math.min(pts.length-1, Math.floor(n));
+  const frac = n-Math.floor(n);
+  const cur = last>=pts.length-1 ? pts[pts.length-1] : pts[last] + (pts[last+1]-pts[last])*frac;
+  const cx=X(last+ (last<pts.length-1?frac:0)), cy=Y(cur);
+
+  // area fill
+  ctx.beginPath();
+  for(let i=0;i<=last;i++){ const x=X(i),y=Y(pts[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+  if(last<pts.length-1) ctx.lineTo(cx,cy);
+  const grad=ctx.createLinearGradient(0,padT,0,H-padB);
+  grad.addColorStop(0,'rgba(95,176,230,.32)'); grad.addColorStop(1,'rgba(95,176,230,0)');
+  ctx.save(); ctx.lineTo(cx,H-padB); ctx.lineTo(padL,H-padB); ctx.closePath(); ctx.fillStyle=grad; ctx.fill(); ctx.restore();
+  // line
+  ctx.beginPath();
+  for(let i=0;i<=last;i++){ const x=X(i),y=Y(pts[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+  if(last<pts.length-1) ctx.lineTo(cx,cy);
+  ctx.strokeStyle='#5FB0E6'; ctx.lineWidth=2.6; ctx.lineJoin='round'; ctx.stroke();
+
+  // event markers
+  events.forEach(e=>{ if(e.i<=last){ const x=X(e.i),y=Y(pts[e.i]);
+    const col = e.up===1?'#87CEEB': e.up===0?'#E5736B':'#9db4cc';
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(x,y,4.5,0,7); ctx.fill();
+    ctx.fillStyle='#cfe0f0'; ctx.font='12px sans-serif';
+    const aboveTop = y < Y(yMax-55);
+    ctx.textAlign = x > W-180 ? 'right' : 'center';
+    ctx.fillText(e.t, Math.min(x, W-padR-2), aboveTop ? y+22 : y-15); } });
+
+  // current dot (pulse)
+  const pr=2.5+Math.sin(performance.now()/220)*1.4;
+  ctx.fillStyle='#FDFBF7'; ctx.beginPath(); ctx.arc(cx,cy,4.5,0,7); ctx.fill();
+  ctx.strokeStyle='rgba(135,206,235,.5)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(cx,cy,6+pr,0,7); ctx.stroke();
+
+  const v=Math.round(cur);
+  valEl.textContent=v; tierEl.textContent=tierFor(v);
+  const d=v-pts[0]; deltaEl.textContent=(d>=0?'▲ +':'▼ ')+d+'  ('+(d>=0?'+':'')+((d/pts[0])*100).toFixed(1)+'%)';
+  deltaEl.style.color = d>=0?'#87CEEB':'#E5736B';
+}
+function tick(ts){ if(!start)start=ts; progress=Math.min(1,(ts-start)/5600);
+  draw(progress); if(progress<1) raf=requestAnimationFrame(tick); else loop(); }
+function loop(){ draw(1); raf=requestAnimationFrame(loop); }
+function play(){ cancelAnimationFrame(raf); start=0; progress=0; raf=requestAnimationFrame(tick); }
+size(); play();
+</script>
+</body>
+</html>

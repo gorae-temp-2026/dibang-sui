@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Scene 8 — Moi Credit → DeFi (on-chain flow)</title>
+<style>
+  :root{ --navy:#1E3A5F; --navydk:#0F2138; --sky:#87CEEB; --ivory:#FDFBF7; --gold:#E0A93C; --green:#3DBE8B; --muted:#7E93AB; --line:#34577e; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:radial-gradient(120% 120% at 70% -10%, #16314f 0%, var(--navydk) 60%);color:var(--ivory);
+       font-family:'Pretendard Variable',-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;
+       display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .wrap{width:1180px;max-width:97vw;padding:30px 44px;}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px;}
+  .ttl{font-family:Georgia,serif;font-size:30px;font-weight:700;}
+  .ttl small{display:block;font-family:inherit;font-size:14px;color:var(--sky);font-weight:400;margin-top:5px;letter-spacing:.3px;}
+  .road{font-size:12px;color:var(--gold);border:1px solid rgba(224,169,60,.4);border-radius:999px;padding:5px 13px;white-space:nowrap;}
+  .flow{display:flex;align-items:center;gap:0;}
+  .card{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:20px 18px;min-height:190px;
+        opacity:0;transform:translateY(14px);transition:opacity .5s ease, transform .5s ease;}
+  .card.on{opacity:1;transform:none;}
+  .ctag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--sky);}
+  .anon{display:flex;align-items:center;gap:12px;margin:14px 0 6px;}
+  .av{width:52px;height:52px;border-radius:50%;background:#22354c;display:flex;align-items:center;justify-content:center;font-size:26px;color:#54708e;border:1px dashed #3f5d7e;}
+  .anonlbl{font-size:12.5px;color:var(--muted);}
+  .anonlbl b{color:var(--ivory);display:block;font-size:15px;}
+  .obj{margin-top:8px;background:linear-gradient(135deg,#1b3552,#24456a);border:1px solid #3a6da0;border-radius:12px;padding:11px 13px;}
+  .obj .big{font-size:30px;font-weight:800;line-height:1;}
+  .obj .big span{font-size:15px;color:var(--gold);font-weight:800;margin-left:6px;}
+  .obj .sub{font-size:11px;color:#a9c2da;margin-top:5px;}
+  .navi .name{font-size:21px;font-weight:800;margin:14px 0 4px;}
+  .navi .desc{font-size:13px;color:#cdddec;line-height:1.5;}
+  .navi .hl{margin-top:12px;background:rgba(135,206,235,.12);border-left:3px solid var(--sky);border-radius:0 8px 8px 0;padding:9px 11px;font-size:12.5px;color:#dcebf8;}
+  .navi .hl b{color:#fff;}
+  .loan .name{font-size:17px;font-weight:700;margin:14px 0 4px;color:#dff3ea;}
+  .loan .amt{font-size:34px;font-weight:800;color:var(--green);line-height:1;}
+  .loan .amt small{font-size:14px;color:var(--muted);font-weight:600;}
+  .loan .basis{font-size:11.5px;color:#9fb6cc;margin-top:9px;line-height:1.5;}
+  .stamp{display:inline-block;margin-top:11px;border:2px solid var(--green);color:var(--green);font-weight:800;font-size:13px;
+         padding:3px 12px;border-radius:8px;letter-spacing:1px;transform:rotate(-4deg);opacity:0;transition:opacity .4s;}
+  .stamp.on{opacity:1;}
+  .arrow{flex:0 0 64px;display:flex;flex-direction:column;align-items:center;opacity:0;transition:opacity .4s;}
+  .arrow.on{opacity:1;}
+  .arrow svg{width:46px;height:22px;}
+  .arrow .al{font-size:10.5px;color:var(--sky);margin-top:4px;text-align:center;white-space:nowrap;}
+  .deepbook{margin-top:16px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:12px 18px;
+            display:flex;align-items:center;gap:12px;opacity:0;transform:translateY(10px);transition:opacity .5s, transform .5s;}
+  .deepbook.on{opacity:1;transform:none;}
+  .deepbook .dt{font-size:13px;color:#cdddec;} .deepbook .dt b{color:var(--ivory);}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--sky);}
+  .foot{margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+  .foot .echo{font-family:Georgia,serif;font-style:italic;font-size:15px;color:var(--sky);}
+  button{background:var(--navy);color:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 18px;font-size:13px;cursor:pointer;}
+  button:hover{filter:brightness(1.15);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="ttl">Moi Credit → DeFi<small>predicted cash flow + on-chain credit → an uncollateralized loan</small></div>
+    <div class="road">concept · roadmap — Navi / DeepBook integration</div>
+  </div>
+
+  <div class="flow">
+    <!-- A: anonymous + Moi Credit object -->
+    <div class="card" id="cA">
+      <div class="ctag">on Sui · Move object</div>
+      <div class="anon"><div class="av">?</div><div class="anonlbl"><b>Identity hidden</b>anonymous borrower</div></div>
+      <div class="obj"><div class="big">824<span>AAA</span></div><div class="sub">Moi Credit · composable Move object</div></div>
+    </div>
+
+    <div class="arrow" id="arr1"><svg viewBox="0 0 46 22"><path d="M0 11 H38 M30 4 L40 11 L30 18" fill="none" stroke="#87CEEB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="al">reads</div></div>
+
+    <!-- B: Navi oracle -->
+    <div class="card navi" id="cB">
+      <div class="ctag">reputation oracle</div>
+      <div class="name">Navi Protocol</div>
+      <div class="desc">Reads the Moi Credit object as a reputation input — no wallet history, no collateral.</div>
+      <div class="hl">reads your <b>credit</b> — never <b>who you are</b></div>
+    </div>
+
+    <div class="arrow" id="arr2"><svg viewBox="0 0 46 22"><path d="M0 11 H38 M30 4 L40 11 L30 18" fill="none" stroke="#3DBE8B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="al">approves</div></div>
+
+    <!-- C: loan -->
+    <div class="card loan" id="cC">
+      <div class="ctag">DeFi · payments</div>
+      <div class="name">Uncollateralized wedding loan</div>
+      <div class="amt">₩13.58M<small> approved</small></div>
+      <div class="basis">backed by predicted future gifts:<br/>180 guests · ₩14M expected (호혜 / reciprocity)</div>
+      <span class="stamp" id="stamp">APPROVED</span>
+    </div>
+  </div>
+
+  <div class="deepbook" id="db"><span class="dot"></span><div class="dt"><b>DeepBook</b> — on-chain liquidity & settlement rail (disbursement · repayment · liquidation)</div></div>
+
+  <div class="foot">
+    <div class="echo">"We don't need to know who you are to know you can be trusted."</div>
+    <button onclick="play()">▶ Replay</button>
+  </div>
+</div>
+<script>
+const steps=[['cA',0],['arr1',700],['cB',1100],['arr2',1900],['cC',2300],['stamp',3100],['db',3500]];
+let timers=[];
+function play(){
+  timers.forEach(clearTimeout); timers=[];
+  ['cA','arr1','cB','arr2','cC','stamp','db'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  steps.forEach(([id,t])=>timers.push(setTimeout(()=>document.getElementById(id).classList.add('on'),t)));
+}
+play();
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Scene 9 — Quantifying the trust network (vision)</title>
+<style>
+  :root{ --navydk:#0A1828; --sky:#87CEEB; --ivory:#FDFBF7; --gold:#E0A93C; --muted:#7E93AB; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:radial-gradient(130% 130% at 50% 18%, #14304e 0%, var(--navydk) 62%);color:var(--ivory);
+       font-family:'Pretendard Variable',-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif;overflow:hidden;}
+  #stage{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;}
+  .overlay{position:relative;text-align:center;z-index:2;pointer-events:none;max-width:880px;padding:0 24px;}
+  .cap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:760px;opacity:0;transition:opacity .6s ease;}
+  .cap.on{opacity:1;}
+  .cap .big{font-family:Georgia,serif;font-size:52px;font-weight:700;line-height:1.05;}
+  .cap .big.kr{font-family:'Noto Serif KR','Nanum Myeongjo',Georgia,serif;}
+  .cap .sub{font-size:17px;color:#C8D9EA;margin-top:14px;}
+  .cap.final .big{font-size:46px;color:var(--ivory);}
+  .cap.final .echo{font-family:Georgia,serif;font-style:italic;font-size:19px;color:var(--sky);margin-top:18px;line-height:1.5;}
+  .cap.final .brand{font-size:14px;letter-spacing:3px;color:var(--muted);margin-top:22px;text-transform:uppercase;}
+  .kw{display:inline-block;color:var(--gold);}
+  button{position:absolute;right:26px;bottom:24px;z-index:3;background:#1E3A5F;color:#fff;border:1px solid #34577e;border-radius:10px;padding:9px 18px;font-size:13px;cursor:pointer;}
+  button:hover{filter:brightness(1.15);}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div class="overlay">
+    <div class="cap" data-i="0"><div class="big">Chulsoo<span class="kw"> · today</span></div><div class="sub">one person — one web of relationships</div></div>
+    <div class="cap" data-i="1"><div class="big"><span class="kw">1,000</span> relationships</div><div class="sub">our simulation · real on-chain data</div></div>
+    <div class="cap" data-i="2"><div class="big"><span class="kw">7 billion</span> people</div><div class="sub">everyone already has relationships</div></div>
+    <div class="cap" data-i="3"><div class="big"><span class="kw">100 years</span> of trust</div><div class="sub">a lifetime — recorded, composable, on-chain</div></div>
+    <div class="cap" data-i="4"><div class="big">one trust <span class="kw">ontology</span></div><div class="sub">every relationship — structured &amp; quantified</div></div>
+    <div class="cap final" data-i="5">
+      <div class="big kr">관계가 전부다</div>
+      <div class="echo">"We don't need to know who you are<br/>to know you can be trusted."</div>
+      <div class="brand">Dibang · Social Transaction Intelligence</div>
+    </div>
+  </div>
+  <button onclick="play()">▶ Replay</button>
+</div>
+<script>
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+let W,H,DPR;
+function size(){ DPR=window.devicePixelRatio||1; W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+addEventListener('resize',size); size();
+
+// fibonacci sphere
+const N=460, P=[];
+for(let i=0;i<N;i++){ const y=1-(i/(N-1))*2; const r=Math.sqrt(1-y*y); const th=i*2.399963;
+  P.push({x:Math.cos(th)*r, y:y, z:Math.sin(th)*r, born:i/N}); }   // born ∈ [0,1]
+// neighbor edges (each to 3 nearest)
+const E=[];
+for(let i=0;i<N;i++){ const d=[]; for(let j=0;j<N;j++){ if(i===j)continue; const dx=P[i].x-P[j].x,dy=P[i].y-P[j].y,dz=P[i].z-P[j].z; d.push([dx*dx+dy*dy+dz*dz,j]); }
+  d.sort((a,b)=>a[0]-b[0]); for(let n=0;n<3;n++) if(d[n][1]>i) E.push([i,d[n][1]]); }
+
+const DUR=6000;   // growth duration
+let t0=0, raf=null;
+const caps=document.querySelectorAll('.cap');
+const capTimes=[0,1500,2900,4100,5200,6500];
+function draw(ts){
+  if(!t0)t0=ts; const t=ts-t0;
+  ctx.clearRect(0,0,W,H);
+  const grow=Math.min(1, t/DUR);
+  const Rbase=Math.min(W,H)*0.40, R=Rbase*(0.28+0.72*easeOut(grow));   // sphere grows
+  const cx=W/2, cy=H/2, ang=t*0.00020, ca=Math.cos(ang), sa=Math.sin(ang);
+  const born=i=>P[i].born <= grow*1.05;
+  // edges
+  ctx.lineWidth=1;
+  for(const [a,b] of E){ if(!born(a)||!born(b))continue;
+    const pa=proj(P[a],ca,sa,R,cx,cy), pb=proj(P[b],ca,sa,R,cx,cy);
+    const zz=(pa.z+pb.z)/2; ctx.strokeStyle=`rgba(95,176,230,${0.05+0.12*(zz+1)/2})`;
+    ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y); ctx.stroke(); }
+  // nodes
+  for(let i=0;i<N;i++){ if(!born(i))continue; const p=proj(P[i],ca,sa,R,cx,cy);
+    const s=1.1+1.7*(p.z+1)/2, o=0.35+0.55*(p.z+1)/2;
+    if(i===0){ ctx.fillStyle=`rgba(224,169,60,1)`; ctx.beginPath(); ctx.arc(p.x,p.y,3.4,0,7); ctx.fill();
+      ctx.strokeStyle='rgba(224,169,60,.4)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(p.x,p.y,7+Math.sin(ts/240)*1.5,0,7); ctx.stroke(); }
+    else { ctx.fillStyle=`rgba(150,200,235,${o})`; ctx.beginPath(); ctx.arc(p.x,p.y,s,0,7); ctx.fill(); } }
+  // captions
+  let idx=0; for(let i=0;i<capTimes.length;i++) if(t>=capTimes[i]) idx=i;
+  caps.forEach((c,i)=>c.classList.toggle('on', i===idx));
+  raf=requestAnimationFrame(draw);
+}
+function proj(p,ca,sa,R,cx,cy){ const x=p.x*ca - p.z*sa, z=p.x*sa + p.z*ca;
+  const persp=1/(1.8 - z*0.55); return { x:cx + x*R*persp, y:cy + p.y*R*persp, z }; }
+function easeOut(x){ return 1-Math.pow(1-x,3); }
+function play(){ cancelAnimationFrame(raf); t0=0; raf=requestAnimationFrame(draw); }
+play();
+</script>
+</body>
+</html>

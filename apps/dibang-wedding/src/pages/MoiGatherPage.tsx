@@ -271,7 +271,7 @@ export function MoiGatherPage() {
     return () => clearTimeout(t)
   }, [])
 
-  const { yone, owned, placed, equipped, pendingItemId, error, toast } = state.context
+  const { owned, placed, equipped, pendingItemId, error, toast } = state.context
   const giftReceived = useSelector(giftActor, (s) => s.context.received)
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
   useEffect(() => {

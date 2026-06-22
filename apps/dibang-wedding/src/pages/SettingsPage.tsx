@@ -4,7 +4,7 @@ import { useMachine } from '@xstate/react';
 import { settingsMachine } from '../machines/settings.machine';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from '@xstate/react';
-import { Coins, Plus, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import {
   getMeOptions,
   getMeQueryKey,
@@ -14,7 +14,6 @@ import { useAuth } from '../providers/AuthContext';
 import { useZkLogin } from '../providers/ZkLoginProvider';
 import { useSignOut } from '../queries/auth/useSignOut';
 import { giftActor } from '../machines/gift.machine';
-import { YoneChargeSheet } from '../components/settings/YoneChargeSheet';
 import { useT, useLangStore, type Lang } from '../lib/i18n';
 import { useInyeonProfile, fileToProfileDataUrl } from '../stores/inyeonProfile';
 
@@ -45,35 +44,11 @@ export function SettingsPage() {
   const meta = session?.user?.user_metadata;
   // 세션 우선, 없으면 getMe 폴백(dev 로그인우회 프리뷰 = 철수 fixture에서 이름 표시).
   const userName = meta?.display_name ?? meta?.name ?? session?.user?.email ?? me?.name ?? '알 수 없음';
-  const [userOverride, setUserOverride] = useState<boolean | null>(null);
-  const marketing = userOverride ?? me?.marketing_agreed ?? false;
 
   // 저장 진행 + 토스트(2초 자동닫힘) flow는 머신(settings).
-  const [state, send] = useMachine(settingsMachine);
-  const toast = state.matches({ toast: 'visible' }) ? state.context.toastMsg : null;
+  const [, send] = useMachine(settingsMachine);
   // 요네 잔액 = 전역 요네 지갑(giftActor — 선물·꾸미기 공유). 충전 시트로 적립.
   const yone = useSelector(giftActor, (s) => s.context.yone);
-  const [chargeOpen, setChargeOpen] = useState(false);
-
-  const marketingMutation = useMutation({
-    ...updateMarketingConsentMutation(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: getMeQueryKey() });
-      send({ type: 'SAVE_DONE' });
-      send({ type: 'SHOW_TOAST', msg: t('settings.saved') });
-    },
-    onError: () => {
-      setUserOverride(null);
-      send({ type: 'SAVE_ERROR' });
-    },
-  });
-
-  const handleMarketingToggle = () => {
-    const newValue = !marketing;
-    setUserOverride(newValue);
-    send({ type: 'SAVE' });
-    marketingMutation.mutate({ body: { agreed: newValue } });
-  };
 
   // useSignOut 훅 사용 (라운드 1 1-B). supabase 직접 호출 제거.
   // DEV 지갑 로그인은 Supabase 세션이 아니라 dev 키페어(sessionStorage) 기반이라

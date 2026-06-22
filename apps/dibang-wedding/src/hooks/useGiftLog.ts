@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { createJsonRpcClient, getActionLoggedEvents, type ActionLoggedQuery, type SuiNetwork } from '@gorae/sui-sdk'
+import { createJsonRpcClient, getActionLoggedEvents, type SuiNetwork } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
 

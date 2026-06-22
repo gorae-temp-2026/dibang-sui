@@ -2,7 +2,7 @@
 // 선물하기(샵): SHOP 카탈로그 + 온체인 purchase_item(SUI 결제)으로 구매.
 // 받은선물: 온체인 getOwnedMoiItems로 내 소유 MoiItem 조회.
 import { useState } from 'react'
-import { Coins, Plus } from 'lucide-react'
+import { Coins } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
 import { SHOP, ITEM_BY_ID } from './data'
 import { cn } from '../../lib/utils'
@@ -26,22 +26,10 @@ interface GiftPickerProps {
 }
 
 export function GiftPicker(props: GiftPickerProps) {
-  const { open, onOpenChange, toName, yone, suiBalance, received, ownedOnchainItems, pendingItemId, error } = props
+  const { open, onOpenChange, toName, suiBalance, received, ownedOnchainItems, pendingItemId, error } = props
   const [tab, setTab] = useState<'send' | 'received'>('send')
-  const [purchasing, setPurchasing] = useState<string | null>(null)
   const sending = pendingItemId != null
   const offchainInv = received.map((id) => ITEM_BY_ID[id]).filter(Boolean)
-
-  const handlePurchase = async (it: typeof SHOP[0]) => {
-    setPurchasing(it.id)
-    try {
-      await props.onPurchase(it.name, it.category, it.slot ?? it.category)
-    } catch {
-      // 에러는 onDismissError로
-    } finally {
-      setPurchasing(null)
-    }
-  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

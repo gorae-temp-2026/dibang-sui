@@ -3,9 +3,7 @@ import {
   createJsonRpcClient,
   getEventCreatedEvents,
   getParticipatedEvents,
-  getWedding,
   type SuiNetwork,
-  type EventCreatedQuery,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'

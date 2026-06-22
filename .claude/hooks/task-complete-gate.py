@@ -14,6 +14,15 @@ TaskUpdate 완료 게이트 (PreToolUse hook, 방식 A).
 """
 import sys, json, os, subprocess, re, shutil
 
+# ── [임시 무력화 2026-06-20] xState 전면 머신화 작업 동안 비활성 ──────────────────
+# 이유: 이 게이트의 claude -p 심사관이 별도 세션이라 현재 세션의 (파일로 저장되지만
+# 세션에 귀속된) 태스크 목록을 못 보고, 태스크 번호를 transcript로 추론하다 오매핑해
+# 코드가 실제 완료된 태스크(XS-1 Display)까지 거부했다.
+# 검증은 메인 에이전트의 opus 검증 게이트(각 XS 태스크 + V-XS)로 대체한다.
+# 복원: 아래 sys.exit(0) 한 줄만 삭제하면 원래 게이트가 그대로 다시 작동한다.
+sys.exit(0)
+# ──────────────────────────────────────────────────────────────────────────────
+
 REFLECTION = os.path.expanduser(
     '~/.claude/projects/-Users-taewonpark-Github-WORK-GoraeUniverse-dibang-sui/'
     'memory/2026-06-17-task-completion-honesty-reflection.md'

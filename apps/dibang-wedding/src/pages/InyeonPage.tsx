@@ -31,7 +31,7 @@ import { useNotes } from '../hooks/useNotes'
 import { useGiftLog } from '../hooks/useGiftLog'
 
 export function InyeonPage() {
-  const { requestIum, acceptIum, gift: onchainGift, purchaseItem } = useOnchainHostActions()
+  const { requestIum, acceptIum, purchaseItem } = useOnchainHostActions()
   const { items: ownedOnchainItems, refetch: refetchItems } = useOwnedItems()
   const { balanceSui, refetch: refetchBalance } = useSuiBalance()
   const zk = useZkLogin()

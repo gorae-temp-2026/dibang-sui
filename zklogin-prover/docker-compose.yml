@@ -1,0 +1,32 @@
+# zkLogin 자체 호스팅 prover (testnet/mainnet 공용 main zkey)
+# 출처: https://docs.sui.io/sui-stack/zklogin-integration (Run the proving service in your backend)
+#
+# 1) zkey 다운로드 (한 번만, 수 GB):
+#    wget -O - https://raw.githubusercontent.com/sui-foundation/zklogin-ceremony-contributions/main/download-main-zkey.sh | bash
+#    → zkLogin-main.zkey 생성
+#
+# 2) 기동 (이 디렉토리에서):
+#    ZKEY=$(pwd)/zkLogin-main.zkey PROVER_PORT=5001 docker compose up -d
+#
+# 3) 확인:  curl http://localhost:5001/ping   /   엔드포인트: http://localhost:5001/v1
+#    → VITE_ZK_PROVER_URL=http://localhost:5001/v1 (프론트 .env.localhost에 반영됨)
+#
+# HW 권장: 16코어 / 16GB RAM (미달 시 proof 타임아웃)
+services:
+  backend:
+    image: mysten/zklogin:prover-stable
+    volumes:
+      - ${ZKEY}:/app/binaries/zkLogin.zkey
+    environment:
+      - ZKEY=/app/binaries/zkLogin.zkey
+      - WITNESS_BINARIES=/app/binaries
+
+  frontend:
+    image: mysten/zklogin:prover-fe-stable
+    command: '8080'
+    ports:
+      - '${PROVER_PORT}:8080'
+    environment:
+      - PROVER_URI=http://backend:8080/input
+      - NODE_ENV=production
+      - DEBUG=zkLogin:info,jwks

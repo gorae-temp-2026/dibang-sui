@@ -1,0 +1,33 @@
+{
+  "createdAt": "2026-06-21T20:00:05.792Z",
+  "funded": true,
+  "fundAmount": "500000000 MIST (0.5 SUI)",
+  "fundDigest": "8QXdVwMf7b2h6r9niazLVNRGRudmfBW8ZypGaX5QQz7m",
+  "wallets": [
+    {
+      "name": "Wallet1",
+      "address": "0xa1c5d442c86ca9454f70bec6b23b40b3e30fffa8b078fd4273ed4c41e0a80757",
+      "sk": "suiprivkey1qpylt8nq0y0he2j27mwwlfu3rdj30nny4y7gyxgzjkhnckcjvtk4qn8mg4p"
+    },
+    {
+      "name": "Wallet2",
+      "address": "0xc8d5454cf83eb942eedd872ef55235208f047c2bb800c253781f0e575c520e93",
+      "sk": "suiprivkey1qqxp0crhgd05kjylajk7e6k2llhk9y8p4hwy9rul0j36kaejgnq5gxgyp4v"
+    },
+    {
+      "name": "Wallet3",
+      "address": "0x3801db86d80719c2b0ea9e8b2428927f2ee4e862c4175755f7239bc50e5893ea",
+      "sk": "suiprivkey1qqdq57qllp3qdkhsuassh24fael2jj2tgwgvd84sazfgfwhwcq7scyqa65v"
+    },
+    {
+      "name": "Wallet4",
+      "address": "0x3aedaf785842105943c38ed906d4925bdeae382f863154abccd5d97c967bf481",
+      "sk": "suiprivkey1qz49xepx8733rukckt4056eqtrsje6uwjvmkclhuzaaehtges5g6umjcslu"
+    },
+    {
+      "name": "Wallet5",
+      "address": "0x121f088047476d5b6ad1a10c4a435267439dda9bd426c44e6d901e39db80369c",
+      "sk": "suiprivkey1qzvrnue70sxg09uv7n7mldgg7rj8a7g7032ngdjgutwvk8s9rhvxvee9ygr"
+    }
+  ]
+}

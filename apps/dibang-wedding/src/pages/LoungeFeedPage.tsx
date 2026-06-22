@@ -5,7 +5,6 @@ import { loungeFeedMachine } from '../machines/loungeFeed.machine';
 import { useGetFeed } from '../queries/lounge-feed/useGetFeed';
 import { useGetLounge } from '../queries/lounge-feed/useGetLounge';
 import { useGetWedding } from '../queries/lounge-feed/useGetWedding';
-import { useEnsureLoungeCheckIn } from '../queries/lounge-feed/useEnsureLoungeCheckIn';
 import { useGetAnnouncements } from '../queries/lounge-feed/useGetAnnouncements';
 import { useCreateAnnouncement } from '../queries/lounge-feed/useCreateAnnouncement';
 import { useDeleteAnnouncement } from '../queries/lounge-feed/useDeleteAnnouncement';

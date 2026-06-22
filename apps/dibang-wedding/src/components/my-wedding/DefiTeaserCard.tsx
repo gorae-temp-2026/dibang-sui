@@ -8,7 +8,7 @@ const tierFromScore = (s: number) => s >= 700 ? 'AAA' : s >= 500 ? 'AA' : s >= 3
 
 export function DefiTeaserCard({ groomName, brideName }: { groomName: string; brideName: string }) {
   const { address } = useZkLogin()
-  const { data: stats, isLoading } = useMyCreditStats(address ?? undefined)
+  const { data: stats } = useMyCreditStats(address ?? undefined)
   const score = stats?.score ?? 0
   const f = {
     moiCredit: score,
