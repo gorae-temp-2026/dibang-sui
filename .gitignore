@@ -31,3 +31,4 @@ _e2e_test/runs/*/screenshots/
 .env.localhost
 
 ga-adc.json
+apps/dibang-wedding/public/submit
