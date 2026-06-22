@@ -1,4 +1,4 @@
-import type { WeddingSummary, CreateHostInviteRequest, HostInvite } from '@gorae/contracts';
+import type { WeddingSummary, CreateHostInviteRequest, HostInvite } from '../../types/db-compat';
 import { useCopyToClipboard } from '@gorae/web-utils';
 import { useHostInviteList, useCreateHostInvite, useCancelHostInvite } from '../../queries/host-invite/useHostInvites';
 import { useGetWedding } from '../../queries/lounge-feed/useGetWedding';

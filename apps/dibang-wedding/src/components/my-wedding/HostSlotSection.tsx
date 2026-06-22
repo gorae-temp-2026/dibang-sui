@@ -1,4 +1,4 @@
-import type { WeddingSummary, HostInvite } from '@gorae/contracts';
+import type { WeddingSummary, HostInvite } from '../../types/db-compat';
 
 /**
  * 호스트 슬롯 presentational — props/콜백만 받아 렌더링.

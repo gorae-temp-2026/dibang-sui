@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createLoungeCheckIn } from '@gorae/contracts/sdk.gen';
-import type { CreateLoungeCheckInRequest, LoungeCheckIn } from '@gorae/contracts';
+import type { CreateLoungeCheckInRequest, LoungeCheckIn } from '../../types/db-compat';
 
 interface CreateLoungeCheckInVars {
   loungeId: string;

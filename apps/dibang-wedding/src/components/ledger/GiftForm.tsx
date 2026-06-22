@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { CashGift, UpdateCashGiftRequest } from '@gorae/contracts';
+import type { CashGift, UpdateCashGiftRequest } from '../../types/db-compat';
 import { PAY_METHOD_LABEL, PAY_METHOD_OPTIONS, RELATION_OPTIONS } from './ledger-utils';
 
 export function GiftForm({

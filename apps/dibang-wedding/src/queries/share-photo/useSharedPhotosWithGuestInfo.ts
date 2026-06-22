@@ -21,7 +21,7 @@ import {
   listLoungeCheckInsOptions,
   listSharedPhotosOptions,
 } from '@gorae/contracts/@tanstack/react-query.gen';
-import type { SharedPhoto } from '@gorae/contracts';
+import type { SharedPhoto } from '../../types/db-compat';
 import { listSharedPhotoSignedUrls } from '../../lib/sharedPhotoUrl';
 import { formatGuestPrefix } from '../../lib/guestLabel';
 

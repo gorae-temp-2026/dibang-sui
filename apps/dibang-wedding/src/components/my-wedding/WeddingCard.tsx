@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import type { WeddingSummary } from '@gorae/contracts';
+import type { WeddingSummary } from '../../types/db-compat';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import { renderQrToCanvas, downloadQrAsPng } from '../../lib/qr-render';
 import { HostSlotSectionContainer } from './HostSlotSectionContainer';

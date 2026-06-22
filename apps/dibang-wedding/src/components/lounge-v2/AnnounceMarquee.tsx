@@ -1,4 +1,4 @@
-import type { Announcement } from '@gorae/contracts';
+import type { Announcement } from '../../types/db-compat';
 
 // 공지 marquee — 프로토타입 .announce-row.marquee-row/.announce-ticker/.announce-msg 정합.
 // pl-[100%] + 메시지 2벌 + translateX 0→-100%(lng-marquee 36s)로 끊김 없는 좌→우 흐름.

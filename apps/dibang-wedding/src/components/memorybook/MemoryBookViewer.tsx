@@ -16,7 +16,7 @@
  */
 
 import { useMemo } from 'react'
-import type { MemoryBookData as V3MemoryBookData } from '@gorae/contracts'
+import type { MemoryBookData as V3MemoryBookData } from '../../types/db-compat'
 import { useSharedPhotoSignedUrls } from '../../queries/memorybook/useSharedPhotoSignedUrls'
 import { toV2MemoryBookData } from '../../lib/memorybookAdapter'
 import { MemoryBookV2_4Inner } from './MemoryBookV2_4Inner'

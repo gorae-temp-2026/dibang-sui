@@ -9,7 +9,7 @@
  * - couple.cover_photo_url, display_photos는 청첩장 public URL이라 그대로 사용.
  */
 
-import type { MemoryBookData as V3MemoryBookData } from '@gorae/contracts';
+import type { MemoryBookData as V3MemoryBookData } from '../types/db-compat';
 import type { MemoryBookData as V2MemoryBookData } from '../components/memorybook/MemoryBookV2_4Types';
 
 export function formatHHmm(iso: string): string {

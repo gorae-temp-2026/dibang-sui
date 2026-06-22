@@ -4,7 +4,7 @@ import { useMachine } from '@xstate/react';
 import { myWeddingMachine } from '../machines/myWedding.machine';
 import { useQuery } from '@tanstack/react-query';
 import { getMyWeddingsOptions } from '@gorae/contracts/@tanstack/react-query.gen';
-import type { WeddingSummary } from '@gorae/contracts';
+import type { WeddingSummary } from '../types/db-compat';
 import { useCopyToClipboard } from '@gorae/web-utils';
 import { WeddingCard } from '../components/my-wedding/WeddingCard';
 import { AddCard } from '../components/my-wedding/AddCard';

@@ -17,7 +17,7 @@ import { AnnouncementForm } from '../components/lounge-feed/AnnouncementForm';
 import { ParticipantListModal } from '../components/lounge-feed/ParticipantListModal';
 import { PinnedAnnouncementBanner } from '../components/lounge-feed/PinnedAnnouncementBanner';
 import { colors, fonts } from '../lib/theme';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../types/db-compat';
 import { useOnchainLoungeFeed } from '../hooks/useOnchainLoungeFeed';
 
 // TODO: 실제 auth에서 Host 여부를 가져와야 함. 와이어프레임이므로 일단 true.

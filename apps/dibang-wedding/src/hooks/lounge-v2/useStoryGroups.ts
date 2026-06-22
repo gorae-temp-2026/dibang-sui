@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../../types/db-compat';
 import { buildStoryGroups } from '../../lib/loungeV2Feed';
 import type { StoryGroup } from '../../types/lounge-v2';
 

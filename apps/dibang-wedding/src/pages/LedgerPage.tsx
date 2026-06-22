@@ -5,7 +5,7 @@ import { useMachine } from '@xstate/react';
 import { ledgerMachine } from '../machines/ledger.machine';
 import { SharePhotosTab } from '../components/share-photos/SharePhotosTab';
 import { getWeddingOptions, listRsvpsOptions } from '@gorae/contracts/@tanstack/react-query.gen';
-import type { CashGift, HostCreateCashGiftRequest, Rsvp } from '@gorae/contracts';
+import type { CashGift, HostCreateCashGiftRequest, Rsvp } from '../types/db-compat';
 import { FeedItemGuestbookMessage } from '../components/lounge-feed/FeedItemGuestbookMessage';
 import { useListCashGifts } from '../queries/ledger/useListCashGifts';
 import { useGetCashGiftsSummary } from '../queries/ledger/useGetCashGiftsSummary';

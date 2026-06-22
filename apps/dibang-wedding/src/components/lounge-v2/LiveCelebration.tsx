@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useMachine } from '@xstate/react';
 import { Maximize } from 'lucide-react';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../../types/db-compat';
 import { toLogRow, liveMessageText, timeAgo } from '../../lib/loungeV2Feed';
 import { maskGuestName } from '../../lib/guestLabel';
 import { liveCelebrationMachine } from '../../machines/liveCelebration.machine';

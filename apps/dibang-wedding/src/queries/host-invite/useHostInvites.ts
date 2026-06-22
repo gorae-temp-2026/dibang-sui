@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listHostInvites, createHostInvite, cancelHostInvite } from '@gorae/contracts/sdk.gen';
-import type { HostInvite, CreateHostInviteRequest } from '@gorae/contracts';
+import type { HostInvite, CreateHostInviteRequest } from '../../types/db-compat';
 
 export function useHostInviteList(weddingId: string) {
   return useQuery({

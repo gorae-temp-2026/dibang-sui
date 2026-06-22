@@ -4,7 +4,7 @@ import { useMachine } from '@xstate/react';
 import { weddingListMachine } from '../machines/weddingList.machine';
 import { useQuery } from '@tanstack/react-query';
 import { getMyParticipatedWeddingsOptions } from '@gorae/contracts/@tanstack/react-query.gen';
-import type { ParticipatedWedding } from '@gorae/contracts';
+import type { ParticipatedWedding } from '../types/db-compat';
 import { useOnchainWeddingList } from '../hooks/useOnchainWeddingList';
 import { colors, fonts } from '../lib/theme';
 import { useJoinWeddingFromParam } from '../queries/wedding-list/useJoinWeddingFromParam';

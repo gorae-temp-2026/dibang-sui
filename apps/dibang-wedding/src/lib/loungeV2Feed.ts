@@ -4,7 +4,7 @@
 // hook(useWarmth 등)은 이 함수들을 useMemo로 감싸기만 한다.
 // 테스트·재사용을 위해 React 의존 없이 분리.
 
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../types/db-compat';
 import { env } from '../env';
 import { SIDE_LABEL } from './guestLabel';
 import {

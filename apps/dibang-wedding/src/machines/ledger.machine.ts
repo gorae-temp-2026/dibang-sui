@@ -1,5 +1,5 @@
 import { setup, assign } from 'xstate';
-import type { CashGift } from '@gorae/contracts';
+import type { CashGift } from '../types/db-compat';
 
 // ledger.machine — LedgerPage(장부) flow (XS-13).
 // modal 상태머신(gift CRUD drawer/dialog) + activeTab/selectedGift/deleteTargetId context.

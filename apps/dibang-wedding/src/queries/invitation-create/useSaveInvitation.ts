@@ -4,7 +4,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createWedding, updateInvitation, updateWeddingSuiIds } from '@gorae/contracts/sdk.gen';
 import { getMyWeddingsQueryKey } from '@gorae/contracts/@tanstack/react-query.gen';
-import type { CreateWeddingRequest, UpdateInvitationRequest } from '@gorae/contracts';
+import type { CreateWeddingRequest, UpdateInvitationRequest } from '../../types/db-compat';
 import type { SuiNetwork } from '@gorae/sui-sdk';
 import { useOnchainHostActions } from '../../hooks/useOnchainHostActions';
 import { useZkLogin } from '../../providers/ZkLoginProvider';

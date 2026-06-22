@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { colors, fonts } from '../../lib/theme';
-import type { Announcement } from '@gorae/contracts';
+import type { Announcement } from '../../types/db-compat';
 
 interface Props {
   currentAnnouncement?: Announcement;

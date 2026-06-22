@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createInvitation, updateInvitation } from '@gorae/contracts/sdk.gen';
 import { getMyWeddingsQueryKey } from '@gorae/contracts/@tanstack/react-query.gen';
-import type { UpdateInvitationRequest } from '@gorae/contracts';
+import type { UpdateInvitationRequest } from '../../types/db-compat';
 
 export interface AddInvitationPayload {
   slug: string;

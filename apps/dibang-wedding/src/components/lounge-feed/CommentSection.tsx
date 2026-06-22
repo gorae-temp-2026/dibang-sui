@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { colors } from '../../lib/theme';
-import type { FeedComment } from '@gorae/contracts';
+import type { FeedComment } from '../../types/db-compat';
 
 const COMMENT_BG = '#FFF6F8';
 

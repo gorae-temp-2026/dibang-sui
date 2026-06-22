@@ -2,7 +2,7 @@ import { useToggleFeedHeart } from '../../queries/lounge-feed/useToggleFeedHeart
 import { useGetFeedComments } from '../../queries/lounge-feed/useGetFeedComments';
 import { useCreateFeedComment } from '../../queries/lounge-feed/useCreateFeedComment';
 import { useDeleteFeedComment } from '../../queries/lounge-feed/useDeleteFeedComment';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../../types/db-compat';
 import { FeedItemAnnouncement } from './FeedItemAnnouncement';
 import { useState } from 'react';
 

@@ -3,7 +3,7 @@ import { timeAgo } from '../../lib/timeAgo';
 import { SIDE_LABEL } from '../../lib/guestLabel';
 import { HeartButton } from './HeartButton';
 import { CommentSection } from './CommentSection';
-import type { FeedComment, FeedItem } from '@gorae/contracts';
+import type { FeedComment, FeedItem } from '../../types/db-compat';
 
 /**
  * 공지 카드 presentational — 데이터/콜백 props만 받아 렌더링.

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { useMachine } from '@xstate/react';
 import { loungeCheckInGateMachine } from '../machines/loungeCheckInGate.machine';
-import type { CreateLoungeCheckInRequest } from '@gorae/contracts';
+import type { CreateLoungeCheckInRequest } from '../types/db-compat';
 import { useAuth } from '../providers/AuthContext';
 import { useGetMe } from '../queries/shared/useGetMe';
 import { useCheckMyCheckIn } from '../queries/lounge-check-in-gate/useCheckMyCheckIn';

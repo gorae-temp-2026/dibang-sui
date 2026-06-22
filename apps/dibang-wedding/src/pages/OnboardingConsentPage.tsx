@@ -7,7 +7,7 @@ import {
   type TermsType,
 } from '../machines/onboardingConsent.machine'
 import { createConsentsMutation, getMeQueryKey } from '@gorae/contracts/@tanstack/react-query.gen'
-import type { User } from '@gorae/contracts'
+import type { User } from '../types/db-compat'
 
 // _scenario/2026-05-26-user-consent-onboarding/SCENARIOS.md S-01
 // 4 체크박스(필수 3 + 선택 1) + "동의하고 시작". 필수 미체크면 버튼 disabled.

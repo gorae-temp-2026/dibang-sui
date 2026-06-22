@@ -1,6 +1,6 @@
 import { colors } from '../../lib/theme';
 import { SIDE_LABEL, formatGuestPrefix } from '../../lib/guestLabel';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../../types/db-compat';
 
 interface ParticipantListModalProps {
   entries: FeedItem[];

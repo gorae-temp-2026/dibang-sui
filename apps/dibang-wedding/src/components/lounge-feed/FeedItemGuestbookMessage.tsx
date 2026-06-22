@@ -1,6 +1,6 @@
 import { colors, fonts } from '../../lib/theme';
 import { formatGuestPrefix } from '../../lib/guestLabel';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../../types/db-compat';
 
 interface Props {
   item: FeedItem;

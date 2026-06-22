@@ -5,7 +5,7 @@ import {
   getWeddingMemoryBookOptions,
   getWeddingSharedPhotoGroupsOptions,
 } from '@gorae/contracts/@tanstack/react-query.gen';
-import type { SharedPhotoGroup } from '@gorae/contracts';
+import type { SharedPhotoGroup } from '../types/db-compat';
 import { useSignedUrls } from '../queries/share-photo/useSignedUrls';
 import { useReplaceCurated } from '../queries/memory-book/useReplaceCurated';
 import { PhotoLightbox } from '../components/memorybook/PhotoLightbox';

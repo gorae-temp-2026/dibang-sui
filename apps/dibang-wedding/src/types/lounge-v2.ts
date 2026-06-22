@@ -4,7 +4,7 @@
 // (data-fetching.md: 타입 수동 선언 금지). 여기엔 V2 화면이 피드를
 // 클라이언트에서 재가공한 결과 형태만 정의한다.
 
-import type { FeedItem, FeedItemType } from '@gorae/contracts';
+import type { FeedItem, FeedItemType } from './db-compat';
 
 /** 모이는 중 로그 행의 활동 종류
  *  memory: Memory Domain Split 후 추가된 라운지 V2 "온기" 게시물 (text + 0/1 photo).

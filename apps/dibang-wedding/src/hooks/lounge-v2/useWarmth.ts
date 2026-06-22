@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../../types/db-compat';
 import { computeWarmth } from '../../lib/loungeV2Feed';
 
 // 활동량 기반 체온°(우리의 온기). 서버 의존 없는 순수 파생값이라 hooks/.

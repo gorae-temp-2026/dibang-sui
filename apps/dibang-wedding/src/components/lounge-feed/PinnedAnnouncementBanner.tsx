@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { colors } from '../../lib/theme';
 import { SIDE_LABEL } from '../../lib/guestLabel';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../../types/db-compat';
 
 interface Props {
   item: FeedItem;

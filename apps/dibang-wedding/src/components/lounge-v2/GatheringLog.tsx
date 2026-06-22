@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../../types/db-compat';
 import { toLogRow, timeAgo } from '../../lib/loungeV2Feed';
 import { maskGuestName } from '../../lib/guestLabel';
 import type { LogKind } from '../../types/lounge-v2';

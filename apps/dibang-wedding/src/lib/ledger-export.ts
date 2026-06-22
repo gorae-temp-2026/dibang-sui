@@ -1,4 +1,4 @@
-import type { CashGift } from '@gorae/contracts';
+import type { CashGift } from '../types/db-compat';
 import { PAY_METHOD_LABEL } from '../components/ledger/ledger-utils';
 import { downloadCsv } from './csv-download';
 

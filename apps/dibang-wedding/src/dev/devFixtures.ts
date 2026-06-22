@@ -1,6 +1,6 @@
 // ★ DEV 전용 — 철수 1인칭 데모 fixture(데모_시나리오_260620.md). 프로덕션 미사용(dev 시더만 참조).
 // prod 쓰기 0 · 철수·영희·예정결혼식·참여결혼식 = fixture. 날짜 기준 = 2026-06-20.
-import type { User, WeddingSummary, ParticipatedWedding, Wedding, Lounge, FeedItem, Announcement } from '@gorae/contracts'
+import type { User, WeddingSummary, ParticipatedWedding, Wedding, Lounge, FeedItem, Announcement } from '../types/db-compat'
 import { PLAZA_WEDDING } from '../components/moi-gather/data'
 
 // 로그인 사용자 = 철수.

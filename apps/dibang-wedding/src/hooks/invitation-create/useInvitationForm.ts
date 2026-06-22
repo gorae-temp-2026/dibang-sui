@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { WeddingInfo, HostSlots, CreateWeddingRequest, UpdateInvitationRequest } from '@gorae/contracts';
+import type { WeddingInfo, HostSlots, CreateWeddingRequest, UpdateInvitationRequest } from '../../types/db-compat';
 import type { WeddingData, InvitationTheme, ImagePosition } from '@gorae/invitation-ui';
 import type { InvitationDesignConfig, LetteringConfig, LetteringSource, ThemeFonts, ThemeColors, SectionEntry } from '../../types/invitationDesignConfig';
 import { makeDefaultDesignConfig } from '../../types/invitationDesignConfig';

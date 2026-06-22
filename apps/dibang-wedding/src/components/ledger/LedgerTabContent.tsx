@@ -1,4 +1,4 @@
-import type { CashGift } from '@gorae/contracts';
+import type { CashGift } from '../../types/db-compat';
 import { formatAmount, formatDate } from './ledger-utils';
 
 export function LedgerTabContent({

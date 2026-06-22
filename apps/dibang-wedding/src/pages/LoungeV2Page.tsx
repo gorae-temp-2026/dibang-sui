@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Megaphone, PenLine, LayoutGrid, Gift } from 'lucide-react';
 import { useMachine } from '@xstate/react';
-import type { FeedItem } from '@gorae/contracts';
+import type { FeedItem } from '../types/db-compat';
 import { loungeV2Machine } from '../machines/loungeV2.machine';
 import { buildDisplayUrl, buildSharePhotoUploadPath } from '../lib/external-urls';
 import { useGetLounge } from '../queries/lounge-feed/useGetLounge';

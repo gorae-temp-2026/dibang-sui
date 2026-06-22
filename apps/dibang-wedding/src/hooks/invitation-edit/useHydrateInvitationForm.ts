@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { DesignConfig } from '@gorae/contracts';
+import type { DesignConfig } from '../../types/db-compat';
 import { useInvitationForm } from '../invitation-create/useInvitationForm';
 import { makeDefaultDesignConfig, REQUIRED_SECTIONS } from '../../types/invitationDesignConfig';
 import type { InvitationDesignConfig, LetteringSource } from '../../types/invitationDesignConfig';
