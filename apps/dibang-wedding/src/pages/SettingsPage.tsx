@@ -1,14 +1,13 @@
 import { useNavigate } from 'react-router';
-import { useState, useRef, type ChangeEvent } from 'react';
+import { useRef, type ChangeEvent } from 'react';
 import { useMachine } from '@xstate/react';
 import { settingsMachine } from '../machines/settings.machine';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useSelector } from '@xstate/react';
 import { ChevronRight } from 'lucide-react';
 import {
   getMeOptions,
-  getMeQueryKey,
-  updateMarketingConsentMutation,
+  // getMeQueryKey,
 } from '@gorae/contracts/@tanstack/react-query.gen';
 import { useAuth } from '../providers/AuthContext';
 import { useZkLogin } from '../providers/ZkLoginProvider';
@@ -37,7 +36,6 @@ export function SettingsPage() {
   const { session } = useAuth();
   const zk = useZkLogin();
   const signOut = useSignOut();
-  const queryClient = useQueryClient();
   // 마케팅 동의 — 서버값 derived + 사용자 토글 override 패턴 (set-state-in-effect 회피, React 19 룰).
   const { data: me } = useQuery(getMeOptions());
 

@@ -62,8 +62,11 @@ export function TrustGraphPage() {
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
     if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID })
     const client = createJsonRpcClient(network)
+    let cancelled = false
+    function fetchData() {
     Promise.all([getSignalEvents(client), getParticipatedEvents(client), getMoiCreatedEvents(client), getIumAcceptedEvents(client)])
       .then(([signals, participations, _moiEvents, iumAccepted]) => {
+        if (cancelled) return
         const edges: RawEdge[] = []; let minTs = Infinity, maxTs = 0
         for (const s of signals) {
           if (s.ts < minTs) minTs = s.ts; if (s.ts > maxTs) maxTs = s.ts
@@ -89,6 +92,10 @@ export function TrustGraphPage() {
         if (steps.length > 0) steps[steps.length - 1] = maxTs
         setRawEdges(edges); setIumMap(im); setTimeSteps(steps); setSliderValue(50); setLoading(false)
       }).catch(() => setLoading(false))
+    }
+    fetchData()
+    const interval = setInterval(fetchData, 5000)
+    return () => { cancelled = true; clearInterval(interval) }
   }, [])
 
   const currentMaxTs = timeSteps[sliderValue] ?? (timeSteps[timeSteps.length - 1] ?? Date.now())

@@ -82,9 +82,9 @@ export function InyeonPage() {
   const giftSignals = useSelector(giftActor, (s) => s.context.signals)
 
   const {
-    queue, photoIdx, unlocked, yone, screen, degMin, degMax, activeId, message, error,
+    queue, photoIdx, unlocked, screen, degMin, degMax, activeId, message, error,
     incoming, chatOpen, sentIds, matchedIds,
-    detailId, profileMoiId, myProfileOpen, filterOpen, dmRoomId, memoryId, dms,
+    detailId, profileMoiId, myProfileOpen, filterOpen, dmRoomId, memoryId,
   } = state.context
   const unlockedIds = Object.entries(unlocked)
     .filter(([, v]) => v)
