@@ -8,6 +8,12 @@ export interface AuthBootstrapHandle {
 
 export function createAuthBootstrap(): AuthBootstrapHandle {
   const supabase = getSupabaseClient();
+  if (!supabase) {
+    return {
+      getInitialSession: async () => null,
+      subscribe: () => () => {},
+    };
+  }
   return {
     getInitialSession: async () => {
       const { data } = await supabase.auth.getSession();

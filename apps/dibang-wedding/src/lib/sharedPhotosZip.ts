@@ -24,7 +24,7 @@ export async function fetchSharedPhotosZipBlob({
   loungeId,
   guestUserId,
 }: DownloadSharedPhotosZipArgs): Promise<Blob> {
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient()!;
   const { data: session } = await supabase.auth.getSession();
   const token = session.session?.access_token;
   const baseUrl = getApiBaseUrl();

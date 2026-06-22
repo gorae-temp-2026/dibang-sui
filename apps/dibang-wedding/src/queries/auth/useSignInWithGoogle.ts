@@ -9,7 +9,7 @@ import { getSupabaseClient } from '../../lib/supabase';
 export function useSignInWithGoogle() {
   return useMutation({
     mutationFn: async ({ redirectTo }: { redirectTo: string }) => {
-      const supabase = getSupabaseClient();
+      const supabase = getSupabaseClient()!;
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo },

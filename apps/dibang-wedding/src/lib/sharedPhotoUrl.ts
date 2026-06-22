@@ -14,7 +14,7 @@ export async function listSharedPhotoSignedUrls(
   ttlSeconds: number = DEFAULT_TTL_SECONDS,
 ): Promise<Array<string | undefined>> {
   if (storagePaths.length === 0) return [];
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseClient()!;
   const { data, error } = await supabase
     .storage
     .from(SHARED_BUCKET)

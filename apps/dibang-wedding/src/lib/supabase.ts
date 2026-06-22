@@ -8,15 +8,13 @@ import { env } from '../env'
 
 let client: SupabaseClient | null = null
 
-export function getSupabaseClient(): SupabaseClient {
+export function getSupabaseClient(): SupabaseClient | null {
   if (client) return client
+  if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY) return null
 
-  // SSR/Node 환경 가드: storage는 브라우저에서만 의미. 함수 호출 시점 typeof window 분기로
-  // ReferenceError 방지. supabase-js는 storage undefined 시 in-memory fallback. (UI/데이터 분리 P4-2)
-  // env 검증은 src/env.ts 의 t3-env 스키마가 부팅 시점에 처리 (dev 66b854a 통합).
   const storage = typeof window !== 'undefined' ? window.localStorage : undefined
 
-  client = createClient(env.VITE_SUPABASE_URL ?? '', env.VITE_SUPABASE_ANON_KEY ?? '', {
+  client = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
     auth: {
       autoRefreshToken: true,
       detectSessionInUrl: true,

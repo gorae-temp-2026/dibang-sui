@@ -20,7 +20,7 @@ export function useRealtimeChannel(
   useEffect(() => {
     if (!enabled) return;
 
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseClient()!;
     const channel = supabase
       .channel(channelName)
       .on(

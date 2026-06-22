@@ -9,7 +9,7 @@ import { getSupabaseClient } from '../../lib/supabase';
 export function useSignInWithPassword() {
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const supabase = getSupabaseClient();
+      const supabase = getSupabaseClient()!;
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     },
