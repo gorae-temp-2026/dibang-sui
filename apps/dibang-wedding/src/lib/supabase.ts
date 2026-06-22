@@ -16,7 +16,7 @@ export function getSupabaseClient(): SupabaseClient {
   // env 검증은 src/env.ts 의 t3-env 스키마가 부팅 시점에 처리 (dev 66b854a 통합).
   const storage = typeof window !== 'undefined' ? window.localStorage : undefined
 
-  client = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+  client = createClient(env.VITE_SUPABASE_URL ?? '', env.VITE_SUPABASE_ANON_KEY ?? '', {
     auth: {
       autoRefreshToken: true,
       detectSessionInUrl: true,
