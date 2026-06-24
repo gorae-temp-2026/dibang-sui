@@ -1,8 +1,5 @@
 /**
- * 쪽지(DM) hook — Seal 암호화 + Walrus 저장 + Sui NoteSent 이벤트.
- *
- * 전송: 평문 → Seal encrypt(noteBoxId) → Walrus 저장 → NoteSent 이벤트
- * 수신: NoteSent 이벤트 → Walrus fetch → Seal decrypt → 평문 표시
+ * 쪽지(DM) hook — Walrus 저장 + Sui NoteSent 이벤트로 비동기 쪽지.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -12,12 +9,9 @@ import {
   buildCreateNoteBoxTx,
   buildSendNoteTx,
   getNoteSentEvents,
-  sealEncryptNote,
-  sealDecryptNote,
   type SuiNetwork,
   moveTarget,
 } from '@gorae/sui-sdk'
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
 
@@ -35,9 +29,6 @@ export function useNotes() {
   const [loading, setLoading] = useState(false)
   const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
 
-  // dev keypair for Seal decrypt (SessionKey 생성에 signer 필요)
-  const devKeypair = env.VITE_DEV_PRIVATE_KEY ? Ed25519Keypair.fromSecretKey(env.VITE_DEV_PRIVATE_KEY) : null
-
   const fetchNotes = useCallback(async () => {
     if (!address) return
     setLoading(true)
@@ -48,18 +39,7 @@ export function useNotes() {
         events.map(async (e) => {
           try {
             const blob = await walrusFetch(e.blobId)
-            let text: string
-            if (devKeypair) {
-              try {
-                const plain = await sealDecryptNote(blob, e.noteBoxId, devKeypair)
-                text = new TextDecoder().decode(plain)
-              } catch {
-                text = '(복호화 실패)'
-              }
-            } else {
-              text = '(복호화 키 없음)'
-            }
-            return { from: e.from, to: e.to, text, ts: e.ts, noteBoxId: e.noteBoxId }
+            return { from: e.from, to: e.to, text: new TextDecoder().decode(blob), ts: e.ts, noteBoxId: e.noteBoxId }
           } catch {
             return { from: e.from, to: e.to, text: '(읽을 수 없음)', ts: e.ts, noteBoxId: e.noteBoxId }
           }
@@ -71,7 +51,7 @@ export function useNotes() {
     } finally {
       setLoading(false)
     }
-  }, [address, network, devKeypair])
+  }, [address, network])
 
   useEffect(() => { fetchNotes() }, [fetchNotes])
 
@@ -126,10 +106,8 @@ export function useNotes() {
     async (to: string, text: string) => {
       if (!address) throw new Error('로그인 필요')
       const boxId = await findOrCreateNoteBox(to)
-      const plaintext = new TextEncoder().encode(text)
-      // Seal 암호화 → Walrus 저장
-      const encrypted = await sealEncryptNote(boxId, plaintext)
-      const blobId = await walrusStore(encrypted)
+      const blob = new TextEncoder().encode(text)
+      const blobId = await walrusStore(blob)
       const blobIdBytes = new TextEncoder().encode(blobId)
       await executeOnchain(buildSendNoteTx({ noteBoxId: boxId, to, blobId: blobIdBytes }))
       await fetchNotes()

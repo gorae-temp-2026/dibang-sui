@@ -83,8 +83,10 @@ export function initDevLogger(): void {
       origConsole[level](...args)
       devLogger.log('console', level, {
         args: args.map((a) => {
-          try { return typeof a === 'object' ? JSON.stringify(a)?.slice(0, 200) : String(a).slice(0, 200) }
-          catch { return String(a).slice(0, 200) }
+          try {
+            if (a instanceof Error) return `Error: ${a.message}`
+            return typeof a === 'object' ? JSON.stringify(a)?.slice(0, 200) : String(a).slice(0, 200)
+          } catch { return String(a).slice(0, 200) }
         }),
       })
     }

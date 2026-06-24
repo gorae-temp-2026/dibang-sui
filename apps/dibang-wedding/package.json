@@ -21,7 +21,6 @@
     "@gorae/sui-sdk": "workspace:^",
     "@gorae/web-utils": "workspace:*",
     "@mysten/dapp-kit-react": "^2.1.2",
-    "@mysten/seal": "^1.0.1",
     "@mysten/sui": "^2.20.0",
     "@mysten/sui-groups": "^0.0.1",
     "@mysten/sui-stack-messaging": "^0.0.2",

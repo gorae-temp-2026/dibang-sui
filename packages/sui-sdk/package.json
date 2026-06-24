@@ -12,7 +12,6 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json"
   },
   "dependencies": {
-    "@mysten/seal": "^1.0.1",
     "@mysten/sui": "^2.20.0"
   },
   "devDependencies": {

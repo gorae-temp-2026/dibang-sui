@@ -22,7 +22,6 @@ export * from './gift';
 export * from './note';
 export * from './memory';
 export * from './walrus';
-export * from './seal';
 export * from './queries';
 export * from './zklogin';
 export * from './sponsor';
