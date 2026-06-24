@@ -142,6 +142,18 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     saveSession(next)
     sessionStorage.removeItem(PENDING_KEY)
     setSession(next)
+
+    // Supabase 세션 동시 생성 — Go API 인증용
+    try {
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabaseUrl = env.VITE_SUPABASE_URL
+      const supabaseKey = env.VITE_SUPABASE_ANON_KEY
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey)
+        await supabase.auth.signInWithIdToken({ provider: 'google', token: jwt })
+      }
+    } catch {}
+
     return true
   }, [])
 

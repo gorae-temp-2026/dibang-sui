@@ -174,6 +174,19 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem(PENDING_KEY)
     setSession(next)
     devLogger.log('auth', 'zklogin_complete', { address, maxEpoch: next.maxEpoch })
+
+    // Supabase 세션도 동시 생성 — Go API 인증용 (같은 Google JWT 재사용)
+    try {
+      const { getSupabaseClient } = await import('../lib/supabase')
+      const supabase = getSupabaseClient()
+      if (supabase) {
+        await supabase.auth.signInWithIdToken({ provider: 'google', token: jwt })
+        devLogger.log('auth', 'supabase_session_created', { address })
+      }
+    } catch (e) {
+      devLogger.log('auth', 'supabase_session_failed', { error: (e as Error).message })
+    }
+
     return true
   }, [])
 
