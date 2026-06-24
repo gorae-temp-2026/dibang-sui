@@ -25,8 +25,10 @@ import { OnboardingConsentPage } from './pages/OnboardingConsentPage'
 // [비활성] NetworkPage 전체 주석처리 — dev 스캐폴드(비서비스). 진짜 자리는 InyeonPage(태스크 #24).
 // import { NetworkPage } from './pages/NetworkPage'
 import { SignalGuidePage } from './pages/SignalGuidePage'
+import { DevErrorBoundary } from './components/DevErrorBoundary'
 import { MoiCreditGuidePage } from './pages/MoiCreditGuidePage'
 import { TrustGraphPage } from './pages/TrustGraphPage'
+import { DevLogsPage } from './pages/DevLogsPage'
 import { OnboardingGate } from './components/OnboardingGate'
 import { isDevBypass } from './dev/devBypass' // DEV 전용 로그인 우회(프로덕션 import.meta.env.DEV=false로 제거)
 
@@ -48,10 +50,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
+    <DevErrorBoundary>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/trust-graph" element={<TrustGraphPage />} />
+      <Route path="/dev/logs" element={<DevLogsPage />} />
       <Route path="/onboarding/consent" element={<AuthGuard><OnboardingConsentPage /></AuthGuard>} />
       <Route element={<AuthGuard><OnboardingGate><MainLayout /></OnboardingGate></AuthGuard>}>
         <Route path="/inyeon" element={<InyeonPage />} />
@@ -77,6 +81,7 @@ function App() {
       <Route path="/invite/:token" element={<HostInviteAcceptPage />} />
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
+    </DevErrorBoundary>
   )
 }
 

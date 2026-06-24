@@ -1,4 +1,6 @@
 import './env'  // env 스키마 검증 — 부팅 시점에 누락·형식 오류 즉시 fail
+import { initDevLogger } from './lib/devLoggerInit'
+initDevLogger()
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'

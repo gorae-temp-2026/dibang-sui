@@ -29,6 +29,7 @@ import {
   type ZkLoginSession,
 } from '@gorae/sui-sdk'
 import { env } from '../env'
+import { devLogger } from '../lib/devLogger'
 
 // 앱 시작 시 1회: sui-sdk 설정을 env로 덮어쓴다(미설정이면 testnet 기본값 유지).
 if (env.VITE_SUI_PACKAGE_ID) {
@@ -119,6 +120,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       randomness: ek.randomness,
     }
     sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending))
+    devLogger.log('auth', 'zklogin_redirect', { redirectUri, maxEpoch: ek.maxEpoch })
     window.location.href = getGoogleOAuthUrl({ clientId, redirectUri, nonce: ek.nonce })
   }, [])
 
@@ -171,10 +173,12 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     saveSession(next)
     sessionStorage.removeItem(PENDING_KEY)
     setSession(next)
+    devLogger.log('auth', 'zklogin_complete', { address, maxEpoch: next.maxEpoch })
     return true
   }, [])
 
   const logout = useCallback(() => {
+    devLogger.log('auth', 'logout', {})
     clearSession()
     setSession(null)
     sessionStorage.removeItem(DEV_KEY)
@@ -196,7 +200,9 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
       if (devKeypair) {
         const devClient = createJsonRpcClient(net)
+        devLogger.log('sui', 'executeOnchain_start', { mode: 'devKeypair' })
         const res = await executeAndAssert(devClient, { transaction: tx, signer: devKeypair })
+        devLogger.log('sui', 'executeOnchain_success', { digest: res.digest })
         showTxToast(res.digest, net)
         return res.digest
       }
@@ -223,7 +229,11 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
         options: { showEffects: true, showObjectChanges: true },
       })
       const status = res.effects?.status?.status
-      if (status !== 'success') throw new Error(`트랜잭션 실패: ${res.effects?.status?.error ?? status}`)
+      if (status !== 'success') {
+        devLogger.log('sui', 'tx_error', { error: res.effects?.status?.error, status })
+        throw new Error(`트랜잭션 실패: ${res.effects?.status?.error ?? status}`)
+      }
+      devLogger.log('sui', 'executeOnchain_success', { digest: res.digest, mode: 'zkLogin' })
       showTxToast(res.digest, net)
       return res.digest
     },
