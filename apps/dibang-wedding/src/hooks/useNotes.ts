@@ -54,12 +54,10 @@ export function useNotes() {
                 const plain = await sealDecryptNote(blob, e.noteBoxId, devKeypair)
                 text = new TextDecoder().decode(plain)
               } catch {
-                // Seal 복호화 실패 → 평문 시도 (암호화 전에 보낸 메시지 호환)
-                text = new TextDecoder().decode(blob)
+                text = '(복호화 실패)'
               }
             } else {
-              // zkLogin은 Seal SessionKey 생성 제한 → 평문 표시 (후속: zkLogin signer 지원)
-              text = new TextDecoder().decode(blob)
+              text = '(복호화 키 없음)'
             }
             return { from: e.from, to: e.to, text, ts: e.ts, noteBoxId: e.noteBoxId }
           } catch {

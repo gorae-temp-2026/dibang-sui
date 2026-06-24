@@ -28,7 +28,7 @@ function getSealClient(): SealClient {
   _sealClient = new SealClient({
     suiClient: suiClient as any,
     serverConfigs: TESTNET_KEY_SERVERS,
-    verifyKeyServers: false,
+    verifyKeyServers: false, // TODO: production에서는 true로 변경
   });
   return _sealClient;
 }
@@ -138,7 +138,7 @@ export async function sealDecryptNoteWithSession(
       tx.object(noteBoxId),
     ],
   });
-  const txBytes = await tx.build({ client: suiClient as any });
+  const txBytes = await tx.build({ client: suiClient as any, onlyTransactionKind: true });
 
-  return seal.decrypt({ data: encryptedData, sessionKey, txBytes });
+  return seal.decrypt({ data: encryptedData, sessionKey, txBytes, checkLEEncoding: true });
 }
