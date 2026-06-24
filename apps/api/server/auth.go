@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -57,7 +58,7 @@ func deriveDisplayName(fullName, name, email string) string {
 // AuthMiddleware validates Bearer tokens by calling Supabase Auth API.
 // Soft middleware: requests without tokens pass through for public endpoints.
 // Handlers that need auth call UserIDFromContext.
-func AuthMiddleware(supabaseURL, supabaseAnonKey string, ensure EnsureUserFunc, devBypass bool, devUserID string) func(http.Handler) http.Handler {
+func AuthMiddleware(supabaseURL, supabaseAnonKey string, ensure EnsureUserFunc, devBypass bool, devUserID string, googleClientIDs ...string) func(http.Handler) http.Handler {
 	userEndpoint := fmt.Sprintf("%s/auth/v1/user", strings.TrimRight(supabaseURL, "/"))
 	// 가드: uid당 미들웨어 인스턴스 생애 1회만 EnsureUser 시도(핫패스 쓰기 방지). 실패 시 미저장→다음 요청 재시도.
 	var ensured sync.Map
@@ -106,42 +107,76 @@ func AuthMiddleware(supabaseURL, supabaseAnonKey string, ensure EnsureUserFunc, 
 			}
 			defer resp.Body.Close()
 
-			if resp.StatusCode != http.StatusOK {
-				next.ServeHTTP(w, r)
-				return
-			}
-
+			supabaseOK := resp.StatusCode == http.StatusOK
 			var user supabaseUser
-			if err := json.NewDecoder(resp.Body).Decode(&user); err != nil || user.ID == "" {
-				next.ServeHTTP(w, r)
+			if supabaseOK {
+				if err := json.NewDecoder(resp.Body).Decode(&user); err != nil || user.ID == "" {
+					supabaseOK = false
+				}
+			}
+
+			if supabaseOK {
+				var uid pgtype.UUID
+				if err := uid.Scan(user.ID); err != nil {
+					next.ServeHTTP(w, r)
+					return
+				}
+				if ensure != nil {
+					if _, done := ensured.Load(user.ID); !done {
+						name := deriveDisplayName(user.UserMetadata.FullName, user.UserMetadata.Name, user.Email)
+						if err := ensure(r.Context(), uid, user.Email, name); err != nil {
+							log.Printf("auth: EnsureUser failed for %s: %v", user.ID, err)
+						} else {
+							ensured.Store(user.ID, struct{}{})
+						}
+					}
+				}
+				ctx := context.WithValue(r.Context(), userIDContextKey, uid)
+				if user.Email != "" {
+					ctx = context.WithValue(ctx, emailContextKey, user.Email)
+				}
+				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
 
-			var uid pgtype.UUID
-			if err := uid.Scan(user.ID); err != nil {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			// JIT 프로비저닝: 도메인 유저 행 멱등 보장. 실패는 로그만 — 요청은 절대 막지 않음.
-			if ensure != nil {
-				if _, done := ensured.Load(user.ID); !done {
-					name := deriveDisplayName(user.UserMetadata.FullName, user.UserMetadata.Name, user.Email)
-					if err := ensure(r.Context(), uid, user.Email, name); err != nil {
-						log.Printf("auth: EnsureUser failed for %s: %v", user.ID, err)
-					} else {
-						ensured.Store(user.ID, struct{}{})
+			// Supabase 검증 실패 → Google JWT 직접 검증 (zkLogin 호환)
+			if len(googleClientIDs) > 0 {
+				claims, err := VerifyGoogleJWT(token, googleClientIDs)
+				if err == nil && claims.Subject != "" {
+					// Google sub를 UUID v5 네임스페이스로 변환 (결정적 매핑)
+					googleUID := googleSubToUUID(claims.Subject)
+					var uid pgtype.UUID
+					if err := uid.Scan(googleUID); err == nil {
+						if ensure != nil {
+							if _, done := ensured.Load(googleUID); !done {
+								name := deriveDisplayName("", claims.Name, claims.Email)
+								if err := ensure(r.Context(), uid, claims.Email, name); err != nil {
+									log.Printf("auth(google): EnsureUser failed for %s: %v", claims.Email, err)
+								} else {
+									ensured.Store(googleUID, struct{}{})
+								}
+							}
+						}
+						ctx := context.WithValue(r.Context(), userIDContextKey, uid)
+						if claims.Email != "" {
+							ctx = context.WithValue(ctx, emailContextKey, claims.Email)
+						}
+						next.ServeHTTP(w, r.WithContext(ctx))
+						return
 					}
 				}
 			}
 
-			ctx := context.WithValue(r.Context(), userIDContextKey, uid)
-			if user.Email != "" {
-				ctx = context.WithValue(ctx, emailContextKey, user.Email)
-			}
-			next.ServeHTTP(w, r.WithContext(ctx))
+			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// googleSubToUUID converts a Google sub (numeric string) to a deterministic UUID v5.
+// Namespace: "google-sub" hashed. Same sub always produces the same UUID.
+func googleSubToUUID(sub string) string {
+	ns := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8") // DNS namespace
+	return uuid.NewSHA1(ns, []byte("google:"+sub)).String()
 }
 
 func extractBearerToken(r *http.Request) string {

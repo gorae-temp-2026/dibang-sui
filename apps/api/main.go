@@ -77,8 +77,8 @@ func main() {
 	}))
 
 	// Auth middleware — Supabase API 위임
-	r.Use(api.AuthMiddleware(cfg.SupabaseURL, cfg.SupabaseAnonKey, userSvc.EnsureUser, cfg.DevAuthBypass, cfg.DevUserID))
-	log.Println("Auth: Supabase API auth middleware enabled")
+	r.Use(api.AuthMiddleware(cfg.SupabaseURL, cfg.SupabaseAnonKey, userSvc.EnsureUser, cfg.DevAuthBypass, cfg.DevUserID, cfg.GoogleClientID))
+	log.Println("Auth: Supabase + Google JWT auth middleware enabled")
 	if cfg.DevAuthBypass {
 		log.Println("⚠️  Auth: DEV_AUTH_BYPASS 활성 — X-Dev-Auth 헤더로 인증 우회(dev/localhost 전용, prod 금지)")
 	}
