@@ -45,29 +45,7 @@ export function buildSendNoteTx(params: SendNoteParams): Transaction {
 }
 
 // === Walrus 저장/조회 ===
-
-const WALRUS_PUBLISHER = 'https://publisher.walrus-testnet.walrus.space';
-const WALRUS_AGGREGATOR = 'https://aggregator.walrus-testnet.walrus.space';
-
-export async function walrusStore(data: Uint8Array): Promise<string> {
-  const res = await fetch(`${WALRUS_PUBLISHER}/v1/blobs`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/octet-stream' },
-    body: data as unknown as BodyInit,
-  });
-  if (!res.ok) throw new Error(`Walrus store failed: ${res.status}`);
-  const json = await res.json() as Record<string, unknown>;
-  const newlyCreated = json.newlyCreated as { blobObject?: { blobId?: string } } | undefined;
-  const alreadyCertified = json.alreadyCertified as { blobId?: string } | undefined;
-  const blobId = newlyCreated?.blobObject?.blobId ?? alreadyCertified?.blobId;
-  if (!blobId) throw new Error('Walrus: no blobId in response');
-  return blobId;
-}
-
-export async function walrusFetch(blobId: string): Promise<Uint8Array> {
-  const res = await fetch(`${WALRUS_AGGREGATOR}/v1/blobs/${blobId}`);
-  if (!res.ok) throw new Error(`Walrus fetch failed: ${res.status}`);
-  return new Uint8Array(await res.arrayBuffer());
-}
+// 공유 Walrus 클라이언트는 walrus.ts로 일반화됨(index에서 export). walrusStore/walrusFetch/walrusStorePII 등은
+// '@gorae/sui-sdk'에서 그대로 import 가능. note 모듈은 blobId를 인자로 받기만 한다.
 
 // NoteSentQuery는 queries.ts에서 export — 여기선 중복 정의 안 함.

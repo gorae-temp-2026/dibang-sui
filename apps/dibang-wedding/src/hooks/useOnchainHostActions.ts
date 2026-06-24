@@ -14,6 +14,7 @@
 import { useCallback } from 'react'
 import {
   buildCreateWeddingTx,
+  buildCreateInvitationTx,
   buildAddHostTx,
   buildInviteTx,
   buildCreateVaultTx,
@@ -32,6 +33,7 @@ import {
   type AcceptIumParams,
   type GiftParams,
   type InviteParams,
+  type CreateInvitationParams,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 
@@ -57,6 +59,11 @@ export function useOnchainHostActions() {
   // 초대(청첩장) — 혼주가 하객을 초대했다는 관계 신호(CS) 기록.
   const invite = useCallback(
     (p: InviteParams) => executeOnchain(buildInviteTx(p)),
+    [executeOnchain],
+  )
+  // 청첩장(Invitation) 온체인 생성. 이름(신랑·신부)·커버사진은 호출자가 Walrus에 올린 blobId로 전달(평문 금지, VISION §7).
+  const createInvitation = useCallback(
+    (p: CreateInvitationParams) => executeOnchain(buildCreateInvitationTx(p)),
     [executeOnchain],
   )
 
@@ -112,6 +119,7 @@ export function useOnchainHostActions() {
 
   return {
     createWedding,
+    createInvitation,
     addHost,
     invite,
     createVault,

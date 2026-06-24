@@ -19,8 +19,11 @@ const createWedding = vi.fn()
 const updateInvitation = vi.fn()
 const createWeddingOnchain = vi.fn()
 const createVaultOnchain = vi.fn()
+const createInvitationOnchain = vi.fn()
 const extractWeddingObjectIds = vi.fn()
 const updateWeddingSuiIds = vi.fn()
+const walrusStorePIIStringMock = vi.fn()
+const walrusStoreMock = vi.fn()
 const authState = { isAuthenticated: false }
 
 vi.mock('@gorae/contracts/sdk.gen', () => ({
@@ -34,8 +37,22 @@ vi.mock('@gorae/contracts/@tanstack/react-query.gen', () => ({
 }))
 
 vi.mock('../../hooks/useOnchainHostActions', () => ({
-  useOnchainHostActions: () => ({ createWedding: createWeddingOnchain, createVault: createVaultOnchain }),
+  useOnchainHostActions: () => ({
+    createWedding: createWeddingOnchain,
+    createVault: createVaultOnchain,
+    createInvitation: createInvitationOnchain,
+  }),
 }))
+
+// 청첩장 이름·사진 Walrus 업로드(실제 네트워크 호출)를 모킹 — ONCHAIN_BLOB_EPOCHS 등 나머지는 원본 유지.
+vi.mock('@gorae/sui-sdk', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@gorae/sui-sdk')>()
+  return {
+    ...actual,
+    walrusStorePIIString: (...args: unknown[]) => walrusStorePIIStringMock(...args),
+    walrusStore: (...args: unknown[]) => walrusStoreMock(...args),
+  }
+})
 
 vi.mock('../../providers/ZkLoginProvider', () => ({
   useZkLogin: () => ({ isAuthenticated: authState.isAuthenticated }),
@@ -55,8 +72,11 @@ afterEach(() => {
   updateInvitation.mockReset()
   createWeddingOnchain.mockReset()
   createVaultOnchain.mockReset()
+  createInvitationOnchain.mockReset()
   extractWeddingObjectIds.mockReset()
   updateWeddingSuiIds.mockReset()
+  walrusStorePIIStringMock.mockReset()
+  walrusStoreMock.mockReset()
   authState.isAuthenticated = false
   localStorage.clear()
 })
@@ -114,6 +134,8 @@ describe('useSaveInvitation', () => {
     createWedding.mockResolvedValue({ data: { id: 'w-5', invitations: [{ id: 'i' }] } })
     createWeddingOnchain.mockResolvedValue('digest-abc')
     createVaultOnchain.mockResolvedValue('vault-digest')
+    createInvitationOnchain.mockResolvedValue('inv-digest')
+    walrusStorePIIStringMock.mockResolvedValue('nameBlob')
     extractWeddingObjectIds
       .mockResolvedValueOnce({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '' })
       .mockResolvedValueOnce({ weddingId: '', loungeId: '', capId: '', vaultId: '0xV' })
@@ -127,6 +149,19 @@ describe('useSaveInvitation', () => {
       throwOnError: true,
     })
     expect(res.suiIds).toEqual({ weddingId: '0xW', loungeId: '0xL', capId: '0xC', vaultId: '0xV' })
+    // 청첩장 dual-write: 이름은 Walrus blobId 참조로, 공개 정보는 평문으로 create_invitation 호출.
+    expect(createInvitationOnchain).toHaveBeenCalledWith({
+      weddingId: '0xW',
+      slug: 's',
+      groomNameBlobId: 'nameBlob',
+      brideNameBlobId: 'nameBlob',
+      date: '2026-01-01',
+      time: '12:00',
+      venueName: 'v',
+      venueHall: '',
+      coverPhotoBlobId: '',
+      greeting: '',
+    })
   })
 
   it('인증이어도 온체인 실패 시 throw하지 않고 Supabase 유지, suiIds null + onchainError 반환', async () => {

@@ -8,7 +8,7 @@
 // - recipient 복귀(RESTART) 시 firedRef 초기화.
 // - 각 POST 단계의 진입/에러복귀 상태로 돌아오면 가드 해제 → 정상 재시도 허용.
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { StateFrom } from 'xstate';
 import type { Wedding } from '@gorae/contracts';
 import { guestFlowMachine, type GuestFlowEvent } from '../../machines/guestFlow.machine';
@@ -16,11 +16,19 @@ import { useCreateGuestbookEntryMutation } from '../../queries/guestFlow/useCrea
 import { useCreateGuestbookMessageMutation } from '../../queries/guestFlow/useCreateGuestbookMessageMutation';
 import { useCreateCashGiftMutation } from '../../queries/guestFlow/useCreateCashGiftMutation';
 import { useZkLogin } from '../../providers/ZkLoginProvider';
-import { buildParticipateTx, buildGiveTx, getWedding, getParticipationForEvent, createJsonRpcClient, configureSui, type SuiNetwork } from '@gorae/sui-sdk';
+import { buildParticipateTx, buildGiveTx, buildWriteTx, buildWriteMessageTx, walrusStoreString, walrusStorePIIString, getWedding, getParticipationForEvent, createJsonRpcClient, configureSui, ONCHAIN_BLOB_EPOCHS, type SuiNetwork } from '@gorae/sui-sdk';
+import type { RecipientSlot } from '../../machines/guestFlow.machine';
 import { env } from '../../env';
 
 type GuestFlowState = StateFrom<typeof guestFlowMachine>;
 type Send = (event: GuestFlowEvent) => void;
+
+/** 수신 슬롯 → u8 코드(§1-6, write_message·rsvp 공통). */
+const SLOT_CODE: Record<RecipientSlot, number> = {
+  groom: 0, bride: 1, groom_father: 2, groom_mother: 3, bride_father: 4, bride_mother: 5,
+};
+/** 하트 전송용 sentinel(본문 아님 — 온체인 본문 기록 대상에서 제외). */
+const HEART_SENTINEL = '__HEART__';
 
 export function useGuestFlowSubmitter(
   state: GuestFlowState,
@@ -30,15 +38,40 @@ export function useGuestFlowSubmitter(
   const createEntryMutation = useCreateGuestbookEntryMutation();
   const createMessageMutation = useCreateGuestbookMessageMutation();
   const cashGiftMutation = useCreateCashGiftMutation();
+  const zk = useZkLogin();
 
   // StrictMode 가드: 상태당 1회만 발사.
   const firedRef = useRef<Set<string>>(new Set());
+  // 단일 participate 보장: give 경로(transferring)와 done 경로가 동시에 호출해도 participate는 1회만.
+  // event::participate는 온체인 멱등성이 없어(중복 시 Participation SBT·CS 신호 이중 계상) 클라이언트가 보장한다.
+  const participateRef = useRef<Promise<string | null> | null>(null);
   useEffect(() => {
-    if (state.matches('recipient')) firedRef.current.clear();
+    if (state.matches('recipient')) { firedRef.current.clear(); participateRef.current = null; }
     if (state.matches('name')) firedRef.current.delete('creating');
     if (state.matches('transfer')) firedRef.current.delete('transferring');
     if (state.matches('message')) firedRef.current.delete('sendingMessage');
   }, [state]);
+
+  // 참가 보장 — 기존 Participation이 있으면 그 ID, 없으면 1회만 participate 후 ID. 동시 호출은 같은 promise 공유.
+  const ensureParticipation = useCallback(
+    (client: ReturnType<typeof createJsonRpcClient>, eventId: string, address: string): Promise<string | null> => {
+      if (!participateRef.current) {
+        const p = (async () => {
+          let pid = (await getParticipationForEvent(client, address, eventId))?.id ?? null;
+          if (!pid) {
+            await zk.executeOnchain(buildParticipateTx({ eventId, roleId: 1 }));
+            pid = (await getParticipationForEvent(client, address, eventId))?.id ?? null;
+          }
+          return pid;
+        })();
+        // 실패 시 거부된 promise를 캐싱하지 않도록 ref를 비워 재시도를 허용.
+        p.catch(() => { if (participateRef.current === p) participateRef.current = null; });
+        participateRef.current = p;
+      }
+      return participateRef.current;
+    },
+    [zk],
+  );
 
   // creating 진입 → POST /guestbook 1회
   const isCreating = state.matches('creating');
@@ -89,23 +122,23 @@ export function useGuestFlowSubmitter(
         onSuccess: (data) => {
           send({ type: 'TRANSFER_SUCCESS', cashGiftId: data.id });
           // 온체인 부조(give) — zkLogin 인증 시 participate → give fire-and-forget.
-          if (zk.isAuthenticated && wedding) {
+          // ⚠️ 온체인 호출엔 DB UUID(wedding.id)가 아니라 온체인 Wedding 객체 ID(sui_wedding_id)를
+          //    써야 한다. 과거 wedding.id를 넘겨 getWedding(객체조회)이 조용히 실패 → give 무동작이던 버그 정정.
+          const suiWeddingId = wedding?.sui_wedding_id ?? null;
+          const address = zk.address;
+          if (zk.isAuthenticated && address && suiWeddingId) {
             const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
             if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID });
             const client = createJsonRpcClient(net);
-            getWedding(client, wedding.id)
+            getWedding(client, suiWeddingId)
               .then(async (w) => {
-                if (!w?.eventId || !w?.vaultId || !zk.address) return;
-                // 1) participate(아직 안 했으면)
-                let partId = (await getParticipationForEvent(client, zk.address, w.eventId))?.id;
-                if (!partId) {
-                  await zk.executeOnchain(buildParticipateTx({ eventId: w.eventId, roleId: 1 }));
-                  partId = (await getParticipationForEvent(client, zk.address, w.eventId))?.id;
-                }
+                if (!w?.eventId || !w?.vaultId) return;
+                // 1) participate(단일 보장 — done 경로와 공유)
+                const partId = await ensureParticipation(client, w.eventId, address);
                 if (!partId) return;
                 // 2) give(SUI 전송)
                 const amount = BigInt(c.amount) * 1_000_000n; // 원 → MIST(데모 환산)
-                await zk.executeOnchain(buildGiveTx({ vaultId: w.vaultId, weddingId: wedding.id, participationId: partId, amount }));
+                await zk.executeOnchain(buildGiveTx({ vaultId: w.vaultId, weddingId: suiWeddingId, participationId: partId, amount }));
               })
               .catch((e) => console.error('[give] onchain failed:', e));
           }
@@ -134,23 +167,46 @@ export function useGuestFlowSubmitter(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSendingMessage]);
 
-  // done 진입 → 온체인 participate(결혼식 참석 기록) 1회. zkLogin 인증 시에만.
+  // done 진입 → 온체인 participate(+ 방명록 write) 1회. zkLogin 인증 시에만.
   const isDone = state.matches('done');
-  const zk = useZkLogin();
   useEffect(() => {
-    if (!isDone || !zk.isAuthenticated || !wedding) return;
+    // 온체인 호출엔 sui_wedding_id(온체인 객체 ID)를 쓴다(DB UUID 아님).
+    const suiWeddingId = wedding?.sui_wedding_id ?? null;
+    const address = zk.address;
+    if (!isDone || !zk.isAuthenticated || !suiWeddingId || !address) return;
     if (firedRef.current.has('participate')) return;
     firedRef.current.add('participate');
+    // 방명록을 남겼는지(creating 단계에서 GuestbookEntry 생성됨) → 온체인 write 대상 여부.
+    const wroteGuestbook = !!state.context.guestbookEntryId;
+    // 실제 축하 본문(하트 sentinel·빈 값 제외) → write_message로 본문을 Walrus blobId로 남길 대상.
+    const pending = state.context.pendingMessage;
+    const hasBody = !!pending && pending !== HEART_SENTINEL;
+    const slotCode = SLOT_CODE[state.context.recipientSlot ?? 'groom'] ?? 0;
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
     if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID });
     const client = createJsonRpcClient(network);
-    getWedding(client, wedding.id)
-      .then((w) => {
-        if (!w?.eventId) return;
-        return zk.executeOnchain(buildParticipateTx({ eventId: w.eventId, roleId: 1 }));
-      })
-      .then((digest) => { if (digest) console.log('[participate] onchain:', digest); })
-      .catch((e) => console.error('[participate] failed:', e));
+    (async () => {
+      const w = await getWedding(client, suiWeddingId);
+      if (!w?.eventId) return;
+      // 1) participate(단일 보장 — give 경로와 공유, 이중 발행 방지)
+      const partId = await ensureParticipation(client, w.eventId, address);
+      if (!partId) return;
+      // 2) 방명록 작성 → 온체인 기록. 본문·이름 모두 Walrus blobId 참조만 온체인에 싣는다(평문 금지, VISION §7).
+      if (hasBody) {
+        // 본문·이름 → Walrus → write_message(message=blobId, guest_name=nameBlobId).
+        // 온체인엔 본문·이름 평문 없이 Walrus 참조만 남는다(이름 → Walrus → Sui 연결).
+        // blobId가 온체인에 남으므로 내구 epoch로 저장(짧으면 GC 후 온체인 참조 dangling).
+        const messageBlobId = await walrusStoreString(pending, { epochs: ONCHAIN_BLOB_EPOCHS });
+        const name = state.context.guestName;
+        const nameBlobId = name?.trim() ? await walrusStorePIIString(name, { epochs: ONCHAIN_BLOB_EPOCHS }) : '';
+        const digest = await zk.executeOnchain(buildWriteMessageTx({ weddingId: suiWeddingId, participationId: partId, messageBlobId, recipientSlot: slotCode, guestName: nameBlobId }));
+        console.log('[write_message] onchain:', digest);
+      } else if (wroteGuestbook) {
+        // 본문 없음(하트만/메시지 생략) → write(WRITE_MESSAGE CS 신호만).
+        const digest = await zk.executeOnchain(buildWriteTx({ weddingId: suiWeddingId, participationId: partId }));
+        console.log('[write] onchain:', digest);
+      }
+    })().catch((e) => console.error('[participate/write] failed:', e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDone]);
 }

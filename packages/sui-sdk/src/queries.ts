@@ -326,6 +326,80 @@ export async function getRsvpEvents(
   return out;
 }
 
+// === 청첩장(Invitation) 조회 ===
+// 온체인 Invitation은 wedding_id로 묶인 공유 오브젝트. 이름(신랑·신부)·커버 사진 필드엔 평문이 아니라
+// Walrus blobId가 들어있다(VISION §7) → 표시 시 walrusFetch(String/PIIString)로 원본을 복원한다.
+
+export interface InvitationOnChain {
+  id: string;
+  weddingId: string;
+  creator: string;
+  slug: string;
+  /** 신랑 이름의 Walrus blobId(평문 아님 — walrusFetchString으로 복원). 미탑재 시 ''. */
+  groomNameBlobId: string;
+  /** 신부 이름의 Walrus blobId(평문 아님). 미탑재 시 ''. */
+  brideNameBlobId: string;
+  date: string;
+  time: string;
+  venueName: string;
+  venueHall: string;
+  /** 커버 사진의 Walrus blobId(평문 아님 — walrusFetch로 복원). 미탑재 시 ''. */
+  coverPhotoBlobId: string;
+  /** 인사말의 Walrus blobId(평문 아님 — walrusFetchString으로 복원). 미탑재 시 ''. */
+  greetingBlobId: string;
+}
+
+/** Invitation 공유 오브젝트 조회(객체 ID로). */
+export async function getInvitation(
+  client: SuiJsonRpcClient,
+  invitationId: string,
+): Promise<InvitationOnChain | null> {
+  const res = await client.getObject({ id: invitationId, options: { showContent: true } });
+  const f = objectFields(res);
+  if (!f) return null;
+  return {
+    id: invitationId,
+    weddingId: asString(f.wedding_id),
+    creator: asString(f.creator),
+    slug: asString(f.slug),
+    groomNameBlobId: asString(f.groom_name),
+    brideNameBlobId: asString(f.bride_name),
+    date: asString(f.date),
+    time: asString(f.time),
+    venueName: asString(f.venue_name),
+    venueHall: asString(f.venue_hall),
+    coverPhotoBlobId: asString(f.cover_photo_url),
+    greetingBlobId: asString(f.greeting),
+  };
+}
+
+/**
+ * 한 결혼식의 온체인 청첩장 조회. InvitationCreated 이벤트를 wedding_id로 거른 뒤 최신 Invitation을 반환. 없으면 null.
+ *
+ * ⚠️ 위조 가로채기 차단: invitation.move의 create_invitation은 cap 게이트가 없어 누구나 임의 wedding_id로
+ *    Invitation을 발행할 수 있다. "최신만" 택하면 제3자가 더 늦게 위조 청첩장을 올려 가로챌 수 있으므로,
+ *    **발행자(creator)가 그 결혼식의 주최자(primary_host)인 이벤트만 인정**하고 그 중 최신을 택한다.
+ *    (정식 해소는 invitation.move에 WeddingCap/primary_host 게이트 추가 — 컨트랙트 변경 후속.)
+ * (queryAllEvents 전역 스캔 한계 동일 — 프로덕션은 전용 인덱서.)
+ */
+export async function getInvitationForWedding(
+  client: SuiJsonRpcClient,
+  weddingId: string,
+): Promise<InvitationOnChain | null> {
+  const wedding = await getWedding(client, weddingId);
+  const host = wedding?.hosts[0] ?? null;
+  if (!host) return null; // 온체인 Wedding(=주최자)을 못 찾으면 정당성 검증 불가 → 채택 안 함
+  const events = await queryAllEvents(client, moveTarget('invitation', 'InvitationCreated'));
+  let latestId: string | null = null;
+  for (const e of events) {
+    const p = e.parsedJson as Record<string, unknown>;
+    if (asString(p.wedding_id) !== weddingId) continue;
+    if (asString(p.creator) !== host) continue; // 주최자가 발행한 청첩장만 인정(제3자 위조분 거름)
+    latestId = asString(p.invitation_id); // ascending order → 정당 청첩장 중 마지막(최신)
+  }
+  return latestId ? getInvitation(client, latestId) : null;
+}
+
 // === 신뢰 → 신용 이벤트 조회 (credit.ts 입력 경로) ===
 // 컨트랙트가 emit하는 raw 신호를 credit.ts가 소비하는 shape로 가져온다(온체인 raw → 오프체인 신용, 결정#12).
 // ⚠️ queryAllEvents 전역 스캔 한계 동일 — 프로덕션은 전용 인덱서. amount는 number(부조 범위 안전; >2^53 주의).

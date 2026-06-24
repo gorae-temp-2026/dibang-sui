@@ -14,7 +14,7 @@ import { useZkLogin } from '../providers/ZkLoginProvider';
 import { useSignOut } from '../queries/auth/useSignOut';
 import { giftActor } from '../machines/gift.machine';
 import { useT, useLangStore, type Lang } from '../lib/i18n';
-import { useInyeonProfile, fileToProfileDataUrl } from '../stores/inyeonProfile';
+import { useInyeonProfile, fileToProfileDataUrl, fileToWalrusPhoto } from '../stores/inyeonProfile';
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -29,8 +29,14 @@ export function SettingsPage() {
     const f = e.target.files?.[0];
     e.target.value = '';
     if (!f) return;
-    const url = await fileToProfileDataUrl(f);
-    setPhotoUrl(url);
+    // 공개 프로필 사진을 Walrus(분산 블롭)에 올리고 aggregator URL로 표시. 실패 시 로컬 data URL 폴백.
+    try {
+      const { url } = await fileToWalrusPhoto(f);
+      setPhotoUrl(url);
+    } catch (err) {
+      console.error('[profile photo] Walrus 업로드 실패 → data URL 폴백:', err);
+      setPhotoUrl(await fileToProfileDataUrl(f));
+    }
     send({ type: 'SHOW_TOAST', msg: t('settings.saved') });
   };
   const { session } = useAuth();

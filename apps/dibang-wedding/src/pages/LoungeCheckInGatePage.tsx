@@ -8,6 +8,7 @@ import { useGetMe } from '../queries/shared/useGetMe';
 import { useCheckMyCheckIn } from '../queries/lounge-check-in-gate/useCheckMyCheckIn';
 import { useCreateLoungeCheckIn } from '../queries/lounge-check-in-gate/useCreateLoungeCheckIn';
 import { useUpdateMe } from '../queries/lounge-check-in-gate/useUpdateMe';
+import { useOnchainCheckIn } from '../hooks/useOnchainCheckIn';
 
 type RecipientSlot = NonNullable<CreateLoungeCheckInRequest['recipient_slot']>;
 type RelationCategory = NonNullable<CreateLoungeCheckInRequest['relation_category']>;
@@ -48,6 +49,8 @@ export function LoungeCheckInGatePage() {
   const checkQuery = useCheckMyCheckIn(loungeId, state.matches('checking') && !!session);
   const createEntry = useCreateLoungeCheckIn();
   const updateMe = useUpdateMe();
+  // 온체인 참석 기록(participate) — DB 체크인 성공 후 best-effort 발행.
+  const participateOnchain = useOnchainCheckIn();
 
   // ---- guest-web에서 실어온 하객 정보(enter URL 쿼리파라미터) 파싱 ----
   // guest-web GuestFlow가 이미 입력한 이름·수신인·관계를 받아 재입력을 없앤다.
@@ -131,6 +134,8 @@ export function LoungeCheckInGatePage() {
           relation_detail: relationDetail.trim() || undefined,
         },
       });
+      // 온체인 참석 기록(participate) — 비차단 best-effort. 실패해도 DB 체크인·입장은 그대로 진행.
+      void participateOnchain(loungeId);
       send({ type: 'SUBMIT_SUCCESS', entryId: entry.id });
     } catch {
       send({ type: 'SUBMIT_ERROR', error: '입장에 실패했습니다.' });

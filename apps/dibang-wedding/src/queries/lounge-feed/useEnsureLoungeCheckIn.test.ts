@@ -11,35 +11,46 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const mutationFn = vi.fn()
+const participateOnchain = vi.fn()
 
 vi.mock('@gorae/contracts/@tanstack/react-query.gen', () => ({
   createLoungeCheckInMutation: () => ({ mutationFn, mutationKey: ['createLoungeCheckIn'] }),
 }))
 
+vi.mock('../../hooks/useOnchainCheckIn', () => ({
+  useOnchainCheckIn: () => participateOnchain,
+}))
+
 import { useEnsureLoungeCheckIn } from './useEnsureLoungeCheckIn'
 import { createQueryWrapper } from '../../test-utils'
 
-afterEach(() => mutationFn.mockReset())
+afterEach(() => {
+  mutationFn.mockReset()
+  participateOnchain.mockReset()
+})
 
 describe('useEnsureLoungeCheckIn', () => {
-  it('loungeId 있음 → mutate 호출', async () => {
+  it('loungeId 있음 → mutate 호출 + 온체인 participate(best-effort)', async () => {
     mutationFn.mockResolvedValue(null)
     renderHook(() => useEnsureLoungeCheckIn('l-1'), { wrapper: createQueryWrapper() })
     await waitFor(() => expect(mutationFn).toHaveBeenCalled())
     const arg = mutationFn.mock.calls[0][0]
     expect(arg).toEqual({ path: { loungeId: 'l-1' } })
+    await waitFor(() => expect(participateOnchain).toHaveBeenCalledWith('l-1'))
   })
 
-  it('loungeId undefined → mutate 미호출', () => {
+  it('loungeId undefined → mutate·participate 미호출', () => {
     renderHook(() => useEnsureLoungeCheckIn(undefined), { wrapper: createQueryWrapper() })
     expect(mutationFn).not.toHaveBeenCalled()
+    expect(participateOnchain).not.toHaveBeenCalled()
   })
 
-  it('mutation 실패해도 throw 없음(무시)', async () => {
+  it('mutation 실패해도 throw 없음 + 온체인 participate는 시도(onSettled)', async () => {
     mutationFn.mockRejectedValue(new Error('fail'))
     expect(() =>
       renderHook(() => useEnsureLoungeCheckIn('l-2'), { wrapper: createQueryWrapper() }),
     ).not.toThrow()
     await waitFor(() => expect(mutationFn).toHaveBeenCalled())
+    await waitFor(() => expect(participateOnchain).toHaveBeenCalledWith('l-2'))
   })
 })

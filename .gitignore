@@ -26,6 +26,10 @@ contracts/*/build/
 **/.signals-guest-key
 **/.shop-admin-key
 
+# 시뮬레이션/감사 실행 산출물 (테스트 지갑 개인키·실명 PII 포함 — 커밋 금지)
+**/.sim-timed-result.json
+**/.sim-*-result.json
+
 # E2E 실행 기록의 스크린샷은 용량 큼·재생성 가능 → 커밋 제외 (SUMMARY/steps는 커밋)
 _e2e_test/runs/*/screenshots/
 .env.localhost
