@@ -1,6 +1,8 @@
 /**
- * 쪽지(DM) hook — Walrus 저장 + Sui NoteSent 이벤트로 비동기 쪽지.
- * Seal 암호화는 후속(현재 평문으로 Walrus 저장 → NoteSent 이벤트).
+ * 쪽지(DM) hook — Seal 암호화 + Walrus 저장 + Sui NoteSent 이벤트.
+ *
+ * 전송: 평문 → Seal encrypt(noteBoxId) → Walrus 저장 → NoteSent 이벤트
+ * 수신: NoteSent 이벤트 → Walrus fetch → Seal decrypt → 평문 표시
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -10,9 +12,12 @@ import {
   buildCreateNoteBoxTx,
   buildSendNoteTx,
   getNoteSentEvents,
+  sealEncryptNote,
+  sealDecryptNote,
   type SuiNetwork,
   moveTarget,
 } from '@gorae/sui-sdk'
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
 
@@ -30,6 +35,9 @@ export function useNotes() {
   const [loading, setLoading] = useState(false)
   const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
 
+  // dev keypair for Seal decrypt (SessionKey 생성에 signer 필요)
+  const devKeypair = env.VITE_DEV_PRIVATE_KEY ? Ed25519Keypair.fromSecretKey(env.VITE_DEV_PRIVATE_KEY) : null
+
   const fetchNotes = useCallback(async () => {
     if (!address) return
     setLoading(true)
@@ -40,7 +48,20 @@ export function useNotes() {
         events.map(async (e) => {
           try {
             const blob = await walrusFetch(e.blobId)
-            return { from: e.from, to: e.to, text: new TextDecoder().decode(blob), ts: e.ts, noteBoxId: e.noteBoxId }
+            let text: string
+            if (devKeypair) {
+              try {
+                const plain = await sealDecryptNote(blob, e.noteBoxId, devKeypair)
+                text = new TextDecoder().decode(plain)
+              } catch {
+                // Seal 복호화 실패 → 평문 시도 (암호화 전에 보낸 메시지 호환)
+                text = new TextDecoder().decode(blob)
+              }
+            } else {
+              // zkLogin은 Seal SessionKey 생성 제한 → 평문 표시 (후속: zkLogin signer 지원)
+              text = new TextDecoder().decode(blob)
+            }
+            return { from: e.from, to: e.to, text, ts: e.ts, noteBoxId: e.noteBoxId }
           } catch {
             return { from: e.from, to: e.to, text: '(읽을 수 없음)', ts: e.ts, noteBoxId: e.noteBoxId }
           }
@@ -52,7 +73,7 @@ export function useNotes() {
     } finally {
       setLoading(false)
     }
-  }, [address, network])
+  }, [address, network, devKeypair])
 
   useEffect(() => { fetchNotes() }, [fetchNotes])
 
@@ -62,13 +83,11 @@ export function useNotes() {
     return () => window.removeEventListener('sui:tx-success', handler)
   }, [fetchNotes])
 
-  // 상대별 NoteBox ID 캐시(한 번 만들면 계속 사용)
   const noteBoxCache = useRef<Record<string, string>>({})
 
   const findOrCreateNoteBox = useCallback(
     async (to: string): Promise<string> => {
       if (noteBoxCache.current[to]) return noteBoxCache.current[to]
-      // 기존 NoteBoxCreated 이벤트에서 찾기
       const client = createJsonRpcClient(network)
       const events = await client.queryEvents({
         query: { MoveEventType: moveTarget('note', 'NoteBoxCreated') },
@@ -84,9 +103,7 @@ export function useNotes() {
           return boxId
         }
       }
-      // 없으면 생성
       await executeOnchain(buildCreateNoteBoxTx({ other: to }))
-      // 생성 후 이벤트에서 ID 회수
       const events2 = await client.queryEvents({
         query: { MoveEventType: moveTarget('note', 'NoteBoxCreated') },
         limit: 50,
@@ -111,8 +128,10 @@ export function useNotes() {
     async (to: string, text: string) => {
       if (!address) throw new Error('로그인 필요')
       const boxId = await findOrCreateNoteBox(to)
-      const blob = new TextEncoder().encode(text)
-      const blobId = await walrusStore(blob)
+      const plaintext = new TextEncoder().encode(text)
+      // Seal 암호화 → Walrus 저장
+      const encrypted = await sealEncryptNote(boxId, plaintext)
+      const blobId = await walrusStore(encrypted)
       const blobIdBytes = new TextEncoder().encode(blobId)
       await executeOnchain(buildSendNoteTx({ noteBoxId: boxId, to, blobId: blobIdBytes }))
       await fetchNotes()

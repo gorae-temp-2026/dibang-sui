@@ -73,7 +73,7 @@ public fun send_note(
 
 // === Seal 접근 제어 ===
 
-/// Seal namespace = NoteBox ID bytes. 암호화 시 id = [note_box_id][nonce].
+/// Seal namespace = NoteBox ID bytes.
 public fun namespace(note_box: &NoteBox): vector<u8> {
     note_box.id.to_bytes()
 }
