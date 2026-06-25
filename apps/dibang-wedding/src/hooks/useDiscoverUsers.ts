@@ -82,7 +82,6 @@ export function useDiscoverUsers() {
         // 수락된 이음의 eventId 집합 (이미 매칭 성사된 것 필터용)
         const acceptedEventIds = new Set(acceptedEvents.map((a) => a.eventId))
 
-        console.log('[useDiscoverUsers] accepted:', acceptedEvents.length, 'acceptedEventIds:', [...acceptedEventIds])
         // 내가 보낸 이음 (수락된 건 제외)
         const mySent = iumEvents.filter((e) => e.initiator === address && !acceptedEventIds.has(e.eventId))
         setSentMoiIds(mySent.map((s) => {
@@ -112,7 +111,6 @@ export function useDiscoverUsers() {
         const matched = acceptedEvents
           .filter((a) => a.initiator === address || a.receiver === address)
           .map((a) => a.initiator === address ? a.receiver : a.initiator)
-        console.log('[useDiscoverUsers] matchedAddresses:', matched, 'sentPending:', mySent.length)
         setMatchedAddresses(matched)
       })
       .catch((err) => { console.error('[useDiscoverUsers] error:', err) })

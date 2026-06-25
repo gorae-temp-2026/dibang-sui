@@ -79,6 +79,7 @@ export function ChatScreen({
         await onSendOnchainGift(suiAddress)
       } catch (e) {
         console.error('[gift] onchain gift failed:', e)
+        alert(`선물 전송 실패: ${(e as Error).message?.slice(0, 80) ?? '알 수 없는 오류'}`)
       }
     }
   }

@@ -44,7 +44,6 @@ export const giftMachine = setup({
       if (event.type !== 'SEND_GIFT') return false
       const it = ITEM_BY_ID[event.itemId]
       const result = !!it && context.yone >= it.yone
-      console.log('[gift] canAfford:', { itemId: event.itemId, found: !!it, yone: context.yone, cost: it?.yone, result })
       return result
     },
   },

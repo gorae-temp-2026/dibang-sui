@@ -202,12 +202,9 @@ export function useGuestFlowSubmitter(
         const messageBlobId = await walrusStoreString(pending, { epochs: ONCHAIN_BLOB_EPOCHS });
         const name = state.context.guestName;
         const nameBlobId = name?.trim() ? await walrusStorePIIString(name, { epochs: ONCHAIN_BLOB_EPOCHS }) : '';
-        const digest = await zk.executeOnchain(buildWriteMessageTx({ weddingId: suiWeddingId, participationId: partId, messageBlobId, recipientSlot: slotCode, guestName: nameBlobId }));
-        console.log('[write_message] onchain:', digest);
+        await zk.executeOnchain(buildWriteMessageTx({ weddingId: suiWeddingId, participationId: partId, messageBlobId, recipientSlot: slotCode, guestName: nameBlobId }));
       } else if (wroteGuestbook) {
-        // 본문 없음(하트만/메시지 생략) → write(WRITE_MESSAGE CS 신호만).
-        const digest = await zk.executeOnchain(buildWriteTx({ weddingId: suiWeddingId, participationId: partId }));
-        console.log('[write] onchain:', digest);
+        await zk.executeOnchain(buildWriteTx({ weddingId: suiWeddingId, participationId: partId }));
       }
     })().catch((e) => {
       console.error('[participate/write] failed:', e);
