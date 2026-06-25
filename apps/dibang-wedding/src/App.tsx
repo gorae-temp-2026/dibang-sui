@@ -1,36 +1,40 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router'
 import { useAuth } from './providers/AuthContext'
 import { useZkLogin } from './providers/ZkLoginProvider'
 import { MainLayout } from './layouts/MainLayout'
-import { LoginPage } from './pages/LoginPage'
-import { MyWeddingPage } from './pages/MyWeddingPage'
-import { WeddingListPage } from './pages/WeddingListPage'
-import { InyeonPage } from './pages/InyeonPage'
-import { QrPage } from './pages/QrPage'
-import { DmPage } from './pages/DmPage'
-import { SettingsPage } from './pages/SettingsPage'
-import { InvitationCreatePage } from './pages/InvitationCreatePage'
-import { InvitationEditPage } from './pages/InvitationEditPage'
-import { LoungeFeedPage } from './pages/LoungeFeedPage'
-import { LoungeV2Page } from './pages/LoungeV2Page'
-import { MoiGatherPage } from './pages/MoiGatherPage'
-import { LoungeCheckInGatePage } from './pages/LoungeCheckInGatePage'
-import { HostInviteAcceptPage } from './pages/HostInviteAcceptPage'
-import { LedgerPage } from './pages/LedgerPage'
-import { AuthCallbackPage } from './pages/AuthCallbackPage'
-import { SharePhotoUploadPage } from './pages/SharePhotoUploadPage'
-import { WeddingMemoryBookPage } from './pages/WeddingMemoryBookPage'
-import { WeddingMemoryBookCuratePage } from './pages/WeddingMemoryBookCuratePage'
-import { OnboardingConsentPage } from './pages/OnboardingConsentPage'
-// [비활성] NetworkPage 전체 주석처리 — dev 스캐폴드(비서비스). 진짜 자리는 InyeonPage(태스크 #24).
-// import { NetworkPage } from './pages/NetworkPage'
-import { SignalGuidePage } from './pages/SignalGuidePage'
 import { DevErrorBoundary } from './components/DevErrorBoundary'
-import { MoiCreditGuidePage } from './pages/MoiCreditGuidePage'
-import { TrustGraphPage } from './pages/TrustGraphPage'
-import { DevLogsPage } from './pages/DevLogsPage'
 import { OnboardingGate } from './components/OnboardingGate'
-import { isDevBypass } from './dev/devBypass' // DEV 전용 로그인 우회(프로덕션 import.meta.env.DEV=false로 제거)
+import { isDevBypass } from './dev/devBypass'
+
+// 핵심 라우트 — static import (초기 로드)
+import { LoginPage } from './pages/LoginPage'
+import { AuthCallbackPage } from './pages/AuthCallbackPage'
+import { MyWeddingPage } from './pages/MyWeddingPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { NotFoundPage } from './pages/NotFoundPage'
+
+// 무거운 라우트 — lazy import (코드 스플릿)
+const InyeonPage = lazy(() => import('./pages/InyeonPage').then(m => ({ default: m.InyeonPage })))
+const WeddingListPage = lazy(() => import('./pages/WeddingListPage').then(m => ({ default: m.WeddingListPage })))
+const QrPage = lazy(() => import('./pages/QrPage').then(m => ({ default: m.QrPage })))
+const DmPage = lazy(() => import('./pages/DmPage').then(m => ({ default: m.DmPage })))
+const InvitationCreatePage = lazy(() => import('./pages/InvitationCreatePage').then(m => ({ default: m.InvitationCreatePage })))
+const InvitationEditPage = lazy(() => import('./pages/InvitationEditPage').then(m => ({ default: m.InvitationEditPage })))
+const LoungeFeedPage = lazy(() => import('./pages/LoungeFeedPage').then(m => ({ default: m.LoungeFeedPage })))
+const LoungeV2Page = lazy(() => import('./pages/LoungeV2Page').then(m => ({ default: m.LoungeV2Page })))
+const MoiGatherPage = lazy(() => import('./pages/MoiGatherPage').then(m => ({ default: m.MoiGatherPage })))
+const LoungeCheckInGatePage = lazy(() => import('./pages/LoungeCheckInGatePage').then(m => ({ default: m.LoungeCheckInGatePage })))
+const HostInviteAcceptPage = lazy(() => import('./pages/HostInviteAcceptPage').then(m => ({ default: m.HostInviteAcceptPage })))
+const LedgerPage = lazy(() => import('./pages/LedgerPage').then(m => ({ default: m.LedgerPage })))
+const SharePhotoUploadPage = lazy(() => import('./pages/SharePhotoUploadPage').then(m => ({ default: m.SharePhotoUploadPage })))
+const WeddingMemoryBookPage = lazy(() => import('./pages/WeddingMemoryBookPage').then(m => ({ default: m.WeddingMemoryBookPage })))
+const WeddingMemoryBookCuratePage = lazy(() => import('./pages/WeddingMemoryBookCuratePage').then(m => ({ default: m.WeddingMemoryBookCuratePage })))
+const OnboardingConsentPage = lazy(() => import('./pages/OnboardingConsentPage').then(m => ({ default: m.OnboardingConsentPage })))
+const SignalGuidePage = lazy(() => import('./pages/SignalGuidePage').then(m => ({ default: m.SignalGuidePage })))
+const MoiCreditGuidePage = lazy(() => import('./pages/MoiCreditGuidePage').then(m => ({ default: m.MoiCreditGuidePage })))
+const TrustGraphPage = lazy(() => import('./pages/TrustGraphPage').then(m => ({ default: m.TrustGraphPage })))
+const DevLogsPage = lazy(() => import('./pages/DevLogsPage').then(m => ({ default: m.DevLogsPage })))
 
 const AUTH_PATHS = ['/login', '/auth/callback'];
 
@@ -51,6 +55,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <DevErrorBoundary>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><p className="text-gray-400">로딩 중...</p></div>}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
@@ -80,7 +85,9 @@ function App() {
       <Route path="/wedding/:weddingId/memory-book/curate" element={<AuthGuard><OnboardingGate><WeddingMemoryBookCuratePage /></OnboardingGate></AuthGuard>} />
       <Route path="/invite/:token" element={<HostInviteAcceptPage />} />
       <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </Suspense>
     </DevErrorBoundary>
   )
 }
