@@ -12,9 +12,12 @@ function readPersistedLang(): Lang {
   try {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('dibang:lang') : null
     if (raw) {
-      const v = JSON.parse(raw) as { state?: { lang?: unknown } }
-      const l = v?.state?.lang
-      if (l === 'ko' || l === 'en') return l
+      const v = JSON.parse(raw) as { state?: { lang?: unknown }; version?: unknown }
+      // 영문화 전환 이전(version<1)에 저장된 'ko'는 무시하고 영어 기본값을 쓴다(앱 스토어 migrate와 동일 정책).
+      if (v?.version === 1) {
+        const l = v?.state?.lang
+        if (l === 'ko' || l === 'en') return l
+      }
     }
   } catch { /* localStorage 접근 불가 시 기본값 */ }
   return 'en'

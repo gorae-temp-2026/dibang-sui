@@ -52,7 +52,7 @@ function formatWeddingDate(date: string, time?: string): string {
       day: 'numeric',
     })
     if (time) {
-      const [h, m] = time.split(':').map(Number)
+      const [, m] = time.split(':').map(Number)
       const dt = new Date(`${date}T${time}:00`)
       result += `, ${dt.toLocaleTimeString('en-US', { hour: 'numeric', ...(m > 0 ? { minute: '2-digit' } : {}) })}`
     }
