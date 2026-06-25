@@ -148,13 +148,11 @@ func AuthMiddleware(supabaseURL, supabaseAnonKey string, ensure EnsureUserFunc, 
 					var uid pgtype.UUID
 					if err := uid.Scan(googleUID); err == nil {
 						if ensure != nil {
-							if _, done := ensured.Load(googleUID); !done {
-								name := deriveDisplayName("", claims.Name, claims.Email)
-								if err := ensure(r.Context(), uid, claims.Email, name); err != nil {
-									log.Printf("auth(google): EnsureUser failed for %s: %v", claims.Email, err)
-								} else {
-									ensured.Store(googleUID, struct{}{})
-								}
+							name := deriveDisplayName("", claims.Name, claims.Email)
+							if err := ensure(r.Context(), uid, claims.Email, name); err != nil {
+								log.Printf("auth(google): EnsureUser failed for %s: %v", claims.Email, err)
+								next.ServeHTTP(w, r)
+								return
 							}
 						}
 						ctx := context.WithValue(r.Context(), userIDContextKey, uid)
