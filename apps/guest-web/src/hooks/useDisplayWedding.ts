@@ -1,3 +1,11 @@
+function getHttpStatus(error: unknown): number | undefined {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const res = (error as { response?: { status?: number } }).response
+    return res?.status
+  }
+  return undefined
+}
+
 // mecdisplay 워크스트림(SCENARIOS §3 S-01·S-02).
 //
 // v3 API 두 단계 chain:
@@ -62,7 +70,7 @@ export function useDisplayWedding(weddingId: string | null): UseDisplayWeddingRe
     loungeId: wedding?.lounge.id ?? null,
     photoUrls: invitationQuery.data?.gallery_photos ?? [],
     isLoading: !!weddingId && (weddingQuery.isLoading || (!!firstSlug && invitationQuery.isLoading)),
-    notFound: weddingQuery.isError && (weddingQuery.error as any)?.response?.status === 404,
-    isError: weddingQuery.isError && (weddingQuery.error as any)?.response?.status !== 404,
+    notFound: weddingQuery.isError && getHttpStatus(weddingQuery.error) === 404,
+    isError: weddingQuery.isError && getHttpStatus(weddingQuery.error) !== 404,
   }
 }
