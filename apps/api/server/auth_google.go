@@ -40,13 +40,15 @@ var (
 	jwksCacheTTL = 1 * time.Hour
 )
 
+var jwksHTTPClient = &http.Client{Timeout: 10 * time.Second}
+
 func fetchGoogleJWKS() (*googleJWKS, error) {
 	jwksCacheMu.Lock()
 	defer jwksCacheMu.Unlock()
 	if jwksCache != nil && time.Since(jwksCacheAt) < jwksCacheTTL {
 		return jwksCache, nil
 	}
-	resp, err := http.Get(googleJWKSURL)
+	resp, err := jwksHTTPClient.Get(googleJWKSURL)
 	if err != nil {
 		return nil, err
 	}
@@ -121,6 +123,11 @@ func VerifyGoogleJWT(tokenStr string, allowedClientIDs []string) (*GoogleClaims,
 	claims, ok := token.Claims.(*GoogleClaims)
 	if !ok || !token.Valid {
 		return nil, fmt.Errorf("invalid token claims")
+	}
+
+	// Verify email_verified
+	if !claims.EmailVerified {
+		return nil, fmt.Errorf("email not verified")
 	}
 
 	// Verify issuer
