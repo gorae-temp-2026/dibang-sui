@@ -140,7 +140,10 @@ export function useGuestFlowSubmitter(
                 const amount = BigInt(c.amount) * 1_000_000n; // 원 → MIST(데모 환산)
                 await zk.executeOnchain(buildGiveTx({ vaultId: w.vaultId, weddingId: suiWeddingId, participationId: partId, amount }));
               })
-              .catch((e) => console.error('[give] onchain failed:', e));
+              .catch((e) => {
+                console.error('[give] onchain failed:', e);
+                send({ type: 'TRANSFER_ERROR', error: `온체인 전송 실패: ${(e as Error).message?.slice(0, 80) ?? '알 수 없는 오류'}` });
+              });
           }
         },
         onError: (error) => send({ type: 'TRANSFER_ERROR', error: (error as Error).message }),
@@ -206,7 +209,10 @@ export function useGuestFlowSubmitter(
         const digest = await zk.executeOnchain(buildWriteTx({ weddingId: suiWeddingId, participationId: partId }));
         console.log('[write] onchain:', digest);
       }
-    })().catch((e) => console.error('[participate/write] failed:', e));
+    })().catch((e) => {
+      console.error('[participate/write] failed:', e);
+      send({ type: 'MESSAGE_ERROR', error: `온체인 기록 실패: ${(e as Error).message?.slice(0, 80) ?? '알 수 없는 오류'}` });
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDone]);
 }

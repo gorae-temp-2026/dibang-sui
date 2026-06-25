@@ -360,7 +360,7 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
           meal: mealCode,
         });
       } catch (e) {
-        console.error('[온체인] submitRsvp 실패 — Supabase는 유지:', e);
+        console.error('[온체인] submitRsvp 실패:', e);
       }
     }
     // meal 코드(yes/no/undecided)는 API enum이라 그대로 두고, 표시 라벨만 번역.
