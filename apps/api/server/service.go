@@ -11,6 +11,7 @@ import (
 // Domain errors. Handlers map these to HTTP status codes.
 var (
 	ErrNotFound         = errors.New("not found")
+	ErrConflict         = errors.New("conflict")
 	ErrSlugConflict     = errors.New("slug already exists")
 	ErrForbidden        = errors.New("forbidden")
 	ErrHostSelfRequired  = errors.New("at least one host slot must contain the current user")

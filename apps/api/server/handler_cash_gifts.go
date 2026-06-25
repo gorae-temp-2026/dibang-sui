@@ -31,7 +31,8 @@ func (s *Server) ListCashGifts(ctx context.Context, req ListCashGiftsRequestObje
 		return ListCashGifts403JSONResponse{forbidden("not a host of this wedding")}, nil
 	}
 
-	limit := 20
+	const defaultCashGiftLimit = 20
+	limit := defaultCashGiftLimit
 	if req.Params.Limit != nil {
 		limit = *req.Params.Limit
 	}

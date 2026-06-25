@@ -9,10 +9,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// admin write 전용 도메인 에러 (service.go의 ErrNotFound 등과 같은 패키지).
+// admin write 전용 도메인 에러 (ErrConflict은 service.go로 이동).
 var (
 	ErrValidation = errors.New("validation failed") // → 400
-	ErrConflict   = errors.New("conflict")          // → 409 (unique 위반 등)
 )
 
 // adminMutationService는 /admin/* 의 수정·삭제를 처리한다.
