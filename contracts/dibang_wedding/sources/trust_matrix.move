@@ -130,18 +130,27 @@ public fun apply_signal(m: &mut TrustMatrix, from: address, to: address, magnitu
     event::emit(MatrixUpdated { matrix_id: object::id(m), from, to, n: m.nodes.length() });
 }
 
-/// 분류된 신호 벡터 중 *이 매트릭스 타입(kind,resource_id)에 해당하는* 신호만 골라 apply_signal한다.
-/// 도메인 배선의 진입점: 한 발행 경로가 단일 kind를 내므로 보통 전부 적용되지만, 타입 불일치 신호는
-/// 건너뛴다(한 액션이 여러 타입 신호를 낼 때 매트릭스별로 호출해도 안전). 매칭(CS 2개)은 둘 다 적용.
+/// 분류된 신호 벡터 중 *이 매트릭스 타입에 해당하는* 신호를 한꺼번에 누적한 뒤 propagate를 **1회만** 호출.
+/// 매칭(CS 양방향 2개) 등 fan-out > 1일 때 propagate 중복 호출을 피해 가스를 절감한다.
 public fun apply_classified(m: &mut TrustMatrix, signals: &vector<Signal>) {
     let n = signals.length();
+    let mut applied = false;
     let mut i = 0;
     while (i < n) {
         let s = signals.borrow(i);
         if (signal::kind(s) == m.kind && signal::resource_id(s) == m.resource_id) {
-            apply_signal(m, signal::from(s), signal::to(s), signal::magnitude(s));
+            let mag = signal::magnitude(s);
+            assert!(mag > 0, EZeroMagnitude);
+            register_node(m, signal::from(s));
+            register_node(m, signal::to(s));
+            add_give(&mut m.give, signal::from(s), signal::to(s), mag);
+            event::emit(MatrixUpdated { matrix_id: object::id(m), from: signal::from(s), to: signal::to(s), n: m.nodes.length() });
+            applied = true;
         };
         i = i + 1;
+    };
+    if (applied) {
+        propagate(m);
     };
 }
 
