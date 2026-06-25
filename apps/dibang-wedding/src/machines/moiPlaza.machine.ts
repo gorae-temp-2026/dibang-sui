@@ -4,6 +4,8 @@
 //   인테리어·소품 = 다중 구매·다중 배치(placed 인스턴스 uid, 보유 수 한도). 헤어·옷·액세서리 = 1개(전환·착용).
 import { setup, assign, fromPromise, raise, cancel } from 'xstate'
 import { ITEM_BY_ID, SHOP, START_YONE_PLAZA, CHARGE_AMOUNT, DEFAULT_HEAD, DEFAULT_BODY, type EquipSlot, type ShopItem } from '../components/moi-gather/data'
+import { translate, useLangStore } from '../lib/i18n'
+const lang = () => useLangStore.getState().lang;
 
 // 무료 기본(헤어·옷) = 시작부터 보유 → 기본으로 자유 전환.
 const DEFAULT_OWNED = SHOP.filter((s) => s.isDefault).map((s) => s.id)
@@ -188,7 +190,7 @@ export const moiPlazaMachine = setup({
         },
         onError: {
           target: 'idle',
-          actions: assign({ error: () => '구매를 완료하지 못했어요. 다시 시도해주세요.', pendingItemId: () => null }),
+          actions: assign({ error: () => translate(lang(), 'machine.purchase.failed'), pendingItemId: () => null }),
         },
       },
     },

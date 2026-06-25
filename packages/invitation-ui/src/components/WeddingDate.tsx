@@ -1,5 +1,6 @@
 import { useCountdown } from '../hooks/useCountdown';
 import { useIntersectionFadeIn } from '../hooks/useIntersectionFadeIn';
+import { useLang } from '../lib/i18n';
 
 interface WeddingDateProps {
   date: string;
@@ -7,6 +8,7 @@ interface WeddingDateProps {
 
 export function WeddingDate({ date }: WeddingDateProps) {
   const ref = useIntersectionFadeIn<HTMLElement>();
+  const lang = useLang();
   const targetDate = new Date(date);
   const { days, hours, minutes, seconds, isOver } = useCountdown(targetDate);
 
@@ -15,12 +17,28 @@ export function WeddingDate({ date }: WeddingDateProps) {
   const day = targetDate.getDate();
   const dayOfWeek = targetDate.getDay();
 
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-  const koreanDay = dayNames[dayOfWeek];
+  const koDayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  const enDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = lang === 'ko' ? koDayNames : enDayNames;
   const hour = targetDate.getHours();
   const minute = targetDate.getMinutes();
-  const ampm = hour < 12 ? '오전' : '오후';
   const displayHour = hour > 12 ? hour - 12 : hour;
+
+  // 헤드라인 날짜·시각: 한국어는 "년/월/일 요일 / 오전·오후 N시 M분", 영어는 자연스러운 영문 포맷.
+  const enMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const enDayFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  let dateLine: string;
+  let timeLine: string;
+  if (lang === 'ko') {
+    dateLine = `${year}년 ${month}월 ${day}일 ${koDayNames[dayOfWeek]}요일`;
+    const ampm = hour < 12 ? '오전' : '오후';
+    timeLine = `${ampm} ${displayHour}시${minute > 0 ? ` ${minute}분` : ''}`;
+  } else {
+    dateLine = `${enDayFull[dayOfWeek]}, ${enMonths[month - 1]} ${day}, ${year}`;
+    const ampm = hour < 12 ? 'AM' : 'PM';
+    const h12 = displayHour === 0 ? 12 : displayHour;
+    timeLine = `${h12}:${String(minute).padStart(2, '0')} ${ampm}`;
+  }
 
   const startOfWeek = new Date(targetDate);
   startOfWeek.setDate(day - dayOfWeek);
@@ -38,8 +56,8 @@ export function WeddingDate({ date }: WeddingDateProps) {
     >
       <div className="font-italic italic font-normal text-[13px] text-sky tracking-[.18em] uppercase text-center mb-1.5">Wedding Date</div>
       <div className="font-serif font-medium text-xl text-navy text-center tracking-[.02em] mb-[18px] flex flex-wrap justify-center gap-x-1.5">
-        <span>{year}년 {month}월 {day}일 {koreanDay}요일</span>
-        <span>{ampm} {displayHour}시{minute > 0 ? ` ${minute}분` : ''}</span>
+        <span>{dateLine}</span>
+        <span>{timeLine}</span>
       </div>
       <div className="w-6 h-px bg-soft-sky mx-auto mb-[18px]" />
       <div className="mb-[18px]">

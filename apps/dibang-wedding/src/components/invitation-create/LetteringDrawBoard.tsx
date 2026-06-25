@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import type { LetteringStroke, LetteringTool, TimedPoint } from '../../types/invitationDesignConfig';
 import { pointsToFillPath, toolOptions } from '../../lib/letteringPath';
+import { useT } from '../../lib/i18n';
 
 interface Props {
   strokes: LetteringStroke[];
@@ -8,9 +9,9 @@ interface Props {
   onChange: (strokes: LetteringStroke[]) => void;
 }
 
-const TOOLS: { value: LetteringTool; label: string }[] = [
-  { value: 'pen', label: '펜' },
-  { value: 'brush', label: '붓' },
+const TOOLS: { value: LetteringTool; labelKey: string }[] = [
+  { value: 'pen', labelKey: 'invite.brush.pen' },
+  { value: 'brush', labelKey: 'invite.brush.brush' },
 ];
 const MIN_WIDTH = 1;
 const MAX_WIDTH = 12;
@@ -33,6 +34,7 @@ const strokeDuration = (s: LetteringStroke) =>
   s.points && s.points.length ? s.points[s.points.length - 1].t : 0;
 
 export function LetteringDrawBoard({ strokes, viewBox, onChange }: Props) {
+  const t = useT();
   const svgRef = useRef<SVGSVGElement>(null);
   const [tool, setTool] = useState<LetteringTool>('pen');
   const [color, setColor] = useState(DEFAULT_COLOR);
@@ -150,13 +152,13 @@ export function LetteringDrawBoard({ strokes, viewBox, onChange }: Props) {
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2 mb-2">
-        <span className="text-base text-gray-700">도구</span>
-        {TOOLS.map((t) => (
-          <button key={t.value} type="button" onClick={() => setTool(t.value)} className={chip(tool === t.value)}>
-            {t.label}
+        <span className="text-base text-gray-700">{t('invite.canvas.tools')}</span>
+        {TOOLS.map((tl) => (
+          <button key={tl.value} type="button" onClick={() => setTool(tl.value)} className={chip(tool === tl.value)}>
+            {t(tl.labelKey)}
           </button>
         ))}
-        <span className="text-base text-gray-700 ml-2">색</span>
+        <span className="text-base text-gray-700 ml-2">{t('invite.canvas.color')}</span>
         {['#222222', '#e00000', '#1a6be0', '#ffffff'].map((c) => (
           <button
             key={c}
@@ -168,12 +170,12 @@ export function LetteringDrawBoard({ strokes, viewBox, onChange }: Props) {
         ))}
         <label className="relative w-7 h-7 shrink-0 rounded-full border-2 border-dashed border-gray-300 hover:border-gray-400 cursor-pointer flex items-center justify-center transition-colors" style={{ backgroundColor: color }}>
           <span className="text-white text-sm font-bold leading-none drop-shadow-[0_0_2px_rgba(0,0,0,.5)]">+</span>
-          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} aria-label="획 색" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} aria-label={t('invite.canvas.strokeColor')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
         </label>
       </div>
 
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-base text-gray-700 shrink-0">굵기</span>
+        <span className="text-base text-gray-700 shrink-0">{t('invite.canvas.thickness')}</span>
         <input
           type="range"
           min={MIN_WIDTH}
@@ -181,7 +183,7 @@ export function LetteringDrawBoard({ strokes, viewBox, onChange }: Props) {
           step={1}
           value={width}
           onChange={(e) => setWidth(Number(e.target.value))}
-          aria-label="획 굵기"
+          aria-label={t('invite.canvas.strokeWidth')}
           className="flex-1 accent-sky-500 cursor-pointer"
         />
         <span className="text-sm text-gray-500 tabular-nums w-6 text-right">{width}</span>
@@ -189,14 +191,14 @@ export function LetteringDrawBoard({ strokes, viewBox, onChange }: Props) {
 
       {/* 그리기 시간 bar — 펜을 대고 그리는 동안에만 차오름(총 10초) */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-base text-gray-700 shrink-0">그리기 시간</span>
+        <span className="text-base text-gray-700 shrink-0">{t('invite.draw.time')}</span>
         <div className="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
           <div
             className={`h-full ${exhausted ? 'bg-red-400' : 'bg-sky-500'} transition-[width] duration-100`}
             style={{ width: `${usedPct}%` }}
           />
         </div>
-        <span className="text-sm text-gray-500 tabular-nums shrink-0">{(usedMs / 1000).toFixed(1)} / 10초</span>
+        <span className="text-sm text-gray-500 tabular-nums shrink-0">{t('invite.draw.timeValue', { used: (usedMs / 1000).toFixed(1) })}</span>
       </div>
 
       <svg
@@ -221,19 +223,19 @@ export function LetteringDrawBoard({ strokes, viewBox, onChange }: Props) {
         )}
       </svg>
 
-      {exhausted && <p className="text-sm text-red-500 mt-1">그리기 시간(10초)을 모두 사용했어요. 되돌리기로 시간을 비울 수 있어요.</p>}
+      {exhausted && <p className="text-sm text-red-500 mt-1">{t('invite.draw.exhausted')}</p>}
 
       <div className="flex flex-wrap items-center gap-2 mt-2">
         <button type="button" className={chip(false)} onClick={undo} disabled={strokes.length === 0}>
-          되돌리기
+          {t('invite.canvas.undo')}
         </button>
         <button type="button" className={chip(false)} onClick={redo} disabled={redoStack.length === 0}>
-          앞으로
+          {t('invite.canvas.redo')}
         </button>
         <button type="button" className={chip(false)} onClick={clearAll} disabled={strokes.length === 0}>
-          전체 지우기
+          {t('invite.draw.clearAll')}
         </button>
-        <span className="text-sm text-gray-500 self-center">획 {strokes.length}개</span>
+        <span className="text-sm text-gray-500 self-center">{t('invite.draw.strokeCount', { n: strokes.length })}</span>
       </div>
     </div>
   );

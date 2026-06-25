@@ -47,7 +47,7 @@ export function SettingsPage() {
 
   const meta = session?.user?.user_metadata;
   // 세션 우선, 없으면 getMe 폴백(dev 로그인우회 프리뷰 = 철수 fixture에서 이름 표시).
-  const userName = meta?.display_name ?? meta?.name ?? session?.user?.email ?? me?.name ?? '알 수 없음';
+  const userName = meta?.display_name ?? meta?.name ?? session?.user?.email ?? me?.name ?? t('page.settings.unknownUser');
 
   // 저장 진행 + 토스트(2초 자동닫힘) flow는 머신(settings).
   const [, send] = useMachine(settingsMachine);
@@ -78,10 +78,10 @@ export function SettingsPage() {
         {zk.address && (
           <button
             type="button"
-            onClick={() => { navigator.clipboard.writeText(zk.address!); send({ type: 'SHOW_TOAST', msg: '주소 복사됨' }); }}
+            onClick={() => { navigator.clipboard.writeText(zk.address!); send({ type: 'SHOW_TOAST', msg: t('page.settings.addressCopied') }); }}
             className="mt-2 w-full rounded-lg bg-gray-50 px-3 py-2 text-left"
           >
-            <p className="text-xs text-muted">Sui 지갑 주소</p>
+            <p className="text-xs text-muted">{t('page.settings.walletAddress')}</p>
             <p className="break-all text-xs font-mono text-navy">{zk.address}</p>
           </button>
         )}

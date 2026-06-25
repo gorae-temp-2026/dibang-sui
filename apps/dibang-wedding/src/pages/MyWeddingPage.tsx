@@ -50,13 +50,13 @@ export function MyWeddingPage() {
   const handleShareInvite = useCallback(async (url: string) => {
     if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
-        await navigator.share({ title: '결혼식 초대', url });
+        await navigator.share({ title: t('page.myWedding.inviteShareTitle'), url });
         return;
       } catch { /* 사용자 취소 */ }
     }
     const ok = await copy(url);
     if (ok) showCopyToast();
-  }, [copy, showCopyToast]);
+  }, [copy, showCopyToast, t]);
 
   // 청첩장 share/copy/preview 핸들러 — wedding 단위 closure로 캡처.
   // (UI/데이터 분리 P2-1: WeddingCard에서 외부 API 호출 책임을 page가 흡수)
@@ -69,7 +69,7 @@ export function MyWeddingPage() {
       },
       onShareInvitation: async (slug: string) => {
         const url = `${guestWebOrigin}/${slug}`;
-        const title = `${wedding.groom_name} & ${wedding.bride_name} 결혼식에 초대합니다`;
+        const title = t('page.myWedding.invitationShareTitle', { groom: wedding.groom_name, bride: wedding.bride_name });
         if (typeof navigator !== 'undefined' && 'share' in navigator) {
           try {
             await navigator.share({ title, url });
@@ -84,7 +84,7 @@ export function MyWeddingPage() {
       },
       guestFlowUrl: `${guestWebOrigin}/?weddingId=${wedding.id}`,
     }),
-    [guestWebOrigin, copy, showCopyToast],
+    [guestWebOrigin, copy, showCopyToast, t],
   );
 
   return (
@@ -136,7 +136,7 @@ export function MyWeddingPage() {
       {copyToast && (
         <div className="fixed bottom-24 left-4 right-4 z-50 flex justify-center pointer-events-none">
           <div className="rounded-xl bg-gray-900/90 px-5 py-3 text-sm text-white shadow-lg">
-            링크가 복사되었습니다
+            {t('page.myWedding.linkCopied')}
           </div>
         </div>
       )}

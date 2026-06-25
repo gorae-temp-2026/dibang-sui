@@ -5,6 +5,7 @@ import { serif, springs, colors } from '../../styles/tokens';
 import { buildTossLink, buildKakaoLink } from '../../lib/payDeepLink';
 import { useDeepLinkReturn } from '../../hooks/useDeepLinkReturn';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
+import { useT } from '../../lib/i18n';
 
 const ACCOUNT_KEYS: Record<RecipientSlot, keyof Wedding['info']> = {
   groom: 'groom_account',
@@ -27,6 +28,7 @@ interface StepTransferProps {
 }
 
 export function StepTransfer({ wedding, recipientSlot, amount, onConfirm, onDeepLinkNavigate, isSubmitting = false }: StepTransferProps) {
+  const t = useT();
   // 명시적 확인 버튼 가드(딥링크 복귀 자동 onConfirm은 머신이 transferring에서 무시).
   const handleConfirm = () => {
     if (isSubmitting) return;
@@ -61,7 +63,7 @@ export function StepTransfer({ wedding, recipientSlot, amount, onConfirm, onDeep
   if (!account || !accountNumber) {
     return (
       <div style={{ padding: '24px 24px 32px' }}>
-        <p style={{ ...serif, fontSize: 16, color: '#E8465A' }}>계좌 정보가 등록되지 않았습니다.</p>
+        <p style={{ ...serif, fontSize: 16, color: '#E8465A' }}>{t('guestFlow.transfer.noAccount')}</p>
         <motion.button
           whileTap={{ scale: 0.95 }}
           transition={springs.snappy}
@@ -73,7 +75,7 @@ export function StepTransfer({ wedding, recipientSlot, amount, onConfirm, onDeep
             opacity: isSubmitting ? 0.4 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer', ...serif,
           }}
         >
-          {isSubmitting ? '처리 중…' : '다음으로'}
+          {isSubmitting ? t('guestFlow.transfer.processing') : t('guestFlow.transfer.next')}
         </motion.button>
       </div>
     );
@@ -82,7 +84,7 @@ export function StepTransfer({ wedding, recipientSlot, amount, onConfirm, onDeep
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 24px 32px', maxWidth: 420, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <div style={{ marginBottom: 20 }}>
-        <p style={{ ...serif, fontSize: 16, color: colors.textMuted }}>축의금 전달</p>
+        <p style={{ ...serif, fontSize: 16, color: colors.textMuted }}>{t('guestFlow.transfer.title')}</p>
         <p style={{ ...serif, marginTop: 4, fontSize: 24, fontWeight: 700 }}>
           &#8361; {amount.toLocaleString()}
         </p>
@@ -108,12 +110,12 @@ export function StepTransfer({ wedding, recipientSlot, amount, onConfirm, onDeep
             fontSize: 16, color: colors.textMuted, cursor: 'pointer',
           }}
         >
-          {copied ? '복사 완료' : '복사'}
+          {copied ? t('guestFlow.transfer.copied') : t('guestFlow.transfer.copy')}
         </motion.button>
       </div>
 
       <p style={{ ...serif, textAlign: 'center', fontSize: 14, color: colors.textSubtle }}>
-        버튼을 누르면 앱으로 이동합니다
+        {t('guestFlow.transfer.openAppHint')}
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
@@ -127,7 +129,7 @@ export function StepTransfer({ wedding, recipientSlot, amount, onConfirm, onDeep
             border: `1px solid ${colors.borderAccent}`, cursor: 'pointer', ...serif,
           }}
         >
-          토스로 송금
+          {t('guestFlow.transfer.toss')}
         </motion.button>
         <motion.button
           whileTap={{ scale: 0.95 }}
@@ -139,7 +141,7 @@ export function StepTransfer({ wedding, recipientSlot, amount, onConfirm, onDeep
             border: `1px solid ${colors.borderAccent}`, cursor: 'pointer', ...serif,
           }}
         >
-          카카오페이로 송금
+          {t('guestFlow.transfer.kakaoPay')}
         </motion.button>
       </div>
 
@@ -156,7 +158,7 @@ export function StepTransfer({ wedding, recipientSlot, amount, onConfirm, onDeep
           opacity: isSubmitting ? 0.4 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer', ...serif,
         }}
       >
-        {isSubmitting ? '처리 중…' : '메시지로 이동'}
+        {isSubmitting ? t('guestFlow.transfer.processing') : t('guestFlow.transfer.toMessage')}
       </motion.button>
     </div>
   );

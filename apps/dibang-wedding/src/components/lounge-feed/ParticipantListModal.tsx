@@ -1,6 +1,9 @@
 import { colors } from '../../lib/theme';
-import { SIDE_LABEL, formatGuestPrefix } from '../../lib/guestLabel';
+import { sideLabel, formatGuestPrefix } from '../../lib/guestLabel';
+import { useT, translate, useLangStore } from '../../lib/i18n';
 import type { FeedItem } from '../../types/db-compat';
+
+const lang = () => useLangStore.getState().lang;
 
 interface ParticipantListModalProps {
   entries: FeedItem[];
@@ -10,7 +13,7 @@ interface ParticipantListModalProps {
 function getEntryData(item: FeedItem) {
   const d = (item.data ?? {}) as Record<string, unknown>;
   return {
-    visitorName: (d.visitor_name as string) ?? '알 수 없음',
+    visitorName: (d.visitor_name as string) ?? translate(lang(), 'feed.unknownPlain'),
     hostRole: d.host_role as string | undefined,
     recipientSlot: d.recipient_slot as string | undefined,
     relationCategory: d.relation_category as string | undefined,
@@ -20,13 +23,14 @@ function getEntryData(item: FeedItem) {
 
 function getSubtitle(data: ReturnType<typeof getEntryData>): string {
   if (data.hostRole) {
-    return SIDE_LABEL[data.hostRole] ?? data.hostRole;
+    return sideLabel(data.hostRole);
   }
   const prefix = formatGuestPrefix(data.recipientSlot, data.relationCategory, data.relationDetail);
-  return prefix || '참여자';
+  return prefix || translate(lang(), 'feed.participant');
 }
 
 export function ParticipantListModal({ entries, onClose }: ParticipantListModalProps) {
+  const t = useT();
   return (
     <div
       onClick={(e) => {
@@ -74,7 +78,7 @@ export function ParticipantListModal({ entries, onClose }: ParticipantListModalP
               margin: 0,
             }}
           >
-            웨딩라운지 참여자 ({entries.length}명)
+            {t('feed.participants.title', { n: entries.length })}
           </h3>
           <button
             onClick={onClose}
@@ -95,7 +99,7 @@ export function ParticipantListModal({ entries, onClose }: ParticipantListModalP
         <div style={{ overflowY: 'auto', padding: '8px 0' }}>
           {entries.length === 0 && (
             <div style={{ textAlign: 'center', padding: 24, color: colors.textMuted, fontSize: 14 }}>
-              아직 참여자가 없습니다
+              {t('feed.participants.empty')}
             </div>
           )}
           {entries.map((item) => {

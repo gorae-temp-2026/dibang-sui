@@ -12,6 +12,7 @@ import { PhotoLightbox } from '../components/memorybook/PhotoLightbox';
 import { SelectionDot } from '../components/memorybook/SelectionDot';
 import { useMachine } from '@xstate/react';
 import { memoryBookCurateMachine } from '../machines/memoryBookCurate.machine';
+import { useT } from '../lib/i18n';
 
 // _scenario/wedding-memorybook-ui-2026-05-24/SCENARIOS.md §B(S-02~S-06).
 // T-18: 그룹 그리드 + 빈 상태.
@@ -22,10 +23,20 @@ const MAX_SELECTION = 30;
 // 안정 ref 빈 컬렉션 — derived state fallback이 매 렌더 새 ref가 되는 걸 방지.
 const EMPTY_IDS: string[] = [];
 
-const SIDE_LABEL: Record<string, string> = {
-  groom: '신랑측',
-  bride: '신부측',
+// side는 표시용 — i18n 키로 매핑(other는 라벨 없음).
+const SIDE_LABEL_KEY: Record<string, string> = {
+  groom: 'curate.side.groom',
+  bride: 'curate.side.bride',
   other: '',
+};
+// relation_category 값(백엔드 한국어 enum)은 그대로 두고 표시만 번역 — LoungeCheckIn과 키 공유.
+const RELATION_LABEL_KEY: Record<string, string> = {
+  '가족/친척': 'loungeCheckIn.relation.family',
+  '친구/지인': 'loungeCheckIn.relation.friend',
+  '동문/동창': 'loungeCheckIn.relation.alumni',
+  '직장동료': 'loungeCheckIn.relation.coworker',
+  '스승/제자': 'loungeCheckIn.relation.mentor',
+  '기타모임': 'loungeCheckIn.relation.other',
 };
 
 function sideBadgeClass(side?: string) {
@@ -34,9 +45,10 @@ function sideBadgeClass(side?: string) {
   return 'bg-stone-100 text-stone-600';
 }
 
-function buildRelationLabel(g: SharedPhotoGroup): string | null {
+// relation_category는 i18n 매핑, relation_detail은 사용자 입력 자유텍스트라 그대로 둔다.
+function buildRelationLabel(g: SharedPhotoGroup, t: (k: string, v?: Record<string, string | number>) => string): string | null {
   const parts: string[] = [];
-  if (g.relation_category) parts.push(g.relation_category);
+  if (g.relation_category) parts.push(RELATION_LABEL_KEY[g.relation_category] ? t(RELATION_LABEL_KEY[g.relation_category]) : g.relation_category);
   if (g.relation_detail) parts.push(g.relation_detail);
   if (parts.length === 0) return null;
   return parts.join(' · ');
@@ -45,6 +57,7 @@ function buildRelationLabel(g: SharedPhotoGroup): string | null {
 export function WeddingMemoryBookCuratePage() {
   const { weddingId } = useParams<{ weddingId: string }>();
   const navigate = useNavigate();
+  const t = useT();
   const enabled = !!weddingId;
 
   const groupsQuery = useQuery({
@@ -147,10 +160,10 @@ export function WeddingMemoryBookCuratePage() {
     } catch (err) {
       // invalid_ids 등 400/500 처리
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const detail = (err as any)?.error ?? (err as Error)?.message ?? '저장에 실패했습니다.';
-      send({ type: 'SAVE_ERROR', error: typeof detail === 'string' ? detail : '저장에 실패했습니다.' });
+      const detail = (err as any)?.error ?? (err as Error)?.message ?? t('curate.saveErrorFallback');
+      send({ type: 'SAVE_ERROR', error: typeof detail === 'string' ? detail : t('curate.saveErrorFallback') });
     }
-  }, [weddingId, selectedIds, saveMutation, navigate, send]);
+  }, [weddingId, selectedIds, saveMutation, navigate, send, t]);
 
   const handleSave = useCallback(() => {
     if (!weddingId) return;
@@ -189,33 +202,32 @@ export function WeddingMemoryBookCuratePage() {
           type="button"
           onClick={() => navigate(-1)}
           className="flex h-9 w-9 items-center justify-center rounded-full text-stone-600 hover:bg-stone-100"
-          aria-label="뒤로"
+          aria-label={t('curate.back')}
         >
           ‹
         </button>
-        <h1 className="text-base font-semibold text-stone-900">사진 큐레이션</h1>
+        <h1 className="text-base font-semibold text-stone-900">{t('curate.title')}</h1>
       </header>
 
       <p className="px-6 pt-8 pb-3 text-center text-base leading-relaxed text-stone-600">
-        메모리북을 완성하려면 먼저 하객들이 공유해준 사진 중에서<br />
-        마음에 드는 사진을 선택해 주세요.
+        {t('curate.intro')}
       </p>
 
       {isLoading && (
-        <div className="flex justify-center py-20 text-sm text-stone-400">로딩 중…</div>
+        <div className="flex justify-center py-20 text-sm text-stone-400">{t('curate.loading')}</div>
       )}
 
       {!isLoading && hasError && (
         <div className="mx-5 my-8 rounded-xl border border-red-200 bg-red-50 p-5 text-center text-sm text-red-700">
-          사진을 불러오는 데 실패했습니다. 잠시 후 다시 시도해 주세요.
+          {t('curate.loadError')}
         </div>
       )}
 
       {!isLoading && !hasError && groups.length === 0 && (
         <div className="mx-5 my-8 rounded-xl border border-stone-200 bg-white p-6 text-center">
-          <p className="mb-2 text-base font-semibold text-stone-800">아직 공유된 사진이 없어요</p>
+          <p className="mb-2 text-base font-semibold text-stone-800">{t('curate.emptyTitle')}</p>
           <p className="text-sm leading-relaxed text-stone-500">
-            하객들이 사진을 공유하면 여기에 표시됩니다.
+            {t('curate.emptyDesc')}
           </p>
         </div>
       )}
@@ -225,10 +237,10 @@ export function WeddingMemoryBookCuratePage() {
           {/* 선택된 사진 미니 그리드 */}
           <div className="px-4 pt-4 pb-2">
             <p className="mb-2.5 text-base font-semibold text-stone-900">
-              선택한 사진 {selectedIds.length}/{MAX_SELECTION}
+              {t('curate.selected', { n: selectedIds.length, max: MAX_SELECTION })}
             </p>
             {selectedIds.length === 0 ? (
-              <p className="text-sm text-stone-400">아래에서 사진을 선택해 주세요</p>
+              <p className="text-sm text-stone-400">{t('curate.pickHint')}</p>
             ) : (
               <div className="grid grid-cols-5 gap-1.5">
                 {selectedIds.map((id) => {
@@ -240,7 +252,7 @@ export function WeddingMemoryBookCuratePage() {
                       key={id}
                       type="button"
                       onClick={() => handleToggle(id)}
-                      aria-label={`${p.guestName}의 선택 해제`}
+                      aria-label={t('curate.deselect', { name: p.guestName })}
                       className="relative aspect-square overflow-hidden rounded-[10px] border-2 border-stone-900 bg-stone-100 p-0"
                     >
                       {url && (
@@ -259,13 +271,13 @@ export function WeddingMemoryBookCuratePage() {
           <div className="mx-4 my-1 h-px bg-stone-200" />
 
           <div className="px-4 pt-3 pb-1">
-            <p className="text-base font-semibold text-stone-900">전체 사진 {allPhotos.length}</p>
+            <p className="text-base font-semibold text-stone-900">{t('curate.allPhotos', { n: allPhotos.length })}</p>
           </div>
 
           <div className="space-y-3 px-3">
             {groups.map((g) => {
-              const sideText = g.side ? SIDE_LABEL[g.side] : '';
-              const relationLabel = buildRelationLabel(g);
+              const sideText = g.side && SIDE_LABEL_KEY[g.side] ? t(SIDE_LABEL_KEY[g.side]) : '';
+              const relationLabel = buildRelationLabel(g, t);
               return (
                 <section key={g.user_id} className="px-2">
                   <div className="mb-2 flex flex-wrap items-center gap-2 px-1">
@@ -294,12 +306,12 @@ export function WeddingMemoryBookCuratePage() {
                             isSelected ? 'border-[2.5px] border-stone-900' : 'border border-stone-200'
                           }`}
                           role="button"
-                          aria-label={`${g.guest_name}의 사진${isSelected ? `, ${selectionIndex + 1}번째 선택됨` : ''} — 클릭하여 확대`}
+                          aria-label={t('curate.photoAria', { name: g.guest_name, sel: isSelected ? t('curate.photoSelectedSuffix', { n: selectionIndex + 1 }) : '' })}
                         >
                           {url ? (
                             <img
                               src={url}
-                              alt={`${g.guest_name}의 사진`}
+                              alt={t('curate.photoAlt', { name: g.guest_name })}
                               loading="lazy"
                               className="block h-full w-full object-cover"
                             />
@@ -349,7 +361,7 @@ export function WeddingMemoryBookCuratePage() {
           )}
           {saveSuccess && (
             <div className="mb-2.5 rounded-lg border border-green-200 bg-green-50 px-3.5 py-2.5 text-center text-sm text-green-700">
-              저장되었습니다!
+              {t('curate.saved')}
             </div>
           )}
           <button
@@ -363,7 +375,7 @@ export function WeddingMemoryBookCuratePage() {
             }`}
             style={{ height: 52 }}
           >
-            {saveMutation.isPending ? '저장 중…' : `저장하기 (${selectedIds.length}장)`}
+            {saveMutation.isPending ? t('curate.saving') : t('curate.save', { n: selectedIds.length })}
           </button>
         </div>
       )}
@@ -381,10 +393,10 @@ export function WeddingMemoryBookCuratePage() {
             onClick={(e) => e.stopPropagation()}
           >
             <p id="empty-confirm-title" className="text-base font-semibold text-stone-900">
-              선택된 사진이 없습니다
+              {t('curate.emptyConfirmTitle')}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-stone-600">
-              큐레이션을 마치고 나가시겠습니까?
+              {t('curate.emptyConfirmDesc')}
             </p>
             <div className="mt-5 flex gap-2">
               <button
@@ -392,14 +404,14 @@ export function WeddingMemoryBookCuratePage() {
                 onClick={handleEmptyCancel}
                 className="flex-1 rounded-xl border border-stone-200 bg-white py-3 text-sm font-semibold text-stone-700 hover:bg-stone-50"
               >
-                취소
+                {t('curate.cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleEmptyConfirm}
                 className="flex-1 rounded-xl bg-stone-900 py-3 text-sm font-semibold text-white hover:bg-stone-800"
               >
-                나가기
+                {t('curate.leave')}
               </button>
             </div>
           </div>

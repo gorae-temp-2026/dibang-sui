@@ -13,9 +13,10 @@ import { LetteringControls } from './LetteringControls';
 import { SectionControls } from './SectionControls';
 import { ThemeControls } from './ThemeControls';
 import { CanvasEditor } from './CanvasEditor';
-import { inputClass, inputErrorClass, sectionTitleClass, requiredMark, errorMessage, slugStatusConfig } from './styles';
+import { inputClass, inputErrorClass, sectionTitleClass, requiredMark, slugStatusConfig } from './styles';
 import type { SlugAvailability } from '../../queries/invitation/useSlugAvailability';
 import { openDaumPostcode } from '../../lib/daum-postcode';
+import { useT } from '../../lib/i18n';
 
 // 에디터 설정 카드의 탭 칩 스타일 — 레터링 모드 선택 칩과 동일 디자인
 const chipBase = 'rounded-lg border px-3 py-2 text-base font-medium transition-colors';
@@ -49,7 +50,7 @@ interface EditPanelProps {
 }
 
 export function EditPanel({
-  title = '청첩장 만들기',
+  title,
   invitationOnly = false,
   onFocusSection,
   onPlayAnimation,
@@ -66,6 +67,7 @@ export function EditPanel({
   slugAvailability,
 }: EditPanelProps) {
   const store = useInvitationForm();
+  const t = useT();
   const [configTab, setConfigTab] = useState<'sections' | 'design'>('sections');
 
   // 섹션 구성에서 꺼진 섹션은 에디터에서도 흐리게 + 편집 불가 처리 (미리보기 isSectionEnabled와 일관)
@@ -100,10 +102,10 @@ export function EditPanel({
             checked={sectionEnabled(key)}
             disabled={required}
             onChange={() => toggleSection(key)}
-            aria-label={`${title} 섹션 표시`}
+            aria-label={t('invite.sectionToggle', { title })}
             className="w-4 h-4 rounded border-gray-300 text-sky-500 focus:ring-sky-300 disabled:opacity-50"
           />
-          {required && <span className="text-sky-600">필수</span>}
+          {required && <span className="text-sky-600">{t('invite.required')}</span>}
         </label>
       </div>
     );
@@ -111,12 +113,12 @@ export function EditPanel({
 
   return (
     <div className="overflow-y-auto h-full p-6 space-y-6 bg-gray-50">
-      <h1 className="text-[28px] font-semibold text-gray-900">{title}</h1>
+      <h1 className="text-[28px] font-semibold text-gray-900">{title ?? t('invite.title')}</h1>
 
       {/* 카드: 공유 링크(slug) — Edit 전용. 중복검증은 page가 useSlugCheck로 주입(머신 slug 병렬). */}
       {slugAvailability !== undefined && (
         <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
-          <h2 className={sectionTitleClass}>공유 링크</h2>
+          <h2 className={sectionTitleClass}>{t('invite.shareLink')}</h2>
           <div className="flex items-center gap-2">
             <span className="text-base text-gray-400">gorae.com/</span>
             <input
@@ -127,9 +129,9 @@ export function EditPanel({
               className={`flex-1 ${inputClass}`}
             />
           </div>
-          {slugStatusConfig[slugAvailability].text && (
+          {slugStatusConfig[slugAvailability].textKey && (
             <p className={`text-sm ${slugStatusConfig[slugAvailability].color}`}>
-              {slugStatusConfig[slugAvailability].text}
+              {t(slugStatusConfig[slugAvailability].textKey)}
             </p>
           )}
         </div>
@@ -137,13 +139,13 @@ export function EditPanel({
 
       {/* 카드: 에디터 설정 (섹션 구성 + 디자인 설정 탭) */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-        <h2 className={sectionTitleClass}>에디터 설정</h2>
+        <h2 className={sectionTitleClass}>{t('invite.editorSettings')}</h2>
         <div className="flex gap-2">
           <button type="button" className={chip(configTab === 'sections')} onClick={() => setConfigTab('sections')}>
-            섹션 구성
+            {t('invite.sectionConfig')}
           </button>
           <button type="button" className={chip(configTab === 'design')} onClick={() => setConfigTab('design')}>
-            디자인 설정
+            {t('invite.designSettings')}
           </button>
         </div>
         {configTab === 'sections' && (
@@ -166,7 +168,7 @@ export function EditPanel({
       {/* eslint-disable-next-line no-constant-binary-expression -- 의도적 토글(false=숨김, 추후 복원) */}
       {false && (
       <section className="space-y-4">
-        <h2 className={sectionTitleClass}>테마</h2>
+        <h2 className={sectionTitleClass}>{t('invite.theme')}</h2>
         <div className="grid grid-cols-2 gap-3">
           {(Object.entries(invitationThemes) as [InvitationTheme, typeof invitationThemes[InvitationTheme]][]).map(([key, cfg]) => (
             <button
@@ -186,7 +188,7 @@ export function EditPanel({
               <span className={`text-base font-medium ${
                 store.theme === key ? 'text-sky-700' : 'text-gray-600'
               }`}>
-                {cfg.label}
+                {t(cfg.labelKey)}
               </span>
             </button>
           ))}
@@ -206,7 +208,7 @@ export function EditPanel({
 
       {/* 레터링 (텍스트 입력 · 직접 그리기 · 이미지 업로드) — 커버 위에 오버레이 */}
       <section className="space-y-4" onFocus={() => onFocusSection?.('cover')}>
-        <h2 className={sectionTitleClass}>레터링</h2>
+        <h2 className={sectionTitleClass}>{t('invite.lettering')}</h2>
         <LetteringControls
           uploadContext={uploadContext}
           source={store.designConfig.lettering.source}
@@ -237,12 +239,12 @@ export function EditPanel({
       {/* 카드: 나의 역할 */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5">
       <section className="space-y-4" onFocus={() => onFocusSection?.('cover')}>
-        <h2 className={sectionTitleClass}>나의 역할 <span className="text-red-400">*</span></h2>
+        <h2 className={sectionTitleClass}>{t('invite.myRole')} <span className="text-red-400">*</span></h2>
         <div className="grid grid-cols-2 gap-2">
           {([
-            ['groom', '신랑'],
-            ['bride', '신부'],
-          ] as [HostRole, string][]).map(([value, label]) => (
+            ['groom', 'loungeCheckIn.recipient.groom'],
+            ['bride', 'loungeCheckIn.recipient.bride'],
+          ] as [HostRole, string][]).map(([value, labelKey]) => (
             <button
               key={value}
               type="button"
@@ -253,7 +255,7 @@ export function EditPanel({
                   : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
               }`}
             >
-              {label}
+              {t(labelKey)}
             </button>
           ))}
         </div>
@@ -263,36 +265,36 @@ export function EditPanel({
       {/* 카드: 신랑 측 정보 */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5">
       <section className="space-y-4" onFocus={() => onFocusSection?.('invitation')}>
-        <h2 className={sectionTitleClass}>신랑 측 정보</h2>
+        <h2 className={sectionTitleClass}>{t('invite.groomInfo')}</h2>
         <div>
-          <label className="text-base font-medium text-gray-700 mb-1 block">신랑님 <span className="text-red-400">*</span></label>
-          <input type="text" placeholder="이름" value={store.groomName}
+          <label className="text-base font-medium text-gray-700 mb-1 block">{t('invite.groomLabel')} <span className="text-red-400">*</span></label>
+          <input type="text" placeholder={t('invite.namePlaceholder')} value={store.groomName}
             onChange={(e) => store.setField('groomName', e.target.value)} className={store.errors.has('groomName') ? inputErrorClass : inputClass} />
-          {store.errors.has('groomName') && <p className="text-sm text-red-500 mt-1">{errorMessage}</p>}
+          {store.errors.has('groomName') && <p className="text-sm text-red-500 mt-1">{t('invite.requiredField')}</p>}
         </div>
         <div>
-          <label className="text-base font-medium text-gray-700 mb-1 block">신랑 아버님</label>
+          <label className="text-base font-medium text-gray-700 mb-1 block">{t('invite.groomFather')}</label>
           <div className="flex items-center gap-3">
-            <input type="text" placeholder="성함" value={store.groomFatherName}
+            <input type="text" placeholder={t('invite.fullNamePlaceholder')} value={store.groomFatherName}
               onChange={(e) => store.setField('groomFatherName', e.target.value)} className={`flex-1 ${inputClass}`} />
             <label className="flex items-center gap-1.5 text-base text-gray-500 shrink-0 cursor-pointer">
               <input type="checkbox" checked={store.groomFatherDeceased}
                 onChange={(e) => store.setField('groomFatherDeceased', e.target.checked)}
                 className="w-4 h-4 rounded border-gray-300 text-gray-400 focus:ring-gray-300" />
-              고인
+              {t('invite.deceased')}
             </label>
           </div>
         </div>
         <div>
-          <label className="text-base font-medium text-gray-700 mb-1 block">신랑 어머님</label>
+          <label className="text-base font-medium text-gray-700 mb-1 block">{t('invite.groomMother')}</label>
           <div className="flex items-center gap-3">
-            <input type="text" placeholder="성함" value={store.groomMotherName}
+            <input type="text" placeholder={t('invite.fullNamePlaceholder')} value={store.groomMotherName}
               onChange={(e) => store.setField('groomMotherName', e.target.value)} className={`flex-1 ${inputClass}`} />
             <label className="flex items-center gap-1.5 text-base text-gray-500 shrink-0 cursor-pointer">
               <input type="checkbox" checked={store.groomMotherDeceased}
                 onChange={(e) => store.setField('groomMotherDeceased', e.target.checked)}
                 className="w-4 h-4 rounded border-gray-300 text-gray-400 focus:ring-gray-300" />
-              고인
+              {t('invite.deceased')}
             </label>
           </div>
         </div>
@@ -302,36 +304,36 @@ export function EditPanel({
       {/* 카드: 신부 측 정보 */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5">
       <section className="space-y-4" onFocus={() => onFocusSection?.('invitation')}>
-        <h2 className={sectionTitleClass}>신부 측 정보</h2>
+        <h2 className={sectionTitleClass}>{t('invite.brideInfo')}</h2>
         <div>
-          <label className="text-base font-medium text-gray-700 mb-1 block">신부님 <span className="text-red-400">*</span></label>
-          <input type="text" placeholder="이름" value={store.brideName}
+          <label className="text-base font-medium text-gray-700 mb-1 block">{t('invite.brideLabel')} <span className="text-red-400">*</span></label>
+          <input type="text" placeholder={t('invite.namePlaceholder')} value={store.brideName}
             onChange={(e) => store.setField('brideName', e.target.value)} className={store.errors.has('brideName') ? inputErrorClass : inputClass} />
-          {store.errors.has('brideName') && <p className="text-sm text-red-500 mt-1">{errorMessage}</p>}
+          {store.errors.has('brideName') && <p className="text-sm text-red-500 mt-1">{t('invite.requiredField')}</p>}
         </div>
         <div>
-          <label className="text-base font-medium text-gray-700 mb-1 block">신부 아버님</label>
+          <label className="text-base font-medium text-gray-700 mb-1 block">{t('invite.brideFather')}</label>
           <div className="flex items-center gap-3">
-            <input type="text" placeholder="성함" value={store.brideFatherName}
+            <input type="text" placeholder={t('invite.fullNamePlaceholder')} value={store.brideFatherName}
               onChange={(e) => store.setField('brideFatherName', e.target.value)} className={`flex-1 ${inputClass}`} />
             <label className="flex items-center gap-1.5 text-base text-gray-500 shrink-0 cursor-pointer">
               <input type="checkbox" checked={store.brideFatherDeceased}
                 onChange={(e) => store.setField('brideFatherDeceased', e.target.checked)}
                 className="w-4 h-4 rounded border-gray-300 text-gray-400 focus:ring-gray-300" />
-              고인
+              {t('invite.deceased')}
             </label>
           </div>
         </div>
         <div>
-          <label className="text-base font-medium text-gray-700 mb-1 block">신부 어머님</label>
+          <label className="text-base font-medium text-gray-700 mb-1 block">{t('invite.brideMother')}</label>
           <div className="flex items-center gap-3">
-            <input type="text" placeholder="성함" value={store.brideMotherName}
+            <input type="text" placeholder={t('invite.fullNamePlaceholder')} value={store.brideMotherName}
               onChange={(e) => store.setField('brideMotherName', e.target.value)} className={`flex-1 ${inputClass}`} />
             <label className="flex items-center gap-1.5 text-base text-gray-500 shrink-0 cursor-pointer">
               <input type="checkbox" checked={store.brideMotherDeceased}
                 onChange={(e) => store.setField('brideMotherDeceased', e.target.checked)}
                 className="w-4 h-4 rounded border-gray-300 text-gray-400 focus:ring-gray-300" />
-              고인
+              {t('invite.deceased')}
             </label>
           </div>
         </div>
@@ -340,17 +342,17 @@ export function EditPanel({
 
       {/* 카드: 예식 일시 (weddingDate) */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-      {sectionCardHeader('예식 일시', 'weddingDate')}
+      {sectionCardHeader(t('invite.section.dateTime'), 'weddingDate')}
       <div className={`space-y-4 ${offClass('weddingDate')}`} onFocus={() => onFocusSection?.('weddingDate')}>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-base text-gray-700 mb-1 block">날짜</label>
+            <label className="text-base text-gray-700 mb-1 block">{t('invite.date')}</label>
             <input type="date" value={store.date}
               onChange={(e) => store.setField('date', e.target.value)} className={store.errors.has('date') ? inputErrorClass : inputClass} />
-            {store.errors.has('date') && <p className="text-sm text-red-500 mt-1">{errorMessage}</p>}
+            {store.errors.has('date') && <p className="text-sm text-red-500 mt-1">{t('invite.requiredField')}</p>}
           </div>
           <div>
-            <label className="text-base text-gray-700 mb-1 block">시간</label>
+            <label className="text-base text-gray-700 mb-1 block">{t('invite.time')}</label>
             <div className="grid grid-cols-2 gap-2">
               <select
                 value={store.time ? store.time.split(':')[0] : ''}
@@ -360,9 +362,9 @@ export function EditPanel({
                 }}
                 className={store.errors.has('time') ? inputErrorClass : inputClass}
               >
-                <option value="">시</option>
+                <option value="">{t('invite.hour')}</option>
                 {Array.from({ length: 17 }, (_, i) => i + 7).map((h) => (
-                  <option key={h} value={String(h).padStart(2, '0')}>{h}시</option>
+                  <option key={h} value={String(h).padStart(2, '0')}>{t('invite.hourValue', { h })}</option>
                 ))}
               </select>
               <select
@@ -373,13 +375,13 @@ export function EditPanel({
                 }}
                 className={store.errors.has('time') ? inputErrorClass : inputClass}
               >
-                <option value="">분</option>
+                <option value="">{t('invite.minute')}</option>
                 {Array.from({ length: 6 }, (_, i) => String(i * 10).padStart(2, '0')).map((m) => (
-                  <option key={m} value={m}>{m}분</option>
+                  <option key={m} value={m}>{t('invite.minuteValue', { m })}</option>
                 ))}
               </select>
             </div>
-            {store.errors.has('time') && <p className="text-sm text-red-500 mt-1">{errorMessage}</p>}
+            {store.errors.has('time') && <p className="text-sm text-red-500 mt-1">{t('invite.requiredField')}</p>}
           </div>
         </div>
       </div>
@@ -387,12 +389,12 @@ export function EditPanel({
 
       {/* 카드: 예식장 (location) */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-      {sectionCardHeader('예식장', 'location')}
+      {sectionCardHeader(t('invite.section.venue'), 'location')}
       <div className={`space-y-4 ${offClass('location')}`} onFocus={() => onFocusSection?.('location')}>
         <div>
-          <label className="text-base text-gray-700 mb-1 block">주소</label>
+          <label className="text-base text-gray-700 mb-1 block">{t('invite.address')}</label>
           <div className="flex items-center gap-2">
-            <input type="text" placeholder={"예식장 주소를 입력하세요" + requiredMark} value={store.venueAddress}
+            <input type="text" placeholder={t('invite.venueAddressPlaceholder') + requiredMark} value={store.venueAddress}
               onChange={(e) => store.setField('venueAddress', e.target.value)} className={`flex-1 ${store.errors.has('venueAddress') ? inputErrorClass : inputClass}`} readOnly />
             <button
               type="button"
@@ -403,20 +405,20 @@ export function EditPanel({
               }}
               className="shrink-0 rounded-lg bg-gray-100 px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-200 transition-colors"
             >
-              주소 검색
+              {t('invite.searchAddress')}
             </button>
           </div>
-          {store.errors.has('venueAddress') && <p className="text-sm text-red-500 mt-1">{errorMessage}</p>}
+          {store.errors.has('venueAddress') && <p className="text-sm text-red-500 mt-1">{t('invite.requiredField')}</p>}
         </div>
         <div>
-          <label className="text-base text-gray-700 mb-1 block">예식장 이름</label>
-          <input type="text" placeholder={"예식장 이름을 입력하세요" + requiredMark} value={store.venueName}
+          <label className="text-base text-gray-700 mb-1 block">{t('invite.venueName')}</label>
+          <input type="text" placeholder={t('invite.venueNamePlaceholder') + requiredMark} value={store.venueName}
             onChange={(e) => store.setField('venueName', e.target.value)} className={store.errors.has('venueName') ? inputErrorClass : inputClass} />
-          {store.errors.has('venueName') && <p className="text-sm text-red-500 mt-1">{errorMessage}</p>}
+          {store.errors.has('venueName') && <p className="text-sm text-red-500 mt-1">{t('invite.requiredField')}</p>}
         </div>
         <div>
-          <label className="text-base text-gray-700 mb-1 block">층과 홀 (선택)</label>
-          <input type="text" placeholder="예: 그랜드볼룸홀 2층" value={store.venueHall}
+          <label className="text-base text-gray-700 mb-1 block">{t('invite.venueHall')}</label>
+          <input type="text" placeholder={t('invite.venueHallPlaceholder')} value={store.venueHall}
             onChange={(e) => store.setField('venueHall', e.target.value)} className={inputClass} />
         </div>
       </div>
@@ -424,7 +426,7 @@ export function EditPanel({
 
       {/* 카드: 인사말 (greeting) */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
-      {sectionCardHeader('인사말', 'greeting')}
+      {sectionCardHeader(t('invite.section.greeting'), 'greeting')}
       <div className={`space-y-4 ${offClass('greeting')}`} onFocus={() => onFocusSection?.('invitation')}>
         <textarea
           placeholder={DEFAULT_GREETING}
@@ -438,19 +440,19 @@ export function EditPanel({
 
       {/* 카드: 축의금 계좌 정보 (account) */}
       <div className={`rounded-2xl border border-gray-200 p-5 space-y-4 ${cardOffClass('account')}`}>
-      {sectionCardHeader('축의금 계좌 정보', 'account')}
+      {sectionCardHeader(t('invite.section.account'), 'account')}
       <div className={`space-y-4 ${offClass('account')}`} onFocus={() => onFocusSection?.('gratitude')}>
-        <AccountEditor label="신랑측" slots={store.groomAccounts} side="groom" />
-        <AccountEditor label="신부측" slots={store.brideAccounts} side="bride" />
+        <AccountEditor label={t('curate.side.groom')} slots={store.groomAccounts} side="groom" />
+        <AccountEditor label={t('curate.side.bride')} slots={store.brideAccounts} side="bride" />
       </div>
       </div>
 
       {/* 카드: 안내사항 (notice) */}
       <div className={`rounded-2xl border border-gray-200 p-5 space-y-4 ${cardOffClass('notice')}`}>
-      {sectionCardHeader('안내사항', 'notice')}
+      {sectionCardHeader(t('invite.section.notice'), 'notice')}
       <div className={`space-y-4 ${offClass('notice')}`} onFocus={() => onFocusSection?.('ceremony')}>
         <textarea
-          placeholder="하객에게 전할 안내사항 (예: 주차 안내, 복장 코드 등)"
+          placeholder={t('invite.noticePlaceholder')}
           value={store.hostNotice}
           onChange={(e) => store.setField('hostNotice', e.target.value)}
           rows={3}
@@ -462,7 +464,7 @@ export function EditPanel({
 
       {/* 카드: 갤러리 (gallery) — 양 모드 공통 */}
       <div className={`rounded-2xl border border-gray-200 p-5 space-y-4 ${cardOffClass('gallery')}`}>
-      {sectionCardHeader('갤러리', 'gallery')}
+      {sectionCardHeader(t('invite.section.gallery'), 'gallery')}
       <div className={offClass('gallery')} onFocus={() => onFocusSection?.('gallery')}>
         <GalleryUploader
           items={galleryItems}
@@ -475,7 +477,7 @@ export function EditPanel({
 
       {/* 카드: 그림판 (canvas) — 양 모드 공통 */}
       <div className={`rounded-2xl border border-gray-200 p-5 space-y-4 ${cardOffClass('canvas')}`} onClick={() => onFocusSection?.('canvas')}>
-      {sectionCardHeader('그림판', 'canvas')}
+      {sectionCardHeader(t('invite.section.canvas'), 'canvas')}
       <div className={offClass('canvas')}>
         <CanvasEditor
           config={store.canvasConfig}

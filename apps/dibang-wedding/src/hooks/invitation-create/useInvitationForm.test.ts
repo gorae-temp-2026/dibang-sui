@@ -128,7 +128,7 @@ describe('useInvitationForm — gallery photos', () => {
 describe('useInvitationForm — validate', () => {
   it('모든 필수 필드 비어있음 → errors 전부 채워지고 첫 누락 라벨 반환', () => {
     const first = useInvitationForm.getState().validate()
-    expect(first).toBe('신랑 이름')
+    expect(first).toBe("Groom's name")
     expect(useInvitationForm.getState().errors.has('groomName')).toBe(true)
     expect(useInvitationForm.getState().errors.has('brideName')).toBe(true)
     expect(useInvitationForm.getState().errors.has('date')).toBe(true)
@@ -244,10 +244,10 @@ describe('toUpdateInvitationRequest', () => {
 describe('toPreviewData', () => {
   it('빈 store: 기본값 fallback (신랑/신부/예식장/주소 등)', () => {
     const data = toPreviewData(useInvitationForm.getState())
-    expect(data.groomName).toBe('신랑')
-    expect(data.brideName).toBe('신부')
-    expect(data.venue.name).toBe('예식장')
-    expect(data.venue.address).toBe('주소를 입력하세요')
+    expect(data.groomName).toBe('Groom')
+    expect(data.brideName).toBe('Bride')
+    expect(data.venue.name).toBe('Venue')
+    expect(data.venue.address).toBe('Enter the address')
     expect(data.greetingMessage).toBe(DEFAULT_GREETING)
   })
 

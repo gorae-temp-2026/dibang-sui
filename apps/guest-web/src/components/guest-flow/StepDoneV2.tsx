@@ -6,6 +6,7 @@
 // 라운지 입장은 화면 하단 고정 버튼으로 연결한다.
 import { motion } from 'framer-motion';
 import { serif, springs, colors } from '../../styles/tokens';
+import { useT } from '../../lib/i18n';
 import brotherSvg from '../../assets/avatars/brother.svg';
 import sisterSvg from '../../assets/avatars/sister.svg';
 
@@ -58,11 +59,13 @@ function GuestRow({
   count,
   avatarPool,
   hostName,
+  t,
 }: {
   side: string;
   count: number;
   avatarPool: string[];
   hostName: string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
 }) {
   const shown = Math.min(count, MAX_AVATARS);
   const extra = count - shown;
@@ -97,15 +100,15 @@ function GuestRow({
         // 하객이 0명이면: 같은 카드 안에 "첫 번째로 입장" 안내를 글자로 표시
         <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '18px 16px', minHeight: 72 }}>
           <p style={{ ...serif, fontSize: 14, color: colors.textMuted, margin: 0, textAlign: 'center', lineHeight: 1.5 }}>
-            {side} {hostName}님이 기다리고 있어요.
+            {t('guestFlow.doneV2.waitingLine1', { side, host: hostName })}
             <br />
-            라운지에 첫 번째로 입장하세요
+            {t('guestFlow.doneV2.waitingLine2')}
           </p>
         </div>
       )}
 
       <p style={{ ...serif, fontSize: 18, fontWeight: 700, color: colors.textPrimary, margin: 0, textAlign: 'left' }}>
-        {side}측 하객 {count}명이 웨딩라운지에 모여있어요.
+        {t('guestFlow.doneV2.gatheredCount', { side, count })}
       </p>
     </div>
   );
@@ -126,6 +129,7 @@ interface StepDoneV2Props {
 }
 
 export function StepDoneV2({ onGoToLounge, groomSideCount, brideSideCount, groomName, brideName }: StepDoneV2Props) {
+  const t = useT();
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '40px 24px 32px', maxWidth: 420, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       {/* 상단: 하트 + 완료 문구 */}
@@ -144,7 +148,7 @@ export function StepDoneV2({ onGoToLounge, groomSideCount, brideSideCount, groom
           transition={{ delay: 0.3, ...springs.smooth }}
           style={{ ...serif, fontSize: 26, fontWeight: 700, lineHeight: 1.4, color: colors.textPrimary }}
         >
-          축하 메세지를 보냈어요
+          {t('guestFlow.done.sent')}
         </motion.p>
       </div>
 
@@ -155,8 +159,8 @@ export function StepDoneV2({ onGoToLounge, groomSideCount, brideSideCount, groom
         transition={{ delay: 0.5, ...springs.smooth }}
         style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 24 }}
       >
-        <GuestRow side="신랑" count={groomSideCount} avatarPool={GROOM_POOL} hostName={groomName} />
-        <GuestRow side="신부" count={brideSideCount} avatarPool={BRIDE_POOL} hostName={brideName} />
+        <GuestRow side={t('guestFlow.doneV2.groomSide')} count={groomSideCount} avatarPool={GROOM_POOL} hostName={groomName} t={t} />
+        <GuestRow side={t('guestFlow.doneV2.brideSide')} count={brideSideCount} avatarPool={BRIDE_POOL} hostName={brideName} t={t} />
       </motion.div>
 
       {/* 하단 고정: 라운지 입장 버튼 */}
@@ -168,7 +172,7 @@ export function StepDoneV2({ onGoToLounge, groomSideCount, brideSideCount, groom
         onClick={onGoToLounge}
         style={{ ...primaryButtonStyle, height: 56, flexShrink: 0 }}
       >
-        라운지 입장하고 사진 공유하기
+        {t('guestFlow.done.enterLounge')}
       </motion.button>
     </div>
   );

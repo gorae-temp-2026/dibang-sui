@@ -13,12 +13,14 @@
  */
 import { useSharedPhotosWithGuestInfo } from '../../queries/share-photo/useSharedPhotosWithGuestInfo';
 import { useDownloadSharedPhotosZip } from '../../hooks/share-photo/useDownloadSharedPhotosZip';
+import { useT } from '../../lib/i18n';
 
 interface Props {
   loungeId: string;
 }
 
 export function SharePhotosTab({ loungeId }: Props) {
+  const t = useT();
   const { groups, signedUrls, isLoading, error } = useSharedPhotosWithGuestInfo(loungeId);
   const downloadZip = useDownloadSharedPhotosZip();
 
@@ -39,7 +41,7 @@ export function SharePhotosTab({ loungeId }: Props) {
   if (error) {
     return (
       <div className="mx-4 my-6 rounded-2xl border border-lng-line bg-white p-4 text-center text-base text-lng-coral">
-        에러: {error.message}
+        {t('share.tab.errorPrefix')}{error.message}
       </div>
     );
   }
@@ -53,9 +55,9 @@ export function SharePhotosTab({ loungeId }: Props) {
       )}
       {groups.length === 0 ? (
         <div className="rounded-2xl border border-lng-line bg-gray-50 p-8 text-center text-base text-lng-muted">
-          아직 사진이 없어요
+          {t('share.tab.emptyTitle')}
           <br />
-          <span className="mt-1 inline-block text-sm">하객이 라운지에서 사진을 올리면 여기에 모입니다</span>
+          <span className="mt-1 inline-block text-sm">{t('share.tab.emptyDesc')}</span>
         </div>
       ) : (
         <>
@@ -65,7 +67,7 @@ export function SharePhotosTab({ loungeId }: Props) {
             disabled={downloadZip.isPending}
             className="mb-3 w-full rounded-lg bg-[#6A9AB8] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#5A8AA8] disabled:opacity-50"
           >
-            {downloadZip.isPending ? '저장 중...' : '전체 사진 저장'}
+            {downloadZip.isPending ? t('share.tab.saving') : t('share.tab.saveAll')}
           </button>
           <ul className="space-y-4">
           {groups.map((group) => (
@@ -74,7 +76,7 @@ export function SharePhotosTab({ loungeId }: Props) {
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-base font-semibold text-lng-text-primary">
                     {group.name}
-                    <span className="ml-2 text-sm font-normal text-lng-muted">{group.rows.length}장</span>
+                    <span className="ml-2 text-sm font-normal text-lng-muted">{t('share.tab.photoCount', { n: group.rows.length })}</span>
                   </div>
                   {group.prefix && (
                     <div className="mt-0.5 truncate text-sm text-lng-muted">{group.prefix}</div>
@@ -88,7 +90,7 @@ export function SharePhotosTab({ loungeId }: Props) {
                   disabled={downloadZip.isPending}
                   className="flex-shrink-0 rounded-lg border border-lng-line bg-lng-surface px-3 py-1.5 text-sm text-lng-text-primary hover:bg-gray-50 disabled:opacity-50"
                 >
-                  사진 저장
+                  {t('share.tab.savePhotos')}
                 </button>
               </div>
               <div className="grid grid-cols-5 gap-1.5">
@@ -99,7 +101,7 @@ export function SharePhotosTab({ loungeId }: Props) {
                       {url ? (
                         <img src={url} alt="" className="block h-full w-full object-cover" loading="lazy" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-sm text-lng-muted">사진</div>
+                        <div className="flex h-full w-full items-center justify-center text-sm text-lng-muted">{t('share.tab.photo')}</div>
                       )}
                     </div>
                   );

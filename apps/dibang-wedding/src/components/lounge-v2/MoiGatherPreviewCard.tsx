@@ -3,6 +3,7 @@
 // 탭 또는 우측하단 ⛶(유튜브식 전체화면) → 풀 광장(MoiGatherPage).
 import { Maximize } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { useT } from '../../lib/i18n'
 
 // 손그림 모이 합성 — body(발=바닥) 위에 head(목 겹침). 캔버스 neck 기하 근사(300×690 / 300×340).
 function MoiFigure({ head, body, className }: { head: string; body: string; className?: string }) {
@@ -25,12 +26,13 @@ const GUESTS: { head: string; body: string; className: string }[] = [
 ]
 
 export function MoiGatherPreviewCard({ onEnter }: { onEnter: () => void }) {
+  const t = useT()
   return (
     <section className="mx-4 mt-4">
       <button
         type="button"
         onClick={onEnter}
-        aria-label="모이가 모인곳 들어가기"
+        aria-label={t('loungeV2.gather.enter')}
         className="block w-full overflow-hidden rounded-2xl border border-lng-line bg-white text-left shadow-[0_2px_10px_rgba(30,58,95,0.06)]"
       >
         {/* 정적 스냅샷 — 흰 바닥(광장) + 따뜻한 조명 + 모인 모이들 */}
@@ -48,7 +50,7 @@ export function MoiGatherPreviewCard({ onEnter }: { onEnter: () => void }) {
           </span>
         </div>
         <div className="px-4 py-3">
-          <div className="text-[15px] font-extrabold text-lng-navy">모이가 모인곳</div>
+          <div className="text-[15px] font-extrabold text-lng-navy">{t('loungeV2.gather.title')}</div>
         </div>
       </button>
     </section>

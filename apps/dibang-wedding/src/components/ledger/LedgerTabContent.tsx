@@ -1,4 +1,5 @@
 import type { CashGift } from '../../types/db-compat';
+import { useT } from '../../lib/i18n';
 import { formatAmount, formatDate } from './ledger-utils';
 
 export function LedgerTabContent({
@@ -20,6 +21,7 @@ export function LedgerTabContent({
   onAdd: () => void;
   note?: string;
 }) {
+  const t = useT();
   return (
     <>
       {/* Actions row — 설명(좌) + 버튼(우)을 한 줄에서 양쪽 정렬 (#48, #49) */}
@@ -31,13 +33,13 @@ export function LedgerTabContent({
             disabled={gifts.length === 0}
             className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100"
           >
-            다운로드
+            {t('ledger.download')}
           </button>
           <button
             onClick={onAdd}
             className="px-3 py-1.5 text-sm rounded-lg bg-[#6A9AB8] text-white hover:bg-[#5A8AA8]"
           >
-            + 내역 추가
+            {t('ledger.addEntry')}
           </button>
         </div>
       </div>
@@ -54,7 +56,7 @@ export function LedgerTabContent({
         </div>
       ) : gifts.length === 0 ? (
         <div className="text-center py-16 text-gray-400 text-sm">
-          아직 도착한 축의가 없어요
+          {t('ledger.empty')}
         </div>
       ) : (
         <div className="space-y-2">
@@ -71,7 +73,7 @@ export function LedgerTabContent({
                   <span className="text-sm text-gray-400">{gift.relation_category}</span>
                 </div>
                 <span className={`text-sm px-2 py-0.5 rounded-full ${gift.attended ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                  {gift.attended ? '참석' : '불참'}
+                  {gift.attended ? t('ledger.gift.attended') : t('ledger.gift.absent')}
                 </span>
               </div>
               <div className="flex items-end justify-between mt-1">
@@ -81,7 +83,7 @@ export function LedgerTabContent({
             </div>
           ))}
           {isFetchingNextPage && (
-            <div className="text-center py-4 text-sm text-gray-400">불러오는 중...</div>
+            <div className="text-center py-4 text-sm text-gray-400">{t('ledger.loadingMore')}</div>
           )}
         </div>
       )}

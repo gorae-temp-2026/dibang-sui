@@ -71,7 +71,7 @@ func TestAuthMiddlewareEnsureFailureNonBlocking(t *testing.T) {
 }
 
 // JIT 프로비저닝 시 v3_users.name(NOT NULL)에 넣을 표시 이름 도출 규칙 검증.
-// 우선순위: user_metadata.full_name → user_metadata.name → email local-part → "사용자".
+// 우선순위: user_metadata.full_name → user_metadata.name → email local-part → "User".
 func TestDeriveDisplayName(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -84,7 +84,7 @@ func TestDeriveDisplayName(t *testing.T) {
 		{"full_name 없으면 name", "", "길동", "gildong@example.com", "길동"},
 		{"메타 없으면 email local-part", "", "", "alice@example.com", "alice"},
 		{"공백은 비어있는 것으로 취급", "   ", "  ", "  bob@x.com ", "bob"},
-		{"전부 없으면 기본값", "", "", "", "사용자"},
+		{"전부 없으면 기본값", "", "", "", "User"},
 		{"email에 @ 없으면 통째로", "", "", "weird", "weird"},
 	}
 	for _, c := range cases {

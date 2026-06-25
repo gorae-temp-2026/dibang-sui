@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useIntersectionFadeIn } from '../hooks/useIntersectionFadeIn';
+import { useT } from '../lib/i18n';
 
 interface HeartProps {
   initialCount: number;
@@ -11,6 +12,7 @@ interface HeartProps {
 
 export function Heart({ initialCount, syncedCount, onTrigger }: HeartProps) {
   const ref = useIntersectionFadeIn<HTMLDivElement>();
+  const t = useT();
   const [hearted, setHearted] = useState(false);
   const [localCount, setLocalCount] = useState(initialCount);
   const [burstKey, setBurstKey] = useState(0);
@@ -57,7 +59,7 @@ export function Heart({ initialCount, syncedCount, onTrigger }: HeartProps) {
     >
       <button
         type="button"
-        aria-label="좋아요"
+        aria-label={t('invitationUi.heart.like')}
         className={`bg-transparent border-none cursor-pointer inline-flex items-baseline gap-1.5 font-body transition-transform duration-150 relative active:scale-[.92] ${!hearted ? '[&_.heart-icon]:text-[#FFC1C8] [&_.heart-icon]:opacity-50' : ''}`}
         onClick={handleClick}
       >

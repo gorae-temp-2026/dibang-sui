@@ -60,7 +60,7 @@ describe('invitationCreate.machine — editing SAVE 가드', () => {
     actor.send({ type: 'SAVE', uploadingNow: true, isAddMode: false, slug: 'abcd', missing: null })
     const s = actor.getSnapshot()
     expect(s.value).toBe('editing')
-    expect(s.context.toast).toBe('사진 업로드가 끝나면 저장할 수 있어요')
+    expect(s.context.toast).toBe('You can save once photo upload finishes')
   })
 
   it('추가 모드 + slug 2자 미만 → editing 유지 + 토스트', () => {
@@ -68,7 +68,7 @@ describe('invitationCreate.machine — editing SAVE 가드', () => {
     actor.send({ type: 'SAVE', uploadingNow: false, isAddMode: true, slug: 'a', missing: null })
     const s = actor.getSnapshot()
     expect(s.value).toBe('editing')
-    expect(s.context.toast).toBe('공유 링크를 입력해주세요')
+    expect(s.context.toast).toBe('Please enter a share link')
   })
 
   it('생성 모드 + 필수 누락 → editing 유지 + 누락 토스트', () => {
@@ -76,7 +76,7 @@ describe('invitationCreate.machine — editing SAVE 가드', () => {
     actor.send({ type: 'SAVE', uploadingNow: false, isAddMode: false, slug: 'abcd', missing: '신랑 이름' })
     const s = actor.getSnapshot()
     expect(s.value).toBe('editing')
-    expect(s.context.toast).toBe('신랑 이름을(를) 입력해주세요')
+    expect(s.context.toast).toBe('Please enter 신랑 이름')
   })
 
   it('생성 모드 + 검증 통과 → saving (토스트 클리어)', () => {

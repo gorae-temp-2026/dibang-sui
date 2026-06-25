@@ -13,6 +13,9 @@
 
 import imageCompression from 'browser-image-compression';
 import { ensureJpegIfHeic } from './heic-convert';
+import { translate, useLangStore } from './i18n';
+
+const lang = () => useLangStore.getState().lang;
 
 /** 구 POST /uploads의 10MB 본문 제한을 계승한 클라이언트 상한 (해당 핸들러는 폐기 — STORAGE.md). */
 export const SERVER_UPLOAD_LIMIT_BYTES = 10 * 1024 * 1024;
@@ -37,7 +40,7 @@ function isCompressible(file: File): boolean {
 
 function assertWithinLimit(file: File, label: string): void {
   if (file.size > SERVER_UPLOAD_LIMIT_BYTES) {
-    throw new Error(`${label}은 10MB 이하만 업로드할 수 있습니다.`);
+    throw new Error(translate(lang(), 'compress.tooBig', { label }));
   }
 }
 
@@ -54,7 +57,7 @@ export async function compressImageForUpload(file: File): Promise<File> {
   const source = await ensureJpegIfHeic(file);
 
   if (!isCompressible(source)) {
-    assertWithinLimit(source, '이 형식의 파일');
+    assertWithinLimit(source, translate(lang(), 'compress.thisFormat'));
     return source;
   }
 
@@ -65,7 +68,7 @@ export async function compressImageForUpload(file: File): Promise<File> {
   });
 
   if (compressed.size > SERVER_UPLOAD_LIMIT_BYTES) {
-    throw new Error('이미지를 10MB 이하로 줄이지 못했습니다. 다른 사진을 선택해 주세요.');
+    throw new Error(translate(lang(), 'compress.couldNotShrink'));
   }
   // browser-image-compression은 타입 정의(Promise<File>)와 달리 실제로는
   // name만 붙은 Blob을 반환한다. multipart 직렬화는 File일 때만 filename을

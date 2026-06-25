@@ -1,5 +1,6 @@
 import type { StoryGroup } from '../../types/lounge-v2';
 import { maskGuestName } from '../../lib/guestLabel';
+import { useT } from '../../lib/i18n';
 
 // 온기 스토리 strip — 프로토타입 .onki-section/.onki-label/.story-strip/.story-item/.story-photo/.story-name 정합.
 // 한 줄 가로 스크롤(아이템 calc((100vw-92px)/6.5), max64/min52). 활성(메시지/피드)=회전 링 + 스토리.
@@ -12,12 +13,13 @@ interface StoryStripProps {
 }
 
 export function StoryStrip({ groups, onOpenStory, hostNames }: StoryStripProps) {
+  const t = useT();
   if (groups.length === 0) return null;
 
   return (
     <section className="mb-1 mt-2">
       <div className="flex items-center px-[22px] pb-1">
-        <span className="text-[14px] font-semibold tracking-[-0.01em] text-lng-ink">메모리</span>
+        <span className="text-[14px] font-semibold tracking-[-0.01em] text-lng-ink">{t('loungeV2.story.title')}</span>
       </div>
 
       <div className="scrollbar-hide flex gap-[10px] overflow-x-auto px-4 pb-[10px] pt-[14px]">

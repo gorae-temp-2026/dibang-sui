@@ -7,6 +7,7 @@ import { useSignInWithPassword } from '../queries/auth/useSignInWithPassword';
 import { useZkLogin } from '../providers/ZkLoginProvider';
 import { env } from '../env';
 import { DibangWordmark } from '@gorae/invitation-ui';
+import { useT } from '../lib/i18n';
 
 // /login 진입 시 쿼리 `redirect` 파라미터의 안전성 검사.
 // 내부 경로(`/`로 시작)만 허용하고, 프로토콜 상대 URL(`//`)·로그인/콜백 루프는 차단.
@@ -29,6 +30,7 @@ function GoogleIcon() {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const t = useT();
   const [searchParams] = useSearchParams();
   const { session, isReady } = useAuth();
   const redirectAfter = resolveSafeRedirect(searchParams.get('redirect'));
@@ -67,13 +69,13 @@ export function LoginPage() {
     }
     zk.login(callbackUrl).catch((err) => {
       send({ type: 'SIGN_IN_ERROR' });
-      window.alert(err instanceof Error ? err.message : '로그인 실패');
+      window.alert(err instanceof Error ? err.message : t('page.login.failed'));
     });
   }
 
   function signInWithEmail() {
     if (!devEmail || !devPassword) {
-      window.alert('이메일과 비밀번호를 입력하세요');
+      window.alert(t('page.login.enterCredentials'));
       return;
     }
     send({ type: 'SIGN_IN_PASSWORD' });
@@ -87,7 +89,7 @@ export function LoginPage() {
         },
         onError: (err) => {
           send({ type: 'SIGN_IN_ERROR' });
-          window.alert(err instanceof Error ? err.message : '로그인 실패');
+          window.alert(err instanceof Error ? err.message : t('page.login.failed'));
         },
       },
     );
@@ -96,7 +98,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-pale-sky to-white px-6">
       <h1 className="mb-2"><DibangWordmark className="text-6xl" /></h1>
-      <p className="text-base text-muted mb-8">로그인</p>
+      <p className="text-base text-muted mb-8">{t('page.login.title')}</p>
 
       <div className="w-full max-w-xs space-y-3">
         <button
@@ -105,7 +107,7 @@ export function LoginPage() {
           className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-line bg-white px-5 py-3.5 hover:border-soft-sky hover:bg-pale-sky/30 transition-colors disabled:opacity-50 disabled:cursor-default"
         >
           <GoogleIcon />
-          <span className="text-base font-medium text-navy">구글로 계속하기</span>
+          <span className="text-base font-medium text-navy">{t('page.login.continueWithGoogle')}</span>
         </button>
 
         {import.meta.env.DEV && (
@@ -118,7 +120,7 @@ export function LoginPage() {
 
             <input
               type="email"
-              placeholder="이메일"
+              placeholder={t('page.login.email')}
               value={devEmail}
               onChange={(e) => setDevEmail(e.target.value)}
               autoCapitalize="none"
@@ -126,7 +128,7 @@ export function LoginPage() {
             />
             <input
               type="password"
-              placeholder="비밀번호"
+              placeholder={t('page.login.password')}
               value={devPassword}
               onChange={(e) => setDevPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && signInWithEmail()}
@@ -137,18 +139,18 @@ export function LoginPage() {
               disabled={isDisabled}
               className="w-full rounded-xl border border-line bg-white px-5 py-3 text-base text-muted hover:border-soft-sky hover:bg-pale-sky/30 transition-colors disabled:opacity-50 disabled:cursor-default"
             >
-              {state.matches('signingPassword') ? '로그인 중...' : '이메일로 로그인'}
+              {state.matches('signingPassword') ? t('page.login.signingIn') : t('page.login.signInWithEmail')}
             </button>
 
             <button
               onClick={() => zk.devLogin()}
               className="w-full rounded-xl border border-soft-sky bg-pale-sky/40 px-5 py-3 text-base font-medium text-navy hover:bg-pale-sky/60 transition-colors"
             >
-              🔑 DEV 지갑 로그인 (zkLogin 우회·온체인 테스트)
+              {t('page.login.devWalletLogin')}
             </button>
             {zk.isAuthenticated && (
               <p className="text-xs text-navy break-all rounded-lg bg-pale-sky/30 px-3 py-2">
-                지갑 주소: {zk.address}
+                {t('page.login.walletAddress')} {zk.address}
               </p>
             )}
           </>

@@ -4,6 +4,7 @@ import { Maximize } from 'lucide-react';
 import type { FeedItem } from '../../types/db-compat';
 import { toLogRow, liveMessageText, timeAgo } from '../../lib/loungeV2Feed';
 import { maskGuestName } from '../../lib/guestLabel';
+import { useT } from '../../lib/i18n';
 import { liveCelebrationMachine } from '../../machines/liveCelebration.machine';
 
 // LIVE 축하메시지 — 프로토타입 .live-section/.live-empty-card/.lec-*/.live-msg-card/.lmc-* 정합.
@@ -29,6 +30,7 @@ function QrIcon() {
 }
 
 export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebrationProps) {
+  const t = useT();
   const liveMsgs = useMemo(
     () =>
       items
@@ -61,7 +63,7 @@ export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebra
           <span className="h-[5px] w-[5px] rounded-full bg-lng-live" />
           LIVE
         </span>
-        <span className="text-[14px] font-medium tracking-[0.02em] text-lng-muted">축하메세지</span>
+        <span className="text-[14px] font-medium tracking-[0.02em] text-lng-muted">{t('loungeV2.live.label')}</span>
       </div>
 
       {!hasMsgs ? (
@@ -70,11 +72,11 @@ export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebra
             <QrIcon />
           </span>
           <p className="m-0 flex-1 text-[14px] leading-[1.55] tracking-[-0.01em] text-lng-ink">
-            결혼식 당일, 현장의 <strong className="font-semibold text-[#3A5673]">QR을 스캔</strong>하고 축하메시지를 남겨주세요.
-            <span className="mt-[6px] block text-[14px] text-lng-muted">식 종료 후 신랑신부에게 모아서 전달됩니다.</span>
+            {t('loungeV2.live.qrPre')}<strong className="font-semibold text-[#3A5673]">{t('loungeV2.live.qrEmphasis')}</strong>{t('loungeV2.live.qrPost')}
+            <span className="mt-[6px] block text-[14px] text-lng-muted">{t('loungeV2.live.qrHint')}</span>
           </p>
           {onOpenDisplay && (
-            <button type="button" onClick={onOpenDisplay} aria-label="현장 디스플레이 전체보기" className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/40 text-white backdrop-blur">
+            <button type="button" onClick={onOpenDisplay} aria-label={t('loungeV2.live.openDisplay')} className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/40 text-white backdrop-blur">
               <Maximize className="h-4 w-4" />
             </button>
           )}
@@ -100,7 +102,7 @@ export function LiveCelebration({ items, hostNames, onOpenDisplay }: LiveCelebra
             {timeAgo(liveMsgs[safeIdx].createdAt)}
           </p>
           {onOpenDisplay && (
-            <button type="button" onClick={onOpenDisplay} aria-label="현장 디스플레이 전체보기" className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/40 text-white backdrop-blur">
+            <button type="button" onClick={onOpenDisplay} aria-label={t('loungeV2.live.openDisplay')} className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/40 text-white backdrop-blur">
               <Maximize className="h-4 w-4" />
             </button>
           )}

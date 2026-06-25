@@ -22,6 +22,7 @@ import { createRsvp } from '@gorae/contracts/sdk.gen';
 import type { CreateRsvpRequest } from '@gorae/contracts';
 import { useOnchainActions } from '../hooks/useOnchainActions';
 import { useZkLogin } from '../providers/ZkLoginProvider';
+import { useT } from '../lib/i18n';
 
 function toUiAccount(
   apiAccount: { bank?: string; address?: string } | undefined,
@@ -152,7 +153,9 @@ function toCanvasConfig(dc: InvitationPublic['design_config']): WeddingData['can
   };
 }
 
-function toWeddingData(inv: InvitationPublic, slug: string): WeddingData {
+type TFn = (key: string, vars?: Record<string, string | number>) => string;
+
+function toWeddingData(inv: InvitationPublic, slug: string, t: TFn): WeddingData {
   const { info } = inv;
   const dc = inv.design_config;
   return {
@@ -176,14 +179,14 @@ function toWeddingData(inv: InvitationPublic, slug: string): WeddingData {
     },
     greetingMessage: inv.custom_message ?? '',
     groomAccounts: [
-      toUiAccount(info.groom_account, '신랑', info.groom_name),
-      toUiAccount(info.groom_father_account, '아버지', info.groom_father_name ?? ''),
-      toUiAccount(info.groom_mother_account, '어머니', info.groom_mother_name ?? ''),
+      toUiAccount(info.groom_account, t('invitationPage.account.groom'), info.groom_name),
+      toUiAccount(info.groom_father_account, t('invitationPage.account.groomFather'), info.groom_father_name ?? ''),
+      toUiAccount(info.groom_mother_account, t('invitationPage.account.groomMother'), info.groom_mother_name ?? ''),
     ].filter((a): a is NonNullable<typeof a> => a !== null),
     brideAccounts: [
-      toUiAccount(info.bride_account, '신부', info.bride_name),
-      toUiAccount(info.bride_father_account, '아버지', info.bride_father_name ?? ''),
-      toUiAccount(info.bride_mother_account, '어머니', info.bride_mother_name ?? ''),
+      toUiAccount(info.bride_account, t('invitationPage.account.bride'), info.bride_name),
+      toUiAccount(info.bride_father_account, t('invitationPage.account.brideFather'), info.bride_father_name ?? ''),
+      toUiAccount(info.bride_mother_account, t('invitationPage.account.brideMother'), info.bride_mother_name ?? ''),
     ].filter((a): a is NonNullable<typeof a> => a !== null),
     galleryPhotos: inv.gallery_photos ?? [],
     coverImageUrl: inv.cover_image ?? '',
@@ -223,6 +226,7 @@ interface InvitationPageProps {
 
 export function InvitationPage({ data: dataProp }: InvitationPageProps) {
   const { slug } = useParams<{ slug: string }>();
+  const t = useT();
   const { submitRsvp } = useOnchainActions();
   const { isAuthenticated, login } = useZkLogin();
 
@@ -231,7 +235,7 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
     enabled: !!slug && !dataProp,
   });
 
-  const data = dataProp ?? (invitation ? toWeddingData(invitation, slug!) : undefined);
+  const data = dataProp ?? (invitation ? toWeddingData(invitation, slug!, t) : undefined);
 
   // 페이지 flow는 머신이 제어(STATE_MANAGEMENT.md). data(로딩)/tab(전환)/rsvp(회신) 3축 parallel.
   const [state, send, rsvpActor] = useMachine(invitationPageMachine);
@@ -246,21 +250,21 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
   // 미리보기·카탈로그 호출자는 콜백 미제공으로 무동작 처리.
   const handleCopyAccount = useCallback(async (text: string) => {
     const ok = await copy(text);
-    if (ok) setRsvpResult('계좌번호가 복사되었습니다');
-  }, [copy]);
+    if (ok) setRsvpResult(t('invitationPage.toast.accountCopied'));
+  }, [copy, t]);
   const handleCopyAddress = useCallback(async (address: string) => {
     const ok = await copy(address);
-    if (ok) setRsvpResult('주소가 복사되었습니다');
-  }, [copy]);
+    if (ok) setRsvpResult(t('invitationPage.toast.addressCopied'));
+  }, [copy, t]);
   const handleCopyCurrentUrl = useCallback(async () => {
     if (typeof window === 'undefined') return;
     const ok = await copy(window.location.href);
-    if (ok) setRsvpResult('링크가 복사되었습니다');
-  }, [copy]);
+    if (ok) setRsvpResult(t('invitationPage.toast.linkCopied'));
+  }, [copy, t]);
   const handleShareKakao = useCallback(() => {
     // TODO: Kakao SDK 도입 시 share 호출. 현재는 placeholder 정책 유지.
-    setRsvpResult('카카오톡 공유 (준비 중)');
-  }, []);
+    setRsvpResult(t('invitationPage.toast.kakaoShareComingSoon'));
+  }, [t]);
   // 마음 전하실 곳 송금 딥링크 — 금액 미지정(0, 송금 앱에서 직접 입력).
   const handlePayToss = useCallback((account: { bank: string; number: string }) => {
     if (typeof window === 'undefined') return;
@@ -270,8 +274,8 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
     if (typeof window === 'undefined') return;
     const url = buildKakaoLink({ bankName: account.bank, accountNumber: account.number, amount: 0 });
     if (url) window.location.href = url;
-    else setRsvpResult('카카오페이 송금을 지원하지 않는 은행입니다');
-  }, []);
+    else setRsvpResult(t('invitationPage.toast.kakaoPayBankUnsupported'));
+  }, [t]);
   const handleOpenMap = useCallback((provider: MapProvider, address: string) => {
     if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
     const link = buildMapLink(provider, address, detectMobile(navigator.userAgent));
@@ -310,8 +314,8 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
     // 백엔드 RSVP 저장(QA 2026-05-29 G1). weddingId는 InvitationPublic.wedding_id.
     const weddingId = invitation?.wedding_id;
     if (!weddingId) {
-      setRsvpResult('RSVP를 보낼 수 없습니다. 잠시 후 다시 시도해주세요.');
-      send({ type: 'RSVP_ERROR', error: 'weddingId 없음' });
+      setRsvpResult(t('invitationPage.rsvp.cannotSend'));
+      send({ type: 'RSVP_ERROR', error: 'missing weddingId' });
       return;
     }
     // RsvpHostOption.key(camelCase) → recipient_slot enum(snake_case) 변환.
@@ -336,8 +340,8 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
       });
     } catch {
       // 제출 실패 시 거짓 성공 대신 실패를 알린다 (#51).
-      setRsvpResult('RSVP 제출에 실패했습니다. 잠시 후 다시 시도해주세요.');
-      send({ type: 'RSVP_ERROR', error: '제출 실패' });
+      setRsvpResult(t('invitationPage.rsvp.submitFailed'));
+      send({ type: 'RSVP_ERROR', error: 'submit failed' });
       return;
     }
     // C10-3 + #18(2026-06-21): Supabase 저장 후 온체인 submitRsvp를 게스트 *본인 zkLogin* 서명으로 제출(헤드리스는 dev keypair).
@@ -359,16 +363,17 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
         console.error('[온체인] submitRsvp 실패 — Supabase는 유지:', e);
       }
     }
-    const mealLabel = { yes: '식사함', no: '식사 안 함', undecided: '미정' }[formData.meal];
+    // meal 코드(yes/no/undecided)는 API enum이라 그대로 두고, 표시 라벨만 번역.
+    const mealLabel = t(`invitationPage.rsvp.meal.${formData.meal}`);
     setRsvpResult(
       [
-        'RSVP 제출 완료!',
-        `참석: ${formData.attendance}`,
-        `하객: ${formData.host.role} ${formData.host.name} 측`,
-        `성함: ${formData.name}`,
-        `동행: ${formData.companion}명`,
-        `식사: ${mealLabel}`,
-        `전화 뒤 4자리: ${formData.phoneLast4 ?? '-'}`,
+        t('invitationPage.rsvp.resultTitle'),
+        t('invitationPage.rsvp.resultAttendance', { value: formData.attendance }),
+        t('invitationPage.rsvp.resultHost', { role: formData.host.role, name: formData.host.name }),
+        t('invitationPage.rsvp.resultName', { value: formData.name }),
+        t('invitationPage.rsvp.resultCompanion', { count: formData.companion }),
+        t('invitationPage.rsvp.resultMeal', { value: mealLabel }),
+        t('invitationPage.rsvp.resultPhone', { value: formData.phoneLast4 ?? '-' }),
       ].join('\n'),
     );
     send({ type: 'RSVP_SUCCESS' });
@@ -382,7 +387,7 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
   if (state.matches({ data: 'loading' }) && !data) {
     return (
       <div className="w-full max-w-[420px] bg-ivory rounded-[32px] overflow-hidden shadow-frame relative px-7 py-20 text-center">
-        <div className="font-serif text-xl text-navy mb-4">청첩장을 불러오는 중...</div>
+        <div className="font-serif text-xl text-navy mb-4">{t('invitationPage.loading')}</div>
       </div>
     );
   }
@@ -390,9 +395,9 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
   if (state.matches({ data: 'error' }) || !data) {
     return (
       <div className="w-full max-w-[420px] bg-ivory rounded-[32px] overflow-hidden shadow-frame relative px-7 py-20 text-center">
-        <div className="font-serif text-xl text-navy mb-4">청첩장을 찾을 수 없습니다</div>
+        <div className="font-serif text-xl text-navy mb-4">{t('invitationPage.notFound.title')}</div>
         <p className="text-sm text-muted">
-          요청하신 청첩장이 존재하지 않거나 삭제되었습니다.
+          {t('invitationPage.notFound.body')}
         </p>
       </div>
     );
@@ -444,14 +449,16 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
         <div className="fixed top-4 left-4 right-4 z-[60] flex justify-center">
           <div className="rounded-xl bg-navy/95 px-4 py-3 text-white shadow-lg max-w-sm w-full">
             <p className="text-xs leading-relaxed">
-              온체인에 <b>본인 지갑</b>으로 RSVP를 기록하려면 로그인하세요. (건너뛰면 저장만 됩니다)
+              {t('invitationPage.loginBanner.before')}
+              <b>{t('invitationPage.loginBanner.ownWallet')}</b>
+              {t('invitationPage.loginBanner.after')}
             </p>
             <button
               type="button"
               onClick={() => login(window.location.href)}
               className="mt-2 w-full rounded-lg bg-white px-3 py-2 text-sm font-semibold text-navy hover:bg-white/90 transition-colors"
             >
-              Google로 로그인하고 서명
+              {t('invitationPage.loginBanner.button')}
             </button>
           </div>
         </div>
@@ -465,14 +472,14 @@ export function InvitationPage({ data: dataProp }: InvitationPageProps) {
             className="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-navy">RSVP 제출 완료</h3>
+            <h3 className="text-lg font-bold text-navy">{t('invitationPage.rsvp.modalTitle')}</h3>
             <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans leading-relaxed">{rsvpResult}</pre>
             <button
               type="button"
               onClick={() => setRsvpResult(null)}
               className="w-full rounded-lg bg-navy px-4 py-2.5 text-base font-semibold text-white hover:bg-navy/90 transition-colors"
             >
-              확인
+              {t('invitationPage.confirm')}
             </button>
           </div>
         </div>

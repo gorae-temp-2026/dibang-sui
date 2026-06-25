@@ -9,25 +9,33 @@ import {
 } from '../../types/invitationDesignConfig';
 import { LetteringDrawBoard } from './LetteringDrawBoard';
 import { inputClass } from './styles';
+import { useT } from '../../lib/i18n';
 
 type CoverTextAnimation = 'none' | 'fade-in' | 'typing';
 
 const UPLOAD_PRESETS = ANIMATION_PRESETS;
-const DRAW_ANIM_OPTIONS: { value: LetteringAnimation; label: string }[] = [
-  { value: 'none', label: '정지' },
-  { value: 'stroke-order', label: '그린 순서' },
-  { value: 'fade-in', label: '페이드인' },
+// ANIMATION_PRESETS(외부 공유 상수)의 한국어 라벨은 값→i18n 키로 매핑해 렌더 시 번역.
+const UPLOAD_ANIM_KEY: Record<string, string> = {
+  none: 'invite.letter.textAnim.none',
+  'fade-in': 'invite.letter.anim.fadeIn',
+  draw: 'invite.letter.anim.draw',
+  typing: 'invite.letter.textAnim.typing',
+};
+const DRAW_ANIM_OPTIONS: { value: LetteringAnimation; labelKey: string }[] = [
+  { value: 'none', labelKey: 'invite.letter.anim.none' },
+  { value: 'stroke-order', labelKey: 'invite.letter.anim.strokeOrder' },
+  { value: 'fade-in', labelKey: 'invite.letter.anim.fadeIn' },
 ];
-const TEXT_PRESETS: { value: CoverTextAnimation; label: string }[] = [
-  { value: 'none', label: '없음' },
-  { value: 'fade-in', label: '페이드인' },
-  { value: 'typing', label: '타이핑' },
+const TEXT_PRESETS: { value: CoverTextAnimation; labelKey: string }[] = [
+  { value: 'none', labelKey: 'invite.letter.textAnim.none' },
+  { value: 'fade-in', labelKey: 'invite.letter.textAnim.fadeIn' },
+  { value: 'typing', labelKey: 'invite.letter.textAnim.typing' },
 ];
 
 type CoverTextColorType = 'solid' | 'gradient';
-const COLOR_TYPES: { value: CoverTextColorType; label: string }[] = [
-  { value: 'solid', label: '단색' },
-  { value: 'gradient', label: '그라데이션' },
+const COLOR_TYPES: { value: CoverTextColorType; labelKey: string }[] = [
+  { value: 'solid', labelKey: 'invite.letter.colorMode.solid' },
+  { value: 'gradient', labelKey: 'invite.letter.colorMode.gradient' },
 ];
 
 const SOLID_PRESETS = ['#FF8FA3', '#222222', '#FFFFFF', '#B08968'] as const;
@@ -38,10 +46,10 @@ const GRADIENT_PRESETS: [string, string][] = [
   ['#B8D4B8', '#D4E8D4'],
 ];
 
-const MODES: { value: LetteringSource; label: string }[] = [
-  { value: 'text', label: '텍스트 입력' },
-  { value: 'draw', label: '직접 그리기' },
-  { value: 'upload', label: '이미지 업로드' },
+const MODES: { value: LetteringSource; labelKey: string }[] = [
+  { value: 'text', labelKey: 'invite.letter.mode.text' },
+  { value: 'draw', labelKey: 'invite.letter.mode.draw' },
+  { value: 'upload', labelKey: 'invite.letter.mode.upload' },
 ];
 
 interface Props {
@@ -100,6 +108,7 @@ export function LetteringControls({
   onPlayAnimation,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const t = useT();
   const { upload, isPending, error } = useLetteringUpload(uploadContext);
 
   // '애니메이션 재생' 버튼 — 현재 애니메이션이 'none'이면 비활성
@@ -110,7 +119,7 @@ export function LetteringControls({
       disabled={disabled}
       className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-base font-medium text-gray-600 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
     >
-      애니메이션 재생
+      {t('invite.letter.playAnim')}
     </button>
   );
 
@@ -132,14 +141,14 @@ export function LetteringControls({
       <div className="grid grid-cols-3 gap-2">
         {MODES.map((m) => (
           <button key={m.value} type="button" className={chip(source === m.value)} onClick={() => selectMode(m.value)}>
-            {m.label}
+            {t(m.labelKey)}
           </button>
         ))}
       </div>
 
       {source === 'text' && (
         <div className="space-y-3">
-          <p className="text-base text-gray-400">크기, 위치, 회전은 미리보기에서 직접 조절하세요.</p>
+          <p className="text-base text-gray-400">{t('invite.letter.transformHint')}</p>
           <textarea
             className={`${inputClass} resize-none`}
             rows={2}
@@ -149,7 +158,7 @@ export function LetteringControls({
           />
 
           <div className="space-y-2">
-            <h5 className="text-base font-medium text-gray-700">애니메이션</h5>
+            <h5 className="text-base font-medium text-gray-700">{t('invite.letter.animation')}</h5>
             <div className="flex flex-wrap gap-2">
               {TEXT_PRESETS.map((p) => (
                 <button
@@ -158,7 +167,7 @@ export function LetteringControls({
                   className={chip(coverTextAnimation === p.value)}
                   onClick={() => onChangeCoverTextAnimation(p.value)}
                 >
-                  {p.label}
+                  {t(p.labelKey)}
                 </button>
               ))}
             </div>
@@ -166,7 +175,7 @@ export function LetteringControls({
           </div>
 
           <div className="space-y-2">
-            <h5 className="text-base font-medium text-gray-700">색상</h5>
+            <h5 className="text-base font-medium text-gray-700">{t('invite.letter.color')}</h5>
             <div className="flex gap-2">
               {COLOR_TYPES.map((ct) => (
                 <button
@@ -175,7 +184,7 @@ export function LetteringControls({
                   className={chip(coverTextColorType === ct.value)}
                   onClick={() => onChangeCoverTextColorType(ct.value)}
                 >
-                  {ct.label}
+                  {t(ct.labelKey)}
                 </button>
               ))}
             </div>
@@ -186,7 +195,7 @@ export function LetteringControls({
                     key={c}
                     type="button"
                     onClick={() => onChangeCoverTextSolidColor(c)}
-                    aria-label={`단색 ${c}`}
+                    aria-label={t('invite.letter.solidColor', { c })}
                     className={`w-7 h-7 shrink-0 rounded-full border-2 cursor-pointer transition-colors ${coverTextSolidColor.toLowerCase() === c.toLowerCase() ? 'border-sky-500 ring-2 ring-sky-200' : 'border-gray-200 hover:border-gray-400'}`}
                     style={{ backgroundColor: c }}
                   />
@@ -205,7 +214,7 @@ export function LetteringControls({
                       key={i}
                       type="button"
                       onClick={() => onChangeCoverTextGradientColors(g)}
-                      aria-label={`그라데이션 ${i + 1}`}
+                      aria-label={t('invite.letter.gradient', { n: i + 1 })}
                       className={`w-7 h-7 shrink-0 rounded-full border-2 cursor-pointer transition-colors ${coverTextGradientColors[0] === g[0] && coverTextGradientColors[1] === g[1] ? 'border-sky-500 ring-2 ring-sky-200' : 'border-gray-200 hover:border-gray-400'}`}
                       style={{ backgroundImage: `linear-gradient(135deg, ${g[0]}, ${g[1]})` }}
                     />
@@ -247,7 +256,7 @@ export function LetteringControls({
               onClick={() => fileRef.current?.click()}
               disabled={isPending}
             >
-              {isPending ? '업로드 중...' : imageUrl ? '다시 선택' : '파일 선택'}
+              {isPending ? t('invite.common.uploading') : imageUrl ? t('invite.letter.reselect') : t('invite.letter.pickFile')}
             </button>
             {imageUrl && (
               <button
@@ -255,7 +264,7 @@ export function LetteringControls({
                 className="rounded-lg border border-gray-200 px-4 py-2.5 text-base font-medium text-gray-600 hover:bg-gray-50 transition-colors"
                 onClick={() => onChangeImage(null)}
               >
-                삭제
+                {t('invite.common.delete')}
               </button>
             )}
           </div>
@@ -266,12 +275,12 @@ export function LetteringControls({
 
           {imageUrl && (
             <p className="rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm text-gray-500 break-all">
-              레터링 적용됨 · {imageUrl}
+              {t('invite.letter.applied', { url: imageUrl })}
             </p>
           )}
 
           <div className="space-y-2">
-            <h5 className="text-base font-medium text-gray-700">애니메이션</h5>
+            <h5 className="text-base font-medium text-gray-700">{t('invite.letter.animation')}</h5>
             <div className="flex flex-wrap gap-2">
               {UPLOAD_PRESETS.map((p) => (
                 <button
@@ -280,7 +289,7 @@ export function LetteringControls({
                   className={chip(animation === p.value)}
                   onClick={() => onChangeAnimation(p.value)}
                 >
-                  {p.label}
+                  {t(UPLOAD_ANIM_KEY[p.value] ?? '')}
                 </button>
               ))}
             </div>
@@ -291,11 +300,11 @@ export function LetteringControls({
 
       {source === 'draw' && (
         <div className="space-y-3">
-          <p className="text-base text-gray-500">아래 보드에 직접 그리세요. 그린 순서가 애니메이션 순서가 됩니다.</p>
+          <p className="text-base text-gray-500">{t('invite.letter.drawHint')}</p>
           <LetteringDrawBoard strokes={strokes} viewBox={drawViewBox} onChange={onChangeStrokes} />
 
           <div className="space-y-2">
-            <h5 className="text-base font-medium text-gray-700">애니메이션</h5>
+            <h5 className="text-base font-medium text-gray-700">{t('invite.letter.animation')}</h5>
             <div className="flex flex-wrap gap-2">
               {DRAW_ANIM_OPTIONS.map((o) => (
                 <button
@@ -304,7 +313,7 @@ export function LetteringControls({
                   className={chip(animation === o.value)}
                   onClick={() => onChangeAnimation(o.value)}
                 >
-                  {o.label}
+                  {t(o.labelKey)}
                 </button>
               ))}
             </div>

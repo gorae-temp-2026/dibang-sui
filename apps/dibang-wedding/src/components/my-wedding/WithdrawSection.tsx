@@ -9,6 +9,9 @@ import { useOnchainHostActions } from '../../hooks/useOnchainHostActions'
 import { useOnchainVault } from '../../hooks/useOnchainWedding'
 import { useZkLogin } from '../../providers/ZkLoginProvider'
 import { env } from '../../env'
+import { useT, translate, useLangStore } from '../../lib/i18n'
+
+const lang = () => useLangStore.getState().lang
 
 const MIST_PER_SUI = 1_000_000_000n
 
@@ -31,15 +34,15 @@ export function WithdrawSection({ weddingId }: { weddingId: string }) {
       onchainTxMachine.provide({
         actors: {
           submit: fromPromise<string>(async () => {
-            if (!suiVaultId || !suiWeddingId) throw new Error('온체인 금고가 없습니다')
-            if (!address) throw new Error('로그인이 필요합니다')
+            if (!suiVaultId || !suiWeddingId) throw new Error(translate(lang(), 'myWedding.withdraw.errNoVault'))
+            if (!address) throw new Error(translate(lang(), 'common.errNeedLogin'))
             const sui = parseFloat(amount)
-            if (!Number.isFinite(sui) || sui <= 0) throw new Error('출금액을 입력하세요')
+            if (!Number.isFinite(sui) || sui <= 0) throw new Error(translate(lang(), 'myWedding.withdraw.errAmount'))
             const mist = BigInt(Math.round(sui * Number(MIST_PER_SUI)))
             const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
             const client = createJsonRpcClient(network)
             const capId = await getWeddingCapForWedding(client, address, suiWeddingId)
-            if (!capId) throw new Error('이 결혼식의 WeddingCap이 없습니다(호스트만 출금)')
+            if (!capId) throw new Error(translate(lang(), 'myWedding.withdraw.errNoCap'))
             return withdraw({ vaultId: suiVaultId, capId, amount: mist })
           }),
         },
@@ -47,26 +50,27 @@ export function WithdrawSection({ weddingId }: { weddingId: string }) {
     [suiVaultId, suiWeddingId, address, amount, withdraw],
   )
   const [state, send] = useMachine(machine)
+  const t = useT()
 
   if (!isAuthenticated) return null
   if (!suiVaultId) {
-    return <p className="mt-3 text-xs text-muted">온체인 축의 금고가 아직 없어 출금할 수 없습니다.</p>
+    return <p className="mt-3 text-xs text-muted">{t('myWedding.withdraw.noVault')}</p>
   }
 
   const busy = state.matches('submitting')
   const balanceSui = vault ? Number(vault.balance) / Number(MIST_PER_SUI) : null
   return (
     <div className="mt-3 rounded-xl border border-line bg-white p-4">
-      <p className="text-sm font-semibold text-navy">축의금 출금</p>
+      <p className="text-sm font-semibold text-navy">{t('myWedding.withdraw.title')}</p>
       <p className="mt-1 text-xs text-muted">
-        모금함 잔액 {balanceSui != null ? `${balanceSui} SUI` : '조회 중…'} · 호스트(WeddingCap)만 출금.
+        {t('myWedding.withdraw.balance', { bal: balanceSui != null ? `${balanceSui} SUI` : t('myWedding.withdraw.loading') })}
       </p>
       <div className="mt-2 flex gap-2">
         <input
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           inputMode="decimal"
-          placeholder="출금액 (SUI)"
+          placeholder={t('myWedding.withdraw.placeholder')}
           className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
         <button
@@ -75,11 +79,11 @@ export function WithdrawSection({ weddingId }: { weddingId: string }) {
           disabled={busy || !amount.trim()}
           className="rounded-lg bg-navy px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
-          {busy ? '출금 중…' : '출금'}
+          {busy ? t('myWedding.withdraw.withdrawing') : t('myWedding.withdraw.withdraw')}
         </button>
       </div>
       {state.matches('done') && (
-        <p className="mt-2 break-all text-xs text-green-600">✅ 출금 완료 · digest {state.context.digest}</p>
+        <p className="mt-2 break-all text-xs text-green-600">✅ {t('myWedding.withdraw.done')} · digest {state.context.digest}</p>
       )}
       {state.context.error && state.matches('idle') && (
         <p className="mt-2 text-xs text-red-500">❌ {state.context.error}</p>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useIntersectionFadeIn } from '../hooks/useIntersectionFadeIn';
+import { useT } from '../lib/i18n';
 import type { Account } from '../types/invitation';
 
 interface GratitudeProps {
@@ -26,6 +27,7 @@ function CopyIcon() {
 }
 
 function AccountItem({ account, variant, onCopyAccount, onPayKakao, onPayToss }: { account: Account; variant: 'groom' | 'bride'; onCopyAccount?: (text: string) => void; onPayKakao?: (account: Account) => void; onPayToss?: (account: Account) => void }) {
+  const t = useT();
   const handleCopy = () => {
     onCopyAccount?.(`${account.bank} ${account.number}`);
   };
@@ -41,8 +43,8 @@ function AccountItem({ account, variant, onCopyAccount, onPayKakao, onPayToss }:
           <span className="text-xs text-muted">{account.bank} {account.number}</span>
           <button
             className={`bg-transparent border-none cursor-pointer p-[2px_4px] leading-none transition-all duration-150 inline-flex items-center hover:scale-115 ${isBride ? 'text-[#E0A0B5] hover:text-[#C2185B]' : 'text-soft-sky hover:text-navy'}`}
-            title="복사"
-            aria-label="복사"
+            title={t('invitationUi.gratitude.copy')}
+            aria-label={t('invitationUi.gratitude.copy')}
             onClick={handleCopy}
           >
             <CopyIcon />
@@ -54,13 +56,13 @@ function AccountItem({ account, variant, onCopyAccount, onPayKakao, onPayToss }:
           className="flex items-center justify-center gap-1.5 py-[7px] px-2.5 w-full bg-white border-2 border-[#FEE500] rounded-lg cursor-pointer font-body text-[10px] font-bold tracking-[.04em] text-[#3C1E1E] transition-all duration-150 hover:-translate-y-0.5"
           onClick={() => onPayKakao?.(account)}
         >
-          카카오
+          {t('invitationUi.gratitude.kakao')}
         </button>
         <button
           className="flex items-center justify-center gap-1.5 py-[7px] px-2.5 w-full bg-white border-2 border-[#0064FF] rounded-lg cursor-pointer font-body text-[10px] font-bold tracking-[.04em] text-[#0064FF] transition-all duration-150 hover:-translate-y-0.5"
           onClick={() => onPayToss?.(account)}
         >
-          토스
+          {t('invitationUi.gratitude.toss')}
         </button>
       </div>
     </div>
@@ -90,16 +92,17 @@ function AccountSide({ label, accounts, variant, onCopyAccount, onPayKakao, onPa
 
 export function Gratitude({ groomAccounts, brideAccounts, onCopyAccount, onPayKakao, onPayToss }: GratitudeProps) {
   const ref = useIntersectionFadeIn<HTMLElement>();
+  const t = useT();
 
   return (
     <section
       ref={ref}
       className="px-7 py-12 border-b border-line opacity-0 translate-y-10 transition-all duration-[1.5s] ease-[cubic-bezier(.16,1,.3,1)] [&.visible]:opacity-100 [&.visible]:translate-y-0"
     >
-      <div className="font-serif font-medium text-xl text-navy text-center tracking-[.02em] mb-[18px]">마음 전하실 곳</div>
+      <div className="font-serif font-medium text-xl text-navy text-center tracking-[.02em] mb-[18px]">{t('invitationUi.gratitude.title')}</div>
       <div className="w-6 h-px bg-soft-sky mx-auto mb-[18px]" />
-      <AccountSide label="신랑측" accounts={groomAccounts} variant="groom" onCopyAccount={onCopyAccount} onPayKakao={onPayKakao} onPayToss={onPayToss} />
-      <AccountSide label="신부측" accounts={brideAccounts} variant="bride" onCopyAccount={onCopyAccount} onPayKakao={onPayKakao} onPayToss={onPayToss} />
+      <AccountSide label={t('invitationUi.gratitude.groomSide')} accounts={groomAccounts} variant="groom" onCopyAccount={onCopyAccount} onPayKakao={onPayKakao} onPayToss={onPayToss} />
+      <AccountSide label={t('invitationUi.gratitude.brideSide')} accounts={brideAccounts} variant="bride" onCopyAccount={onCopyAccount} onPayKakao={onPayKakao} onPayToss={onPayToss} />
     </section>
   );
 }

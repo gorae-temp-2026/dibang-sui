@@ -63,7 +63,7 @@ describe('invitationEdit.machine — 저장 가드 체인', () => {
     a.send({ type: 'SAVE', missing: [], uploadingNow: true })
     const s = a.getSnapshot()
     expect(s.value).toMatchObject({ flow: 'editing' })
-    expect(s.context.toast).toBe('사진 업로드가 끝나면 저장할 수 있어요')
+    expect(s.context.toast).toBe('You can save once photo upload finishes')
   })
 
   it('SAVE(필수 누락) → editing 머무름 + 누락 toast', () => {
@@ -83,7 +83,7 @@ describe('invitationEdit.machine — 저장 가드 체인', () => {
     a.send({ type: 'SAVE', missing: [], uploadingNow: false })
     const s = a.getSnapshot()
     expect(s.value).toMatchObject({ flow: 'editing' })
-    expect(s.context.toast).toBe('공유 링크 중복 확인이 필요해요')
+    expect(s.context.toast).toBe('Please check the share link for duplicates')
   })
 
   it('DISMISS_TOAST → toast 클리어', () => {

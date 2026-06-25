@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback } from 'react';
+import { useT } from '../lib/i18n';
 
 type Tab = 'invitation' | 'lounge';
 
@@ -8,6 +9,7 @@ interface BottomToggleProps {
 }
 
 export function BottomToggle({ activeTab, onTabChange }: BottomToggleProps) {
+  const t = useT();
   const toggleRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -46,10 +48,10 @@ export function BottomToggle({ activeTab, onTabChange }: BottomToggleProps) {
         className="absolute top-[5px] bottom-[5px] bg-navy rounded-3xl shadow-[0_4px_12px_rgba(30,58,95,.25)] transition-all duration-[.4s] ease-[cubic-bezier(.16,1,.3,1)] z-[1]"
       />
       <button className={`relative border-none bg-transparent py-[11px] px-[30px] rounded-3xl cursor-pointer font-body font-medium whitespace-nowrap shrink-0 z-[2] transition-colors duration-[.35s] ease-[cubic-bezier(.16,1,.3,1)] ${activeTab === 'invitation' ? 'active-tab text-white font-semibold' : 'text-muted'}`}>
-        청첩장
+        {t('invitationUi.toggle.invitation')}
       </button>
       <button className={`relative border-none bg-transparent py-[11px] px-[30px] rounded-3xl cursor-pointer font-body font-medium whitespace-nowrap shrink-0 z-[2] transition-colors duration-[.35s] ease-[cubic-bezier(.16,1,.3,1)] ${activeTab === 'lounge' ? 'active-tab text-white font-semibold' : 'text-muted'}`}>
-        라운지
+        {t('invitationUi.toggle.lounge')}
       </button>
     </div>
   );

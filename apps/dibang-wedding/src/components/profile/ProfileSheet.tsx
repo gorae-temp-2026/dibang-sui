@@ -45,7 +45,7 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
   const t = useT()
   const offline = context === 'lounge'
   const showDetail = offline || revealed // 이음 후/라운지 = 시그널·인연 망 상세 공개
-  const name = showDetail ? data.subject : '익명 모이'
+  const name = showDetail ? data.subject : t('profile.anonMoi')
   const ieumCount = Math.max(0, data.graph.nodes.length - 1)
   const creditGood = ['AAA', 'AA', 'A'].includes(data.moiCredit.tier)
   const creditLabel = creditGood ? t('profile.creditGood') : t('profile.creditFair')
@@ -61,7 +61,7 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
           <div onClick={isPage ? () => onOpenChange(false) : undefined} className={`relative mb-3 ${heroClass} overflow-hidden rounded-2xl bg-cover bg-[center_22%]`} style={meeting.photoUrl ? { backgroundImage: `url(${meeting.photoUrl})` } : { background: photoBg(meeting.photoHue) }}>
             <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0d1621]/92 via-[#0d1621]/40 to-transparent" />
             <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#0d1621]/55 px-2.5 py-1 text-[10.5px] font-bold text-white backdrop-blur">
-              {showDetail ? '✓ 이음 완료 · 실명' : (<><Lock className="h-3 w-3" /> 이음 전 · 익명</>)}
+              {showDetail ? t('profile.ieumDoneBadge') : (<><Lock className="h-3 w-3" /> {t('profile.beforeIeumBadge')}</>)}
             </span>
             <div className="absolute inset-x-0 bottom-0 p-4">
               {showDetail && <div className="mb-1 text-[18px] font-extrabold text-white">{name}</div>}
@@ -71,7 +71,7 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
               </div>
               {meeting.mutualCount > 0 && (
                 <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">
-                  🤝 공통 친구 {meeting.mutualCount}명
+                  🤝 {t('inyeon.mutual', { n: meeting.mutualCount })}
                 </span>
               )}
             </div>
@@ -109,11 +109,11 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
             <div className="flex justify-center">
               <InyeonGraph data={data} size={250} />
             </div>
-            <p className="mt-1.5 text-center text-[10px] text-white/40">{offline ? '실명 네트워크' : '나와의 연결 망'} · 강한 이웃 {ieumCount}명</p>
+            <p className="mt-1.5 text-center text-[10px] text-white/40">{offline ? t('profile.netRealName') : t('profile.netMyWeb')} · {t('profile.strongNeighbors', { n: ieumCount })}</p>
             {data.graph.nodes.some((n) => n.here) && (
               <p className="mt-1 flex items-center justify-center gap-1.5 text-[10px] text-white/45">
                 <span className="inline-block h-2 w-2 flex-shrink-0 rounded-full ring-2 ring-[#F8C57A]" />
-                {offline ? '이 결혼식에서 만난 사람' : '직접 이어진 사람'} · 나머지는 더 넓은 망
+                {offline ? t('profile.metHere') : t('profile.directlyLinked')} · {t('profile.restWiderWeb')}
               </p>
             )}
           </>
@@ -132,14 +132,14 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
             <SignalSunburst data={data.signal} size={180} />
           </div>
           <ul className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-white/70">
-            <li><b className="text-[#D4687A]">EM</b> 부조·증여</li>
-            <li><b className="text-[#5B89B3]">CS</b> 참석·이음·대화</li>
-            <li><b className="text-[#B8884A]">AR</b> 관계</li>
-            <li><b className="text-[#9999AD]">MP</b> 거래</li>
+            <li><b className="text-[#D4687A]">EM</b> {t('profile.signal.em')}</li>
+            <li><b className="text-[#5B89B3]">CS</b> {t('profile.signal.cs')}</li>
+            <li><b className="text-[#B8884A]">AR</b> {t('profile.signal.ar')}</li>
+            <li><b className="text-[#9999AD]">MP</b> {t('profile.signal.mp')}</li>
           </ul>
           {giftSignal != null && giftSignal > 0 && (
             <div className="mt-2 rounded-xl border border-[#F8C57A]/30 bg-[#F8C57A]/10 px-3 py-2 text-center text-[11.5px] text-white/85">
-              💝 받은 선물 신뢰 신호 <b className="text-[#F8C57A]">+{giftSignal}</b>
+              💝 {t('profile.giftSignal')} <b className="text-[#F8C57A]">+{giftSignal}</b>
             </div>
           )}
         </Section>
@@ -161,7 +161,7 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
           onClick={onIeum}
           className="mt-1 w-full rounded-2xl bg-gradient-to-br from-[#1E3A5F] to-[#2d6a9e] py-3.5 text-[14.5px] font-extrabold text-white"
         >
-          {offline ? '이음 신청' : t('inyeon.ieum')}
+          {offline ? t('profile.ieumApply') : t('inyeon.ieum')}
         </button>
       )}
     </>
@@ -178,10 +178,10 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
         className="fixed inset-0 z-[60] mx-auto flex max-w-[480px] flex-col bg-[#0A1626] text-[#E8EFF6]"
       >
         <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/8 bg-[#0A1626]/92 px-3 py-3 backdrop-blur">
-          <button type="button" aria-label="뒤로" onClick={() => onOpenChange(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+          <button type="button" aria-label={t('common.back')} onClick={() => onOpenChange(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h2 className="text-[16px] font-extrabold text-white">{showDetail ? `${name} · 프로필` : '프로필'}</h2>
+          <h2 className="text-[16px] font-extrabold text-white">{showDetail ? t('profile.titleNamed', { name }) : t('profile.title')}</h2>
         </header>
         <div className="scrollbar-hide flex-1 overflow-y-auto px-4 pb-24 pt-3">{body}</div>
       </motion.div>
@@ -193,7 +193,7 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[92vh] scrollbar-hide">
         <SheetHeader>
-          <SheetTitle>{showDetail ? `${name} · 프로필` : '프로필'}</SheetTitle>
+          <SheetTitle>{showDetail ? t('profile.titleNamed', { name }) : t('profile.title')}</SheetTitle>
         </SheetHeader>
         {body}
       </SheetContent>

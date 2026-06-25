@@ -30,7 +30,7 @@ describe('GiftForm', () => {
       />,
     )
     expect(screen.getByRole('heading', { name: '축의 추가' })).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('이름')).toHaveValue('')
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('')
     expect(screen.getByPlaceholderText('0')).toHaveValue('')
     expect(screen.getByRole('button', { name: '저장' })).toBeDisabled()
   })
@@ -56,7 +56,7 @@ describe('GiftForm', () => {
         isLoading={false}
       />,
     )
-    expect(screen.getByPlaceholderText('이름')).toHaveValue('김영희')
+    expect(screen.getByPlaceholderText('Name')).toHaveValue('김영희')
     expect(screen.getByPlaceholderText('0')).toHaveValue('30000')
   })
 
@@ -65,7 +65,7 @@ describe('GiftForm', () => {
     render(
       <GiftForm title="t" onSubmit={onSubmit} submitLabel="저장" isLoading={false} />,
     )
-    fireEvent.change(screen.getByPlaceholderText('이름'), { target: { value: '  홍길동  ' } })
+    fireEvent.change(screen.getByPlaceholderText('Name'), { target: { value: '  홍길동  ' } })
     fireEvent.change(screen.getByPlaceholderText('0'), { target: { value: '50000' } })
     // 관계·축의 방식도 필수(QA 2026-05-29): select 0=관계, 1=축의 방식
     const selects = screen.getAllByRole('combobox')
@@ -93,14 +93,14 @@ describe('GiftForm', () => {
       <GiftForm title="t" onSubmit={vi.fn()} submitLabel="저장" isLoading={false} />,
     )
     fireEvent.change(screen.getByPlaceholderText('0'), { target: { value: '50000' } })
-    expect(screen.getByText('50,000원')).toBeInTheDocument()
+    expect(screen.getByText('50,000 KRW')).toBeInTheDocument()
   })
 
   it('isLoading=true: "처리 중..." + disabled', () => {
     render(
       <GiftForm title="t" onSubmit={vi.fn()} submitLabel="저장" isLoading />,
     )
-    const btn = screen.getByRole('button', { name: '처리 중...' })
+    const btn = screen.getByRole('button', { name: 'Processing...' })
     expect(btn).toBeDisabled()
   })
 
@@ -108,7 +108,7 @@ describe('GiftForm', () => {
     render(
       <GiftForm title="t" onSubmit={vi.fn()} submitLabel="저장" isLoading={false} />,
     )
-    fireEvent.change(screen.getByPlaceholderText('이름'), { target: { value: '홍길동' } })
+    fireEvent.change(screen.getByPlaceholderText('Name'), { target: { value: '홍길동' } })
     fireEvent.change(screen.getByPlaceholderText('0'), { target: { value: '0' } })
     expect(screen.getByRole('button', { name: '저장' })).toBeDisabled()
   })

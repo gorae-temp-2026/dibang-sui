@@ -1,6 +1,8 @@
 // 우리의 온기 orb — 흰 원 + 자전 분홍 dot(::before, .lng-orb) + 온도° 텍스트.
 // 프로토타입 .warm-orb / .warm-orb-text 정합. hero=38px(라벨 없음), mini=28px + '우리의 온기'.
 
+import { useT } from '../../lib/i18n';
+
 interface WarmthOrbProps {
   /** "36.5°" 형태 */
   label: string;
@@ -8,6 +10,7 @@ interface WarmthOrbProps {
 }
 
 export function WarmthOrb({ label, variant }: WarmthOrbProps) {
+  const t = useT();
   if (variant === 'hero') {
     return (
       <span className="lng-orb inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center align-middle">
@@ -25,7 +28,7 @@ export function WarmthOrb({ label, variant }: WarmthOrbProps) {
         </span>
       </span>
       <span className="whitespace-nowrap text-[14px] font-medium leading-none tracking-[-0.01em] text-lng-ink">
-        우리의 온기
+        {t('loungeV2.warmth.label')}
       </span>
     </span>
   );

@@ -50,7 +50,7 @@ export const loungeFeedMachine = setup({
 
   states: {
     loading: {
-      description: "피드 초기 로딩 중",
+      description: "Feed initial loading",
       on: {
         LOAD_SUCCESS: {
           target: "idle",
@@ -67,7 +67,7 @@ export const loungeFeedMachine = setup({
     },
 
     idle: {
-      description: "피드 표시 중 — 무한스크롤 & 풀다운 새로고침 가능",
+      description: "Showing feed — infinite scroll & pull-to-refresh available",
       on: {
         REFRESH: {
           target: "refreshing",
@@ -77,7 +77,7 @@ export const loungeFeedMachine = setup({
     },
 
     refreshing: {
-      description: "풀다운 새로고침 중",
+      description: "Pull-to-refresh in progress",
       on: {
         REFRESH_SUCCESS: {
           target: "idle",
@@ -100,7 +100,7 @@ export const loungeFeedMachine = setup({
     },
 
     error: {
-      description: "피드 로딩 실패",
+      description: "Feed load failed",
       on: {
         RETRY: {
           target: "loading",

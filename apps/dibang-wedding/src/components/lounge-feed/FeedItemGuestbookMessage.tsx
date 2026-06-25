@@ -1,4 +1,5 @@
 import { colors, fonts } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 import { formatGuestPrefix } from '../../lib/guestLabel';
 import type { FeedItem } from '../../types/db-compat';
 
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function FeedItemGuestbookMessage({ item }: Props) {
+  const t = useT();
   const data = item.data as {
     guest_name?: string;
     relation_category?: string;
@@ -17,7 +19,7 @@ export function FeedItemGuestbookMessage({ item }: Props) {
     message?: string;
   };
 
-  const guestName = data.guest_name ?? '(알 수 없음)';
+  const guestName = data.guest_name ?? t('feed.unknown');
   const message = data.message ?? '';
   const isHeart = message === '__HEART__';
 

@@ -1,4 +1,5 @@
 import { useIntersectionFadeIn } from '../hooks/useIntersectionFadeIn';
+import { useT } from '../lib/i18n';
 
 function KakaoIcon() {
   return (
@@ -32,6 +33,7 @@ interface ShareProps {
 
 export function Share({ onShareKakao, onCopyCurrentUrl }: ShareProps = {}) {
   const ref = useIntersectionFadeIn<HTMLElement>();
+  const t = useT();
 
   return (
     <section
@@ -42,22 +44,22 @@ export function Share({ onShareKakao, onCopyCurrentUrl }: ShareProps = {}) {
         <div className="flex flex-col items-center gap-2">
           <button
             className="w-[54px] h-[54px] rounded-full border-none cursor-pointer flex items-center justify-center font-body bg-[#FEE500] text-[#3C1E1E] transition-all duration-250 ease-[cubic-bezier(.16,1,.3,1)] hover:scale-108 hover:-rotate-[4deg] hover:shadow-[0_8px_20px_rgba(254,229,0,.35)]"
-            title="카카오톡 공유"
+            title={t('invitationUi.share.kakaoTitle')}
             onClick={() => onShareKakao?.()}
           >
             <KakaoIcon />
           </button>
-          <span className="text-sm text-muted font-medium tracking-[.04em]">카카오톡 공유하기</span>
+          <span className="text-sm text-muted font-medium tracking-[.04em]">{t('invitationUi.share.kakaoLabel')}</span>
         </div>
         <div className="flex flex-col items-center gap-2">
           <button
             className="w-[54px] h-[54px] rounded-full border-none cursor-pointer flex items-center justify-center font-body bg-pale-sky text-navy transition-all duration-250 ease-[cubic-bezier(.16,1,.3,1)] hover:bg-soft-sky hover:scale-108"
-            title="링크 복사"
+            title={t('invitationUi.share.linkTitle')}
             onClick={() => onCopyCurrentUrl?.()}
           >
             <LinkIcon />
           </button>
-          <span className="text-sm text-muted font-medium tracking-[.04em]">링크 공유하기</span>
+          <span className="text-sm text-muted font-medium tracking-[.04em]">{t('invitationUi.share.linkLabel')}</span>
         </div>
       </div>
     </section>

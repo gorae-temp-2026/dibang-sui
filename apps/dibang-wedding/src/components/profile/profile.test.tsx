@@ -23,12 +23,12 @@ describe('공유 프로필 viz', () => {
 
   it('MoiCreditPanel — raw→층→공식 + 온체인 Moi Credit 강조', () => {
     render(<MoiCreditPanel data={chulsooProfile} />)
-    expect(screen.getByText(/Moi Credit \(온체인\)/)).toBeInTheDocument()
-    expect(screen.getByText(/1층 raw/)).toBeInTheDocument()
+    expect(screen.getByText(/Moi Credit \(on-chain\)/)).toBeInTheDocument()
+    expect(screen.getByText(/L1 raw/)).toBeInTheDocument()
   })
 
   it('TrustRange — 익명 신뢰범위(정확값 비노출)', () => {
     render(<TrustRange trust={chulsooProfile.trustRange} />)
-    expect(screen.getByText(/익명/)).toBeInTheDocument()
+    expect(screen.getByText(/anonymous/)).toBeInTheDocument()
   })
 })

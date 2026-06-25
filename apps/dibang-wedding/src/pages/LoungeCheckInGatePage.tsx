@@ -9,22 +9,34 @@ import { useCheckMyCheckIn } from '../queries/lounge-check-in-gate/useCheckMyChe
 import { useCreateLoungeCheckIn } from '../queries/lounge-check-in-gate/useCreateLoungeCheckIn';
 import { useUpdateMe } from '../queries/lounge-check-in-gate/useUpdateMe';
 import { useOnchainCheckIn } from '../hooks/useOnchainCheckIn';
+import { useT } from '../lib/i18n';
 
 type RecipientSlot = NonNullable<CreateLoungeCheckInRequest['recipient_slot']>;
 type RelationCategory = NonNullable<CreateLoungeCheckInRequest['relation_category']>;
 
-const RECIPIENT_OPTIONS: { slot: RecipientSlot; label: string }[] = [
-  { slot: 'groom', label: '신랑' },
-  { slot: 'bride', label: '신부' },
-  { slot: 'groom_father', label: '신랑 아버지' },
-  { slot: 'groom_mother', label: '신랑 어머니' },
-  { slot: 'bride_father', label: '신부 아버지' },
-  { slot: 'bride_mother', label: '신부 어머니' },
+// labelKey = i18n 키. slot은 백엔드로 보내는 값이라 그대로 둔다(표시만 번역).
+const RECIPIENT_OPTIONS: { slot: RecipientSlot; labelKey: string }[] = [
+  { slot: 'groom', labelKey: 'loungeCheckIn.recipient.groom' },
+  { slot: 'bride', labelKey: 'loungeCheckIn.recipient.bride' },
+  { slot: 'groom_father', labelKey: 'loungeCheckIn.recipient.groom_father' },
+  { slot: 'groom_mother', labelKey: 'loungeCheckIn.recipient.groom_mother' },
+  { slot: 'bride_father', labelKey: 'loungeCheckIn.recipient.bride_father' },
+  { slot: 'bride_mother', labelKey: 'loungeCheckIn.recipient.bride_mother' },
 ];
 
+// ⚠️ 값(한국어)은 백엔드 enum이자 guest-web 쿼리파라미터와 대조되는 값 — 절대 바꾸지 않는다.
+// 표시 라벨만 i18n 키로 매핑한다.
 const RELATION_CATEGORIES: RelationCategory[] = [
   '가족/친척', '친구/지인', '동문/동창', '직장동료', '스승/제자', '기타모임',
 ];
+const RELATION_LABEL_KEY: Record<RelationCategory, string> = {
+  '가족/친척': 'loungeCheckIn.relation.family',
+  '친구/지인': 'loungeCheckIn.relation.friend',
+  '동문/동창': 'loungeCheckIn.relation.alumni',
+  '직장동료': 'loungeCheckIn.relation.coworker',
+  '스승/제자': 'loungeCheckIn.relation.mentor',
+  '기타모임': 'loungeCheckIn.relation.other',
+};
 
 export function LoungeCheckInGatePage() {
   const { loungeId } = useParams<{ loungeId: string }>();
@@ -32,6 +44,7 @@ export function LoungeCheckInGatePage() {
   const { session, isReady } = useAuth();
   const [state, send] = useMachine(loungeCheckInGateMachine);
   const { data: me } = useGetMe();
+  const t = useT();
 
   // C2: 비로그인 게스트가 입장 게이트 진입 시 me/check-in 401로 에러 페이지가 뜨던 문제 →
   // 미인증이면 로그인으로 보내고, 로그인 후 이 게이트(/lounge/:id/enter)로 복귀시킨다.
@@ -92,7 +105,7 @@ export function LoungeCheckInGatePage() {
         send({ type: 'CHECK_NOT_FOUND' });
       }
     } else if (checkQuery.isError) {
-      send({ type: 'CHECK_ERROR', error: '확인 중 오류가 발생했습니다.' });
+      send({ type: 'CHECK_ERROR', error: t('loungeCheckIn.error.check') });
     }
     // send는 xstate actor가 보장하는 안정 참조. state(snapshot 전체)는 의존성에 넣으면
     // 매 micro-tick마다 effect 재실행되어 무한 fetch 위험 — state.value만으로 충분.
@@ -121,7 +134,7 @@ export function LoungeCheckInGatePage() {
         try {
           await updateMe.mutateAsync({ name: trimmedName });
         } catch {
-          send({ type: 'SUBMIT_ERROR', error: '이름 저장에 실패했습니다.' });
+          send({ type: 'SUBMIT_ERROR', error: t('loungeCheckIn.error.nameSave') });
           return;
         }
       }
@@ -138,7 +151,7 @@ export function LoungeCheckInGatePage() {
       void participateOnchain(loungeId);
       send({ type: 'SUBMIT_SUCCESS', entryId: entry.id });
     } catch {
-      send({ type: 'SUBMIT_ERROR', error: '입장에 실패했습니다.' });
+      send({ type: 'SUBMIT_ERROR', error: t('loungeCheckIn.error.enter') });
     }
   };
 
@@ -163,7 +176,7 @@ export function LoungeCheckInGatePage() {
   if (state.matches('checking')) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
-        <p className="text-base text-muted">확인 중...</p>
+        <p className="text-base text-muted">{t('loungeCheckIn.checking')}</p>
       </div>
     );
   }
@@ -171,7 +184,7 @@ export function LoungeCheckInGatePage() {
   if (isAutoEntering) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
-        <p className="text-base text-muted">입장 중...</p>
+        <p className="text-base text-muted">{t('loungeCheckIn.entering')}</p>
       </div>
     );
   }
@@ -185,7 +198,7 @@ export function LoungeCheckInGatePage() {
           onClick={() => send({ type: 'RETRY' })}
           className="rounded-xl bg-navy px-6 py-2.5 text-sm font-semibold text-white"
         >
-          다시 시도
+          {t('loungeCheckIn.retry')}
         </button>
       </div>
     );
@@ -195,27 +208,27 @@ export function LoungeCheckInGatePage() {
   return (
     <div className="flex min-h-screen flex-col bg-white max-w-lg mx-auto">
       <div className="px-6 py-8">
-        <h1 className="text-[24px] font-semibold text-navy mb-2">라운지 입장</h1>
-        <p className="text-sm text-muted mb-8">웨딩 라운지에 입장하기 전에 본인 정보를 알려주세요.</p>
+        <h1 className="text-[24px] font-semibold text-navy mb-2">{t('loungeCheckIn.title')}</h1>
+        <p className="text-sm text-muted mb-8">{t('loungeCheckIn.subtitle')}</p>
 
         {/* 이름 */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-navy mb-2">이름</label>
+          <label className="block text-sm font-medium text-navy mb-2">{t('loungeCheckIn.nameLabel')}</label>
           <input
             type="text"
             value={displayName}
             onChange={(e) => setDisplayNameOverride(e.target.value)}
             maxLength={20}
-            placeholder="이름을 입력해주세요"
+            placeholder={t('loungeCheckIn.namePlaceholder')}
             className="w-full rounded-xl border border-line px-4 py-3 text-base text-navy placeholder:text-muted focus:border-navy focus:outline-none"
           />
         </div>
 
         {/* 수신인 선택 */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-navy mb-3">누구 측 하객인가요?</label>
+          <label className="block text-sm font-medium text-navy mb-3">{t('loungeCheckIn.recipientLabel')}</label>
           <div className="grid grid-cols-2 gap-2">
-            {RECIPIENT_OPTIONS.map(({ slot, label }) => (
+            {RECIPIENT_OPTIONS.map(({ slot, labelKey }) => (
               <button
                 key={slot}
                 onClick={() => setRecipientSlot(slot)}
@@ -225,7 +238,7 @@ export function LoungeCheckInGatePage() {
                     : 'border-line bg-white text-navy hover:border-soft-sky'
                 }`}
               >
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>
@@ -233,7 +246,7 @@ export function LoungeCheckInGatePage() {
 
         {/* 관계 */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-navy mb-3">관계</label>
+          <label className="block text-sm font-medium text-navy mb-3">{t('loungeCheckIn.relationLabel')}</label>
           <div className="grid grid-cols-3 gap-2">
             {RELATION_CATEGORIES.map((cat) => (
               <button
@@ -245,7 +258,7 @@ export function LoungeCheckInGatePage() {
                     : 'border-line bg-white text-navy hover:border-soft-sky'
                 }`}
               >
-                {cat}
+                {t(RELATION_LABEL_KEY[cat])}
               </button>
             ))}
           </div>
@@ -253,13 +266,13 @@ export function LoungeCheckInGatePage() {
 
         {/* 관계 상세 */}
         <div className="mb-8">
-          <label className="block text-sm font-medium text-navy mb-2">관계 상세 (선택)</label>
+          <label className="block text-sm font-medium text-navy mb-2">{t('loungeCheckIn.relationDetailLabel')}</label>
           <input
             type="text"
             value={relationDetail}
             onChange={(e) => setRelationDetail(e.target.value)}
             maxLength={40}
-            placeholder="예: 고등학교 동창, 회사 팀원"
+            placeholder={t('loungeCheckIn.relationDetailPlaceholder')}
             className="w-full rounded-xl border border-line px-4 py-3 text-sm text-navy placeholder:text-muted focus:border-navy focus:outline-none"
           />
         </div>
@@ -279,7 +292,7 @@ export function LoungeCheckInGatePage() {
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
         >
-          {state.matches('submitting') ? '입장 중...' : '라운지 입장하기'}
+          {state.matches('submitting') ? t('loungeCheckIn.entering') : t('loungeCheckIn.submit')}
         </button>
       </div>
     </div>

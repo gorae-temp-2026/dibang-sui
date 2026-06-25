@@ -3,41 +3,32 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Wedding } from '@gorae/contracts';
 import type { RecipientSlot } from '../../machines/guestFlow.machine';
 import { serif, colors } from '../../styles/tokens';
+import { useT } from '../../lib/i18n';
 
 const HERO_H = 384;
 
 interface SlotDef {
   slot: RecipientSlot;
-  label: string;
+  labelKey: string;
   nameKey: 'groom_name' | 'bride_name' | 'groom_father_name' | 'groom_mother_name' | 'bride_father_name' | 'bride_mother_name';
   side: 'groom' | 'bride';
 }
 
 const GROOM_SLOTS: SlotDef[] = [
-  { slot: 'groom', label: '신랑', nameKey: 'groom_name', side: 'groom' },
-  { slot: 'groom_father', label: '신랑 아버지', nameKey: 'groom_father_name', side: 'groom' },
-  { slot: 'groom_mother', label: '신랑 어머니', nameKey: 'groom_mother_name', side: 'groom' },
+  { slot: 'groom', labelKey: 'guestFlow.recipient.groom', nameKey: 'groom_name', side: 'groom' },
+  { slot: 'groom_father', labelKey: 'guestFlow.recipient.groomFather', nameKey: 'groom_father_name', side: 'groom' },
+  { slot: 'groom_mother', labelKey: 'guestFlow.recipient.groomMother', nameKey: 'groom_mother_name', side: 'groom' },
 ];
 
 const BRIDE_SLOTS: SlotDef[] = [
-  { slot: 'bride', label: '신부', nameKey: 'bride_name', side: 'bride' },
-  { slot: 'bride_father', label: '신부 아버지', nameKey: 'bride_father_name', side: 'bride' },
-  { slot: 'bride_mother', label: '신부 어머니', nameKey: 'bride_mother_name', side: 'bride' },
+  { slot: 'bride', labelKey: 'guestFlow.recipient.bride', nameKey: 'bride_name', side: 'bride' },
+  { slot: 'bride_father', labelKey: 'guestFlow.recipient.brideFather', nameKey: 'bride_father_name', side: 'bride' },
+  { slot: 'bride_mother', labelKey: 'guestFlow.recipient.brideMother', nameKey: 'bride_mother_name', side: 'bride' },
 ];
 
 function formatDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-');
   return `${y}. ${m}. ${d}`;
-}
-
-function formatTime(timeStr?: string): string {
-  if (!timeStr) return '';
-  const [hStr, mStr] = timeStr.split(':');
-  const h = parseInt(hStr, 10);
-  const m = parseInt(mStr, 10);
-  const period = h < 12 ? '오전' : '오후';
-  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return m === 0 ? `${period} ${h12}시` : `${period} ${h12}시 ${m}분`;
 }
 
 interface StepRecipientProps {
@@ -46,8 +37,21 @@ interface StepRecipientProps {
 }
 
 export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
+  const t = useT();
   const { info } = wedding;
   const containerRef = useRef<HTMLDivElement>(null);
+
+  function formatTimeLabel(timeStr?: string): string {
+    if (!timeStr) return '';
+    const [hStr, mStr] = timeStr.split(':');
+    const h = parseInt(hStr, 10);
+    const m = parseInt(mStr, 10);
+    const period = h < 12 ? t('guestFlow.time.am') : t('guestFlow.time.pm');
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return m === 0
+      ? t('guestFlow.time.hour', { period, h: h12 })
+      : t('guestFlow.time.hourMinute', { period, h: h12, m });
+  }
 
   const coverImage = wedding.invitations?.[0]?.cover_image;
 
@@ -66,7 +70,7 @@ export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
         {coverImage ? (
           <img
             src={coverImage}
-            alt="커플 사진"
+            alt={t('guestFlow.recipient.coverAlt')}
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }}
           />
         ) : (
@@ -83,7 +87,7 @@ export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
             {info.groom_name} · {info.bride_name}
           </p>
           <p style={{ ...serif, fontSize: 14, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.75)', marginTop: 8 }}>
-            {formatDate(info.date)}{info.time && <>&nbsp;&nbsp;{formatTime(info.time)}</>}
+            {formatDate(info.date)}{info.time && <>&nbsp;&nbsp;{formatTimeLabel(info.time)}</>}
           </p>
           <p style={{ ...serif, fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{venueName}</p>
         </motion.div>
@@ -97,7 +101,7 @@ export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
           transition={{ delay: 0.3, duration: 0.35, ease: 'easeOut' }}
           style={{ ...serif, marginBottom: 28, textAlign: 'center', fontSize: 18, lineHeight: 1.7, color: colors.textHeading }}
         >
-          방명록 작성, 축의, 사진 공유를 할 수 있어요.<br />어느 분의 하객으로 오셨나요?
+          {t('guestFlow.recipient.intro1')}<br />{t('guestFlow.recipient.intro2')}
         </motion.p>
 
         {groomButtons.length > 0 && (
@@ -111,7 +115,7 @@ export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
               onClick={() => setGroomOpen((v) => !v)}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 16px', background: colors.bgAccentSubtle, borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: groomOpen ? `1px solid ${colors.borderLight}` : 'none', cursor: 'pointer' }}
             >
-              <p style={{ ...serif, fontSize: 18, letterSpacing: '0.14em', color: colors.accent, margin: 0 }}>신랑측</p>
+              <p style={{ ...serif, fontSize: 18, letterSpacing: '0.14em', color: colors.accent, margin: 0 }}>{t('guestFlow.side.groom')}</p>
               <span style={{ fontSize: 28, fontWeight: 300, color: colors.accent, transition: 'transform 0.2s', transform: groomOpen ? 'rotate(90deg)' : 'rotate(0deg)', lineHeight: 1 }}>&#8250;</span>
             </button>
             <AnimatePresence initial={false}>
@@ -127,7 +131,7 @@ export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
                     <motion.button
                       key={btn.slot}
                       whileTap={{ opacity: 0.6 }}
-                      onClick={() => onSelect(btn.slot, `${btn.label} ${info[btn.nameKey]}`)}
+                      onClick={() => onSelect(btn.slot, `${t(btn.labelKey)} ${info[btn.nameKey]}`)}
                       style={{
                         display: 'flex',
                         width: '100%',
@@ -141,7 +145,7 @@ export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
                         textAlign: 'left',
                       }}
                     >
-                      <span style={{ ...serif, fontSize: 20, color: '#3D3026' }}>{btn.label} {info[btn.nameKey]}</span>
+                      <span style={{ ...serif, fontSize: 20, color: '#3D3026' }}>{t(btn.labelKey)} {info[btn.nameKey]}</span>
                       <span style={{ fontSize: 18, color: colors.accentLight }}>&#8250;</span>
                     </motion.button>
                   ))}
@@ -162,7 +166,7 @@ export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
               onClick={() => setBrideOpen((v) => !v)}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '10px 16px', background: colors.bgAccentSubtle, borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: brideOpen ? `1px solid ${colors.borderLight}` : 'none', cursor: 'pointer' }}
             >
-              <p style={{ ...serif, fontSize: 18, letterSpacing: '0.14em', color: colors.accent, margin: 0 }}>신부측</p>
+              <p style={{ ...serif, fontSize: 18, letterSpacing: '0.14em', color: colors.accent, margin: 0 }}>{t('guestFlow.side.bride')}</p>
               <span style={{ fontSize: 28, fontWeight: 300, color: colors.accent, transition: 'transform 0.2s', transform: brideOpen ? 'rotate(90deg)' : 'rotate(0deg)', lineHeight: 1 }}>&#8250;</span>
             </button>
             <AnimatePresence initial={false}>
@@ -178,7 +182,7 @@ export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
                     <motion.button
                       key={btn.slot}
                       whileTap={{ opacity: 0.6 }}
-                      onClick={() => onSelect(btn.slot, `${btn.label} ${info[btn.nameKey]}`)}
+                      onClick={() => onSelect(btn.slot, `${t(btn.labelKey)} ${info[btn.nameKey]}`)}
                       style={{
                         display: 'flex',
                         width: '100%',
@@ -192,7 +196,7 @@ export function StepRecipient({ wedding, onSelect }: StepRecipientProps) {
                         textAlign: 'left',
                       }}
                     >
-                      <span style={{ ...serif, fontSize: 20, color: '#3D3026' }}>{btn.label} {info[btn.nameKey]}</span>
+                      <span style={{ ...serif, fontSize: 20, color: '#3D3026' }}>{t(btn.labelKey)} {info[btn.nameKey]}</span>
                       <span style={{ fontSize: 18, color: colors.accentLight }}>&#8250;</span>
                     </motion.button>
                   ))}

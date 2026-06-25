@@ -18,15 +18,17 @@ import { PinnedAnnouncementBanner } from '../components/lounge-feed/PinnedAnnoun
 import { colors, fonts } from '../lib/theme';
 import type { FeedItem } from '../types/db-compat';
 import { useOnchainLoungeFeed } from '../hooks/useOnchainLoungeFeed';
-
-// TODO: 실제 auth에서 Host 여부를 가져와야 함. 와이어프레임이므로 일단 true.
-const IS_HOST = true;
+import { useGetMe } from '../queries/shared/useGetMe';
+import { useT, useLang } from '../lib/i18n';
 
 const MAX_VISIBLE_AVATARS = 5;
 
-function formatDateKorean(dateStr: string): string {
+function formatDate(dateStr: string, lang: 'ko' | 'en'): string {
   try {
     const d = new Date(dateStr);
+    if (lang === 'en') {
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
     const year = d.getFullYear();
     const month = d.getMonth() + 1;
     const day = d.getDate();
@@ -116,6 +118,8 @@ function LoungeSkeleton() {
 export function LoungeFeedPage() {
   const { loungeId } = useParams<{ loungeId: string }>();
   const navigate = useNavigate();
+  const t = useT();
+  const lang = useLang();
   const [state, send] = useMachine(loungeFeedMachine);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
@@ -125,6 +129,18 @@ export function LoungeFeedPage() {
   const loungeQuery = useGetLounge(loungeId ?? '');
   const weddingId = loungeQuery.data?.wedding_id;
   const weddingQuery = useGetWedding(weddingId);
+  // Host 여부 = 로그인 유저 id가 이 결혼식의 호스트 슬롯(신랑·신부·양가 혼주) 중 하나와 일치.
+  // (LoungeV2Page와 동일 판정.) 공지 작성·관리 UI 노출 게이트.
+  const myId = useGetMe().data?.id;
+  const weddingHosts = weddingQuery.data?.hosts;
+  const isHost = !!myId && !!weddingHosts && [
+    weddingHosts.host_groom_id,
+    weddingHosts.host_bride_id,
+    weddingHosts.host_groom_father_id,
+    weddingHosts.host_groom_mother_id,
+    weddingHosts.host_bride_father_id,
+    weddingHosts.host_bride_mother_id,
+  ].includes(myId);
   const feedQuery = useGetFeed(loungeId ?? '');
   const observerRef = useRef<HTMLDivElement>(null);
   const announcementsQuery = useGetAnnouncements(loungeId ?? '');
@@ -220,11 +236,11 @@ export function LoungeFeedPage() {
       created_at: oc.ts ? new Date(oc.ts).toISOString() : new Date().toISOString(),
       data: {
         guest_name: `${oc.actor.slice(0, 6)}…${oc.actor.slice(-4)}`,
-        message: oc.type === 'give' ? `💧 축의금 ${(oc.amount / 1e6).toFixed(3)} SUI`
-          : oc.type === 'note' ? `💌 ${oc.message ?? '쪽지'}`
-          : '✍️ 방명록 (온체인)',
+        message: oc.type === 'give' ? `💧 ${t('page.lounge.onchainGift', { amount: (oc.amount / 1e6).toFixed(3) })}`
+          : oc.type === 'note' ? `💌 ${oc.message ?? t('page.lounge.note')}`
+          : `✍️ ${t('page.lounge.onchainGuestbook')}`,
         recipient_slot: 'groom',
-        relation_category: '온체인',
+        relation_category: t('page.lounge.onchain'),
       },
     } as unknown as FeedItem));
 
@@ -244,7 +260,7 @@ export function LoungeFeedPage() {
   // ---- 렌더 ----
 
   if (!loungeId) {
-    return <div style={{ padding: 16, fontFamily: fonts.serif.family }}>[에러] loungeId가 없습니다</div>;
+    return <div style={{ padding: 16, fontFamily: fonts.serif.family }}>{t('page.lounge.noLoungeId')}</div>;
   }
 
   // 로딩 중 스켈레톤
@@ -291,7 +307,7 @@ export function LoungeFeedPage() {
           <>
             {/* Date */}
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', margin: 0 }}>
-              {formatDateKorean(weddingInfo.date)}
+              {formatDate(weddingInfo.date, lang)}
             </p>
 
             {/* Names */}
@@ -305,7 +321,7 @@ export function LoungeFeedPage() {
                 color: colors.white,
               }}
             >
-              {weddingInfo.groom_name} · {weddingInfo.bride_name}의 웨딩라운지
+              {t('page.lounge.weddingLoungeOf', { names: `${weddingInfo.groom_name} · ${weddingInfo.bride_name}` })}
             </h1>
 
             {/* Venue */}
@@ -326,12 +342,12 @@ export function LoungeFeedPage() {
               <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
                 {(weddingInfo.groom_father_name || weddingInfo.groom_mother_name) && (
                   <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)' }}>
-                    신랑 부모 {weddingInfo.groom_father_name ?? ''} · {weddingInfo.groom_mother_name ?? ''}
+                    {t('page.lounge.groomParents')} {weddingInfo.groom_father_name ?? ''} · {weddingInfo.groom_mother_name ?? ''}
                   </span>
                 )}
                 {(weddingInfo.bride_father_name || weddingInfo.bride_mother_name) && (
                   <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)' }}>
-                    신부 부모 {weddingInfo.bride_father_name ?? ''} · {weddingInfo.bride_mother_name ?? ''}
+                    {t('page.lounge.brideParents')} {weddingInfo.bride_father_name ?? ''} · {weddingInfo.bride_mother_name ?? ''}
                   </span>
                 )}
               </div>
@@ -348,7 +364,7 @@ export function LoungeFeedPage() {
               color: colors.white,
             }}
           >
-            웨딩라운지
+            {t('page.lounge.weddingLounge')}
           </h1>
         )}
 
@@ -368,7 +384,7 @@ export function LoungeFeedPage() {
             }}
           >
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', margin: 0 }}>
-              참여자
+              {t('page.lounge.participants')}
             </p>
             <div style={{ display: 'flex', alignItems: 'center', marginTop: 8 }}>
               {/* 겹치는 원형 아바타 */}
@@ -425,7 +441,7 @@ export function LoungeFeedPage() {
           </button>
 
           {/* 우: 공지 버튼 (Host 전용) */}
-          {IS_HOST && (
+          {isHost && (
             <button
               onClick={() => setShowAnnouncementForm(!showAnnouncementForm)}
               style={{
@@ -446,14 +462,14 @@ export function LoungeFeedPage() {
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>공지</span>
+              <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>{t('page.lounge.announcement')}</span>
             </button>
           )}
         </div>
       </div>
 
       {/* ── 공지 작성 모달 ─────────────────────────────── */}
-      {IS_HOST && showAnnouncementForm && (
+      {isHost && showAnnouncementForm && (
         <div
           onClick={() => setShowAnnouncementForm(false)}
           style={{
@@ -472,7 +488,7 @@ export function LoungeFeedPage() {
             }}
           >
             <div style={{ padding: '20px 20px 12px', borderBottom: `1px solid ${colors.borderWarm}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>공지 관리</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>{t('page.lounge.manageAnnouncement')}</h3>
               <button onClick={() => setShowAnnouncementForm(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: colors.textSecondary, cursor: 'pointer', padding: 0 }}>
                 ✕
               </button>
@@ -504,7 +520,7 @@ export function LoungeFeedPage() {
         {/* 풀다운 새로고침 중 */}
         {state.matches('refreshing') && (
           <div style={{ textAlign: 'center', padding: '12px 0', color: colors.textMuted, fontSize: 14 }}>
-            새로고침 중...
+            {t('page.lounge.refreshing')}
           </div>
         )}
 
@@ -562,7 +578,7 @@ export function LoungeFeedPage() {
                 color: colors.textPrimary,
               }}
             >
-              재시도
+              {t('sharePhoto.retry')}
             </button>
           </div>
         )}
@@ -574,7 +590,7 @@ export function LoungeFeedPage() {
             {allItems.length === 0 && (
               <div style={{ textAlign: 'center', paddingTop: 64, paddingBottom: 64 }}>
                 <p style={{ fontSize: 16, color: colors.textMuted, margin: 0 }}>
-                  아직 활동이 없어요
+                  {t('page.lounge.noActivity')}
                 </p>
               </div>
             )}

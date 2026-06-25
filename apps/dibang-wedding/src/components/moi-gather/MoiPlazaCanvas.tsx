@@ -8,6 +8,9 @@ import { useEffect, useRef } from 'react'
 import { Application, Container, Graphics, Sprite, Assets, Text, Texture, Rectangle, type FederatedPointerEvent } from 'pixi.js'
 import type { PlacedItem } from '../../machines/moiPlaza.machine'
 import { ITEM_BY_ID, ALL_ASSET_URLS, RECOLOR_BODY, HEAD_NECK_Y, BODY_NECK_Y, type PlazaMoi, type EquipSlot } from './data'
+import { translate, useLangStore } from '../../lib/i18n'
+
+const lang = () => useLangStore.getState().lang
 
 const PLAZA_W = 1400
 const PLAZA_H = 1760
@@ -334,7 +337,7 @@ export function MoiPlazaCanvas({ placed, equipped, crowd, onMoiClick, onMovePlac
           }
         }
         if (m.me) {
-          const label = new Text({ text: '나', style: { fontSize: 64, fill: 0x2a2320, fontWeight: '800' } })
+          const label = new Text({ text: translate(lang(), 'moiGather.meLabel'), style: { fontSize: 64, fill: 0x2a2320, fontWeight: '800' } })
           label.anchor.set(0.5)
           label.position.set(0, 70)
           node.addChild(label)

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useInvitationForm } from '../../hooks/invitation-create/useInvitationForm';
 import type { InvitationUploadItem } from '../../machines/invitationImageUpload.machine';
 import { sectionTitleClass } from './styles';
+import { useT } from '../../lib/i18n';
 
 /**
  * 갤러리 사진 그리드 + 다중 file input presentational — 낙관적 UI.
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function GalleryUploader({ items, onPickFiles, onRetryItem, onRemoveItem }: Props) {
+  const t = useT();
   const store = useInvitationForm();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -52,7 +54,7 @@ export function GalleryUploader({ items, onPickFiles, onRetryItem, onRemoveItem 
   return (
     <section className="space-y-4">
       <h2 className={sectionTitleClass}>
-        갤러리 사진 <span className="text-sm font-normal text-gray-400">({totalCount}/{MAX_GALLERY_PHOTOS})</span>
+        {t('invite.gallery.title')} <span className="text-sm font-normal text-gray-400">({totalCount}/{MAX_GALLERY_PHOTOS})</span>
       </h2>
       <div className="grid grid-cols-4 gap-2">
         {totalCount < MAX_GALLERY_PHOTOS && (
@@ -81,7 +83,7 @@ export function GalleryUploader({ items, onPickFiles, onRetryItem, onRemoveItem 
           >
             <img
               src={url}
-              alt={`갤러리 ${i + 1}`}
+              alt={t('invite.gallery.photoAlt', { n: i + 1 })}
               className="w-full h-full object-cover pointer-events-none"
             />
             <button
@@ -100,23 +102,23 @@ export function GalleryUploader({ items, onPickFiles, onRetryItem, onRemoveItem 
           >
             <img
               src={item.localUrl}
-              alt="업로드 중인 사진"
+              alt={t('invite.gallery.uploadingAlt')}
               className="w-full h-full object-cover pointer-events-none"
             />
             {item.status === 'uploading' && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-                <span className="text-sm font-medium text-gray-700">업로드 중</span>
+                <span className="text-sm font-medium text-gray-700">{t('invite.upload.uploadingShort')}</span>
               </div>
             )}
             {item.status === 'failed' && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white/70">
-                <span className="text-sm font-medium text-red-500">실패</span>
+                <span className="text-sm font-medium text-red-500">{t('invite.upload.failedShort')}</span>
                 <button
                   type="button"
                   onClick={() => onRetryItem(item.id)}
                   className="rounded-md bg-black/60 px-2 py-0.5 text-sm text-white hover:bg-black/80 transition-colors"
                 >
-                  재시도
+                  {t('invite.upload.retry')}
                 </button>
               </div>
             )}
@@ -130,10 +132,10 @@ export function GalleryUploader({ items, onPickFiles, onRetryItem, onRemoveItem 
           </div>
         ))}
       </div>
-      <p className="text-sm text-gray-400">최대 {MAX_GALLERY_PHOTOS}장까지 등록 가능합니다.</p>
+      <p className="text-sm text-gray-400">{t('invite.gallery.maxHint', { max: MAX_GALLERY_PHOTOS })}</p>
       {items.some((it) => it.status === 'failed') && (
         <p className="text-base text-red-500">
-          일부 사진 업로드에 실패했습니다. 실패한 칸에서 재시도하거나 제거해 주세요.
+          {t('invite.gallery.someFailed')}
         </p>
       )}
     </section>

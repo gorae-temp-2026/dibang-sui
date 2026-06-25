@@ -44,7 +44,7 @@ describe('HostSlotSection — 점유 기반 슬롯 렌더', () => {
     // 신랑 슬롯이 "채워짐"으로 이름 표시.
     expect(screen.getByText('박태원')).toBeInTheDocument()
     // 점유된 신랑 슬롯엔 '초대하기'가 없어야 함 → 빈 부모 슬롯 4개만 초대 버튼.
-    expect(screen.getAllByRole('button', { name: '초대하기' })).toHaveLength(4)
+    expect(screen.getAllByRole('button', { name: 'Invite' })).toHaveLength(4)
   })
 
   it('점유 없고 pending 초대가 있으면 대기중 + 공유/취소를 노출한다', () => {
@@ -56,8 +56,8 @@ describe('HostSlotSection — 점유 기반 슬롯 렌더', () => {
         occupiedSlots={new Set()}
       />,
     )
-    expect(screen.getByText('대기중')).toBeInTheDocument()
-    expect(screen.getByText('카카오톡 공유')).toBeInTheDocument()
+    expect(screen.getByText('Pending')).toBeInTheDocument()
+    expect(screen.getByText('Share on KakaoTalk')).toBeInTheDocument()
   })
 
   it('점유도 초대도 없으면 초대하기 버튼을 띄운다(배우자+부모 4 = 5개)', () => {
@@ -69,6 +69,6 @@ describe('HostSlotSection — 점유 기반 슬롯 렌더', () => {
         occupiedSlots={new Set()}
       />,
     )
-    expect(screen.getAllByRole('button', { name: '초대하기' })).toHaveLength(5)
+    expect(screen.getAllByRole('button', { name: 'Invite' })).toHaveLength(5)
   })
 })

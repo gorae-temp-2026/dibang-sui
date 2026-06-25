@@ -194,7 +194,7 @@ describe('inyeon.machine — 채팅 메시지/메모리', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
-  it('SEND_DM → 내 메시지 즉시 append, 900ms 뒤 상대 자동응답', async () => {
+  it('SEND_DM → 내 메시지 낙관적 append만, 가짜 자동응답 없음(실 송수신은 온체인 노트)', async () => {
     const a = start()
     const id = POOL.find((m) => m.tier === 0)!.id
     a.send({ type: 'OPEN_DM_ROOM', id })
@@ -203,10 +203,11 @@ describe('inyeon.machine — 채팅 메시지/메모리', () => {
     const afterSend = ctxOf(a).dms[id]
     expect(afterSend.length).toBe(seeded + 1)
     expect(afterSend.at(-1)?.me).toBe('안녕하세요')
+    // 가짜 자동응답(DM_REPLY) 제거됨 → 시간이 지나도 상대 메시지가 생기지 않는다. (D3)
     await vi.advanceTimersByTimeAsync(900)
-    const afterReply = ctxOf(a).dms[id]
-    expect(afterReply.length).toBe(seeded + 2)
-    expect(afterReply.at(-1)?.them).toBeTruthy()
+    const afterWait = ctxOf(a).dms[id]
+    expect(afterWait.length).toBe(seeded + 1)
+    expect(afterWait.some((msg) => msg.them)).toBe(false)
   })
 
   it('OPEN_MEMORY/CLOSE_MEMORY', () => {
@@ -217,12 +218,12 @@ describe('inyeon.machine — 채팅 메시지/메모리', () => {
     expect(ctxOf(a).memoryId).toBeNull()
   })
 
-  it('다른 화면으로 NAV(chat 떠남) → 열린 DM방·메모리·대화기록 초기화(원본 언마운트 보존)', async () => {
+  it('다른 화면으로 NAV(chat 떠남) → 열린 DM방·메모리·대화기록 초기화(원본 언마운트 보존)', () => {
     const a = start()
     a.send({ type: 'NAV', screen: 'chat' })
     const id = POOL.find((m) => m.tier === 0)!.id
     a.send({ type: 'OPEN_DM_ROOM', id })
-    a.send({ type: 'SEND_DM', id, text: '안녕' }) // 900ms 뒤 자동응답 예약됨
+    a.send({ type: 'SEND_DM', id, text: '안녕' })
     a.send({ type: 'OPEN_MEMORY', id })
     expect(ctxOf(a).dmRoomId).toBe(id)
     a.send({ type: 'NAV', screen: 'universe' }) // chat → universe (화면 바뀜 = 언마운트)
@@ -231,9 +232,6 @@ describe('inyeon.machine — 채팅 메시지/메모리', () => {
     expect(c.memoryId).toBeNull()
     expect(c.dms).toEqual({})
     expect(c.screen).toBe('universe')
-    // 보류 중이던 자동응답이 뒤늦게 와도 닫힌 대화를 되살리지 않는다(원본: 언마운트로 콜백 무효).
-    await vi.advanceTimersByTimeAsync(900)
-    expect(ctxOf(a).dms).toEqual({})
   })
 
   it('같은 화면 재NAV(chat 탭 재클릭) → 열린 DM방·메시지 유지(원본: 언마운트 안 됨)', () => {

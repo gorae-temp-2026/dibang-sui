@@ -27,6 +27,7 @@ import { pointsToFillPath, pointsToFillPathWithBounds, toolOptions, type DrawPoi
 import { STICKER_PRESETS } from '../../lib/stickerPresets';
 import { FontSelect } from './FontSelect';
 import { inputClass } from './styles';
+import { useT } from '../../lib/i18n';
 
 type Tool = 'select' | 'draw' | 'text' | 'image';
 
@@ -36,27 +37,28 @@ interface CanvasEditorProps {
   onUploadImage: (file: File) => Promise<string | null>;
 }
 
-const TOOLS: { value: Tool; label: string }[] = [
-  { value: 'select', label: '선택' },
-  { value: 'draw', label: '그리기' },
-  { value: 'text', label: '텍스트' },
-  { value: 'image', label: '이미지' },
+const TOOLS: { value: Tool; labelKey: string }[] = [
+  { value: 'select', labelKey: 'invite.tool.select' },
+  { value: 'draw', labelKey: 'invite.tool.draw' },
+  { value: 'text', labelKey: 'invite.tool.text' },
+  { value: 'image', labelKey: 'invite.tool.image' },
 ];
 
 const chipBase = 'rounded-lg border px-3 py-1.5 text-base font-medium transition-colors disabled:opacity-40';
 const chip = (active: boolean) =>
   `${chipBase} ${active ? 'border-sky-400 bg-sky-50 text-sky-700' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`;
 
-const DRAW_TOOLS: { value: LetteringTool; label: string }[] = [
-  { value: 'pen', label: '펜' },
-  { value: 'brush', label: '붓' },
+const DRAW_TOOLS: { value: LetteringTool; labelKey: string }[] = [
+  { value: 'pen', labelKey: 'invite.brush.pen' },
+  { value: 'brush', labelKey: 'invite.brush.brush' },
 ];
 const MIN_WIDTH = 1;
 const MAX_WIDTH = 12;
 const DEFAULT_WIDTH = 4;
 const DEFAULT_DRAW_COLOR = '#222222';
 
-const DEFAULT_TEXT = '텍스트 입력';
+// 기본 텍스트 = 생성·렌더 fallback·자동선택 비교의 단일 sentinel. 영문 고정(영문 서비스).
+const DEFAULT_TEXT = 'Enter text';
 const DEFAULT_FONT_SIZE = 24;
 const MIN_FONT_SIZE = 12;
 const MAX_FONT_SIZE = 80;
@@ -104,14 +106,14 @@ interface KonvaCommonProps {
 /* ---------- 레이어 패널 ---------- */
 
 /** 레이어 목록에 표시할 요소 라벨. */
-function layerLabel(item: CanvasItem): string {
-  if (item.type === 'drawing') return '그리기';
+function layerLabel(item: CanvasItem, t: (k: string) => string): string {
+  if (item.type === 'drawing') return t('invite.layer.drawing');
   if (item.type === 'text') {
-    const t = item.text.trim();
-    if (!t) return '텍스트';
-    return t.length > 14 ? `${t.slice(0, 14)}…` : t;
+    const text = item.text.trim();
+    if (!text) return t('invite.layer.text');
+    return text.length > 14 ? `${text.slice(0, 14)}…` : text;
   }
-  return item.isSticker ? '스티커' : '이미지';
+  return item.isSticker ? t('invite.layer.sticker') : t('invite.layer.image');
 }
 
 interface LayerRowProps {
@@ -123,6 +125,7 @@ interface LayerRowProps {
 }
 
 function LayerRow({ item, label, selected, onSelect, onRemove }: LayerRowProps) {
+  const t = useT();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
   });
@@ -147,7 +150,7 @@ function LayerRow({ item, label, selected, onSelect, onRemove }: LayerRowProps) 
         type="button"
         onClick={onSelect}
         onPointerDown={(e) => e.stopPropagation()}
-        aria-label={`레이어 선택: ${label}`}
+        aria-label={t('invite.canvas.selectLayer', { label })}
         className="flex-1 min-w-0 truncate text-left text-sm text-gray-700"
       >
         {label}
@@ -156,10 +159,10 @@ function LayerRow({ item, label, selected, onSelect, onRemove }: LayerRowProps) 
         type="button"
         onClick={onRemove}
         onPointerDown={(e) => e.stopPropagation()}
-        aria-label="레이어 삭제"
+        aria-label={t('invite.canvas.deleteLayer')}
         className="shrink-0 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors"
       >
-        삭제
+        {t('invite.common.delete')}
       </button>
     </li>
   );
@@ -168,6 +171,7 @@ function LayerRow({ item, label, selected, onSelect, onRemove }: LayerRowProps) 
 /* ---------- 메인 에디터 ---------- */
 
 export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorProps) {
+  const t = useT();
   // 도구 모드(tool)·이미지 탭·업로드 진행은 머신(canvasEditor). 그리기/선택은 캔버스 로컬 유지.
   const [canvasState, canvasSend] = useMachine(canvasEditorMachine);
   const tool = canvasState.context.tool;
@@ -564,7 +568,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
       {/* 섹션 헤더 */}
       <div className="space-y-2">
         <label className="block">
-          <span className="block text-base text-gray-700 mb-1">부제목 (영문)</span>
+          <span className="block text-base text-gray-700 mb-1">{t('invite.canvas.subtitleEn')}</span>
           <input
             type="text"
             value={config.subtitle ?? ''}
@@ -574,12 +578,12 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
           />
         </label>
         <label className="block">
-          <span className="block text-base text-gray-700 mb-1">제목 (한글)</span>
+          <span className="block text-base text-gray-700 mb-1">{t('invite.canvas.titleKo')}</span>
           <input
             type="text"
             value={config.title ?? ''}
             onChange={(e) => onChange({ ...config, title: e.target.value })}
-            placeholder="그림판"
+            placeholder={t('invite.canvas.boardPlaceholder')}
             className={inputClass}
           />
         </label>
@@ -587,17 +591,17 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
 
       {/* 도구 바 */}
       <div className="flex flex-wrap items-center gap-2">
-        {TOOLS.map((t) => (
+        {TOOLS.map((toolDef) => (
           <button
-            key={t.value}
+            key={toolDef.value}
             type="button"
             onClick={() => {
-              canvasSend({ type: 'SET_TOOL', tool: t.value });
+              canvasSend({ type: 'SET_TOOL', tool: toolDef.value });
               deselect();
             }}
-            className={chip(tool === t.value)}
+            className={chip(tool === toolDef.value)}
           >
-            {t.label}
+            {t(toolDef.labelKey)}
           </button>
         ))}
       </div>
@@ -607,13 +611,13 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
         {tool === 'draw' ? (
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-base text-gray-700">도구</span>
-              {DRAW_TOOLS.map((t) => (
-                <button key={t.value} type="button" onClick={() => setDrawTool(t.value)} className={chip(drawTool === t.value)}>
-                  {t.label}
+              <span className="text-base text-gray-700">{t('invite.canvas.tools')}</span>
+              {DRAW_TOOLS.map((dt) => (
+                <button key={dt.value} type="button" onClick={() => setDrawTool(dt.value)} className={chip(drawTool === dt.value)}>
+                  {t(dt.labelKey)}
                 </button>
               ))}
-              <span className="text-base text-gray-700 ml-2">색</span>
+              <span className="text-base text-gray-700 ml-2">{t('invite.canvas.color')}</span>
               {['#222222', '#e00000', '#1a6be0', '#ffffff'].map((c) => (
                 <button
                   key={c}
@@ -625,11 +629,11 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
               ))}
               <label className="relative w-7 h-7 shrink-0 rounded-full border-2 border-dashed border-gray-300 hover:border-gray-400 cursor-pointer flex items-center justify-center transition-colors" style={{ backgroundColor: drawColor }}>
                 <span className="text-white text-sm font-bold leading-none drop-shadow-[0_0_2px_rgba(0,0,0,.5)]">+</span>
-                <input type="color" value={drawColor} onChange={(e) => setDrawColor(e.target.value)} aria-label="획 색" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                <input type="color" value={drawColor} onChange={(e) => setDrawColor(e.target.value)} aria-label={t('invite.canvas.strokeColor')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
               </label>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-base text-gray-700 shrink-0">굵기</span>
+              <span className="text-base text-gray-700 shrink-0">{t('invite.canvas.thickness')}</span>
               <input
                 type="range"
                 min={MIN_WIDTH}
@@ -637,17 +641,17 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
                 step={1}
                 value={drawWidth}
                 onChange={(e) => setDrawWidth(Number(e.target.value))}
-                aria-label="획 굵기"
+                aria-label={t('invite.canvas.strokeWidth')}
                 className="flex-1 accent-sky-500 cursor-pointer"
               />
               <span className="text-sm text-gray-500 tabular-nums w-6 text-right">{drawWidth}</span>
             </div>
             <div className="flex items-center gap-2">
               <button type="button" className={chip(false)} onClick={undoDraw} disabled={!config.items.some((it) => it.type === 'drawing')}>
-                되돌리기
+                {t('invite.canvas.undo')}
               </button>
               <button type="button" className={chip(false)} onClick={redoDraw} disabled={drawRedo.length === 0}>
-                앞으로
+                {t('invite.canvas.redo')}
               </button>
             </div>
           </div>
@@ -655,10 +659,10 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
           <div className="space-y-3">
             <div className="flex gap-2">
               <button type="button" className={chip(imageTab === 'upload')} onClick={() => canvasSend({ type: 'SET_IMAGE_TAB', tab: 'upload' })}>
-                이미지 업로드
+                {t('invite.canvas.uploadImage')}
               </button>
               <button type="button" className={chip(imageTab === 'sticker')} onClick={() => canvasSend({ type: 'SET_IMAGE_TAB', tab: 'sticker' })}>
-                이모지 스티커
+                {t('invite.canvas.emojiSticker')}
               </button>
             </div>
             {imageTab === 'upload' ? (
@@ -680,7 +684,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
                   disabled={uploading}
                   className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
                 >
-                  {uploading ? '업로드 중...' : '이미지 선택'}
+                  {uploading ? t('invite.common.uploading') : t('invite.canvas.pickImage')}
                 </button>
               </div>
             ) : (
@@ -690,10 +694,10 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
                     key={s.id}
                     type="button"
                     onClick={() => addImageItem(s.url, true, 120, 120)}
-                    aria-label={s.name}
+                    aria-label={t(s.nameKey)}
                     className="aspect-square rounded-lg border border-gray-200 bg-white p-2 hover:border-sky-300 transition-colors"
                   >
-                    <img src={s.url} alt={s.name} className="w-full h-full object-contain" />
+                    <img src={s.url} alt={t(s.nameKey)} className="w-full h-full object-contain" />
                   </button>
                 ))}
               </div>
@@ -704,21 +708,21 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
             {selectedItem.type === 'text' && (
               <>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-base text-gray-700">폰트</span>
+                  <span className="text-base text-gray-700">{t('invite.canvas.font')}</span>
                   <FontSelect
                     value={selectedItem.fontFamily}
                     onChange={(font) => updateItem(selectedItem.id, { fontFamily: font })}
                     fonts={SYSTEM_FONTS}
                     className="min-w-[160px]"
                   />
-                  <span className="text-base text-gray-700 ml-2">색</span>
+                  <span className="text-base text-gray-700 ml-2">{t('invite.canvas.color')}</span>
                   <label className="relative w-7 h-7 shrink-0 rounded-full border-2 border-dashed border-gray-300 hover:border-gray-400 cursor-pointer flex items-center justify-center transition-colors" style={{ backgroundColor: selectedItem.color }}>
                     <span className="text-white text-sm font-bold leading-none drop-shadow-[0_0_2px_rgba(0,0,0,.5)]">+</span>
-                    <input type="color" value={selectedItem.color} onChange={(e) => updateItem(selectedItem.id, { color: e.target.value })} aria-label="텍스트 색" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                    <input type="color" value={selectedItem.color} onChange={(e) => updateItem(selectedItem.id, { color: e.target.value })} aria-label={t('invite.canvas.textColor')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                   </label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-base text-gray-700 shrink-0">크기</span>
+                  <span className="text-base text-gray-700 shrink-0">{t('invite.canvas.size')}</span>
                   <input
                     type="range"
                     min={MIN_FONT_SIZE}
@@ -726,7 +730,7 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
                     step={1}
                     value={selectedItem.fontSize}
                     onChange={(e) => updateItem(selectedItem.id, { fontSize: Number(e.target.value) })}
-                    aria-label="글씨 크기"
+                    aria-label={t('invite.canvas.fontSize')}
                     className="flex-1 accent-sky-500 cursor-pointer"
                   />
                   <span className="text-sm text-gray-500 tabular-nums w-8 text-right">{selectedItem.fontSize}</span>
@@ -734,18 +738,18 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
               </>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">선택된 요소</span>
+              <span className="text-sm text-gray-500">{t('invite.canvas.selectedElement')}</span>
               <button
                 type="button"
                 onClick={() => removeItem(selectedItem.id)}
                 className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors"
               >
-                삭제
+                {t('invite.common.delete')}
               </button>
             </div>
           </div>
         ) : (
-          <p className="text-base text-gray-500">요소를 선택하거나 위 도구를 골라 편집하세요.</p>
+          <p className="text-base text-gray-500">{t('invite.canvas.editHint')}</p>
         )}
       </div>
 
@@ -907,9 +911,9 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
 
       {/* 레이어 패널 */}
       <div className="rounded-lg border border-gray-200 bg-white p-3">
-        <div className="mb-2 text-base font-medium text-gray-700">레이어</div>
+        <div className="mb-2 text-base font-medium text-gray-700">{t('invite.canvas.layers')}</div>
         {ordered.length === 0 ? (
-          <p className="text-base text-gray-500">추가된 요소가 없습니다.</p>
+          <p className="text-base text-gray-500">{t('invite.canvas.noElements')}</p>
         ) : (
           <DndContext sensors={layerSensors} collisionDetection={closestCorners} onDragEnd={handleLayerDragEnd}>
             <SortableContext items={layers.map((it) => it.id)} strategy={verticalListSortingStrategy}>
@@ -917,12 +921,12 @@ export function CanvasEditor({ config, onChange, onUploadImage }: CanvasEditorPr
                 {(() => {
                   const baseCounts = new Map<string, number>();
                   layers.forEach((it) => {
-                    const base = layerLabel(it);
+                    const base = layerLabel(it, t);
                     baseCounts.set(base, (baseCounts.get(base) ?? 0) + 1);
                   });
                   const runCounts = new Map<string, number>();
                   return layers.map((item) => {
-                    const base = layerLabel(item);
+                    const base = layerLabel(item, t);
                     const total = baseCounts.get(base) ?? 1;
                     let label = base;
                     if (total > 1) {

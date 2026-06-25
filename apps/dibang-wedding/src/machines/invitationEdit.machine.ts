@@ -1,4 +1,6 @@
 import { setup, assign } from 'xstate';
+import { translate, useLangStore } from '../lib/i18n';
+const lang = () => useLangStore.getState().lang;
 
 // invitationEdit.machine — 청첩장 수정 페이지 flow (InvitationEditPage 연결, XS-7).
 //
@@ -71,12 +73,14 @@ export const invitationEditMachine = setup({
     setSlugTaken: assign({ slugStatus: 'taken' }),
     setSlugError: assign({ slugStatus: 'error' }),
     incrementSaveAttempts: assign({ saveAttempts: ({ context }) => context.saveAttempts + 1 }),
-    toastUploadWait: assign({ toast: '사진 업로드가 끝나면 저장할 수 있어요' }),
+    toastUploadWait: assign({ toast: () => translate(lang(), 'machine.save.uploadWait') }),
     toastMissing: assign({
       toast: ({ event }) =>
-        event.type === 'SAVE' && event.missing[0] ? `${event.missing[0]}을(를) 입력해주세요` : null,
+        event.type === 'SAVE' && event.missing[0]
+          ? translate(lang(), 'machine.save.fieldRequired', { field: event.missing[0] })
+          : null,
     }),
-    toastSlugCheck: assign({ toast: '공유 링크 중복 확인이 필요해요' }),
+    toastSlugCheck: assign({ toast: () => translate(lang(), 'machine.save.slugCheckNeeded') }),
     toastSaveError: assign({ toast: (_, p: { error: string }) => p.error }),
     clearToast: assign({ toast: null }),
     setConflict: assign({ hasConflict: true }),
@@ -112,13 +116,13 @@ export const invitationEditMachine = setup({
           },
         },
         loadError: {
-          description: '데이터 로딩 실패 — network면 재시도 가능',
+          description: 'Data load failed — retryable when network error',
           on: {
             RETRY_LOAD: { guard: 'isNetworkError', target: 'loading', actions: 'clearLoadError' },
           },
         },
         editing: {
-          description: '편집 — 저장 가드 체인(업로드중→필수누락→slug미확인→통과)',
+          description: 'Editing — save guard chain (uploading -> missing fields -> slug unchecked -> pass)',
           on: {
             FIELD_CHANGED: { actions: 'markDirty' },
             SAVE: [
@@ -135,7 +139,7 @@ export const invitationEditMachine = setup({
           },
         },
         saving: {
-          description: 'updateWedding + updateInvitation API 호출(컴포넌트가 결과 send)',
+          description: 'updateWedding + updateInvitation API calls (component sends result)',
           entry: 'clearToast',
           on: {
             SAVE_SUCCESS: { target: 'success', actions: 'clearDirty' },
@@ -144,28 +148,28 @@ export const invitationEditMachine = setup({
               target: 'editing',
               actions: {
                 type: 'toastSaveError',
-                params: ({ event }) => ({ error: event.type === 'SAVE_ERROR' ? event.error : '저장에 실패했습니다.' }),
+                params: ({ event }) => ({ error: event.type === 'SAVE_ERROR' ? event.error : translate(lang(), 'machine.save.failed') }),
               },
             },
             SAVE_CONFLICT: { target: 'conflict', actions: 'setConflict' },
           },
         },
         conflict: {
-          description: '서버 데이터 충돌(낙관잠금) — 강제 저장 또는 서버 데이터 재로드',
+          description: 'Server data conflict (optimistic lock) — force save or reload server data',
           on: {
             FORCE_SAVE: { target: 'saving', actions: ['clearConflict', 'incrementSaveAttempts'] },
             RELOAD_SERVER_DATA: { target: 'loading', actions: ['clearConflict', 'clearDirty'] },
           },
         },
-        success: { description: '저장 완료 — 컴포넌트 navigate', type: 'final' },
+        success: { description: 'Save complete — component navigates', type: 'final' },
         confirmingLeave: {
-          description: '미저장 변경 경고 모달',
+          description: 'Unsaved changes warning modal',
           on: {
             CONFIRM_LEAVE: { target: 'left' },
             CANCEL_LEAVE: { target: 'editing' },
           },
         },
-        left: { description: '페이지 이탈 확정 — 컴포넌트 navigate', type: 'final' },
+        left: { description: 'Leave confirmed — component navigates', type: 'final' },
       },
     },
 

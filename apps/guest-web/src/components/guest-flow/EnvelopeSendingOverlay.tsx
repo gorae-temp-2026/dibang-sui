@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { serif, colors } from '../../styles/tokens';
+import { useT } from '../../lib/i18n';
 
 interface Props {
   visible: boolean;
@@ -42,6 +43,7 @@ function EnvelopeSVG({ onComplete }: { onComplete: () => void }) {
 }
 
 export function EnvelopeSendingOverlay({ visible, onDone }: Props) {
+  const t = useT();
   return (
     <AnimatePresence>
       {visible && (
@@ -69,7 +71,7 @@ export function EnvelopeSendingOverlay({ visible, onDone }: Props) {
             transition={{ delay: 0.3, duration: 0.4 }}
             style={{ ...serif, fontSize: 16, color: colors.textSubtle }}
           >
-            메시지를 전달 중입니다
+            {t('guestFlow.envelopeSending')}
           </motion.p>
         </motion.div>
       )}

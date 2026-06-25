@@ -3,6 +3,8 @@
 // sendGift actor는 온체인 gift::gift(MoiItem 이전 + GIFT 신호) 호출.
 import { setup, assign, fromPromise, createActor } from 'xstate'
 import { ITEM_BY_ID } from '../components/moi-gather/data'
+import { translate, useLangStore } from '../lib/i18n'
+const lang = () => useLangStore.getState().lang;
 
 export interface GiftEvent {
   id: number
@@ -111,7 +113,7 @@ export const giftMachine = setup({
             }
           }),
         },
-        onError: { target: 'idle', actions: assign({ error: () => '선물을 보내지 못했어요. 다시 시도해주세요.', pending: () => null }) },
+        onError: { target: 'idle', actions: assign({ error: () => translate(lang(), 'machine.gift.failed'), pending: () => null }) },
       },
     },
   },

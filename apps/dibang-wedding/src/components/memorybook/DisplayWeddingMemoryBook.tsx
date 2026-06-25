@@ -12,13 +12,28 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fonts } from '../../lib/theme'
 import type { MemoryBookData } from './MemoryBookV2_4Types'
+import { useLang, type Lang } from '../../lib/i18n'
 
 // ---------------------------------------------------------------------------
 // Inline helpers (v2 의존 제거)
 // ---------------------------------------------------------------------------
 
-function formatKoreanDate(date: string, time?: string): string {
+function formatWeddingDate(lang: Lang, date: string, time?: string): string {
   const d = new Date(`${date}T00:00:00`)
+  if (lang === 'en') {
+    let result = d.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+    if (time) {
+      const [, m] = time.split(':').map(Number)
+      const dt = new Date(`${date}T${time}:00`)
+      result += `, ${dt.toLocaleTimeString('en-US', { hour: 'numeric', ...(m > 0 ? { minute: '2-digit' } : {}) })}`
+    }
+    return result
+  }
   const year = d.getFullYear()
   const month = d.getMonth() + 1
   const day = d.getDate()
@@ -221,6 +236,7 @@ export default function DisplayWeddingMemoryBook({
   data,
 }: DisplayWeddingMemoryBookProps) {
   const { couple, mecMessages, displayPhotos } = data
+  const lang = useLang()
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0)
@@ -483,7 +499,7 @@ export default function DisplayWeddingMemoryBook({
                 fontWeight: fonts.serif.weight,
               }}
             >
-              {formatKoreanDate(couple.weddingDate, couple.time)}
+              {formatWeddingDate(lang, couple.weddingDate, couple.time)}
             </div>
             <div
               style={{

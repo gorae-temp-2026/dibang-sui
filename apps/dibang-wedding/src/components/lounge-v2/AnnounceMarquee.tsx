@@ -1,4 +1,5 @@
 import type { Announcement } from '../../types/db-compat';
+import { useT } from '../../lib/i18n';
 
 // 공지 marquee — 프로토타입 .announce-row.marquee-row/.announce-ticker/.announce-msg 정합.
 // pl-[100%] + 메시지 2벌 + translateX 0→-100%(lng-marquee 36s)로 끊김 없는 좌→우 흐름.
@@ -20,6 +21,7 @@ function SpeakerIcon() {
 }
 
 function MarqueeRow({ announcements, hostSideMap }: { announcements: Announcement[]; hostSideMap?: Record<string, string> }) {
+  const t = useT();
   return (
     <>
       {announcements.map((a) => {
@@ -30,7 +32,7 @@ function MarqueeRow({ announcements, hostSideMap }: { announcements: Announcemen
               <SpeakerIcon />
             </span>
             <span className="shrink-0 rounded-full bg-lng-pink px-[6px] py-[2px] text-[14px] font-bold tracking-[0.04em] text-lng-pink-ink">
-              공지
+              {t('loungeV2.announce.badge')}
             </span>
             {side && (
               <span className="shrink-0 text-[14px] font-medium text-lng-brand">{side}</span>
@@ -44,10 +46,11 @@ function MarqueeRow({ announcements, hostSideMap }: { announcements: Announcemen
 }
 
 export function AnnounceMarquee({ announcements, hostSideMap }: AnnounceMarqueeProps) {
+  const t = useT();
   if (announcements.length === 0) return null;
 
   return (
-    <div className="group mb-1 w-full overflow-hidden py-[10px]" aria-label="공지">
+    <div className="group mb-1 w-full overflow-hidden py-[10px]" aria-label={t('loungeV2.announce.badge')}>
       <div className="inline-flex flex-nowrap whitespace-nowrap pl-[100%] animate-lng-marquee will-change-transform group-hover:[animation-play-state:paused]">
         <MarqueeRow announcements={announcements} hostSideMap={hostSideMap} />
         <MarqueeRow announcements={announcements} hostSideMap={hostSideMap} />

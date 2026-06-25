@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SECTION_LABELS, REQUIRED_SECTIONS, type SectionEntry } from '../../types/invitationDesignConfig';
+import { useT } from '../../lib/i18n';
 
 interface Props {
   sections: SectionEntry[];
@@ -30,6 +31,7 @@ interface SortableItemProps {
 
 // 한 섹션 행 = 정렬 가능한 항목. 드래그는 핸들(햄버거)에만 걸어 체크박스 클릭과 분리한다.
 function SortableItem({ entry, required, onToggle }: SortableItemProps) {
+  const t = useT();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: entry.key,
   });
@@ -66,7 +68,7 @@ function SortableItem({ entry, required, onToggle }: SortableItemProps) {
         {SECTION_LABELS[entry.key].name}
         <span className="text-gray-400 ml-1">({SECTION_LABELS[entry.key].sub})</span>
       </span>
-      {required && <span className="text-base text-sky-600 shrink-0">필수</span>}
+      {required && <span className="text-base text-sky-600 shrink-0">{t('invite.required')}</span>}
     </li>
   );
 }

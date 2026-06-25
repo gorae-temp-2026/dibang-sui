@@ -16,8 +16,10 @@ import { MAX_GALLERY_PHOTOS } from '../components/invitation-create/GalleryUploa
 import { PreviewPanel } from '../components/invitation-create/PreviewPanel';
 import { SlugModal } from '../components/invitation-create/SlugModal';
 import { Toast } from '../components/invitation-create/Toast';
+import { useT } from '../lib/i18n';
 
 export function InvitationCreatePage() {
+  const t = useT();
   // UI 토글 — flow 아님(STATE_MANAGEMENT.md): useState 유지
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [focusedSection, setFocusedSection] = useState<{ section: string; key: number } | undefined>();
@@ -124,7 +126,7 @@ export function InvitationCreatePage() {
     if (!flowActor.getSnapshot().matches('saving')) return;
 
     const onError = (e: unknown) =>
-      send({ type: 'SAVE_ERROR', error: e instanceof Error ? e.message : '저장에 실패했습니다.' });
+      send({ type: 'SAVE_ERROR', error: e instanceof Error ? e.message : t('page.invitation.saveFailed') });
 
     if (isAddMode) {
       addInvitation(
@@ -181,7 +183,7 @@ export function InvitationCreatePage() {
           disabled={isSaving}
           className="rounded-lg bg-sky-500 px-4 py-2 text-base font-semibold text-white hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {isSaving ? '저장 중...' : '저장하기'}
+          {isSaving ? t('invite.common.saving') : t('page.invitation.save')}
         </button>
       </header>
 
@@ -193,7 +195,7 @@ export function InvitationCreatePage() {
             mobileTab === 'edit' ? 'text-navy border-b-2 border-navy' : 'text-muted'
           }`}
         >
-          편집
+          {t('page.invitation.editTab')}
         </button>
         <button
           onClick={() => setMobileTab('preview')}
@@ -201,7 +203,7 @@ export function InvitationCreatePage() {
             mobileTab === 'preview' ? 'text-navy border-b-2 border-navy' : 'text-muted'
           }`}
         >
-          미리보기
+          {t('page.invitation.previewTab')}
         </button>
       </div>
 
@@ -212,7 +214,7 @@ export function InvitationCreatePage() {
         </div>
         <div className="basis-7/12 overflow-y-auto">
           <EditPanel
-            title={isAddMode ? '청첩장 추가' : '청첩장 만들기'}
+            title={isAddMode ? t('page.invitation.addTitle') : t('invite.title')}
             invitationOnly={isAddMode}
             onFocusSection={handleFocusSection}
             onPlayAnimation={handlePlayAnimation}
@@ -234,7 +236,7 @@ export function InvitationCreatePage() {
       <div className="flex-1 overflow-y-auto scrollbar-hide md:hidden">
         {mobileTab === 'edit' ? (
           <EditPanel
-            title={isAddMode ? '청첩장 추가' : '청첩장 만들기'}
+            title={isAddMode ? t('page.invitation.addTitle') : t('invite.title')}
             invitationOnly={isAddMode}
             onFocusSection={handleFocusSection}
             onPlayAnimation={handlePlayAnimation}

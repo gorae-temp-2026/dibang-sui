@@ -8,7 +8,7 @@ import type { ParticipatedWedding } from '../types/db-compat';
 import { useOnchainWeddingList } from '../hooks/useOnchainWeddingList';
 import { colors, fonts } from '../lib/theme';
 import { useJoinWeddingFromParam } from '../queries/wedding-list/useJoinWeddingFromParam';
-import { useT } from '../lib/i18n';
+import { useT, useLang, type Lang } from '../lib/i18n';
 
 // 이벤트 일반화: type(wedding|party) + party는 title 표시. fixture에서 주입(없으면 wedding).
 type EventItem = ParticipatedWedding & { type?: 'wedding' | 'party'; title?: string };
@@ -22,11 +22,24 @@ function formatDday(dateStr: string): string {
   return diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
 }
 
-function formatDateKorean(dateStr: string, time?: string): string {
+function formatEventDate(dateStr: string, lang: Lang, time?: string): string {
   const d = new Date(dateStr + 'T00:00:00');
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
   const day = d.getDate();
+  if (lang === 'en') {
+    const enDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let result = `${enMonths[d.getMonth()]} ${day}, ${year} (${enDays[d.getDay()]})`;
+    if (time) {
+      const [h, m] = time.split(':');
+      const hour = Number(h);
+      const ampm = hour < 12 ? 'AM' : 'PM';
+      const h12 = hour % 12 || 12;
+      result += ` ${h12}:${m} ${ampm}`;
+    }
+    return result;
+  }
   const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
   const dayName = dayNames[d.getDay()];
   let result = `${year}년 ${month}월 ${day}일 (${dayName})`;
@@ -42,6 +55,7 @@ function formatDateKorean(dateStr: string, time?: string): string {
 
 function EventCard({ wedding, onClick }: { wedding: EventItem; onClick: () => void }) {
   const t = useT();
+  const lang = useLang();
   const isParty = wedding.type === 'party';
   const displayName = isParty ? wedding.title ?? t('events.badge.party') : `${wedding.groom_name} & ${wedding.bride_name}`;
   const d = new Date(wedding.date + 'T00:00:00');
@@ -160,7 +174,7 @@ function EventCard({ wedding, onClick }: { wedding: EventItem; onClick: () => vo
               {displayName}
             </div>
             <div style={{ marginTop: 8, fontSize: 16, color: '#FFFFFF' }}>
-              {formatDateKorean(wedding.date, wedding.time)}
+              {formatEventDate(wedding.date, lang, wedding.time)}
             </div>
           </div>
         </div>
@@ -249,10 +263,10 @@ export function WeddingListPage() {
     .filter((ow) => !ow.weddingId || !dbIds.has(ow.weddingId))
     .map((ow): EventItem => ({
       id: ow.weddingId ?? ow.eventId,
-      groom_name: ow.role === 'host' ? '혼주' : '',
+      groom_name: ow.role === 'host' ? t('page.weddingList.host') : '',
       bride_name: '',
       date: ow.date || new Date().toISOString().slice(0, 10),
-      venue_name: '온체인 결혼식',
+      venue_name: t('page.weddingList.onchainWedding'),
       venue_hall: ow.creator.slice(0, 10) + '...',
       lounge_id: '',
       type: 'wedding',

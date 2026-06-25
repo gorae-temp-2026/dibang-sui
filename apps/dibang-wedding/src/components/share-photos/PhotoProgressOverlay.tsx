@@ -1,19 +1,21 @@
 import type { FileProgress } from '../../machines/sharePhotoUpload.machine';
+import { useT } from '../../lib/i18n';
 
 interface Props {
   progress?: FileProgress;
 }
 
-const LABEL: Record<FileProgress['state'], string> = {
-  queued: '대기중',
-  converting: '변환중',
-  requesting: '준비중',
-  uploading: '업로드중',
-  done: '완료',
-  failed: '실패',
+const LABEL_KEY: Record<FileProgress['state'], string> = {
+  queued: 'share.progress.queued',
+  converting: 'share.progress.converting',
+  requesting: 'share.progress.requesting',
+  uploading: 'share.progress.uploading',
+  done: 'share.progress.done',
+  failed: 'share.progress.failed',
 };
 
 export function PhotoProgressOverlay({ progress }: Props) {
+  const t = useT();
   if (!progress) return null;
   const { state, percent, error } = progress;
 
@@ -30,7 +32,7 @@ export function PhotoProgressOverlay({ progress }: Props) {
   if (state === 'failed') {
     return (
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/55 text-center">
-        <span className="text-sm font-semibold text-white">실패</span>
+        <span className="text-sm font-semibold text-white">{t('share.progress.failed')}</span>
         {error && <span className="px-2 text-sm text-white/90 line-clamp-2">{error}</span>}
       </div>
     );
@@ -38,7 +40,7 @@ export function PhotoProgressOverlay({ progress }: Props) {
 
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40">
-      <span className="text-sm font-semibold text-white">{LABEL[state]}</span>
+      <span className="text-sm font-semibold text-white">{t(LABEL_KEY[state])}</span>
       {state === 'uploading' && (
         <>
           <span className="text-sm font-bold text-white">{percent}%</span>

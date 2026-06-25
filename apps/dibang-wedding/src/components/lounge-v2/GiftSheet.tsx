@@ -3,6 +3,7 @@
 // 들러리 일부 담당 = tier0 인연 페르소나(서아·하늘·하린) 매칭 → 라운지=인연 동일 인물(실명·실사진).
 import { useState } from 'react'
 import { Clock } from 'lucide-react'
+import { useT } from '../../lib/i18n'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet'
 import {
   ROLE_SLOTS_DONE,
@@ -33,6 +34,7 @@ function teamClass(team?: string) {
 
 // 들러리 얼굴 — 실사진(페르소나) 우선, 없거나 깨지면 손그림 모이 head로 fallback.
 function MoiFace({ slot, dashed }: { slot: RoleSlot; dashed?: boolean }) {
+  const t = useT()
   const [failed, setFailed] = useState(false)
   const headUrl = `${MOI_HEAD_BASE}/${slot.head ?? 'chu_default'}.png`
   const usePhoto = !!slot.photoUrl && !failed
@@ -40,7 +42,7 @@ function MoiFace({ slot, dashed }: { slot: RoleSlot; dashed?: boolean }) {
     <div className={`h-11 w-11 overflow-hidden rounded-full bg-lng-surface ring-2 ring-white ${dashed ? 'outline-dashed outline-1 outline-lng-navy/25' : ''}`}>
       <img
         src={usePhoto ? slot.photoUrl : headUrl}
-        alt={slot.name ?? '모이'}
+        alt={slot.name ?? t('loungeV2.gift.moiAlt')}
         onError={() => setFailed(true)}
         className={usePhoto ? 'h-full w-full object-cover' : 'h-full w-full object-contain p-[3px]'}
         draggable={false}
@@ -75,6 +77,7 @@ function DoneSlot({ slot }: { slot: RoleSlot }) {
 }
 
 function PendingSlot({ slot }: { slot: RoleSlot }) {
+  const t = useT()
   const cd = slot.deadline ? timeUntil(slot.deadline) : null
   return (
     <div className="rounded-2xl border border-dashed border-lng-navy/30 bg-lng-surface px-2.5 py-2.5 text-center">
@@ -85,28 +88,29 @@ function PendingSlot({ slot }: { slot: RoleSlot }) {
           <span className="absolute -bottom-1 -right-1 text-[14px]">✋</span>
         </div>
       </div>
-      <div className="text-[10.5px] text-lng-muted">후보자 {slot.candidates}명</div>
+      <div className="text-[10.5px] text-lng-muted">{t('loungeV2.gift.candidates', { n: slot.candidates })}</div>
       {cd && (
-        <div className="mt-0.5 text-[10px] font-semibold text-lng-coral">{cd.expired ? '마감' : `마감 ${cd.label}`}</div>
+        <div className="mt-0.5 text-[10px] font-semibold text-lng-coral">{cd.expired ? t('loungeV2.gift.closed') : t('loungeV2.gift.closesIn', { label: cd.label })}</div>
       )}
       <div className="mt-1.5 flex gap-1">
-        <button type="button" className="flex-1 rounded-lg bg-lng-navy py-1 text-[10.5px] font-bold text-white">지원</button>
-        <button type="button" className="flex-1 rounded-lg border border-lng-line bg-white py-1 text-[10.5px] font-bold text-lng-ink">추천</button>
+        <button type="button" className="flex-1 rounded-lg bg-lng-navy py-1 text-[10.5px] font-bold text-white">{t('loungeV2.gift.apply')}</button>
+        <button type="button" className="flex-1 rounded-lg border border-lng-line bg-white py-1 text-[10.5px] font-bold text-lng-ink">{t('loungeV2.gift.recommend')}</button>
       </div>
     </div>
   )
 }
 
 function BridesmaidSection() {
+  const t = useT()
   return (
     <section className="mb-6">
-      <SectionHead eyebrow="Bridesmaids · Groomsmen" title="들러리" desc="우리를 더 빛나게 해주는 사람이에요." />
+      <SectionHead eyebrow="Bridesmaids · Groomsmen" title={t('loungeV2.gift.attendantsTitle')} desc={t('loungeV2.gift.attendantsDesc')} />
       <div className="grid grid-cols-3 gap-2">
         {ROLE_SLOTS_DONE.map((s) => (
           <DoneSlot key={s.id} slot={s} />
         ))}
       </div>
-      <p className="mb-1.5 mt-3 px-0.5 text-[11px] font-bold text-lng-navy">아직 모집 중인 자리</p>
+      <p className="mb-1.5 mt-3 px-0.5 text-[11px] font-bold text-lng-navy">{t('loungeV2.gift.openRoles')}</p>
       <div className="grid grid-cols-2 gap-2">
         {ROLE_SLOTS_PENDING.map((s) => (
           <PendingSlot key={s.id} slot={s} />
@@ -117,20 +121,21 @@ function BridesmaidSection() {
 }
 
 function GiftSection() {
+  const t = useT()
   const cd = timeUntil(GIFT_DEADLINE)
   return (
     <section className="mb-6">
-      <SectionHead eyebrow="Gifts" title="선물" desc="결혼식 위에 얹히는 디지털 선물. 혼자 또는 여럿이 함께 선물할 수 있어요." />
+      <SectionHead eyebrow="Gifts" title={t('loungeV2.gift.giftsTitle')} desc={t('loungeV2.gift.giftsDesc')} />
       <div className="mb-3 rounded-2xl border border-lng-pink-ink/15 bg-lng-pink/50 px-3.5 py-2.5 text-center">
         <div className="flex items-center justify-center gap-1.5 text-[12px] font-bold text-lng-pink-ink">
           <Clock className="h-3.5 w-3.5" />
           {cd.expired ? (
-            <span>디방화환 결제가 마감되었어요</span>
+            <span>{t('loungeV2.gift.wreathClosed')}</span>
           ) : (
-            <span>디방화환 결제 마감까지 <span className="text-[13.5px]">{cd.label}</span> 남았어요</span>
+            <span>{t('loungeV2.gift.wreathClosesIn', { label: cd.label })}</span>
           )}
         </div>
-        <p className="mt-1 text-[10.5px] text-lng-muted">결혼식 2주 전까지 확정돼야 웨딩홀 셋팅이 진행돼요.</p>
+        <p className="mt-1 text-[10.5px] text-lng-muted">{t('loungeV2.gift.wreathHint')}</p>
       </div>
       <div className="space-y-2.5">
         {GIFT_PRODUCTS.map((g) => (
@@ -147,14 +152,14 @@ function GiftSection() {
                 <p className="mt-0.5 text-[11px] leading-relaxed text-lng-muted">{g.desc}</p>
                 <div className="mt-1 text-[13px] font-extrabold text-lng-navy">
                   {g.yone.toLocaleString()}
-                  <span className="text-[11px] font-bold"> 요네</span>
-                  <span className="ml-1.5 text-[10.5px] font-normal text-lng-muted">또는 카드 {g.krw}</span>
+                  <span className="text-[11px] font-bold"> {t('loungeV2.gift.yoneUnit')}</span>
+                  <span className="ml-1.5 text-[10.5px] font-normal text-lng-muted">{t('loungeV2.gift.orCard', { krw: g.krw })}</span>
                 </div>
               </div>
             </div>
             <div className="mt-2.5 grid grid-cols-2 gap-2">
-              <button type="button" className="rounded-xl bg-lng-navy py-2 text-[12px] font-bold text-white">선물하기</button>
-              <button type="button" className="rounded-xl border border-lng-navy/20 bg-white py-2 text-[12px] font-bold text-lng-navy">함께 선물하기</button>
+              <button type="button" className="rounded-xl bg-lng-navy py-2 text-[12px] font-bold text-white">{t('loungeV2.gift.give')}</button>
+              <button type="button" className="rounded-xl border border-lng-navy/20 bg-white py-2 text-[12px] font-bold text-lng-navy">{t('loungeV2.gift.giveTogether')}</button>
             </div>
           </div>
         ))}
@@ -164,9 +169,10 @@ function GiftSection() {
 }
 
 function MakersSection() {
+  const t = useT()
   return (
     <section className="mb-6">
-      <SectionHead eyebrow="Makers" title="참여" desc="우리 결혼식을 함께 만든 사람들이에요." />
+      <SectionHead eyebrow="Makers" title={t('loungeV2.gift.makersTitle')} desc={t('loungeV2.gift.makersDesc')} />
       <div className="grid grid-cols-3 gap-2">
         {VENDORS.map((v) => (
           <div key={v.id} className="flex flex-col items-center rounded-2xl border border-lng-line bg-white px-1.5 py-2.5 text-center">
@@ -177,19 +183,20 @@ function MakersSection() {
         ))}
       </div>
       <p className="mt-2.5 text-center text-[10px] leading-relaxed text-lng-muted">
-        참여 업체가 라운지에 들어와 자기를 소개하는 흐름은 V3.X에서 본격 활성화돼요.
+        {t('loungeV2.gift.makersNote')}
       </p>
     </section>
   )
 }
 
 export function GiftSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const t = useT()
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" showClose className="border-lng-line bg-white text-lng-ink scrollbar-hide">
         <SheetHeader>
-          <SheetTitle className="text-lng-navy">들러리 · 선물</SheetTitle>
-          <SheetDescription className="text-lng-muted">하객끼리 함께 축하해요 — 우리의 네트워크가 결혼식을 채워요.</SheetDescription>
+          <SheetTitle className="text-lng-navy">{t('loungeV2.gift.sheetTitle')}</SheetTitle>
+          <SheetDescription className="text-lng-muted">{t('loungeV2.gift.sheetDesc')}</SheetDescription>
         </SheetHeader>
 
         <BridesmaidSection />
@@ -201,7 +208,7 @@ export function GiftSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
           onClick={() => onOpenChange(false)}
           className="w-full rounded-2xl border border-lng-line bg-lng-surface py-3 text-[14px] font-bold text-lng-ink"
         >
-          닫기
+          {t('loungeV2.gift.close')}
         </button>
       </SheetContent>
     </Sheet>

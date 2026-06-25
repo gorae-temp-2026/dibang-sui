@@ -1,4 +1,7 @@
 import type { HostInfo, RsvpHostOption } from '../types/invitation';
+import { translate, useLangStore } from '../lib/i18n';
+
+const lang = () => useLangStore.getState().lang;
 
 /**
  * 청첩장 호스트 정보로부터 RSVP "어느 분의 하객이신가요?" 선택지를 만든다.
@@ -16,30 +19,31 @@ export function getRsvpHostOptions(params: {
 }): RsvpHostOption[] {
   const { groomName, brideName, hosts } = params;
 
+  const l = lang();
   const candidates: Array<RsvpHostOption & { deceased?: boolean }> = [
-    { key: 'groom', role: '신랑', name: groomName },
-    { key: 'bride', role: '신부', name: brideName },
+    { key: 'groom', role: translate(l, 'invitationUi.rsvp.roleGroom'), name: groomName },
+    { key: 'bride', role: translate(l, 'invitationUi.rsvp.roleBride'), name: brideName },
     {
       key: 'groomFather',
-      role: '신랑 아버지',
+      role: translate(l, 'invitationUi.rsvp.roleGroomFather'),
       name: hosts.groomFatherName,
       deceased: hosts.groomFatherDeceased,
     },
     {
       key: 'groomMother',
-      role: '신랑 어머니',
+      role: translate(l, 'invitationUi.rsvp.roleGroomMother'),
       name: hosts.groomMotherName,
       deceased: hosts.groomMotherDeceased,
     },
     {
       key: 'brideFather',
-      role: '신부 아버지',
+      role: translate(l, 'invitationUi.rsvp.roleBrideFather'),
       name: hosts.brideFatherName,
       deceased: hosts.brideFatherDeceased,
     },
     {
       key: 'brideMother',
-      role: '신부 어머니',
+      role: translate(l, 'invitationUi.rsvp.roleBrideMother'),
       name: hosts.brideMotherName,
       deceased: hosts.brideMotherDeceased,
     },

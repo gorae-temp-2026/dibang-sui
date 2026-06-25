@@ -20,36 +20,24 @@ import { GiftForm } from '../components/ledger/GiftForm';
 import { formatAmount } from '../components/ledger/ledger-utils';
 import { exportLedgerCsv } from '../lib/ledger-export';
 import { useGetMe } from '../queries/shared/useGetMe';
+import { useT } from '../lib/i18n';
 
 type TabKey = 'ledger' | 'messages' | 'rsvp' | 'share-photos';
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'ledger', label: '장부' },
-  { key: 'messages', label: '축하 메시지' },
-  { key: 'rsvp', label: '참석 의사' },
-  { key: 'share-photos', label: '받은 사진' },
-];
-
-// 탭 설명은 '장부' 탭에만 노출(QA 2026-05-29: 나머지 탭 설명 문구 삭제). 빈 문자열이면 미표시.
-const TAB_DESCRIPTIONS: Record<TabKey, string> = {
-  'share-photos': '',
-  ledger: '장부는 본인만 열람할 수 있습니다',
-  messages: '',
-  rsvp: '',
-};
-
 // 참석 의사 RSVP 카드 — 측별 섹션에서 재사용 (#50)
 function RsvpCard({ r }: { r: Rsvp }) {
+  const t = useT();
+  const mealLabel = { yes: t('page.ledger.mealYes'), no: t('page.ledger.mealNo'), undecided: t('page.ledger.mealUndecided') }[r.meal];
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-100">
       <div className="flex items-center justify-between">
         <span className="font-medium text-gray-900">{r.guest_name}</span>
         <span className={`text-sm px-2 py-0.5 rounded-full ${r.attendance === 'attending' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-          {r.attendance === 'attending' ? '참석' : '불참'}
+          {r.attendance === 'attending' ? t('page.ledger.attending') : t('page.ledger.notAttending')}
         </span>
       </div>
       <div className="mt-1 text-sm text-gray-400">
-        동행 {r.companion_count}명 · 식사 {{ yes: '함', no: '안 함', undecided: '미정' }[r.meal]}
+        {t('page.ledger.companions', { n: r.companion_count })} · {t('page.ledger.meal', { meal: mealLabel })}
         {r.phone_last4 ? ` · ****${r.phone_last4}` : ''}
       </div>
     </div>
@@ -59,6 +47,22 @@ function RsvpCard({ r }: { r: Rsvp }) {
 export function LedgerPage() {
   const { weddingId } = useParams<{ weddingId: string }>();
   const navigate = useNavigate();
+  const t = useT();
+
+  const TABS: { key: TabKey; label: string }[] = [
+    { key: 'ledger', label: t('page.ledger.tabLedger') },
+    { key: 'messages', label: t('page.ledger.tabMessages') },
+    { key: 'rsvp', label: t('page.ledger.tabRsvp') },
+    { key: 'share-photos', label: t('page.ledger.tabPhotos') },
+  ];
+
+  // 탭 설명은 '장부' 탭에만 노출. 빈 문자열이면 미표시.
+  const TAB_DESCRIPTIONS: Record<TabKey, string> = {
+    'share-photos': '',
+    ledger: t('page.ledger.ledgerDesc'),
+    messages: '',
+    rsvp: '',
+  };
 
   // 페이지 flow는 머신(ledger): modal 상태(상세/편집/추가/삭제확인) + activeTab/selectedGift context.
   // 파생 변수로 풀어 렌더 JSX 조건은 그대로 두고, 핸들러만 send로 바꾼다.
@@ -190,13 +194,13 @@ export function LedgerPage() {
           <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-white/80 mb-3">Wedding Report</p>
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <p className="text-sm text-white/70 mb-1">총 축의금</p>
+              <p className="text-sm text-white/70 mb-1">{t('page.ledger.totalGifts')}</p>
               <p className="text-2xl font-bold font-serif tracking-tight text-white">
                 {summary ? formatAmount(Number(summary.total_amount)) : '-'}
               </p>
             </div>
             <div className="flex-1 text-right">
-              <p className="text-sm text-white/70 mb-1">현장 참석 축의금</p>
+              <p className="text-sm text-white/70 mb-1">{t('page.ledger.attendedGifts')}</p>
               <p className="text-2xl font-bold font-serif tracking-tight text-white">
                 {formatAmount(attendedTotal)}
               </p>
@@ -204,12 +208,12 @@ export function LedgerPage() {
           </div>
           <div className="flex gap-6 mt-3 text-sm">
             <div>
-              <span className="text-white/70">축의 건수</span>
-              <span className="ml-2 font-medium text-white">{summary?.total_count ?? 0}건</span>
+              <span className="text-white/70">{t('page.ledger.giftCount')}</span>
+              <span className="ml-2 font-medium text-white">{t('page.ledger.countUnit', { n: summary?.total_count ?? 0 })}</span>
             </div>
             <div>
-              <span className="text-white/70">참석</span>
-              <span className="ml-2 font-medium text-white">{summary?.attended_count ?? 0}명</span>
+              <span className="text-white/70">{t('page.ledger.attendCount')}</span>
+              <span className="ml-2 font-medium text-white">{t('page.ledger.peopleUnit', { n: summary?.attended_count ?? 0 })}</span>
             </div>
           </div>
         </div>
@@ -256,13 +260,13 @@ export function LedgerPage() {
         {activeTab === 'messages' && (
           <div className="space-y-2">
             <h2 className="text-base font-semibold text-gray-900">
-              Live 축하메세지 {messages.length}건
+              {t('page.ledger.liveMessages', { n: messages.length })}
             </h2>
             {isMessagesLoading && (
-              <p className="text-base text-gray-400 text-center py-16">불러오는 중...</p>
+              <p className="text-base text-gray-400 text-center py-16">{t('events.loading')}</p>
             )}
             {!isMessagesLoading && messages.length === 0 && (
-              <p className="text-base text-gray-400 text-center py-16">아직 축하 메시지가 없습니다</p>
+              <p className="text-base text-gray-400 text-center py-16">{t('page.ledger.noMessages')}</p>
             )}
             {messages.map((item, idx) => (
               <div
@@ -278,18 +282,18 @@ export function LedgerPage() {
         {activeTab === 'rsvp' && (
           <div className="space-y-5">
             {rsvps.length === 0 ? (
-              <p className="text-base text-gray-400 text-center py-16">아직 수집된 답변이 없습니다</p>
+              <p className="text-base text-gray-400 text-center py-16">{t('page.ledger.noRsvp')}</p>
             ) : (
               <>
                 {groomRsvps.length > 0 && (
                   <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-gray-700">신랑측</h3>
+                    <h3 className="text-sm font-semibold text-gray-700">{t('curate.side.groom')}</h3>
                     {groomRsvps.map((r) => <RsvpCard key={r.id} r={r} />)}
                   </div>
                 )}
                 {brideRsvps.length > 0 && (
                   <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-gray-700">신부측</h3>
+                    <h3 className="text-sm font-semibold text-gray-700">{t('curate.side.bride')}</h3>
                     {brideRsvps.map((r) => <RsvpCard key={r.id} r={r} />)}
                   </div>
                 )}
@@ -318,7 +322,7 @@ export function LedgerPage() {
       {selectedGift && isEditing && (
         <DrawerOverlay onClose={() => send({ type: 'CLOSE' })}>
           <GiftForm
-            title="축의 수정"
+            title={t('page.ledger.editGift')}
             initial={selectedGift}
             onSubmit={(values) =>
               updateMut.mutate(
@@ -333,7 +337,7 @@ export function LedgerPage() {
                 },
               )
             }
-            submitLabel="수정하기"
+            submitLabel={t('page.ledger.saveEdit')}
             isLoading={updateMut.isPending}
           />
         </DrawerOverlay>
@@ -343,14 +347,14 @@ export function LedgerPage() {
       {showAddForm && (
         <DrawerOverlay onClose={() => send({ type: 'CLOSE' })}>
           <GiftForm
-            title="내역 추가"
+            title={t('page.ledger.addEntry')}
             onSubmit={(values) =>
               createMut.mutate({
                 path: { weddingId: weddingId! },
                 body: values as HostCreateCashGiftRequest,
               })
             }
-            submitLabel="추가하기"
+            submitLabel={t('page.ledger.addSubmit')}
             isLoading={createMut.isPending}
           />
         </DrawerOverlay>
@@ -360,11 +364,11 @@ export function LedgerPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => send({ type: 'CANCEL_DELETE' })}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-xs mx-4 space-y-4 text-center" onClick={(e) => e.stopPropagation()}>
-            <p className="text-base font-medium text-gray-900">이 축의 내역을 삭제할까요?</p>
-            <p className="text-sm text-gray-500">삭제하면 복구할 수 없습니다.</p>
+            <p className="text-base font-medium text-gray-900">{t('page.ledger.deleteConfirmTitle')}</p>
+            <p className="text-sm text-gray-500">{t('page.ledger.deleteConfirmDesc')}</p>
             <div className="flex gap-2">
               <button onClick={() => send({ type: 'CANCEL_DELETE' })} className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-600 text-sm">
-                취소
+                {t('sharePhoto.cancel')}
               </button>
               <button
                 onClick={() =>
@@ -380,7 +384,7 @@ export function LedgerPage() {
                 disabled={deleteMut.isPending}
                 className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm hover:bg-red-600 disabled:opacity-50"
               >
-                삭제
+                {t('sharePhoto.delete')}
               </button>
             </div>
           </div>

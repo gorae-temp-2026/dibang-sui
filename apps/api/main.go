@@ -83,6 +83,9 @@ func main() {
 		log.Println("⚠️  Auth: DEV_AUTH_BYPASS 활성 — X-Dev-Auth 헤더로 인증 우회(dev/localhost 전용, prod 금지)")
 	}
 
+	// ClientInfo — 요청 IP·User-Agent를 컨텍스트에 주입(consent_records ip·ua 저장용).
+	r.Use(api.ClientInfoMiddleware())
+
 	// AdminGuard — /admin/* 경로는 허용 이메일만. ADMIN_EMAIL은 콤마 구분.
 	adminEmails := cfg.AdminEmails()
 	r.Use(api.AdminGuard([]string{"/admin/"}, adminEmails))

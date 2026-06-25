@@ -7,15 +7,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
 import { SHOP, ITEM_BY_ID, type ShopItem, type EquipSlot } from './data'
 import type { PlacedItem } from '../../machines/moiPlaza.machine'
 import { cn } from '../../lib/utils'
+import { useT } from '../../lib/i18n'
 
 type Cat = 'all' | 'hair' | 'clothes' | 'interior' | 'accessory' | 'mine'
-const CATS: { key: Cat; label: string }[] = [
-  { key: 'all', label: '전체' },
-  { key: 'hair', label: '헤어' },
-  { key: 'clothes', label: '옷' },
-  { key: 'interior', label: '인테리어' },
-  { key: 'accessory', label: '액세서리' },
-  { key: 'mine', label: '내 아이템' },
+const CATS: { key: Cat; labelKey: string }[] = [
+  { key: 'all', labelKey: 'moiGather.catAll' },
+  { key: 'hair', labelKey: 'moiGather.catHair' },
+  { key: 'clothes', labelKey: 'moiGather.catClothes' },
+  { key: 'interior', labelKey: 'moiGather.catInterior' },
+  { key: 'accessory', labelKey: 'moiGather.catAccessory' },
+  { key: 'mine', labelKey: 'moiGather.catMine' },
 ]
 
 const slotKey = (slot?: EquipSlot): 'head' | 'body' | 'acc' => (slot === 'head' ? 'head' : slot === 'body' ? 'body' : 'acc')
@@ -39,11 +40,12 @@ interface ShopSheetProps {
 }
 
 function Tabs({ cat, setCat }: { cat: Cat; setCat: (c: Cat) => void }) {
+  const t = useT()
   return (
     <div className="mb-3 flex gap-1.5 overflow-x-auto pb-0.5">
       {CATS.map((c) => (
         <button key={c.key} type="button" onClick={() => setCat(c.key)} className={cn('flex-shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors', cat === c.key ? 'bg-[#1E3A5F] text-white' : 'bg-white/[0.05] text-white/55')}>
-          {c.label}
+          {t(c.labelKey)}
         </button>
       ))}
     </div>
@@ -69,6 +71,7 @@ function MoiPreview({ head, body, acc }: { head?: string; body?: string; acc?: s
 }
 
 export function ShopSheet(props: ShopSheetProps) {
+  const t = useT()
   const { open, onOpenChange, yone, owned, placed, equipped, pendingItemId, error } = props
   const [cat, setCat] = useState<Cat>('all')
   const [preview, setPreview] = useState<Partial<Record<'head' | 'body' | 'acc', string>>>({})
@@ -93,22 +96,22 @@ export function ShopSheet(props: ShopSheetProps) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="bottom" className="max-h-[88vh] scrollbar-hide">
-          <SheetHeader><SheetTitle>샵 · 내 아이템</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>{t('moiGather.shopMyItems')}</SheetTitle></SheetHeader>
           <Tabs cat={cat} setCat={setCat} />
 
           <div className="mb-3 rounded-2xl border border-white/8 bg-[#f4f1ea] py-3">
             <MoiPreview head={pv.head} body={pv.body} acc={pv.acc} />
-            <p className="mt-1 text-center text-[11px] text-[#5a4a3a]">{hasPreview ? '미리보기 — 확정하면 적용돼요' : '내 모이'}</p>
+            <p className="mt-1 text-center text-[11px] text-[#5a4a3a]">{hasPreview ? t('moiGather.previewHint') : t('moiGather.myMoi')}</p>
           </div>
           {hasPreview && (
             <button type="button" onClick={confirm} className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] py-3 text-[14px] font-extrabold text-white">
-              <Check className="h-4 w-4" /> 확정 · 모이에 적용
+              <Check className="h-4 w-4" /> {t('moiGather.confirmApply')}
             </button>
           )}
 
           {wearables.length > 0 && (
             <>
-              <p className="mb-1.5 text-[11px] font-bold text-white/50">입기 · 갈아입기</p>
+              <p className="mb-1.5 text-[11px] font-bold text-white/50">{t('moiGather.wearSection')}</p>
               <div className="mb-3 grid grid-cols-2 gap-2">
                 {wearables.map((it) => {
                   const k = slotKey(it.slot)
@@ -121,12 +124,12 @@ export function ShopSheet(props: ShopSheetProps) {
                         <div className="truncate text-[12px] font-bold text-white">{it.name}</div>
                         {wornNow ? (
                           it.slot === 'acc' ? (
-                            <button type="button" onClick={() => props.onUnequip('acc')} className="mt-1.5 w-full rounded-lg border border-[#F8C57A]/40 py-1.5 text-[11px] font-bold text-[#F8C57A]">착용 중 · 벗기</button>
+                            <button type="button" onClick={() => props.onUnequip('acc')} className="mt-1.5 w-full rounded-lg border border-[#F8C57A]/40 py-1.5 text-[11px] font-bold text-[#F8C57A]">{t('moiGather.wornTakeOff')}</button>
                           ) : (
-                            <div className="mt-1.5 w-full rounded-lg border border-[#F8C57A]/40 py-1.5 text-center text-[11px] font-bold text-[#F8C57A]">착용 중</div>
+                            <div className="mt-1.5 w-full rounded-lg border border-[#F8C57A]/40 py-1.5 text-center text-[11px] font-bold text-[#F8C57A]">{t('moiGather.worn')}</div>
                           )
                         ) : (
-                          <button type="button" onClick={() => setPreview((p) => ({ ...p, [k]: it.id }))} className={cn('mt-1.5 w-full rounded-lg py-1.5 text-[11px] font-bold', inPreview ? 'bg-[#5AA3D6] text-white' : 'bg-white/[0.08] text-white')}>{inPreview ? '미리보기 중' : '입어보기'}</button>
+                          <button type="button" onClick={() => setPreview((p) => ({ ...p, [k]: it.id }))} className={cn('mt-1.5 w-full rounded-lg py-1.5 text-[11px] font-bold', inPreview ? 'bg-[#5AA3D6] text-white' : 'bg-white/[0.08] text-white')}>{inPreview ? t('moiGather.previewing') : t('moiGather.tryOn')}</button>
                         )}
                       </div>
                     </div>
@@ -138,7 +141,7 @@ export function ShopSheet(props: ShopSheetProps) {
 
           {interiors.length > 0 && (
             <>
-              <p className="mb-1.5 text-[11px] font-bold text-white/50">광장에 배치</p>
+              <p className="mb-1.5 text-[11px] font-bold text-white/50">{t('moiGather.placeSection')}</p>
               <div className="grid grid-cols-2 gap-2 pb-1">
                 {interiors.map((it) => {
                   const have = ownedCount(it.id)
@@ -149,7 +152,7 @@ export function ShopSheet(props: ShopSheetProps) {
                       <div className="flex h-20 items-center justify-center bg-[#f4f1ea]"><img src={it.url} alt={it.name} className="h-16 w-16 object-contain" draggable={false} /></div>
                       <div className="p-2">
                         <div className="truncate text-[12px] font-bold text-white">{it.name} <span className="text-white/45">{placedN}/{have}</span></div>
-                        <button type="button" disabled={!canPlace} onClick={() => props.onPlace(it.id)} className={cn('mt-1.5 w-full rounded-lg py-1.5 text-[11px] font-bold', canPlace ? 'bg-white/[0.08] text-white' : 'bg-white/[0.04] text-white/30')}>{canPlace ? '광장에 배치' : '모두 배치됨'}</button>
+                        <button type="button" disabled={!canPlace} onClick={() => props.onPlace(it.id)} className={cn('mt-1.5 w-full rounded-lg py-1.5 text-[11px] font-bold', canPlace ? 'bg-white/[0.08] text-white' : 'bg-white/[0.04] text-white/30')}>{canPlace ? t('moiGather.placeInPlaza') : t('moiGather.allPlaced')}</button>
                       </div>
                     </div>
                   )
@@ -157,7 +160,7 @@ export function ShopSheet(props: ShopSheetProps) {
               </div>
               {placed.length > 0 && (
                 <div className="mt-2 mb-2 rounded-xl bg-white/[0.03] p-2.5">
-                  <p className="mb-1.5 text-[10.5px] font-bold text-white/45">배치됨 — 광장에서 끌어 옮기거나 여기서 빼기</p>
+                  <p className="mb-1.5 text-[10.5px] font-bold text-white/45">{t('moiGather.placedHint')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {placed.map((p) => (
                       <button key={p.uid} type="button" onClick={() => props.onRemove(p.uid)} className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[10.5px] text-white/70">{ITEM_BY_ID[p.itemId]?.name} ✕</button>
@@ -168,7 +171,7 @@ export function ShopSheet(props: ShopSheetProps) {
             </>
           )}
 
-          {owned.length === 0 && <p className="py-10 text-center text-[12.5px] text-white/40">아직 보유한 아이템이 없어요. 카탈로그에서 구매하면 여기 모여요.</p>}
+          {owned.length === 0 && <p className="py-10 text-center text-[12.5px] text-white/40">{t('moiGather.noOwnedItems')}</p>}
         </SheetContent>
       </Sheet>
     )
@@ -179,18 +182,18 @@ export function ShopSheet(props: ShopSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[88vh] scrollbar-hide">
-        <SheetHeader><SheetTitle>샵 · 모이 꾸미기</SheetTitle></SheetHeader>
+        <SheetHeader><SheetTitle>{t('moiGather.shopDecorate')}</SheetTitle></SheetHeader>
 
         <div className="mb-3 flex items-center gap-3 rounded-2xl border border-[#4DA2FF]/30 bg-gradient-to-br from-[#4DA2FF]/14 to-transparent px-4 py-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#4DA2FF]/20 text-xl">💧</div>
           <div className="min-w-0 flex-1">
             <div className="text-[10.5px] font-bold uppercase tracking-wide text-white/45">My SUI</div>
             <div className="flex items-baseline gap-1 text-white"><b className="text-[22px] font-black tracking-tight">{(yone / 1000).toFixed(3)}</b><span className="text-[11px] text-white/55">SUI</span></div>
-            <div className="text-[10px] text-white/35">아이템 구매 시 0.001 SUI 결제</div>
+            <div className="text-[10px] text-white/35">{t('moiGather.itemPrice')}</div>
           </div>
         </div>
 
-        {error && <button type="button" onClick={props.onDismissError} className="mb-3 block w-full rounded-xl border border-[#E0607A]/40 bg-[#E0607A]/10 px-3 py-2 text-left text-[12px] text-[#f3b6c2]">{error} <span className="text-white/40">(눌러 닫기)</span></button>}
+        {error && <button type="button" onClick={props.onDismissError} className="mb-3 block w-full rounded-xl border border-[#E0607A]/40 bg-[#E0607A]/10 px-3 py-2 text-left text-[12px] text-[#f3b6c2]">{error} <span className="text-white/40">{t('moiGather.tapToClose')}</span></button>}
 
         <Tabs cat={cat} setCat={setCat} />
 
@@ -204,17 +207,17 @@ export function ShopSheet(props: ShopSheetProps) {
               <div key={it.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
                 <div className="relative flex h-24 items-center justify-center bg-[#f4f1ea]">
                   <img src={it.url} alt={it.name} className="h-[88px] w-[88px] object-contain" draggable={false} />
-                  {it.isDefault && <span className="absolute left-2 top-2 rounded-full bg-white/80 px-1.5 py-0.5 text-[8.5px] font-extrabold text-[#5a3a12]">기본</span>}
-                  {have > 0 && !it.isDefault && <span className="absolute left-2 top-2 rounded-full bg-[#46d77f]/90 px-1.5 py-0.5 text-[8.5px] font-extrabold text-[#0a2414]">보유{multi && have > 1 ? ` ${have}` : ''}</span>}
+                  {it.isDefault && <span className="absolute left-2 top-2 rounded-full bg-white/80 px-1.5 py-0.5 text-[8.5px] font-extrabold text-[#5a3a12]">{t('moiGather.badgeDefault')}</span>}
+                  {have > 0 && !it.isDefault && <span className="absolute left-2 top-2 rounded-full bg-[#46d77f]/90 px-1.5 py-0.5 text-[8.5px] font-extrabold text-[#0a2414]">{t('moiGather.badgeOwned')}{multi && have > 1 ? ` ${have}` : ''}</span>}
                 </div>
                 <div className="flex flex-1 flex-col p-2.5">
                   <div className="truncate text-[12.5px] font-bold text-white">{it.name}</div>
                   <div className="mt-2">
                     {ownedNonMulti || it.isDefault ? (
-                      <div className="w-full rounded-lg border border-white/12 py-2 text-center text-[12px] font-bold text-white/45">{it.isDefault ? '기본 제공' : '보유 중'}</div>
+                      <div className="w-full rounded-lg border border-white/12 py-2 text-center text-[12px] font-bold text-white/45">{it.isDefault ? t('moiGather.providedDefault') : t('moiGather.ownedState')}</div>
                     ) : (
                       <button type="button" disabled={!canAfford || purchasing} onClick={() => props.onPurchase(it.id)} className={cn('flex w-full items-center justify-center gap-1 rounded-lg py-2 text-[12px] font-extrabold transition-colors', canAfford && !purchasing ? 'bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] text-white' : 'bg-white/[0.06] text-white/35')}>
-                        {pendingItemId === it.id ? '구매 중…' : (<><Coins className="h-3.5 w-3.5 text-[#F8C57A]" /> {it.yone} {canAfford ? (multi && have > 0 ? '더 구매' : '구매') : '부족'}</>)}
+                        {pendingItemId === it.id ? t('moiGather.purchasing') : (<><Coins className="h-3.5 w-3.5 text-[#F8C57A]" /> {it.yone} {canAfford ? (multi && have > 0 ? t('moiGather.buyMore') : t('moiGather.buy')) : t('moiGather.insufficient')}</>)}
                       </button>
                     )}
                   </div>

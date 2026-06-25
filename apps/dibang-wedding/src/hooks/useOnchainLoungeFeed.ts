@@ -8,6 +8,9 @@ import {
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
+import { translate, useLangStore } from '../lib/i18n'
+
+const lang = () => useLangStore.getState().lang
 
 export interface OnchainFeedItem {
   id: string
@@ -61,7 +64,7 @@ export function useOnchainLoungeFeed(weddingId?: string) {
       }
 
       for (const n of notes) {
-        feed.push({ id: `note-${n.ts}`, type: 'note', actor: n.from, target: n.to, amount: 0, ts: n.ts, message: `쪽지: ${n.blobId.slice(0, 8)}...` })
+        feed.push({ id: `note-${n.ts}`, type: 'note', actor: n.from, target: n.to, amount: 0, ts: n.ts, message: translate(lang(), 'feed.note', { id: n.blobId.slice(0, 8) }) })
       }
 
       feed.sort((a, b) => b.ts - a.ts)

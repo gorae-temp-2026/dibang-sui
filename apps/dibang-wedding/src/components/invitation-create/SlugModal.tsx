@@ -1,6 +1,7 @@
 import { useInvitationForm } from '../../hooks/invitation-create/useInvitationForm';
 import type { SlugAvailability } from '../../queries/invitation/useSlugAvailability';
 import { inputClass, slugStatusConfig } from './styles';
+import { useT } from '../../lib/i18n';
 
 /**
  * 슬러그 입력 모달 presentational.
@@ -19,6 +20,7 @@ interface Props {
 
 export function SlugModal({ open, onClose, onConfirm, isPending, slugAvailability }: Props) {
   const store = useInvitationForm();
+  const t = useT();
   const config = slugStatusConfig[slugAvailability];
   const canConfirm = store.slug.trim().length >= 2 && slugAvailability === 'available';
 
@@ -27,8 +29,8 @@ export function SlugModal({ open, onClose, onConfirm, isPending, slugAvailabilit
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4 space-y-5">
-        <h2 className="text-xl font-bold text-gray-900">공유 링크 설정</h2>
-        <p className="text-sm text-gray-500">청첩장에 사용할 고유 링크를 입력하세요. 생성 후 변경할 수 없습니다.</p>
+        <h2 className="text-xl font-bold text-gray-900">{t('invite.slug.title')}</h2>
+        <p className="text-sm text-gray-500">{t('invite.slug.desc')}</p>
         <div>
           <div className="flex items-center gap-2">
             <span className="text-base text-gray-400">gorae.com/</span>
@@ -41,8 +43,8 @@ export function SlugModal({ open, onClose, onConfirm, isPending, slugAvailabilit
               autoFocus
             />
           </div>
-          {config.text && (
-            <p className={`text-sm mt-2 ${config.color}`}>{config.text}</p>
+          {config.textKey && (
+            <p className={`text-sm mt-2 ${config.color}`}>{t(config.textKey)}</p>
           )}
         </div>
         <div className="flex gap-3">
@@ -51,7 +53,7 @@ export function SlugModal({ open, onClose, onConfirm, isPending, slugAvailabilit
             onClick={onClose}
             className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            돌아가기
+            {t('invite.slug.back')}
           </button>
           <button
             type="button"
@@ -59,7 +61,7 @@ export function SlugModal({ open, onClose, onConfirm, isPending, slugAvailabilit
             disabled={!canConfirm || isPending}
             className="flex-1 rounded-lg bg-sky-500 px-4 py-2.5 text-base font-semibold text-white hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isPending ? '저장 중...' : '확인'}
+            {isPending ? t('invite.common.saving') : t('invite.slug.confirm')}
           </button>
         </div>
       </div>

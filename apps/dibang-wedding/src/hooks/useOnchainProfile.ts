@@ -5,6 +5,9 @@
  */
 import type { ProfileData } from '../components/profile/types'
 import type { Moi } from '../components/inyeon/types'
+import { translate, useLangStore } from '../lib/i18n'
+
+const lang = () => useLangStore.getState().lang
 
 const EMPTY_SIGNAL: ProfileData['signal'] = { name: 'root', children: [
   { name: 'EM', value: 0 }, { name: 'CS', value: 0 }, { name: 'AR', value: 0, stub: true }, { name: 'MP', value: 0, stub: true },
@@ -19,7 +22,7 @@ const EMPTY_TRACE = {
 export function buildProfileFromMoi(moi: Moi | null, options?: { ieumCount?: number; creditScore?: number }): ProfileData {
   const addr = (moi as Moi & { suiAddress?: string })?.suiAddress ?? ''
   const addrNum = addr ? parseInt(addr.slice(2, 10), 16) : 210
-  const name = addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : '알 수 없음'
+  const name = addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : translate(lang(), 'feed.unknownPlain')
   const ieumCount = options?.ieumCount ?? 0
   const score = options?.creditScore ?? 0
   const tier = score >= 700 ? 'AAA' : score >= 500 ? 'AA' : score >= 300 ? 'A' : score >= 100 ? 'B' : 'C'
@@ -39,7 +42,7 @@ export function buildProfileFromMoi(moi: Moi | null, options?: { ieumCount?: num
     graph: {
       nodes: Array.from({ length: ieumCount + 1 }, (_, i) => ({
         id: String(i),
-        label: i === 0 ? name : `연결 ${i}`,
+        label: i === 0 ? name : translate(lang(), 'profile.graph.node', { i }),
         hue: (addrNum + i * 60) % 360,
         here: i === 0,
       })),
@@ -52,8 +55,8 @@ export function buildProfileFromMoi(moi: Moi | null, options?: { ieumCount?: num
     },
     signal: EMPTY_SIGNAL,
     trustRange: {
-      tier: score >= 300 ? '높음' : score >= 100 ? '보통' : '낮음',
-      label: score >= 300 ? '높음' : score >= 100 ? '보통' : '낮음',
+      tier: score >= 300 ? 'high' : score >= 100 ? 'medium' : 'low',
+      label: translate(lang(), score >= 300 ? 'trust.high' : score >= 100 ? 'trust.medium' : 'trust.low'),
       anon: true,
     },
   }

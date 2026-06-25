@@ -54,7 +54,7 @@ export const loungeV2Machine = setup({
 
   states: {
     loading: {
-      description: "라운지 V2 초기 로딩 중",
+      description: "Lounge V2 initial loading",
       on: {
         LOAD_SUCCESS: { target: "idle", actions: "clearError" },
         LOAD_ERROR: {
@@ -68,7 +68,7 @@ export const loungeV2Machine = setup({
     },
 
     idle: {
-      description: "라운지 표시 중 — 무한스크롤 & 풀다운 새로고침 가능",
+      description: "Showing lounge — infinite scroll & pull-to-refresh available",
       on: {
         REFRESH: {
           target: "refreshing",
@@ -78,7 +78,7 @@ export const loungeV2Machine = setup({
     },
 
     refreshing: {
-      description: "풀다운 새로고침 중",
+      description: "Pull-to-refresh in progress",
       on: {
         REFRESH_SUCCESS: {
           target: "idle",
@@ -99,7 +99,7 @@ export const loungeV2Machine = setup({
     },
 
     error: {
-      description: "라운지 로딩 실패",
+      description: "Lounge load failed",
       on: {
         RETRY: { target: "loading", actions: ["clearError", "resetRefreshAttempts"] },
       },

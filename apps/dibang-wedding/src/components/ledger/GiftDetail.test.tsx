@@ -33,10 +33,10 @@ describe('GiftDetail', () => {
   it('guest_name(h3) + 금액 + 관계(상세 포함) + 축의 방식 + 참석 + 일시 노출', () => {
     render(<GiftDetail gift={baseGift} onEdit={vi.fn()} onDelete={vi.fn()} />)
     expect(screen.getByRole('heading', { name: '홍길동', level: 3 })).toBeInTheDocument()
-    expect(screen.getByText('50,000원')).toBeInTheDocument()
+    expect(screen.getByText('50,000 KRW')).toBeInTheDocument()
     expect(screen.getByText('친구/지인 / 대학 동기')).toBeInTheDocument()
-    expect(screen.getByText('현금')).toBeInTheDocument()
-    expect(screen.getByText('참석')).toBeInTheDocument()
+    expect(screen.getByText('Cash')).toBeInTheDocument()
+    expect(screen.getByText('Attended')).toBeInTheDocument()
   })
 
   it('relation_detail 없으면 카테고리만 표시', () => {
@@ -48,7 +48,7 @@ describe('GiftDetail', () => {
   it('attended=false → "불참" 표시', () => {
     const gift = { ...baseGift, attended: false } as CashGift
     render(<GiftDetail gift={gift} onEdit={vi.fn()} onDelete={vi.fn()} />)
-    expect(screen.getByText('불참')).toBeInTheDocument()
+    expect(screen.getByText('Absent')).toBeInTheDocument()
   })
 
   it('pay_method가 라벨 맵에 없으면 raw 값 그대로', () => {
@@ -61,9 +61,9 @@ describe('GiftDetail', () => {
     const onEdit = vi.fn()
     const onDelete = vi.fn()
     render(<GiftDetail gift={baseGift} onEdit={onEdit} onDelete={onDelete} />)
-    await userEvent.click(screen.getByRole('button', { name: '수정' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
     expect(onEdit).toHaveBeenCalledTimes(1)
-    await userEvent.click(screen.getByRole('button', { name: '삭제' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
     expect(onDelete).toHaveBeenCalledTimes(1)
   })
 })

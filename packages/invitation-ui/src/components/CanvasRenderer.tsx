@@ -1,4 +1,5 @@
 import type { CanvasConfig } from '../types/invitation';
+import { useT } from '../lib/i18n';
 
 interface Props {
   config: CanvasConfig;
@@ -11,6 +12,7 @@ interface Props {
  * 제목·부제목이 있으면 다른 섹션과 동일한 헤더(영문 부제목 + 한글 제목)를 캔버스 위에 표시한다.
  */
 export function CanvasRenderer({ config }: Props) {
+  const t = useT();
   const { title, subtitle, items, backgroundColor, viewBox } = config;
   const hasTitle = !!title?.trim();
   const hasSubtitle = !!subtitle?.trim();
@@ -43,7 +45,7 @@ export function CanvasRenderer({ config }: Props) {
           viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}
           preserveAspectRatio="xMidYMid meet"
           role="img"
-          aria-label="청첩장 그림판"
+          aria-label={t('invitationUi.canvas.ariaLabel')}
           style={{
             display: 'block',
             width: '100%',

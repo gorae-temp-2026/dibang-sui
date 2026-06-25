@@ -6,6 +6,7 @@ import { Coins } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
 import { SHOP, ITEM_BY_ID } from './data'
 import { cn } from '../../lib/utils'
+import { useT } from '../../lib/i18n'
 import type { MoiItemOnChain } from '@gorae/sui-sdk'
 
 interface GiftPickerProps {
@@ -26,6 +27,7 @@ interface GiftPickerProps {
 }
 
 export function GiftPicker(props: GiftPickerProps) {
+  const t = useT()
   const { open, onOpenChange, toName, suiBalance, received, ownedOnchainItems, pendingItemId, error } = props
   const [tab, setTab] = useState<'send' | 'received'>('send')
   const sending = pendingItemId != null
@@ -35,7 +37,7 @@ export function GiftPicker(props: GiftPickerProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[88vh]">
         <SheetHeader>
-          <SheetTitle>🎁 {toName}에게 선물</SheetTitle>
+          <SheetTitle>🎁 {t('moiGather.giftTo', { name: toName })}</SheetTitle>
         </SheetHeader>
 
         <div className="mb-3 flex items-center gap-3 rounded-2xl border border-[#4DA2FF]/30 bg-gradient-to-br from-[#4DA2FF]/14 to-transparent px-4 py-3">
@@ -46,19 +48,19 @@ export function GiftPicker(props: GiftPickerProps) {
               <b className="text-[22px] font-black tracking-tight">{suiBalance.toFixed(4)}</b>
               <span className="text-[11px] text-white/55">SUI</span>
             </div>
-            <div className="text-[10px] text-white/35">아이템 구매 시 0.001 SUI 결제</div>
+            <div className="text-[10px] text-white/35">{t('moiGather.itemPrice')}</div>
           </div>
         </div>
 
         {error && (
           <button type="button" onClick={props.onDismissError} className="mb-3 block w-full rounded-xl border border-[#E0607A]/40 bg-[#E0607A]/10 px-3 py-2 text-left text-[12px] text-[#f3b6c2]">
-            {error} <span className="text-white/40">(눌러 닫기)</span>
+            {error} <span className="text-white/40">{t('moiGather.tapToClose')}</span>
           </button>
         )}
 
         <div className="mb-3 flex gap-1.5">
-          <button type="button" onClick={() => setTab('send')} className={cn('rounded-full px-3.5 py-1.5 text-[12px] font-bold transition-colors', tab === 'send' ? 'bg-[#1E3A5F] text-white' : 'bg-white/[0.05] text-white/55')}>선물하기</button>
-          <button type="button" onClick={() => setTab('received')} className={cn('rounded-full px-3.5 py-1.5 text-[12px] font-bold transition-colors', tab === 'received' ? 'bg-[#1E3A5F] text-white' : 'bg-white/[0.05] text-white/55')}>받은 선물 <span className="rounded-full bg-white/10 px-1.5 text-[10px]">{ownedOnchainItems.length + offchainInv.length}</span></button>
+          <button type="button" onClick={() => setTab('send')} className={cn('rounded-full px-3.5 py-1.5 text-[12px] font-bold transition-colors', tab === 'send' ? 'bg-[#1E3A5F] text-white' : 'bg-white/[0.05] text-white/55')}>{t('moiGather.tabGive')}</button>
+          <button type="button" onClick={() => setTab('received')} className={cn('rounded-full px-3.5 py-1.5 text-[12px] font-bold transition-colors', tab === 'received' ? 'bg-[#1E3A5F] text-white' : 'bg-white/[0.05] text-white/55')}>{t('moiGather.tabReceived')} <span className="rounded-full bg-white/10 px-1.5 text-[10px]">{ownedOnchainItems.length + offchainInv.length}</span></button>
         </div>
 
         {tab === 'send' ? (
@@ -78,7 +80,7 @@ export function GiftPicker(props: GiftPickerProps) {
                       onClick={() => props.onGift(it.id)}
                       className={cn('mt-2 flex w-full items-center justify-center gap-1 rounded-lg py-2 text-[12px] font-extrabold transition-colors', afford && !sending ? 'bg-gradient-to-br from-[#4DA2FF] to-[#2E7BD6] text-white' : 'bg-white/[0.06] text-white/35')}
                     >
-                      {pendingItemId === it.id ? '보내는 중…' : (<><Coins className="h-3.5 w-3.5" /> 0.001 SUI 선물</>)}
+                      {pendingItemId === it.id ? t('moiGather.sending') : (<><Coins className="h-3.5 w-3.5" /> {t('moiGather.giftPrice')}</>)}
                     </button>
                   </div>
                 </div>
@@ -86,14 +88,14 @@ export function GiftPicker(props: GiftPickerProps) {
             })}
           </div>
         ) : ownedOnchainItems.length === 0 && offchainInv.length === 0 ? (
-          <p className="py-10 text-center text-[12.5px] text-white/40">아직 받은 선물이 없어요. 받으면 여기 모이고, 광장 꾸미기에서 쓸 수 있어요.</p>
+          <p className="py-10 text-center text-[12.5px] text-white/40">{t('moiGather.noReceivedGifts')}</p>
         ) : (
           <div className="grid grid-cols-2 gap-2.5 pb-2">
             {ownedOnchainItems.map((oi) => (
               <div key={oi.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#46d77f]/30 bg-white/[0.04]">
                 <div className="relative flex h-24 items-center justify-center bg-[#f4f1ea]">
                   <div className="text-3xl">🎁</div>
-                  <span className="absolute left-2 top-2 rounded-full bg-[#46d77f]/90 px-1.5 py-0.5 text-[8.5px] font-extrabold text-[#0a2414]">온체인</span>
+                  <span className="absolute left-2 top-2 rounded-full bg-[#46d77f]/90 px-1.5 py-0.5 text-[8.5px] font-extrabold text-[#0a2414]">{t('moiGather.onchain')}</span>
                 </div>
                 <div className="flex flex-1 flex-col p-2.5">
                   <div className="truncate text-[12.5px] font-bold text-white">{oi.name}</div>
@@ -105,11 +107,11 @@ export function GiftPicker(props: GiftPickerProps) {
               <div key={it!.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
                 <div className="relative flex h-24 items-center justify-center bg-[#f4f1ea]">
                   <img src={it!.url} alt={it!.name} className="h-[84px] w-[84px] object-contain" draggable={false} />
-                  <span className="absolute left-2 top-2 rounded-full bg-white/20 px-1.5 py-0.5 text-[8.5px] font-extrabold text-white/60">오프체인</span>
+                  <span className="absolute left-2 top-2 rounded-full bg-white/20 px-1.5 py-0.5 text-[8.5px] font-extrabold text-white/60">{t('moiGather.offchain')}</span>
                 </div>
                 <div className="flex flex-1 flex-col p-2.5">
                   <div className="truncate text-[12.5px] font-bold text-white">{it!.name}</div>
-                  <div className="mt-1 text-[10.5px] text-white/45">광장 꾸미기에서 사용 가능</div>
+                  <div className="mt-1 text-[10.5px] text-white/45">{t('moiGather.usableInDecor')}</div>
                 </div>
               </div>
             ))}
@@ -117,8 +119,8 @@ export function GiftPicker(props: GiftPickerProps) {
         )}
 
         <p className="mt-3 rounded-2xl border border-white/8 bg-white/[0.03] p-3 text-[11px] leading-relaxed text-white/55">
-          선물은 <b className="text-white/75">증여 신뢰 신호(EM·CS)</b>로 상대 프로필에 쌓여요. 요네 결제 자체는 화폐라 신호에서 제외돼요(§13-2).
-          <span className="text-white/35"> · 온체인 attestation·Moi Credit 재계산은 연결 단계에서.</span>
+          {t('moiGather.giftNotePre')}<b className="text-white/75">{t('moiGather.giftNoteBold')}</b>{t('moiGather.giftNotePost')}
+          <span className="text-white/35">{t('moiGather.giftNoteAside')}</span>
         </p>
       </SheetContent>
     </Sheet>

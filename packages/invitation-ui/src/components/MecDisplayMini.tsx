@@ -11,12 +11,14 @@
  * 글씨가 7px/6px로 매우 작은 것은 디바이스 목업 내부의 장식 텍스트라 의도된 것(읽기용 본문 아님).
  */
 
-// 떠오르는 축하 메시지 — 장식용 고정값. 이름은 마스킹 예시.
+import { useT } from '../lib/i18n';
+
+// 떠오르는 축하 메시지 — 장식용 고정값. 이름은 마스킹 예시. (텍스트는 i18n 키, 이름은 마스킹 데이터라 그대로)
 const DECO_MESSAGES = [
-  { text: '결혼 축하해요! 행복하세요', name: '김*준', left: '5px', delay: '0s' },
-  { text: '두 분의 앞날을 축복합니다', name: '이*영', left: '30px', delay: '2.5s' },
-  { text: '항상 함께 웃는 가정 되세요', name: '박*수', left: '10px', delay: '5s' },
-  { text: '사랑 가득한 날 되세요', name: '최*은', left: '35px', delay: '1.2s' },
+  { key: 'invitationUi.mec.msg1', name: '김*준', left: '5px', delay: '0s' },
+  { key: 'invitationUi.mec.msg2', name: '이*영', left: '30px', delay: '2.5s' },
+  { key: 'invitationUi.mec.msg3', name: '박*수', left: '10px', delay: '5s' },
+  { key: 'invitationUi.mec.msg4', name: '최*은', left: '35px', delay: '1.2s' },
 ];
 
 interface MecDisplayMiniProps {
@@ -25,6 +27,7 @@ interface MecDisplayMiniProps {
 }
 
 export function MecDisplayMini({ couplePhotoUrl }: MecDisplayMiniProps) {
+  const t = useT();
   return (
     <div className="w-[130px] mx-auto mb-6 relative">
       {/* mecFloat: 아래에서 위로 떠오르며 페이드. self-contained라 소비앱 Tailwind 설정 불필요 */}
@@ -73,7 +76,7 @@ export function MecDisplayMini({ couplePhotoUrl }: MecDisplayMiniProps) {
                     textShadow: '0 1px 6px rgba(0,0,0,0.7)',
                   }}
                 >
-                  {m.text}
+                  {t(m.key)}
                 </div>
                 <div
                   style={{

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Cropper from 'react-easy-crop';
 import type { Point, Area } from 'react-easy-crop';
 import type { ImagePosition } from '@gorae/invitation-ui';
+import { useT } from '../../lib/i18n';
 
 interface Props {
   url: string;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function PhotoPositionModal({ url, saved, onApply, onClose, aspect = 3 / 4 }: Props) {
+  const t = useT();
   const [crop, setCrop] = useState<Point>({ x: saved?.editorCrop.x ?? 0, y: saved?.editorCrop.y ?? 0 });
   const [zoom, setZoom] = useState(saved?.zoom ?? 1);
   const [croppedArea, setCroppedArea] = useState<Area | null>(null);
@@ -34,10 +36,10 @@ export function PhotoPositionModal({ url, saved, onApply, onClose, aspect = 3 / 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900">사진 위치 조정</h3>
+          <h3 className="text-lg font-bold text-gray-900">{t('invite.photoPos.title')}</h3>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
         </div>
-        <p className="text-sm text-gray-500">드래그하여 위치를, 스크롤/핀치로 크기를 조절하세요.</p>
+        <p className="text-sm text-gray-500">{t('invite.photoPos.hint')}</p>
 
         <div className="relative w-full rounded-lg overflow-hidden bg-gray-900" style={{ aspectRatio: aspect }}>
           <Cropper
@@ -74,11 +76,11 @@ export function PhotoPositionModal({ url, saved, onApply, onClose, aspect = 3 / 
         <div className="flex gap-3">
           <button type="button" onClick={onClose}
             className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-            취소
+            {t('invite.photoPos.cancel')}
           </button>
           <button type="button" onClick={handleApply}
             className="flex-1 rounded-lg bg-sky-500 px-4 py-2.5 text-base font-semibold text-white hover:bg-sky-600 transition-colors">
-            적용
+            {t('invite.photoPos.apply')}
           </button>
         </div>
       </div>

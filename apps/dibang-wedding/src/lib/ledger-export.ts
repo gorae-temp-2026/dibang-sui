@@ -1,6 +1,9 @@
 import type { CashGift } from '../types/db-compat';
 import { PAY_METHOD_LABEL } from '../components/ledger/ledger-utils';
 import { downloadCsv } from './csv-download';
+import { translate, useLangStore } from './i18n';
+
+const lang = () => useLangStore.getState().lang;
 
 /**
  * 축의금 장부를 CSV로 내려받는 헬퍼.
@@ -24,22 +27,32 @@ export interface LedgerExportMeta {
 
 export function exportLedgerCsv(gifts: CashGift[], meta?: LedgerExportMeta): void {
   if (gifts.length === 0) return;
-  const header = ['이름', '관계', '관계상세', '금액', '축의방식', '참석여부', '일시'];
+  const l = lang();
+  const locale = l === 'ko' ? 'ko-KR' : 'en-US';
+  const header = [
+    translate(l, 'ledgerExport.colName'),
+    translate(l, 'ledgerExport.colRelation'),
+    translate(l, 'ledgerExport.colRelationDetail'),
+    translate(l, 'ledgerExport.colAmount'),
+    translate(l, 'ledgerExport.colPayMethod'),
+    translate(l, 'ledgerExport.colAttendance'),
+    translate(l, 'ledgerExport.colDateTime'),
+  ];
   const dataRows = gifts.map((g) => [
     sanitize(g.guest_name),
     sanitize(g.relation_category),
     sanitize(g.relation_detail ?? ''),
     String(g.amount),
     sanitize(PAY_METHOD_LABEL[g.pay_method] ?? g.pay_method),
-    g.attended ? '참석' : '불참',
-    sanitize(new Date(g.created_at).toLocaleString('ko-KR')),
+    g.attended ? translate(l, 'ledger.gift.attended') : translate(l, 'ledger.gift.absent'),
+    sanitize(new Date(g.created_at).toLocaleString(locale)),
   ]);
   const dateStr = new Date().toISOString().slice(0, 10);
   const fileBase =
     meta?.groomName && meta?.brideName
-      ? `${meta.groomName}·${meta.brideName} 결혼식 ${meta.date ?? dateStr}${
-          meta.ownerName ? ` - ${meta.ownerName}의 장부` : ''
+      ? `${translate(l, 'ledgerExport.fileTitle', { groom: meta.groomName, bride: meta.brideName, date: meta.date ?? dateStr })}${
+          meta.ownerName ? translate(l, 'ledgerExport.fileOwnerSuffix', { owner: meta.ownerName }) : ''
         }`
-      : `축의금-장부-${dateStr}`;
+      : translate(l, 'ledgerExport.fileDefault', { date: dateStr });
   downloadCsv(`${fileBase}.csv`, [header, ...dataRows]);
 }

@@ -41,7 +41,7 @@ export function MoiCreditGuidePage() {
   return (
     <div className="mx-auto min-h-[100dvh] max-w-[480px] bg-[#0A1626] text-[#E8EFF6]">
       <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/8 bg-[#0A1626]/92 px-3 py-3 backdrop-blur">
-        <button type="button" aria-label="뒤로" onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
+        <button type="button" aria-label={ko ? '뒤로' : 'Back'} onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-[16px] font-extrabold text-white">{t('settings.guideCredit')}</h1>

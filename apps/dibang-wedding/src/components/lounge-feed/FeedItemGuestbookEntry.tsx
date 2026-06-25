@@ -1,5 +1,6 @@
 import { colors } from '../../lib/theme';
 import { timeAgo } from '../../lib/timeAgo';
+import { useT } from '../../lib/i18n';
 import { formatGuestPrefix } from '../../lib/guestLabel';
 import type { FeedItem } from '../../types/db-compat';
 
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function FeedItemGuestbookEntry({ item }: Props) {
+  const t = useT();
   const data = item.data as {
     guest_name?: string;
     relation_category?: string;
@@ -16,7 +18,7 @@ export function FeedItemGuestbookEntry({ item }: Props) {
     recipient_slot?: string;
   };
 
-  const guestName = data.guest_name ?? '(알 수 없음)';
+  const guestName = data.guest_name ?? t('feed.unknown');
   const relationTag = formatGuestPrefix(data.recipient_slot, data.relation_category, data.relation_detail);
 
   return (
@@ -36,7 +38,7 @@ export function FeedItemGuestbookEntry({ item }: Props) {
             <span style={{ color: colors.brand, fontWeight: 600 }}>{relationTag} </span>
           )}
           <span style={{ fontStyle: 'normal', color: '#3B82C8', fontWeight: 600 }}>{guestName}</span>
-          님이 <span style={{ color: colors.brand, fontWeight: 600 }}>현장에 참석했어요</span>
+          {t('feed.checkIn.attendedPrefix')}<span style={{ color: colors.brand, fontWeight: 600 }}>{t('feed.checkIn.attendedPhrase')}</span>
         </p>
         <span style={{ fontSize: 14, color: colors.textMuted, flexShrink: 0 }}>
           {timeAgo(item.created_at)}

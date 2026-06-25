@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { FeedItem } from '../../types/db-compat';
 import { toLogRow, timeAgo } from '../../lib/loungeV2Feed';
 import { maskGuestName } from '../../lib/guestLabel';
+import { useT } from '../../lib/i18n';
 import type { LogKind } from '../../types/lounge-v2';
 
 // 모이는 중 — 프로토타입 .log-section/.log-label/.log-row/.log-avatar/.la-label 정합.
@@ -25,16 +26,17 @@ interface GatheringLogProps {
 }
 
 export function GatheringLog({ items, hostNames }: GatheringLogProps) {
+  const t = useT();
   const rows = useMemo(() => items.map(toLogRow), [items]);
 
   return (
     <section className="mx-4 mb-6 mt-2 px-[6px]">
       <div className="flex items-center px-[2px] pb-[12px]">
-        <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-lng-ink">모이는 중</h2>
+        <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-lng-ink">{t('loungeV2.log.title')}</h2>
       </div>
 
       {rows.length === 0 ? (
-        <p className="py-10 text-center text-[14px] text-lng-muted">아직 활동이 없어요</p>
+        <p className="py-10 text-center text-[14px] text-lng-muted">{t('loungeV2.log.empty')}</p>
       ) : (
         <ul>
           {rows.map((row) => (
@@ -54,7 +56,7 @@ export function GatheringLog({ items, hostNames }: GatheringLogProps) {
               <p className="m-0 flex-1 leading-[1.45]">
                 {row.relation && <span className="font-medium text-lng-ink">{row.relation} </span>}
                 <span className="font-semibold text-lng-ink">{maskGuestName(row.actorName, hostNames)}</span>
-                <span className="text-lng-muted">님이 {row.message}</span>
+                <span className="text-lng-muted">{t('loungeV2.log.actorSuffix')}{row.message}</span>
               </p>
               <span className="shrink-0 text-[14px] text-[#B0B0B8]">{timeAgo(row.createdAt)}</span>
             </li>

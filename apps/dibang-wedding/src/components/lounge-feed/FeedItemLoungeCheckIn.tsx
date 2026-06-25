@@ -1,6 +1,7 @@
 import { colors } from '../../lib/theme';
 import { timeAgo } from '../../lib/timeAgo';
-import { SIDE_LABEL, formatGuestPrefix } from '../../lib/guestLabel';
+import { useT } from '../../lib/i18n';
+import { sideLabel, formatGuestPrefix } from '../../lib/guestLabel';
 import type { FeedItem } from '../../types/db-compat';
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function FeedItemLoungeCheckIn({ item }: Props) {
+  const t = useT();
   const data = (item.data ?? {}) as {
     visitor_name?: string;
     is_host?: boolean;
@@ -16,9 +18,9 @@ export function FeedItemLoungeCheckIn({ item }: Props) {
     relation_category?: string;
     relation_detail?: string;
   };
-  const visitorName = data.visitor_name ?? '(알 수 없음)';
+  const visitorName = data.visitor_name ?? t('feed.unknown');
   const isHost = data.is_host ?? false;
-  const hostRoleLabel = data.host_role ? (SIDE_LABEL[data.host_role] ?? null) : null;
+  const hostRoleLabel = data.host_role ? (sideLabel(data.host_role) || null) : null;
 
   const guestPrefix = !isHost
     ? formatGuestPrefix(data.recipient_slot, data.relation_category, data.relation_detail)
@@ -44,7 +46,7 @@ export function FeedItemLoungeCheckIn({ item }: Props) {
           <span style={{ color: colors.brand, fontWeight: 600 }}>{guestPrefix} </span>
         )}
         <span style={{ fontStyle: 'normal', color: '#3B82C8', fontWeight: 600 }}>{visitorName}</span>
-        님이 라운지에 입장했어요
+        {t('feed.checkIn.entered')}
       </p>
       <span style={{ fontSize: 14, color: colors.textMuted, flexShrink: 0 }}>
         {timeAgo(item.created_at)}

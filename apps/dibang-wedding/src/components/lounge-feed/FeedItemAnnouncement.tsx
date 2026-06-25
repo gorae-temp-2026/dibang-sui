@@ -1,6 +1,7 @@
 import { colors, fonts } from '../../lib/theme';
 import { timeAgo } from '../../lib/timeAgo';
-import { SIDE_LABEL } from '../../lib/guestLabel';
+import { useT } from '../../lib/i18n';
+import { sideLabel } from '../../lib/guestLabel';
 import { HeartButton } from './HeartButton';
 import { CommentSection } from './CommentSection';
 import type { FeedComment, FeedItem } from '../../types/db-compat';
@@ -34,11 +35,12 @@ export function FeedItemAnnouncement({
   isCommentMutating,
   isCommentsLoading,
 }: Props) {
+  const t = useT();
   const data = (item.data ?? {}) as { message?: string; is_pinned?: boolean; author_name?: string; author_role?: string };
   const message = data.message ?? '';
   const isPinned = data.is_pinned ?? false;
   const authorName = data.author_name;
-  const authorRole = data.author_role ? (SIDE_LABEL[data.author_role] ?? data.author_role) : null;
+  const authorRole = data.author_role ? (sideLabel(data.author_role) || null) : null;
 
   return (
     <div style={{ padding: '10px 0' }}>
@@ -49,7 +51,7 @@ export function FeedItemAnnouncement({
           <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke={colors.brand} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <span style={{ fontSize: 14, fontWeight: 600, color: colors.brand }}>
-          공지{isPinned ? ' (고정)' : ''}
+          {t('feed.announcement.label')}{isPinned ? ` ${t('feed.announcement.pinnedSuffix')}` : ''}
         </span>
         <span style={{ fontSize: 14, color: colors.textMuted, marginLeft: 'auto' }}>
           {timeAgo(item.created_at)}

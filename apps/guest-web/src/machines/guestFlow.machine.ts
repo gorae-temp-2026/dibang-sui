@@ -147,7 +147,7 @@ export const guestFlowMachine = setup({
 
   states: {
     recipient: {
-      description: '누구측 6슬롯 선택',
+      description: 'Select one of the 6 recipient slots',
       on: {
         SELECT_RECIPIENT: {
           target: 'name',
@@ -160,7 +160,7 @@ export const guestFlowMachine = setup({
     },
 
     name: {
-      description: '관계/이름 입력',
+      description: 'Enter relationship and name',
       on: {
         BACK: { target: 'recipient' },
         SUBMIT_NAME: {
@@ -178,7 +178,7 @@ export const guestFlowMachine = setup({
     },
 
     creating: {
-      description: 'POST /guestbook 호출 중 (참석 기록 생성)',
+      description: 'Calling POST /guestbook (creating attendance record)',
       on: {
         CREATE_SUCCESS: {
           target: 'amount',
@@ -201,7 +201,7 @@ export const guestFlowMachine = setup({
     },
 
     amount: {
-      description: '금액 선택',
+      description: 'Select gift amount',
       on: {
         BACK: { target: 'name' },
         SELECT_AMOUNT: {
@@ -217,7 +217,7 @@ export const guestFlowMachine = setup({
     },
 
     transfer: {
-      description: '축의 전달 (계좌 복사 / 딥링크)',
+      description: 'Send the gift (copy account / deep link)',
       on: {
         BACK: { target: 'amount' },
         CONFIRM_TRANSFER: {
@@ -231,7 +231,7 @@ export const guestFlowMachine = setup({
     },
 
     transferring: {
-      description: 'POST /cash-gifts 호출 중',
+      description: 'Calling POST /cash-gifts',
       on: {
         TRANSFER_SUCCESS: {
           target: 'message',
@@ -254,7 +254,7 @@ export const guestFlowMachine = setup({
     },
 
     message: {
-      description: '메세지 작성 또는 하트 전송',
+      description: 'Write a message or send a heart',
       on: {
         BACK: { target: 'amount' },
         SEND_MESSAGE: {
@@ -275,7 +275,7 @@ export const guestFlowMachine = setup({
     },
 
     sendingMessage: {
-      description: 'POST /guestbook/{entryId}/message 호출 중',
+      description: 'Calling POST /guestbook/{entryId}/message',
       on: {
         MESSAGE_SUCCESS: {
           target: 'done',
@@ -292,7 +292,7 @@ export const guestFlowMachine = setup({
     },
 
     done: {
-      description: '전송 완료',
+      description: 'Send complete',
       on: {
         RESTART: {
           target: 'recipient',

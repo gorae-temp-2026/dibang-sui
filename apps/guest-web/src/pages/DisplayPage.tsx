@@ -22,6 +22,7 @@ import { useViewportScale } from '../components/display/useViewportScale'
 import { serif, NOTICE_DELAY_MS, NOTICE_INITIAL_DELAY_MS } from '../components/display/constants'
 import { INFO_MESSAGES } from '../components/display/infoMessages'
 import { formatKoreanDate } from '../components/display/formatDate'
+import { useT, useLang } from '../lib/i18n'
 
 // v3 sentinel: 게스트가 '하트 보내기'를 누르면 guestbook_messages.message가 '__HEART__'로
 // 저장된다(guest-web GuestFlowPage / guestFlow.machine.ts). mecdisplay에서는 이 값을
@@ -39,6 +40,8 @@ import { displayMachine } from '../machines/display.machine'
 export default function DisplayPage() {
   const [searchParams] = useSearchParams()
   const weddingId = searchParams.get('weddingId')
+  const t = useT()
+  const lang = useLang()
 
   // mecdisplay 풀스크린 환경 보장: 마운트 동안만 body 스타일을 강제 설정하고
   // 언마운트 시 복원. (UI/데이터 분리 1-D: useBodyStyleScope 훅으로 캡슐화)
@@ -93,14 +96,17 @@ export default function DisplayPage() {
   const noticeIndexRef = useRef(0)
   const addNoticeRef = useRef(addNoticeEnvelope)
   useEffect(() => { addNoticeRef.current = addNoticeEnvelope }, [addNoticeEnvelope])
+  // 안내 메세지 문구는 i18n 키라 렌더 시점 언어로 번역해 봉투에 싣는다(언어 변경 즉시 반영).
+  const tRef = useRef(t)
+  useEffect(() => { tRef.current = t }, [t])
 
   const scheduleNotice = useCallback((delayMs = NOTICE_DELAY_MS) => {
     if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current)
     noticeTimerRef.current = setTimeout(() => {
       const idx = noticeIndexRef.current
-      const message = INFO_MESSAGES[idx]
+      const info = INFO_MESSAGES[idx]
       noticeIndexRef.current = (idx + 1) % INFO_MESSAGES.length
-      addNoticeRef.current(message)
+      addNoticeRef.current({ ...info, message: tRef.current(info.message) })
     }, delayMs)
   }, [])
 
@@ -121,8 +127,8 @@ export default function DisplayPage() {
     return (
       <div className="flex h-screen items-center justify-center text-zinc-400">
         {state.context.fatalReason === 'wedding 미존재'
-          ? '결혼식을 찾을 수 없습니다'
-          : 'URL에 ?weddingId=xxx를 입력해주세요'}
+          ? t('display.weddingNotFound')
+          : t('display.missingWeddingId')}
       </div>
     )
   }
@@ -130,7 +136,7 @@ export default function DisplayPage() {
   if (state.matches('loadingWedding') || isLoading || !wedding) {
     return (
       <div className="flex h-screen items-center justify-center text-zinc-400">
-        결혼식 정보를 불러오는 중...
+        {t('display.loadingWedding')}
       </div>
     )
   }
@@ -144,7 +150,7 @@ export default function DisplayPage() {
       {/* 실시간 구독 재연결 표시 — 머신 reconnecting 상태(SUBSCRIBE_ERROR/TIMEOUT) 반영 */}
       {state.matches('reconnecting') && (
         <div className="absolute left-1/2 top-3 z-[30] -translate-x-1/2 rounded-full bg-black/60 px-4 py-1.5 text-xs text-amber-300">
-          실시간 연결 재시도 중…
+          {t('display.reconnecting')}
         </div>
       )}
 
@@ -190,7 +196,7 @@ export default function DisplayPage() {
             className="mb-1 sm:mb-1.5 text-[13px] sm:text-[21px] tracking-[2px] sm:tracking-[3px]"
             style={{ color: 'rgba(255, 248, 240, 0.40)', textShadow: '0 1px 12px rgba(0,0,0,0.5)', ...serif }}
           >
-            {formatKoreanDate(wedding.date, wedding.time)}
+            {formatKoreanDate(wedding.date, wedding.time, lang)}
           </p>
           <p
             className="text-[11px] sm:text-[18px] tracking-[1px] sm:tracking-[2px]"

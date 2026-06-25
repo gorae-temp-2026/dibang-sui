@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { colors, fonts } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 import type { Announcement } from '../../types/db-compat';
 
 interface Props {
@@ -18,6 +19,7 @@ export function AnnouncementForm({
   isDeleting,
 }: Props) {
   const [message, setMessage] = useState('');
+  const t = useT();
 
   const handleSubmit = () => {
     const trimmed = message.trim();
@@ -42,7 +44,7 @@ export function AnnouncementForm({
             marginBottom: 16,
           }}
         >
-          <p style={{ fontSize: 14, color: colors.textMuted, margin: '0 0 6px' }}>현재 공지</p>
+          <p style={{ fontSize: 14, color: colors.textMuted, margin: '0 0 6px' }}>{t('feed.announcement.current')}</p>
           <p style={{
             fontSize: 16,
             color: colors.textPrimary,
@@ -55,7 +57,7 @@ export function AnnouncementForm({
         </div>
       ) : (
         <p style={{ fontSize: 14, color: colors.textMuted, margin: '0 0 16px' }}>
-          등록된 공지가 없습니다
+          {t('feed.announcement.none')}
         </p>
       )}
 
@@ -63,7 +65,7 @@ export function AnnouncementForm({
       <textarea
         value={message}
         onChange={(e) => setMessage(e.target.value.slice(0, 100))}
-        placeholder={currentAnnouncement ? '새 공지로 교체 (100자)' : '공지 내용을 입력하세요 (100자)'}
+        placeholder={currentAnnouncement ? t('feed.announcement.replacePlaceholder') : t('feed.announcement.newPlaceholder')}
         maxLength={100}
         rows={3}
         style={{
@@ -101,7 +103,7 @@ export function AnnouncementForm({
             borderRadius: 10,
           }}
         >
-          {currentAnnouncement ? '공지 교체' : '공지 등록'}
+          {currentAnnouncement ? t('feed.announcement.replace') : t('feed.announcement.post')}
         </button>
         {currentAnnouncement && (
           <button
@@ -118,7 +120,7 @@ export function AnnouncementForm({
               borderRadius: 10,
             }}
           >
-            공지 삭제
+            {t('feed.announcement.delete')}
           </button>
         )}
       </div>

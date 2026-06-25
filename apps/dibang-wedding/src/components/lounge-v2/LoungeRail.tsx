@@ -4,6 +4,7 @@
 import { useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Plus, X } from 'lucide-react'
+import { useT } from '../../lib/i18n'
 
 export interface RailAction {
   key: string
@@ -13,6 +14,7 @@ export interface RailAction {
 }
 
 export function LoungeRail({ actions }: { actions: RailAction[] }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const shadow = 'shadow-[0_12px_28px_rgba(0,0,0,0.14),0_2px_6px_rgba(0,0,0,0.06)]'
 
@@ -49,7 +51,7 @@ export function LoungeRail({ actions }: { actions: RailAction[] }) {
 
           <button
             type="button"
-            aria-label={open ? '레일 접기' : '레일 펴기'}
+            aria-label={open ? t('loungeV2.rail.collapse') : t('loungeV2.rail.expand')}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
             className={`pointer-events-auto flex h-[50px] w-[50px] items-center justify-center rounded-[15px] bg-lng-navy text-white ${shadow} transition active:scale-90`}

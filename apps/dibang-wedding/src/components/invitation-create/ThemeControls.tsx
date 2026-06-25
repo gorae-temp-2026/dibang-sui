@@ -1,5 +1,6 @@
 import { SYSTEM_FONTS, RECOMMENDED_PALETTES, type ThemeFonts, type ThemeColors } from '../../types/invitationDesignConfig';
 import { FontSelect } from './FontSelect';
+import { useT } from '../../lib/i18n';
 
 interface Props {
   fonts: ThemeFonts;
@@ -8,17 +9,17 @@ interface Props {
   onChangeColors: (colors: ThemeColors) => void;
 }
 
-const FONT_FIELDS: { slot: 'title' | 'subtitle' | 'body'; label: string }[] = [
-  { slot: 'title', label: '제목' },
-  { slot: 'subtitle', label: '부제목' },
-  { slot: 'body', label: '본문' },
+const FONT_FIELDS: { slot: 'title' | 'subtitle' | 'body'; labelKey: string }[] = [
+  { slot: 'title', labelKey: 'invite.theme.title' },
+  { slot: 'subtitle', labelKey: 'invite.theme.subtitle' },
+  { slot: 'body', labelKey: 'invite.theme.body' },
 ];
 
-const COLOR_FIELDS: { field: keyof ThemeColors; label: string }[] = [
-  { field: 'background', label: '배경' },
-  { field: 'text', label: '본문' },
-  { field: 'button', label: '장식' },
-  { field: 'accent', label: '제목' },
+const COLOR_FIELDS: { field: keyof ThemeColors; labelKey: string }[] = [
+  { field: 'background', labelKey: 'invite.theme.colorBackground' },
+  { field: 'text', labelKey: 'invite.theme.body' },
+  { field: 'button', labelKey: 'invite.theme.colorDecor' },
+  { field: 'accent', labelKey: 'invite.theme.title' },
 ];
 
 const PRESET_COLORS: Record<keyof ThemeColors, string[]> = {
@@ -29,13 +30,14 @@ const PRESET_COLORS: Record<keyof ThemeColors, string[]> = {
 };
 
 export function ThemeControls({ fonts, colors, onChangeFont, onChangeColors }: Props) {
+  const t = useT();
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <h5 className="text-base font-medium text-gray-700">폰트</h5>
-        {FONT_FIELDS.map(({ slot, label }) => (
+        <h5 className="text-base font-medium text-gray-700">{t('invite.theme.fontHeading')}</h5>
+        {FONT_FIELDS.map(({ slot, labelKey }) => (
           <div key={slot} className="flex items-center gap-3">
-            <span className="w-16 shrink-0 text-base text-gray-700">{label}</span>
+            <span className="w-16 shrink-0 text-base text-gray-700">{t(labelKey)}</span>
             <FontSelect
               value={fonts[slot]}
               onChange={(font) => onChangeFont(slot, font)}
@@ -47,16 +49,16 @@ export function ThemeControls({ fonts, colors, onChangeFont, onChangeColors }: P
       </div>
 
       <div className="space-y-2">
-        <h5 className="text-base font-medium text-gray-700">색상</h5>
-        {COLOR_FIELDS.map(({ field, label }) => (
+        <h5 className="text-base font-medium text-gray-700">{t('invite.theme.colorHeading')}</h5>
+        {COLOR_FIELDS.map(({ field, labelKey }) => (
           <div key={field} className="flex items-center gap-2">
-            <span className="w-16 shrink-0 text-base text-gray-700">{label}</span>
+            <span className="w-16 shrink-0 text-base text-gray-700">{t(labelKey)}</span>
             {PRESET_COLORS[field].map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => onChangeColors({ ...colors, [field]: c })}
-                aria-label={`${label} ${c}`}
+                aria-label={`${t(labelKey)} ${c}`}
                 className={`w-7 h-7 shrink-0 rounded-full border-2 transition-colors ${colors[field].toLowerCase() === c.toLowerCase() ? 'border-sky-500 ring-2 ring-sky-200' : 'border-gray-200 hover:border-gray-400'}`}
                 style={{ backgroundColor: c }}
               />

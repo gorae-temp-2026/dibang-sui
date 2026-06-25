@@ -36,8 +36,8 @@ describe('AccountSlotRow', () => {
   it('enabled=false: role 텍스트만 보이고 입력 필드는 숨김', () => {
     render(<AccountSlotRow slot={slot({ enabled: false })} side="groom" index={0} />)
     expect(screen.getByText('신랑')).toBeInTheDocument()
-    expect(screen.queryByPlaceholderText('예금주')).not.toBeInTheDocument()
-    expect(screen.queryByPlaceholderText('계좌번호')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Account holder')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Account number')).not.toBeInTheDocument()
   })
 
   it('enabled=true: 예금주/은행/계좌번호 입력이 모두 보인다', () => {
@@ -73,7 +73,7 @@ describe('AccountSlotRow', () => {
         index={1}
       />,
     )
-    const nameInput = screen.getByPlaceholderText('예금주')
+    const nameInput = screen.getByPlaceholderText('Account holder')
     await userEvent.type(nameInput, 'A')
     expect(useInvitationForm.getState().brideAccounts[1].name).toBe('A')
   })

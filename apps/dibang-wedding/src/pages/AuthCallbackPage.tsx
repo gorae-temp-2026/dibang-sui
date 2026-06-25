@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useMachine } from '@xstate/react';
 import { authCallbackMachine } from '../machines/authCallback.machine';
 import { useZkLogin } from '../providers/ZkLoginProvider';
+import { useT } from '../lib/i18n';
 
 function safeRedirect(raw: string | null): string | null {
   if (!raw) return null;
@@ -12,6 +13,7 @@ function safeRedirect(raw: string | null): string | null {
 
 export function AuthCallbackPage() {
   const navigate = useNavigate();
+  const t = useT();
   const zk = useZkLogin();
   const zkAttempted = useRef(false);
   const [state, send] = useMachine(authCallbackMachine);
@@ -56,7 +58,7 @@ export function AuthCallbackPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-pale-sky to-white">
       <div className="text-base text-muted">
-        {state.matches('timedOut') ? '시간이 초과되어 로그인으로 이동합니다...' : '로그인 처리 중...'}
+        {state.matches('timedOut') ? t('page.authCallback.timeout') : t('page.authCallback.processing')}
       </div>
     </div>
   );

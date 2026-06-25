@@ -1,4 +1,6 @@
 import { setup, assign } from 'xstate';
+import { translate, useLangStore } from '../lib/i18n';
+const lang = () => useLangStore.getState().lang;
 
 /**
  * invitationCreate.machine — /invitation/create 페이지 flow 제어 (프로덕션 연결본).
@@ -57,11 +59,13 @@ export const invitationCreateMachine = setup({
       event.type === 'SAVE' && !event.isAddMode && event.missing !== null,
   },
   actions: {
-    toastUploadWait: assign({ toast: '사진 업로드가 끝나면 저장할 수 있어요' }),
-    toastSlugRequired: assign({ toast: '공유 링크를 입력해주세요' }),
+    toastUploadWait: assign({ toast: () => translate(lang(), 'machine.save.uploadWait') }),
+    toastSlugRequired: assign({ toast: () => translate(lang(), 'machine.save.slugRequired') }),
     toastMissing: assign({
       toast: ({ event }) =>
-        event.type === 'SAVE' && event.missing ? `${event.missing}을(를) 입력해주세요` : null,
+        event.type === 'SAVE' && event.missing
+          ? translate(lang(), 'machine.save.fieldRequired', { field: event.missing })
+          : null,
     }),
     clearToast: assign({ toast: null }),
     setSaveError: assign({
