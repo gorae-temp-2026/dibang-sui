@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { serif, springs, colors } from '../../styles/tokens';
+import { useT } from '../../lib/i18n';
 
 function HeartSVG({ size = 80 }: { size?: number }) {
   return (
@@ -23,6 +24,7 @@ interface StepMessageProps {
 }
 
 export function StepMessage({ onSendMessage, onSendHeart, error, isSubmitting = false }: StepMessageProps) {
+  const t = useT();
   const [message, setMessage] = useState('');
   const [useHeart, setUseHeart] = useState(false);
 
@@ -41,7 +43,7 @@ export function StepMessage({ onSendMessage, onSendHeart, error, isSubmitting = 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 24px 32px', maxWidth: 420, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <p style={{ ...serif, fontSize: 20, color: colors.textHeading, textAlign: 'center', marginBottom: 24 }}>
-        축하 메시지를 남겨주세요
+        {t('guestFlow.message.title')}
       </p>
 
       {error && (
@@ -57,7 +59,7 @@ export function StepMessage({ onSendMessage, onSendHeart, error, isSubmitting = 
         {useHeart ? (
           <div style={{ display: 'flex', height: 260, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
             <HeartSVG size={96} />
-            <p style={{ ...serif, fontSize: 16, color: colors.textSubtle }}>축하의 마음을 전합니다</p>
+            <p style={{ ...serif, fontSize: 16, color: colors.textSubtle }}>{t('guestFlow.message.heartCaption')}</p>
           </div>
         ) : (
           <div>
@@ -74,7 +76,7 @@ export function StepMessage({ onSendMessage, onSendHeart, error, isSubmitting = 
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value.slice(0, 60))}
-                placeholder="축하 메시지를 작성해주세요"
+                placeholder={t('guestFlow.message.placeholder')}
                 rows={5}
                 maxLength={60}
                 style={{
@@ -108,7 +110,7 @@ export function StepMessage({ onSendMessage, onSendHeart, error, isSubmitting = 
           onChange={(e) => setUseHeart(e.target.checked)}
           style={{ width: 16, height: 16, accentColor: colors.accent, outline: 'none' }}
         />
-        <span style={{ ...serif, fontSize: 16, color: colors.textMuted }}>메시지 생략하고 하트만 보내기</span>
+        <span style={{ ...serif, fontSize: 16, color: colors.textMuted }}>{t('guestFlow.message.heartOnly')}</span>
       </label>
 
       <motion.button
@@ -123,7 +125,7 @@ export function StepMessage({ onSendMessage, onSendHeart, error, isSubmitting = 
           border: 'none', ...serif,
         }}
       >
-        {isSubmitting ? '전송 중…' : '축하 메시지 전하기'}
+        {isSubmitting ? t('guestFlow.message.sending') : t('guestFlow.message.send')}
       </motion.button>
     </div>
   );

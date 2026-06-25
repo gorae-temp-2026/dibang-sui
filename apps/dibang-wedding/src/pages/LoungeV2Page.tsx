@@ -30,6 +30,7 @@ import { MoiGatherPreviewCard } from '../components/lounge-v2/MoiGatherPreviewCa
 import { GiftSheet } from '../components/lounge-v2/GiftSheet';
 import { ComposeModal } from '../components/lounge-v2/ComposeModal';
 import { AnnouncementForm } from '../components/lounge-feed/AnnouncementForm';
+import { useT } from '../lib/i18n';
 
 // 웨딩 라운지 V2 — 섹션 합성 페이지 (/lounge/:loungeId/v2).
 // V1 LoungeFeedPage는 무수정. 같은 라운지 데이터를 V2 정보구조로 재배치.
@@ -37,6 +38,7 @@ import { AnnouncementForm } from '../components/lounge-feed/AnnouncementForm';
 export function LoungeV2Page() {
   const { loungeId } = useParams<{ loungeId: string }>();
   const navigate = useNavigate();
+  const t = useT();
   const [state, send] = useMachine(loungeV2Machine);
   const touchStartY = useRef(0);
   const pullDistance = useRef(0);
@@ -74,8 +76,8 @@ export function LoungeV2Page() {
   const hostSideMap: Record<string, string> = {};
   if (wedding) {
     const h = wedding.hosts;
-    [h.host_groom_id, h.host_groom_father_id, h.host_groom_mother_id].forEach((id) => { if (id) hostSideMap[id] = '신랑측'; });
-    [h.host_bride_id, h.host_bride_father_id, h.host_bride_mother_id].forEach((id) => { if (id) hostSideMap[id] = '신부측'; });
+    [h.host_groom_id, h.host_groom_father_id, h.host_groom_mother_id].forEach((id) => { if (id) hostSideMap[id] = t('curate.side.groom'); });
+    [h.host_bride_id, h.host_bride_father_id, h.host_bride_mother_id].forEach((id) => { if (id) hostSideMap[id] = t('curate.side.bride'); });
   }
   const isHost = !!myId && !!wedding && [
     wedding.hosts.host_groom_id,
@@ -173,7 +175,7 @@ export function LoungeV2Page() {
   }, [state, send, feedQuery]);
 
   if (!loungeId) {
-    return <div className="p-4 text-base text-lng-muted">[에러] loungeId가 없습니다</div>;
+    return <div className="p-4 text-base text-lng-muted">{t('page.lounge.noLoungeId')}</div>;
   }
 
   const info = weddingQuery.data?.info;
@@ -187,7 +189,7 @@ export function LoungeV2Page() {
       onTouchEnd={handleTouchEnd}
     >
       <TopBarV2
-        title={info ? `${info.groom_name} · ${info.bride_name}의 라운지` : '라운지'}
+        title={info ? t('page.lounge.loungeOf', { names: `${info.groom_name} · ${info.bride_name}` }) : t('page.lounge.lounge')}
         warmthLabel={warmth.label}
       />
 
@@ -223,7 +225,7 @@ export function LoungeV2Page() {
           />
 
           {state.matches('refreshing') && (
-            <p className="py-3 text-center text-sm text-lng-muted">새로고침 중...</p>
+            <p className="py-3 text-center text-sm text-lng-muted">{t('page.lounge.refreshing')}</p>
           )}
 
           {state.matches('error') ? (
@@ -237,7 +239,7 @@ export function LoungeV2Page() {
                 }}
                 className="rounded-lg border border-lng-line bg-lng-surface px-4 py-1.5 text-sm text-lng-ink"
               >
-                재시도
+                {t('sharePhoto.retry')}
               </button>
             </div>
           ) : (
@@ -261,16 +263,16 @@ export function LoungeV2Page() {
             ? [
                 {
                   key: 'announce',
-                  label: '공지',
+                  label: t('page.lounge.announcement'),
                   icon: <Megaphone className="h-[19px] w-[19px]" />,
                   onClick: () => setAnnounceOpen(true),
                 },
               ]
             : []),
-          { key: 'memory', label: '메모리', icon: <PenLine className="h-[19px] w-[19px]" />, onClick: () => setComposeOpen(true) },
+          { key: 'memory', label: t('page.lounge.railMemory'), icon: <PenLine className="h-[19px] w-[19px]" />, onClick: () => setComposeOpen(true) },
           // TODO: 메모리 vs 피드 compose 모드 분리 (현재 동일 ComposeModal — 핸드오프 §2-3은 둘 다 "기존 compose").
-          { key: 'feed', label: '피드', icon: <LayoutGrid className="h-[19px] w-[19px]" />, onClick: () => setComposeOpen(true) },
-          { key: 'gift', label: '들러리·선물', icon: <Gift className="h-[19px] w-[19px]" />, onClick: () => setGiftOpen(true) },
+          { key: 'feed', label: t('page.lounge.railFeed'), icon: <LayoutGrid className="h-[19px] w-[19px]" />, onClick: () => setComposeOpen(true) },
+          { key: 'gift', label: t('page.lounge.railGift'), icon: <Gift className="h-[19px] w-[19px]" />, onClick: () => setGiftOpen(true) },
         ]}
       />
 
@@ -279,8 +281,8 @@ export function LoungeV2Page() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" onClick={() => setAnnounceOpen(false)}>
           <div className="m-4 w-full max-w-[420px] rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-bold">공지 작성</h3>
-              <button type="button" aria-label="닫기" onClick={() => setAnnounceOpen(false)} className="text-2xl leading-none">&times;</button>
+              <h3 className="text-lg font-bold">{t('page.lounge.writeAnnouncement')}</h3>
+              <button type="button" aria-label={t('page.lounge.close')} onClick={() => setAnnounceOpen(false)} className="text-2xl leading-none">&times;</button>
             </div>
             <AnnouncementForm
               currentAnnouncement={currentAnnouncement}
@@ -303,7 +305,7 @@ export function LoungeV2Page() {
       <ComposeModal
         isOpen={composeOpen}
         onClose={() => setComposeOpen(false)}
-        currentUserName={meQuery.data?.name ?? '나'}
+        currentUserName={meQuery.data?.name ?? t('page.lounge.me')}
         onSubmit={compose.submit}
         isUploading={compose.isUploading}
         isPosting={compose.isPosting}

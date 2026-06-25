@@ -38,7 +38,7 @@ type supabaseUser struct {
 }
 
 // deriveDisplayName: v3_users.name(NOT NULL)에 넣을 표시 이름 도출.
-// 우선순위 full_name → name → email local-part → "사용자".
+// 우선순위 full_name → name → email local-part → "User".
 func deriveDisplayName(fullName, name, email string) string {
 	if v := strings.TrimSpace(fullName); v != "" {
 		return v
@@ -52,7 +52,7 @@ func deriveDisplayName(fullName, name, email string) string {
 		}
 		return e
 	}
-	return "사용자"
+	return "User"
 }
 
 // AuthMiddleware validates Bearer tokens by calling Supabase Auth API.

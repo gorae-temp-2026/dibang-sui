@@ -1,4 +1,6 @@
 import { setup, assign } from 'xstate';
+import { translate, useLangStore } from '../lib/i18n';
+const lang = () => useLangStore.getState().lang;
 
 // memoryBookCurate.machine — WeddingMemoryBookCuratePage flow (XS-15).
 // parallel 3축:
@@ -62,7 +64,7 @@ export const memoryBookCurateMachine = setup({
             SAVE_SUCCESS: { target: 'success', actions: 'clearSaveError' },
             SAVE_ERROR: {
               target: 'error',
-              actions: { type: 'setSaveError', params: ({ event }) => ({ error: event.type === 'SAVE_ERROR' ? event.error : '저장에 실패했습니다.' }) },
+              actions: { type: 'setSaveError', params: ({ event }) => ({ error: event.type === 'SAVE_ERROR' ? event.error : translate(lang(), 'machine.save.failed') }) },
             },
           },
         },

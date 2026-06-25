@@ -1,4 +1,5 @@
 import bgUrl from '../assets/mobile-invitation-lounge.png';
+import { useT } from '../lib/i18n';
 
 interface LoungePreviewProps {
   loungeId: string;
@@ -18,6 +19,7 @@ interface LoungePreviewProps {
 
 // 라운지 탭: 배경 이미지 풀블리드 + '입장하기' 버튼만.
 export function LoungePreview({ loungeId, dibangOrigin, onEnter }: LoungePreviewProps) {
+  const t = useT();
   const handleEnterLounge = () => {
     if (onEnter) {
       onEnter(loungeId);
@@ -30,12 +32,12 @@ export function LoungePreview({ loungeId, dibangOrigin, onEnter }: LoungePreview
   return (
     <div className="relative w-full">
       {/* 컨테이너 max-width(청첩장 420px 프레임)를 꽉 채움 — 자연 비율로 전체 노출 */}
-      <img src={bgUrl} alt="웨딩 라운지 미리보기" className="block w-full" />
+      <img src={bgUrl} alt={t('invitationUi.lounge.previewAlt')} className="block w-full" />
       <button
         className="absolute bottom-[56px] left-1/2 -translate-x-1/2 bg-navy text-white border-none py-3.5 px-9 rounded-3xl font-body text-sm font-semibold tracking-[.04em] cursor-pointer"
         onClick={handleEnterLounge}
       >
-        입장하기
+        {t('invitationUi.lounge.enter')}
       </button>
     </div>
   );

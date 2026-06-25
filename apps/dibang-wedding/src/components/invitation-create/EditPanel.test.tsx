@@ -42,9 +42,9 @@ const baseProps = {
 }
 
 describe('EditPanel (smoke)', () => {
-  it('기본 title "청첩장 만들기"가 보인다', () => {
+  it('기본 title "Create invitation"이 보인다', () => {
     render(<EditPanel {...baseProps} />)
-    expect(screen.getByRole('heading', { name: '청첩장 만들기', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Create invitation', level: 1 })).toBeInTheDocument()
   })
 
   it('title prop 전달 → 그 텍스트가 h1으로 노출', () => {
@@ -55,14 +55,14 @@ describe('EditPanel (smoke)', () => {
   it('invitationOnly=false (기본): 비-청첩장 섹션이 함께 노출된다', () => {
     render(<EditPanel {...baseProps} />)
     // 청첩장 섹션 + 비-청첩장(나의 역할/신랑·신부 정보) 섹션 텍스트
-    expect(screen.getByRole('heading', { name: /나의 역할/ })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '신랑 측 정보' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '신부 측 정보' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /My role/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Groom info' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Bride info' })).toBeInTheDocument()
   })
 
   it('invitationOnly=true: 비-청첩장 섹션은 숨김', () => {
     render(<EditPanel {...baseProps} invitationOnly />)
-    expect(screen.queryByRole('heading', { name: /나의 역할/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: '신랑 측 정보' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /My role/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Groom info' })).not.toBeInTheDocument()
   })
 })

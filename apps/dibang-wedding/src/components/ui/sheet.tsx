@@ -5,6 +5,7 @@ import * as SheetPrimitive from '@radix-ui/react-dialog'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { X } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { translate, useLangStore } from '../../lib/i18n'
 
 const Sheet = SheetPrimitive.Root
 const SheetTrigger = SheetPrimitive.Trigger
@@ -54,7 +55,7 @@ function SheetContent({ side = 'bottom', showClose = true, className, children, 
         {showClose && (
           <SheetPrimitive.Close className="absolute right-4 top-4 rounded-full p-1 text-white/60 opacity-80 transition hover:opacity-100 focus:outline-none">
             <X className="h-5 w-5" />
-            <span className="sr-only">닫기</span>
+            <span className="sr-only">{translate(useLangStore.getState().lang, 'common.close')}</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Content>

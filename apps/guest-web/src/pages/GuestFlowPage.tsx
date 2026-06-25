@@ -21,6 +21,7 @@ import { useDibangNavigator } from '../hooks/useDibangNavigator';
 import { useZkLogin } from '../providers/ZkLoginProvider';
 import { stepEnter, serif, colors } from '../styles/tokens';
 import { trackEvent } from '../lib/analytics';
+import { useT } from '../lib/i18n';
 
 
 type IndicatorStep = 'recipient' | 'name' | 'amount' | 'transfer' | 'message' | 'done';
@@ -55,6 +56,7 @@ export function GuestFlowPage() {
 
   const navigator = useDibangNavigator();
   const zk = useZkLogin();
+  const t = useT();
 
   const [searchParams] = useSearchParams();
   const weddingId = searchParams.get('weddingId');
@@ -87,7 +89,7 @@ export function GuestFlowPage() {
     return (
       <div style={{ padding: 24, textAlign: 'center' }}>
         <p style={{ ...serif, fontSize: 16, color: '#E8465A' }}>
-          잘못된 접근입니다. QR 코드를 다시 스캔해주세요.
+          {t('guestFlow.page.badAccess')}
         </p>
       </div>
     );
@@ -96,7 +98,7 @@ export function GuestFlowPage() {
   if (isLoading) {
     return (
       <div style={{ padding: 24, textAlign: 'center' }}>
-        <p style={{ ...serif, fontSize: 16, color: colors.textMuted }}>결혼식 정보를 불러오는 중...</p>
+        <p style={{ ...serif, fontSize: 16, color: colors.textMuted }}>{t('guestFlow.page.loading')}</p>
       </div>
     );
   }
@@ -105,7 +107,7 @@ export function GuestFlowPage() {
     return (
       <div style={{ padding: 24, textAlign: 'center' }}>
         <p style={{ ...serif, fontSize: 16, color: '#E8465A' }}>
-          결혼식 정보를 찾을 수 없습니다.
+          {t('guestFlow.page.notFound')}
         </p>
       </div>
     );
@@ -143,13 +145,13 @@ export function GuestFlowPage() {
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {!zk.isAuthenticated && (
         <div style={{ padding: '12px 16px', background: '#1E3A5F', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ ...serif, fontSize: 13, color: '#fff' }}>SUI로 축의하려면 로그인이 필요해요</span>
+          <span style={{ ...serif, fontSize: 13, color: '#fff' }}>{t('guestFlow.loginNeededForSui')}</span>
           <button
             type="button"
             onClick={() => zk.login(window.location.href)}
             style={{ background: '#F8C57A', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 700, color: '#5a3a12', cursor: 'pointer' }}
           >
-            구글 로그인
+            {t('guestFlow.page.googleLogin')}
           </button>
         </div>
       )}
@@ -180,7 +182,7 @@ export function GuestFlowPage() {
               />
               {state.matches('creating') && (
                 <div style={{ padding: '0 24px', textAlign: 'center' }}>
-                  <p style={{ ...serif, fontSize: 14, color: colors.textSubtle }}>참석 기록 중...</p>
+                  <p style={{ ...serif, fontSize: 14, color: colors.textSubtle }}>{t('guestFlow.page.recordingAttendance')}</p>
                 </div>
               )}
               {state.context.error && state.matches('name') && (
@@ -223,7 +225,7 @@ export function GuestFlowPage() {
               />
               {state.matches('transferring') && (
                 <div style={{ padding: '0 24px', textAlign: 'center' }}>
-                  <p style={{ ...serif, fontSize: 14, color: colors.textSubtle }}>축의 기록 중...</p>
+                  <p style={{ ...serif, fontSize: 14, color: colors.textSubtle }}>{t('guestFlow.page.recordingGift')}</p>
                 </div>
               )}
               {state.context.error && (

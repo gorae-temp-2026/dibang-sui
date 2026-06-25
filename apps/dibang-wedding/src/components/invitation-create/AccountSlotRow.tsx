@@ -1,6 +1,7 @@
 import { useInvitationForm } from '../../hooks/invitation-create/useInvitationForm';
 import type { AccountSlot } from '../../hooks/invitation-create/useInvitationForm';
 import { inputClass, BANK_LIST } from './styles';
+import { useT } from '../../lib/i18n';
 
 export function AccountSlotRow({ slot, side, index }: {
   slot: AccountSlot;
@@ -8,6 +9,7 @@ export function AccountSlotRow({ slot, side, index }: {
   index: number;
 }) {
   const update = useInvitationForm((s) => s.updateAccountSlot);
+  const t = useT();
 
   return (
     <div className={`rounded-lg border p-3 space-y-2.5 transition-colors ${slot.enabled ? 'border-sky-200 bg-sky-50/30' : 'border-gray-100 bg-gray-50'}`}>
@@ -25,7 +27,7 @@ export function AccountSlotRow({ slot, side, index }: {
           <div className="grid grid-cols-2 gap-2">
             <input
               type="text"
-              placeholder="예금주"
+              placeholder={t('invite.account.holder')}
               value={slot.name}
               onChange={(e) => update(side, index, 'name', e.target.value)}
               className={inputClass}
@@ -35,7 +37,7 @@ export function AccountSlotRow({ slot, side, index }: {
               onChange={(e) => update(side, index, 'bank', e.target.value)}
               className={inputClass}
             >
-              <option value="">은행 선택</option>
+              <option value="">{t('invite.account.selectBank')}</option>
               {BANK_LIST.map((bank) => (
                 <option key={bank} value={bank}>{bank}</option>
               ))}
@@ -43,7 +45,7 @@ export function AccountSlotRow({ slot, side, index }: {
           </div>
           <input
             type="text"
-            placeholder="계좌번호"
+            placeholder={t('invite.account.number')}
             value={slot.number}
             onChange={(e) => update(side, index, 'number', e.target.value)}
             className={inputClass}

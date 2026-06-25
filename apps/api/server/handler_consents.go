@@ -65,15 +65,47 @@ func (s *Server) UpdateMarketingConsent(ctx context.Context, req UpdateMarketing
 	return UpdateMarketingConsent201Response{}, nil
 }
 
-// requestIPUA: chi 요청 컨텍스트에서 IP·User-Agent 추출.
-// http.Request 자체는 context 에 없으니 별도 helper 키로 보존했어야 하나, 현재 미들웨어가
-// 그걸 안 함 → caller가 X-Forwarded-For 헤더를 직접 전달하도록 차후 보강. 일단 (nil, nil) 반환으로
-// consent_records의 ip·ua 컬럼은 NULL 저장 (서비스 동작에 영향 없음).
-func requestIPUA(_ context.Context) (*string, *string) {
-	return nil, nil
+// 클라이언트 IP·User-Agent를 요청 컨텍스트에 실어 나르는 키.
+// http.Request 는 strict-server handler 시그니처(ctx만 받음)에 안 닿으므로,
+// ClientInfoMiddleware 가 헤더에서 뽑아 context 에 넣고 requestIPUA 가 꺼낸다.
+const (
+	clientIPContextKey contextKey = "clientIP"
+	clientUAContextKey contextKey = "clientUA"
+)
+
+// ClientInfoMiddleware: 요청 IP(X-Forwarded-For/CF/RemoteAddr 순)와 User-Agent 를
+// 컨텍스트에 주입한다. consent_records 의 ip·ua 컬럼 저장에 쓰인다.
+func ClientInfoMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			if ip := extractIPFromXFF(r); ip != "" {
+				ctx = context.WithValue(ctx, clientIPContextKey, ip)
+			}
+			if ua := strings.TrimSpace(r.UserAgent()); ua != "" {
+				ctx = context.WithValue(ctx, clientUAContextKey, ua)
+			}
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
-// extractIPFromXFF: X-Forwarded-For 헤더에서 가장 앞 IP 추출. 미사용이지만 helper로 보관.
+// requestIPUA: ClientInfoMiddleware 가 컨텍스트에 넣어둔 IP·User-Agent 추출.
+// 미들웨어 미적용 경로/누락 시 nil 반환 → consent_records 컬럼은 NULL 저장(동작 영향 없음).
+func requestIPUA(ctx context.Context) (*string, *string) {
+	var ip, ua *string
+	if v, ok := ctx.Value(clientIPContextKey).(string); ok && v != "" {
+		val := v
+		ip = &val
+	}
+	if v, ok := ctx.Value(clientUAContextKey).(string); ok && v != "" {
+		val := v
+		ua = &val
+	}
+	return ip, ua
+}
+
+// extractIPFromXFF: X-Forwarded-For 헤더에서 가장 앞 IP 추출(CF-Connecting-IP·RemoteAddr 폴백).
 func extractIPFromXFF(r *http.Request) string {
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		if idx := strings.IndexByte(xff, ','); idx > 0 {

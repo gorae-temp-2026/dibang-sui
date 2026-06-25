@@ -1,6 +1,8 @@
 // [설계/시뮬 전용 — 프로덕션 미연결] 리치 invitationCreate 머신(slug·편집∥업로드·저장 전 API·온체인까지 한 장). Stately로 보고 시뮬하는 설계 SSOT. 실제 페이지는 invitationCreate.machine.ts(thin)에 연결됨.
 import { setup, assign, sendTo, fromPromise, type ActorRefFrom } from 'xstate';
 import { uploadItemMachine } from './uploadItem.machine';
+import { translate, useLangStore } from '../lib/i18n';
+const lang = () => useLangStore.getState().lang;
 
 /**
  * invitationCreate.machine — /invitation/create 페이지 전체 flow (xState-first, 완전 펼침).
@@ -231,12 +233,12 @@ export const invitationCreateDesignMachine = setup({
       return { items: context.items.filter((it) => it.id !== event.id) };
     }),
 
-    toastUploadWait: assign({ toast: '사진 업로드가 끝나면 저장할 수 있어요' }),
-    toastSlugRequired: assign({ toast: '공유 링크를 입력해주세요' }),
+    toastUploadWait: assign({ toast: () => translate(lang(), 'machine.save.uploadWait') }),
+    toastSlugRequired: assign({ toast: () => translate(lang(), 'machine.save.slugRequired') }),
     toastMissing: assign({
       toast: ({ event }) => {
         const m = (event as { missing?: string | null }).missing;
-        return m ? `${m}을(를) 입력해주세요` : null;
+        return m ? translate(lang(), 'machine.save.fieldRequired', { field: m }) : null;
       },
     }),
     clearToast: assign({ toast: null }),
@@ -254,7 +256,7 @@ export const invitationCreateDesignMachine = setup({
     setSaveError: assign({
       saveError: ({ event }) => {
         const e = (event as unknown as { error?: unknown }).error;
-        return e instanceof Error ? e.message : '저장에 실패했습니다.';
+        return e instanceof Error ? e.message : translate(lang(), 'machine.save.failed');
       },
     }),
     markOnchainFailed: assign({ onchainFailed: true }),

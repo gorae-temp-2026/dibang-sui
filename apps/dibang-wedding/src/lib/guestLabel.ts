@@ -1,19 +1,35 @@
-/** side/slot 코드 → 한글 레이블 */
-export const SIDE_LABEL: Record<string, string> = {
-  groom: '신랑',
-  bride: '신부',
-  groom_father: '신랑 아버지',
-  groom_mother: '신랑 어머니',
-  bride_father: '신부 아버지',
-  bride_mother: '신부 어머니',
+// side/slot·관계 코드 → 표시 레이블. 비-React 유틸이라 useT 대신 translate(현재 lang)로 로케일 인식.
+import { translate, useLangStore } from './i18n';
+
+const lang = () => useLangStore.getState().lang;
+
+const KNOWN_SLOTS = new Set([
+  'groom', 'bride', 'groom_father', 'groom_mother', 'bride_father', 'bride_mother',
+]);
+
+/** side/slot 코드 → 레이블(현재 언어). 미지의 slot은 원값 그대로(기존 `SIDE_LABEL[x] ?? x` 의미 보존). */
+export function sideLabel(slot?: string): string {
+  if (!slot) return '';
+  return KNOWN_SLOTS.has(slot) ? translate(lang(), `loungeCheckIn.recipient.${slot}`) : slot;
+}
+
+// relation_category 값(백엔드 한국어 enum) → i18n 키. LoungeCheckIn과 공유.
+const RELATION_LABEL_KEY: Record<string, string> = {
+  '가족/친척': 'loungeCheckIn.relation.family',
+  '친구/지인': 'loungeCheckIn.relation.friend',
+  '동문/동창': 'loungeCheckIn.relation.alumni',
+  '직장동료': 'loungeCheckIn.relation.coworker',
+  '스승/제자': 'loungeCheckIn.relation.mentor',
+  '기타모임': 'loungeCheckIn.relation.other',
 };
+export function relationLabel(category?: string): string {
+  if (!category) return '';
+  return RELATION_LABEL_KEY[category] ? translate(lang(), RELATION_LABEL_KEY[category]) : category;
+}
 
 /**
- * 한글 이름 가운데 마스킹.
- *  - 1글자: 그대로
- *  - 2글자: 첫 글자 + '*'   (김철 → 김*)
- *  - 3글자 이상: 첫·끝 글자만 남기고 가운데 전부 '*'  (홍길동 → 홍*동, 남궁민수 → 남**수)
- * 두 글자 성(남궁·제갈 등)도 성씨 사전 없이 안전하게 가운데만 가린다.
+ * 이름 가운데 마스킹(언어 무관 — 글자 단위).
+ *  - 1글자: 그대로 / 2글자: 첫 글자 + '*' / 3글자 이상: 첫·끝만 남기고 가운데 '*'
  */
 export function maskName(name: string): string {
   const n = name.trim();
@@ -31,29 +47,27 @@ export function maskGuestName(name: string, hostNames: Set<string>): string {
 }
 
 /**
- * 게스트의 역할 접두어를 한글로 조합
+ * 게스트의 역할 접두어를 현재 언어로 조합.
  *
- * 예시:
- *  - ("groom", "친구/지인", "고등학교동창") → "신랑의 친구/지인 고등학교동창"
- *  - ("groom_father", "가족/친척", "형")   → "신랑 아버지의 가족/친척 형"
- *  - ("bride", undefined, undefined)        → "신부"
+ * 예시(en):
+ *  - ("groom", "친구/지인", "high-school")  → "Groom's Friends high-school"
+ *  - ("bride", undefined, undefined)        → "Bride"
  */
 export function formatGuestPrefix(
   recipientSlot?: string,
   relationCategory?: string,
   relationDetail?: string,
 ): string {
-  const slotLabel = recipientSlot ? (SIDE_LABEL[recipientSlot] ?? recipientSlot) : '';
+  const slot = sideLabel(recipientSlot);
+  const relation = relationLabel(relationCategory);
 
-  if (!slotLabel && !relationCategory) return '';
+  if (!slot && !relation) return '';
 
   let prefix: string;
-  if (slotLabel && relationCategory) {
-    prefix = `${slotLabel}의 ${relationCategory}`;
-  } else if (slotLabel) {
-    prefix = slotLabel;
+  if (slot && relation) {
+    prefix = translate(lang(), 'guest.prefixOf', { side: slot, relation });
   } else {
-    prefix = relationCategory!;
+    prefix = slot || relation;
   }
 
   if (relationDetail) {

@@ -7,6 +7,7 @@ import { moiGateMachine } from '../machines/moiGate.machine'
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
+import { useT } from '../lib/i18n'
 
 /**
  * Moi(아바타) 강제 생성 게이트 모달 — Moi가 꼭 필요한 기능(인연 등) 진입 시 마운트한다.
@@ -38,6 +39,7 @@ export function MoiGateModal() {
     [createMoi, refetch],
   )
   const [state, send] = useMachine(machine)
+  const t = useT()
 
   const hasMoi = (moiIds?.length ?? 0) > 0
   const queryDone = moiIds !== undefined
@@ -53,9 +55,9 @@ export function MoiGateModal() {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-6">
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-        <p className="text-lg font-bold text-navy">내 아바타(Moi)를 만들어 주세요</p>
+        <p className="text-lg font-bold text-navy">{t('myWedding.moiGate.title')}</p>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          인연·상점·선물을 이용하려면 온체인 아바타가 필요해요. 계정당 1개(soulbound)이며, 한 번만 만들면 됩니다.
+          {t('myWedding.moiGate.desc')}
         </p>
         <button
           type="button"
@@ -63,7 +65,7 @@ export function MoiGateModal() {
           disabled={busy}
           className="mt-4 w-full rounded-lg bg-navy px-4 py-3 text-base font-semibold text-white disabled:opacity-50"
         >
-          {busy ? '생성 중…' : '내 아바타 만들기'}
+          {busy ? t('myWedding.moiGate.creating') : t('myWedding.moiGate.create')}
         </button>
         {state.context.error && (
           <p className="mt-2 text-xs text-red-500">❌ {state.context.error}</p>

@@ -71,6 +71,6 @@ describe('PreviewPanel (smoke)', () => {
     render(<PreviewPanel />)
     await userEvent.click(screen.getByTestId('renderer-pick-edit-photo'))
     // PhotoPositionModal 헤더로 분기 진입 확인 (실제 컴포넌트 그대로 사용)
-    expect(screen.getByRole('heading', { name: '사진 위치 조정' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Adjust photo position' })).toBeInTheDocument()
   })
 })

@@ -154,7 +154,7 @@ func (s *Server) UpdateWedding(ctx context.Context, req UpdateWeddingRequestObje
 	wedding, err := s.Weddings.Update(ctx, req.WeddingId, req.Body)
 	if err != nil {
 		if errors.Is(err, ErrConflict) {
-			return UpdateWedding409JSONResponse{conflict("다른 곳에서 먼저 수정됐어요. 새로고침 후 다시 시도해주세요.")}, nil
+			return UpdateWedding409JSONResponse{conflict("This was edited elsewhere first. Please refresh and try again.")}, nil
 		}
 		if errors.Is(err, ErrNotFound) {
 			return UpdateWedding404JSONResponse{NotFoundJSONResponse{

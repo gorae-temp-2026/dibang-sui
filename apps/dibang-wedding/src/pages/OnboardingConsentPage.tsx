@@ -8,6 +8,7 @@ import {
 } from '../machines/onboardingConsent.machine'
 import { createConsentsMutation, getMeQueryKey } from '@gorae/contracts/@tanstack/react-query.gen'
 import type { User } from '../types/db-compat'
+import { useT } from '../lib/i18n'
 
 // _scenario/2026-05-26-user-consent-onboarding/SCENARIOS.md S-01
 // 4 체크박스(필수 3 + 선택 1) + "동의하고 시작". 필수 미체크면 버튼 disabled.
@@ -16,6 +17,7 @@ export function OnboardingConsentPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const t = useT()
   const nextUrl = searchParams.get('next') || '/my-wedding'
 
   const [state, send] = useMachine(onboardingConsentMachine)
@@ -62,7 +64,7 @@ export function OnboardingConsentPage() {
       })
       send({ type: 'SUBMIT_SUCCESS' })
     } catch (e) {
-      send({ type: 'SUBMIT_ERROR', error: e instanceof Error ? e.message : '제출 실패' })
+      send({ type: 'SUBMIT_ERROR', error: e instanceof Error ? e.message : t('page.consent.submitError') })
     }
   }
 
@@ -71,9 +73,9 @@ export function OnboardingConsentPage() {
   return (
     <div className="min-h-screen bg-white px-6 py-10">
       <div className="mx-auto max-w-md">
-        <h1 className="text-[28px] font-semibold text-navy mb-2">서비스 이용 동의</h1>
+        <h1 className="text-[28px] font-semibold text-navy mb-2">{t('page.consent.title')}</h1>
         <p className="text-base text-muted mb-8">
-          서비스를 이용하기 위해 아래 약관에 동의해주세요.
+          {t('page.consent.subtitle')}
         </p>
 
         <button
@@ -88,7 +90,7 @@ export function OnboardingConsentPage() {
               onChange={handleToggleAll}
               className="h-5 w-5"
             />
-            <span className="text-base font-semibold text-navy">전체 동의</span>
+            <span className="text-base font-semibold text-navy">{t('page.consent.agreeAll')}</span>
           </label>
         </button>
 
@@ -96,22 +98,22 @@ export function OnboardingConsentPage() {
           <ConsentRow
             checked={ctx.age_verification}
             onChange={handleToggle('age_verification')}
-            label="(필수) 만 14세 이상 확인"
+            label={t('page.consent.ageVerification')}
           />
           <ConsentRow
             checked={ctx.service}
             onChange={handleToggle('service')}
-            label="(필수) 서비스 이용약관 동의"
+            label={t('page.consent.service')}
           />
           <ConsentRow
             checked={ctx.privacy}
             onChange={handleToggle('privacy')}
-            label="(필수) 개인정보 수집·이용 동의"
+            label={t('page.consent.privacy')}
           />
           <ConsentRow
             checked={ctx.marketing}
             onChange={handleToggle('marketing')}
-            label="(선택) 마케팅 정보 수신 동의"
+            label={t('page.consent.marketing')}
           />
         </div>
 
@@ -125,7 +127,7 @@ export function OnboardingConsentPage() {
           disabled={!canSubmit || submitting}
           className="w-full rounded-xl bg-navy px-5 py-3.5 text-base font-semibold text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          {submitting ? '처리 중...' : '동의하고 시작'}
+          {submitting ? t('page.consent.submitting') : t('page.consent.submit')}
         </button>
       </div>
     </div>

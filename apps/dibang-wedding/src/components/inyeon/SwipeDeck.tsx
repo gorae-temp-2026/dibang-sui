@@ -93,7 +93,7 @@ export function SwipeDeck({
             className="flex flex-col items-center gap-1 rounded-2xl bg-black/50 px-5 py-3 backdrop-blur"
           >
             <ChevronUp className="h-6 w-6 text-white" />
-            <span className="text-xs font-semibold text-white">위로 스와이프</span>
+            <span className="text-xs font-semibold text-white">{t('inyeon.deck.swipeUp')}</span>
           </motion.div>
         </div>
       )}

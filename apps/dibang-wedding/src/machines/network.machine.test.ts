@@ -11,7 +11,7 @@ describe('networkMachine', () => {
     const a = createActor(networkMachine).start()
     a.send({ type: 'CREATE_MOI' })
     expect(a.getSnapshot().matches({ moi: 'submitting' })).toBe(true)
-    expect(a.getSnapshot().context.moiResult).toBe('Moi 발행 중...')
+    expect(a.getSnapshot().context.moiResult).toBe('Issuing Moi...')
     a.send({ type: 'MOI_DONE', result: '✅ digest abc' })
     expect(a.getSnapshot().matches({ moi: 'idle' })).toBe(true)
     expect(a.getSnapshot().context.moiResult).toBe('✅ digest abc')

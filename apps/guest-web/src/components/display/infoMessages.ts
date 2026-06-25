@@ -1,11 +1,13 @@
 // 레거시 NOTICE_MESSAGES / DEFAULT_SEED_MESSAGES 그대로(SCENARIOS §1-1·§4).
-// 시각 동일성 보존 — 문구·순서 변경 금지.
+// 시각 동일성 보존 — 순서 변경 금지.
+// 영문화(트랙 E): INFO_MESSAGES.message 는 이제 i18n *키*다. DisplayPage 가 렌더 시점에 t()로
+// 번역해 봉투에 싣는다(언어 변경 즉시 반영). DEFAULT_SEED_MESSAGES 는 데모 시드라 원문 유지.
 import type { EnvelopeBase } from './types'
 
 export const INFO_MESSAGES: EnvelopeBase[] = [
-  { guestName: '', guestAffiliation: '', message: '하객분들의 마음이 전해지고 있어요' },
-  { guestName: '', guestAffiliation: '', message: '예식이 끝나면 신랑·신부에게 메세지가 전달돼요' },
-  { guestName: '', guestAffiliation: '', message: '로그인해서 사진을 공유해주세요' },
+  { guestName: '', guestAffiliation: '', message: 'display.notice.heartsFlowing' },
+  { guestName: '', guestAffiliation: '', message: 'display.notice.deliveredAfterCeremony' },
+  { guestName: '', guestAffiliation: '', message: 'display.notice.loginToShare' },
 ]
 
 export const DEFAULT_SEED_MESSAGES: EnvelopeBase[] = [

@@ -1,9 +1,11 @@
 // 디방인연 상태 머신 — 카드 탐색 + 사진 게이트 + 이음(연결) async 흐름.
 // xState 사용 근거(CLAUDE.md): 이음 신청 = 전송→수락대기→성사 비동기 분기. 데모는 mock 수락,
 // 백엔드 연결 시 sendIeum actor를 실제 attestation/수락 폴링으로 교체(나머지 구조 유지).
-import { setup, assign, fromPromise, raise } from 'xstate'
+import { setup, assign, fromPromise } from 'xstate'
 import type { Moi, IncomingReq, DmMsg } from '../components/inyeon/types'
-import { PHOTO_COST, START_YONE, DM_COST, seedDm, DM_AUTO_REPLY } from '../components/inyeon/data'
+import { translate, useLangStore } from '../lib/i18n'
+const lang = () => useLangStore.getState().lang;
+import { PHOTO_COST, START_YONE, DM_COST, seedDm } from '../components/inyeon/data'
 
 export type InyeonScreen = 'universe' | 'received' | 'chat' | 'me'
 
@@ -86,7 +88,6 @@ export const inyeonMachine = setup({
       | { type: 'OPEN_MEMORY'; id: number }
       | { type: 'CLOSE_MEMORY' }
       | { type: 'SEND_DM'; id: number; text: string }
-      | { type: 'DM_REPLY'; id: number }
   },
   guards: {
     canUnlock: ({ context, event }) =>
@@ -232,7 +233,7 @@ export const inyeonMachine = setup({
         }
         const cost = DM_COST[m.tier]
         if (cost > 0 && context.yone < cost) {
-          return { error: '요네가 부족해 대화를 못 열어요. 충전하면 바로 열려요.' }
+          return { error: translate(lang(), 'machine.inyeon.notEnoughYone') }
         }
         return {
           yone: context.yone - cost,
@@ -246,28 +247,14 @@ export const inyeonMachine = setup({
     CLOSE_DM_ROOM: { actions: assign({ dmRoomId: () => null }) },
     OPEN_MEMORY: { actions: assign({ memoryId: ({ event }) => event.type === 'OPEN_MEMORY' ? event.id : null }) },
     CLOSE_MEMORY: { actions: assign({ memoryId: () => null }) },
-    // 메시지 전송 = 내 메시지 즉시 append + 900ms 뒤 상대 자동응답(DM_REPLY 지연 raise).
+    // 메시지 전송 = 내 메시지 낙관적 append만. 실제 송수신은 온체인 노트(useNotes)로 처리되고
+    // ChatScreen DM방은 그 노트를 렌더한다 → 가짜 자동응답(DM_REPLY) 제거(데모 잔재). (D3)
     SEND_DM: {
-      actions: [
-        assign({
-          dms: ({ context, event }) => {
-            if (event.type !== 'SEND_DM') return context.dms
-            const cur = context.dms[event.id] ?? seedDm()
-            return { ...context.dms, [event.id]: [...cur, { me: event.text }] }
-          },
-        }),
-        raise(({ event }) => ({ type: 'DM_REPLY' as const, id: event.type === 'SEND_DM' ? event.id : -1 }), { delay: 900 }),
-      ],
-    },
-    DM_REPLY: {
       actions: assign({
         dms: ({ context, event }) => {
-          if (event.type !== 'DM_REPLY') return context.dms
-          // 대화가 이미 닫힌(NAV로 dms 리셋된) 방에는 자동응답을 되살리지 않는다 —
-          // 원본은 ChatScreen 언마운트로 setTimeout 콜백이 무효화돼 응답이 버려졌다.
-          const cur = context.dms[event.id]
-          if (!cur) return context.dms
-          return { ...context.dms, [event.id]: [...cur, { them: DM_AUTO_REPLY }] }
+          if (event.type !== 'SEND_DM') return context.dms
+          const cur = context.dms[event.id] ?? seedDm()
+          return { ...context.dms, [event.id]: [...cur, { me: event.text }] }
         },
       }),
     },
@@ -310,7 +297,7 @@ export const inyeonMachine = setup({
         },
         onError: {
           target: 'composing',
-          actions: assign({ error: () => '이음 신청을 보내지 못했어요. 다시 시도해주세요.' }),
+          actions: assign({ error: () => translate(lang(), 'machine.inyeon.ieumFailed') }),
         },
       },
     },

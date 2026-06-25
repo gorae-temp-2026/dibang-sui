@@ -9,7 +9,10 @@ import { useEffect, useState } from 'react'
 import { createJsonRpcClient, discoverUsers, getIumRequestedEvents, getIumAcceptedEvents, getOwnedIumRequests, type DiscoveredUser, type SuiNetwork } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
+import { translate, useLangStore } from '../lib/i18n'
 import type { Moi, IncomingReq } from '../components/inyeon/types'
+
+const lang = () => useLangStore.getState().lang
 
 function toMoi(user: DiscoveredUser, idx: number): Moi {
   const addrNum = parseInt(user.address.slice(2, 10), 16)
@@ -20,15 +23,15 @@ function toMoi(user: DiscoveredUser, idx: number): Moi {
     online: false,
     tier: user.sharedEventIds.length > 0 ? 0 : user.degree <= 6 ? 1 : 2,
     deg: user.degree,
-    hook: user.sharedEventIds.length > 0 ? '함께 참여한 결혼식이 있어요'
-      : user.degree <= 6 ? '아는 사람을 통해 닿은 인연이에요'
-      : '새로운 인연',
+    hook: user.sharedEventIds.length > 0 ? translate(lang(), 'inyeon.tier.0.hook')
+      : user.degree <= 6 ? translate(lang(), 'inyeon.tier.1.hook')
+      : translate(lang(), 'inyeon.tier.2.hook'),
     mutualCount: user.mutualCount,
     prov: user.sharedEventIds.length > 0
-      ? [{ emoji: '💒', text: '함께 참여한 결혼식', sub: `${user.sharedEventIds.length}개`, tier: 0 as const }]
-      : user.degree <= 6 ? [{ emoji: '🤝', text: '아는 사람을 통해 연결', sub: `${user.degree}다리`, tier: 1 as const }]
-      : [{ emoji: '✨', text: '새로운 인연', tier: 2 as const }],
-    balLabel: user.degree <= 2 ? '높음' : user.degree <= 4 ? '보통' : '낮음',
+      ? [{ emoji: '💒', text: translate(lang(), 'inyeon.prov.sharedWedding'), sub: translate(lang(), 'inyeon.prov.weddingCount', { n: user.sharedEventIds.length }), tier: 0 as const }]
+      : user.degree <= 6 ? [{ emoji: '🤝', text: translate(lang(), 'inyeon.prov.throughAcquaintance'), sub: translate(lang(), 'inyeon.prov.degree', { n: user.degree }), tier: 1 as const }]
+      : [{ emoji: '✨', text: translate(lang(), 'inyeon.prov.newConnection'), tier: 2 as const }],
+    balLabel: user.degree <= 2 ? translate(lang(), 'trust.high') : user.degree <= 4 ? translate(lang(), 'trust.medium') : translate(lang(), 'trust.low'),
     barsF: Math.max(0, 5 - user.degree),
     net: user.mutualCount,
     // 실 데이터 확장 필드(Moi 타입에 없지만 런타임에 접근 가능)
@@ -97,7 +100,7 @@ export function useDiscoverUsers() {
               const senderMoi = moiList.find((m) => (m as Moi & { suiAddress?: string }).suiAddress === req.initiator)
               return {
                 moiId: senderMoi?.id ?? -1,
-                rel: '이음 신청',
+                rel: translate(lang(), 'page.inyeon.requestIeum'),
                 msg: '',
                 eventId: req.eventId,
                 requestId: requestByEvent.get(req.eventId) ?? '',

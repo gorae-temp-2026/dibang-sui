@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { colors } from '../../lib/theme';
+import { useT } from '../../lib/i18n';
 import type { FeedComment } from '../../types/db-compat';
 
 const COMMENT_BG = '#FFF6F8';
@@ -63,6 +64,7 @@ export function CommentSection({
   isLoading,
 }: Props) {
   const [newComment, setNewComment] = useState('');
+  const t = useT();
 
   const handleSubmit = () => {
     const trimmed = newComment.trim();
@@ -116,7 +118,7 @@ export function CommentSection({
           }}
         >
           {isLoading && (
-            <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>댓글 로딩중...</p>
+            <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>{t('feed.comment.loading')}</p>
           )}
 
           {comments.map((comment) => (
@@ -167,7 +169,7 @@ export function CommentSection({
               type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value.slice(0, 50))}
-              placeholder="댓글을 남겨 주세요"
+              placeholder={t('feed.comment.placeholder')}
               maxLength={50}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               style={{

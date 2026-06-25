@@ -1,17 +1,18 @@
 import type { WeddingSummary, HostInvite } from '../../types/db-compat';
+import { useT } from '../../lib/i18n';
 
 /**
  * 호스트 슬롯 presentational — props/콜백만 받아 렌더링.
  * (UI/데이터 분리 2-H: mutation/query 호출은 HostSlotSectionContainer가 책임)
  * QA 2026-05-29: 초대 공유 별도 모달 제거 → pending 슬롯에 공유/복사/취소 버튼 직접 노출.
  */
-const SLOT_LABELS: Record<string, string> = {
-  groom: '신랑',
-  bride: '신부',
-  groom_father: '신랑 아버지',
-  groom_mother: '신랑 어머니',
-  bride_father: '신부 아버지',
-  bride_mother: '신부 어머니',
+const SLOT_LABEL_KEYS: Record<string, string> = {
+  groom: 'myWedding.role.groom',
+  bride: 'myWedding.role.bride',
+  groom_father: 'myWedding.role.groomFather',
+  groom_mother: 'myWedding.role.groomMother',
+  bride_father: 'myWedding.role.brideFather',
+  bride_mother: 'myWedding.role.brideMother',
 };
 
 const PARENT_SLOTS = ['groom_father', 'groom_mother', 'bride_father', 'bride_mother'] as const;
@@ -42,6 +43,7 @@ export function HostSlotSection({
   onCopyInviteLink,
   onShareInvite,
 }: Props) {
+  const t = useT();
   // 배우자 초대: 신랑이면 신부를, 신부이면 신랑을 초대
   const spouseSlot = myRole === 'groom' ? 'bride' : myRole === 'bride' ? 'groom' : null;
 
@@ -57,8 +59,8 @@ export function HostSlotSection({
     if (occupiedSlots.has(slot) || invite?.status === 'accepted') {
       return (
         <div className="rounded-lg border border-green-200 bg-green-50/30 px-3 py-2 text-sm">
-          <span className="text-gray-400">{SLOT_LABELS[slot]}</span>
-          <p className="font-medium text-green-700 mt-0.5">{name || '수락됨'}</p>
+          <span className="text-gray-400">{t(SLOT_LABEL_KEYS[slot])}</span>
+          <p className="font-medium text-green-700 mt-0.5">{name || t('myWedding.hostSlot.accepted')}</p>
         </div>
       );
     }
@@ -67,8 +69,8 @@ export function HostSlotSection({
       return (
         <div className="rounded-lg border border-yellow-200 bg-yellow-50/30 px-3 py-2 text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-gray-400">{SLOT_LABELS[slot]}</span>
-            <span className="text-yellow-600 font-medium">대기중</span>
+            <span className="text-gray-400">{t(SLOT_LABEL_KEYS[slot])}</span>
+            <span className="text-yellow-600 font-medium">{t('myWedding.hostSlot.pending')}</span>
           </div>
           {/* 카카오톡 공유 · 링크 복사 · 취소 (별도 모달 없이 직접 노출) */}
           <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -77,21 +79,21 @@ export function HostSlotSection({
               onClick={() => onShareInvite(invite.token)}
               className="rounded-md bg-[#FEE500] px-2.5 py-1 text-xs font-semibold text-[#3C1E1E] transition hover:brightness-95"
             >
-              카카오톡 공유
+              {t('share.kakao')}
             </button>
             <button
               type="button"
               onClick={() => onCopyInviteLink(invite.token)}
               className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
             >
-              링크 복사
+              {t('share.copyLink')}
             </button>
             <button
               type="button"
               onClick={() => onCancel(invite.id)}
               className="rounded-md px-2.5 py-1 text-xs font-medium text-gray-400 transition hover:text-red-500"
             >
-              취소
+              {t('common.cancel')}
             </button>
           </div>
         </div>
@@ -100,14 +102,14 @@ export function HostSlotSection({
 
     return (
       <div className="rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm">
-        <span className="text-gray-400">{SLOT_LABELS[slot]}</span>
+        <span className="text-gray-400">{t(SLOT_LABEL_KEYS[slot])}</span>
         <button
           type="button"
           onClick={() => onCreate(slot)}
           disabled={isCreating}
           className="block w-full mt-1 text-sm font-medium text-sky-500 hover:text-sky-700 transition-colors disabled:opacity-50"
         >
-          {isCreating ? '...' : '초대하기'}
+          {isCreating ? '...' : t('myWedding.hostSlot.invite')}
         </button>
       </div>
     );
@@ -116,21 +118,21 @@ export function HostSlotSection({
   return (
     <div className="space-y-4">
       <div className="rounded-lg bg-gray-50 p-3 text-sm leading-relaxed text-gray-500">
-        <p>· 배우자는 함께 모바일 청첩장을 편집할 수 있어요.</p>
-        <p>· 혼주는 청첩장 편집은 못 하지만, 웨딩 리포트와 메모리북을 볼 수 있어요.</p>
+        <p>{t('myWedding.hostSlot.noteSpouse')}</p>
+        <p>{t('myWedding.hostSlot.noteParent')}</p>
       </div>
 
       {/* 배우자 초대 */}
       {spouseSlot && (
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">배우자</p>
+          <p className="text-sm font-medium text-gray-700 mb-2">{t('myWedding.hostSlot.spouse')}</p>
           {renderSlot(spouseSlot, spouseSlot === 'groom' ? wedding.groom_name : wedding.bride_name)}
         </div>
       )}
 
       {/* 혼주 초대 */}
       <div>
-        <p className="text-sm font-medium text-gray-700 mb-2">혼주</p>
+        <p className="text-sm font-medium text-gray-700 mb-2">{t('myWedding.hostSlot.parents')}</p>
         <div className="grid grid-cols-2 gap-2">
           {PARENT_SLOTS.map((slot) => {
             const name =

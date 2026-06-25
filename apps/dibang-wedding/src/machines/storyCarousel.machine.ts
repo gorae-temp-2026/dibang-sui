@@ -72,10 +72,10 @@ export const storyCarouselMachine = setup({
   },
 
   states: {
-    closed: { description: "모달 닫힘" },
+    closed: { description: "Modal closed" },
 
     playing: {
-      description: "스토리 표시 중 — 머신이 롤오버/바운드/끝닫힘을 계산(컴포넌트는 send+렌더)",
+      description: "Showing story — machine computes rollover/bounds/close-at-end (component sends + renders)",
       on: {
         // 탭 우 / 5초 자동: 다음 글 → 프로필 끝이면 다음 프로필 첫 글 → 마지막의 마지막이면 닫힘
         NEXT_ITEM: [

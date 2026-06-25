@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useIntersectionFadeIn } from '../hooks/useIntersectionFadeIn';
+import { useT } from '../lib/i18n';
 
 interface GuestbookEntry {
   id: string;
@@ -35,6 +36,7 @@ function EntryCard({ entry }: { entry: GuestbookEntry }) {
 }
 
 function WriteForm({ onSubmit, isSubmitting }: { onSubmit: (name: string, message: string) => void; isSubmitting?: boolean }) {
+  const t = useT();
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
 
@@ -49,14 +51,14 @@ function WriteForm({ onSubmit, isSubmitting }: { onSubmit: (name: string, messag
     <div className="mt-6 space-y-3">
       <input
         type="text"
-        placeholder="이름"
+        placeholder={t('invitationUi.guestbook.namePlaceholder')}
         value={name}
         onChange={(e) => setName(e.target.value)}
         maxLength={20}
         className="w-full rounded-lg border border-line bg-white px-4 py-3 text-base text-navy placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-soft-sky"
       />
       <textarea
-        placeholder="축하 메시지를 남겨주세요"
+        placeholder={t('invitationUi.guestbook.messagePlaceholder')}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         maxLength={500}
@@ -70,7 +72,7 @@ function WriteForm({ onSubmit, isSubmitting }: { onSubmit: (name: string, messag
           disabled={isSubmitting || !name.trim() || !message.trim()}
           className="rounded-xl bg-navy px-6 py-2.5 text-base font-semibold text-white transition-colors hover:bg-sky disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? '등록 중...' : '등록'}
+          {isSubmitting ? t('invitationUi.guestbook.submitting') : t('invitationUi.guestbook.submit')}
         </button>
       </div>
     </div>
@@ -79,17 +81,18 @@ function WriteForm({ onSubmit, isSubmitting }: { onSubmit: (name: string, messag
 
 export function GuestbookSection({ entries, hasMore, onLoadMore, onSubmit, isSubmitting, isLoadingMore }: GuestbookSectionProps) {
   const ref = useIntersectionFadeIn<HTMLElement>();
+  const t = useT();
 
   return (
     <section
       ref={ref}
       className="px-7 py-10 opacity-0 translate-y-8 transition-all duration-[1.4s] ease-[cubic-bezier(.16,1,.3,1)] [&.visible]:opacity-100 [&.visible]:translate-y-0"
     >
-      <h2 className="font-serif text-xl text-navy text-center mb-6">방명록</h2>
+      <h2 className="font-serif text-xl text-navy text-center mb-6">{t('invitationUi.guestbook.title')}</h2>
 
       {entries.length === 0 && (
         <p className="text-base text-muted text-center py-6">
-          아직 남겨진 메시지가 없습니다
+          {t('invitationUi.guestbook.empty')}
         </p>
       )}
 
@@ -105,7 +108,7 @@ export function GuestbookSection({ entries, hasMore, onLoadMore, onSubmit, isSub
           disabled={isLoadingMore}
           className="w-full mt-4 py-3 text-base text-muted hover:text-navy transition-colors disabled:opacity-50"
         >
-          {isLoadingMore ? '불러오는 중...' : '더보기'}
+          {isLoadingMore ? t('invitationUi.guestbook.loading') : t('invitationUi.guestbook.loadMore')}
         </button>
       )}
 

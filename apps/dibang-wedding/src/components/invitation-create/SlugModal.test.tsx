@@ -38,10 +38,10 @@ describe('SlugModal', () => {
 
   it('open=true: 헤더·안내문·돌아가기/확인 버튼 노출', () => {
     render(<SlugModal {...baseProps} />)
-    expect(screen.getByRole('heading', { name: '공유 링크 설정' })).toBeInTheDocument()
-    expect(screen.getByText(/청첩장에 사용할 고유 링크/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '돌아가기' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '확인' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Share link settings' })).toBeInTheDocument()
+    expect(screen.getByText(/Enter a unique link/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
   })
 
   it('slug 입력 → store.slug 갱신 (한 글자 단위)', () => {
@@ -52,10 +52,10 @@ describe('SlugModal', () => {
   })
 
   it.each([
-    ['checking', '확인 중...'],
-    ['available', '사용 가능'],
-    ['taken', '이미 사용 중'],
-    ['error', '확인 실패'],
+    ['checking', 'Checking...'],
+    ['available', 'Available'],
+    ['taken', 'Already taken'],
+    ['error', 'Check failed'],
   ] as const)('slugAvailability=%s → 안내 텍스트 "%s" 노출', (status, expected) => {
     render(<SlugModal {...baseProps} slugAvailability={status} />)
     expect(screen.getByText(expected)).toBeInTheDocument()
@@ -64,26 +64,26 @@ describe('SlugModal', () => {
   it('slugAvailability=idle: 안내 텍스트 비어있음', () => {
     render(<SlugModal {...baseProps} slugAvailability="idle" />)
     // 안내문은 별도 p로만 노출되므로 다른 안내 텍스트가 없어야 함
-    expect(screen.queryByText('확인 중...')).not.toBeInTheDocument()
-    expect(screen.queryByText('사용 가능')).not.toBeInTheDocument()
+    expect(screen.queryByText('Checking...')).not.toBeInTheDocument()
+    expect(screen.queryByText('Available')).not.toBeInTheDocument()
   })
 
   it('확인 버튼: slug<2자 OR available 아니면 disabled', () => {
     useInvitationForm.getState().setField('slug', 'm')
     render(<SlugModal {...baseProps} slugAvailability="available" />)
-    expect(screen.getByRole('button', { name: '확인' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeDisabled()
   })
 
   it('확인 버튼: slug≥2자 + available + !isPending → 활성', () => {
     useInvitationForm.getState().setField('slug', 'mywed')
     render(<SlugModal {...baseProps} slugAvailability="available" />)
-    expect(screen.getByRole('button', { name: '확인' })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Confirm' })).not.toBeDisabled()
   })
 
   it('isPending=true: 확인 버튼 "저장 중..." + disabled', () => {
     useInvitationForm.getState().setField('slug', 'mywed')
     render(<SlugModal {...baseProps} slugAvailability="available" isPending />)
-    const btn = screen.getByRole('button', { name: '저장 중...' })
+    const btn = screen.getByRole('button', { name: 'Saving...' })
     expect(btn).toBeDisabled()
   })
 
@@ -92,9 +92,9 @@ describe('SlugModal', () => {
     const onConfirm = vi.fn()
     useInvitationForm.getState().setField('slug', 'mywed')
     render(<SlugModal {...baseProps} onClose={onClose} onConfirm={onConfirm} slugAvailability="available" />)
-    await userEvent.click(screen.getByRole('button', { name: '돌아가기' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Back' }))
     expect(onClose).toHaveBeenCalledTimes(1)
-    await userEvent.click(screen.getByRole('button', { name: '확인' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm' }))
     expect(onConfirm).toHaveBeenCalledTimes(1)
   })
 })

@@ -16,8 +16,10 @@ import { useMachine } from '@xstate/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getWeddingQueryKey } from '@gorae/contracts/@tanstack/react-query.gen';
 import { invitationEditMachine } from '../machines/invitationEdit.machine';
+import { useT } from '../lib/i18n';
 
 export function InvitationEditPage() {
+  const t = useT();
   const { weddingId } = useParams<{ weddingId: string }>();
   const [searchParams] = useSearchParams();
   const targetInvitationId = searchParams.get('invitationId');
@@ -175,7 +177,7 @@ export function InvitationEditPage() {
   if (state.matches({ flow: 'loading' })) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p className="text-base text-muted">불러오는 중...</p>
+        <p className="text-base text-muted">{t('events.loading')}</p>
       </div>
     );
   }
@@ -183,9 +185,9 @@ export function InvitationEditPage() {
   if (state.matches({ flow: 'loadError' })) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4">
-        <p className="text-base text-muted">청첩장을 불러올 수 없습니다</p>
+        <p className="text-base text-muted">{t('page.invitation.loadFailed')}</p>
         <Link to="/my-wedding" className="text-base text-sky-500 hover:text-sky-700">
-          돌아가기
+          {t('page.hostInvite.back')}
         </Link>
       </div>
     );
@@ -214,7 +216,7 @@ export function InvitationEditPage() {
             (e as { status?: number })?.status ??
             (e as { response?: { status?: number } })?.response?.status;
           if (status === 409) send({ type: 'SAVE_CONFLICT' });
-          else send({ type: 'SAVE_ERROR', error: e instanceof Error ? e.message : '저장에 실패했습니다.' });
+          else send({ type: 'SAVE_ERROR', error: e instanceof Error ? e.message : t('page.invitation.saveFailed') });
         },
       },
     );
@@ -238,7 +240,7 @@ export function InvitationEditPage() {
           <button
             onClick={() => requestLeave(-1)}
             className="text-gray-600 hover:text-gray-900 transition-colors"
-            aria-label="뒤로가기"
+            aria-label={t('page.invitation.backAria')}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
@@ -251,7 +253,7 @@ export function InvitationEditPage() {
           disabled={state.matches({ flow: 'saving' })}
           className="rounded-lg bg-sky-500 px-4 py-2 text-base font-semibold text-white hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {state.matches({ flow: 'saving' }) ? '저장 중...' : '수정하기'}
+          {state.matches({ flow: 'saving' }) ? t('invite.common.saving') : t('page.invitation.saveEdit')}
         </button>
       </header>
 
@@ -263,7 +265,7 @@ export function InvitationEditPage() {
             mobileTab === 'edit' ? 'text-navy border-b-2 border-navy' : 'text-muted'
           }`}
         >
-          편집
+          {t('page.invitation.editTab')}
         </button>
         <button
           onClick={() => setMobileTab('preview')}
@@ -271,7 +273,7 @@ export function InvitationEditPage() {
             mobileTab === 'preview' ? 'text-navy border-b-2 border-navy' : 'text-muted'
           }`}
         >
-          미리보기
+          {t('page.invitation.previewTab')}
         </button>
       </div>
 
@@ -282,7 +284,7 @@ export function InvitationEditPage() {
         </div>
         <div className="basis-7/12 overflow-y-auto">
           <EditPanel
-            title="청첩장 수정하기"
+            title={t('page.invitation.editTitle')}
             onFocusSection={handleFocusSection}
             uploadContext={uploadContext}
             onPickCover={handlePickCover}
@@ -303,7 +305,7 @@ export function InvitationEditPage() {
       <div className="flex-1 overflow-y-auto md:hidden">
         {mobileTab === 'edit' ? (
           <EditPanel
-            title="청첩장 수정하기"
+            title={t('page.invitation.editTitle')}
             onFocusSection={handleFocusSection}
             uploadContext={uploadContext}
             onPickCover={handlePickCover}
@@ -328,15 +330,15 @@ export function InvitationEditPage() {
       {state.matches({ flow: 'confirmingLeave' }) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 space-y-5">
-            <h2 className="text-lg font-bold text-gray-900">저장하지 않고 나갈까요?</h2>
-            <p className="text-base text-gray-500">변경한 내용이 저장되지 않았어요.</p>
+            <h2 className="text-lg font-bold text-gray-900">{t('page.invitation.leaveTitle')}</h2>
+            <p className="text-base text-gray-500">{t('page.invitation.leaveDesc')}</p>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => { send({ type: 'CANCEL_LEAVE' }); setPendingTo(null); }}
                 className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                계속 편집
+                {t('page.invitation.keepEditing')}
               </button>
               <button
                 type="button"
@@ -347,7 +349,7 @@ export function InvitationEditPage() {
                 }}
                 className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-base font-semibold text-white hover:bg-red-600 transition-colors"
               >
-                나가기
+                {t('curate.leave')}
               </button>
             </div>
           </div>
@@ -358,8 +360,8 @@ export function InvitationEditPage() {
       {state.matches({ flow: 'conflict' }) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 space-y-5">
-            <h2 className="text-lg font-bold text-gray-900">다른 곳에서 먼저 수정됐어요</h2>
-            <p className="text-base text-gray-500">새로고침해서 최신 내용을 받거나, 내 변경으로 강제 저장할 수 있어요.</p>
+            <h2 className="text-lg font-bold text-gray-900">{t('page.invitation.conflictTitle')}</h2>
+            <p className="text-base text-gray-500">{t('page.invitation.conflictDesc')}</p>
             <div className="flex gap-3">
               <button
                 type="button"
@@ -369,7 +371,7 @@ export function InvitationEditPage() {
                 }}
                 className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                새로고침
+                {t('page.invitation.refresh')}
               </button>
               <button
                 type="button"
@@ -379,7 +381,7 @@ export function InvitationEditPage() {
                 }}
                 className="flex-1 rounded-lg bg-sky-500 px-4 py-2.5 text-base font-semibold text-white hover:bg-sky-600 transition-colors"
               >
-                강제 저장
+                {t('page.invitation.forceSave')}
               </button>
             </div>
           </div>

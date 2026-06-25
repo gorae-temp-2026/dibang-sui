@@ -17,6 +17,7 @@ import { ITEM_BY_NAME, DEFAULT_HEAD, DEFAULT_BODY, RECOLOR_BODY, type ShopItem, 
 import { ProfileSheet } from '../components/profile/ProfileSheet'
 import type { ProfileData, SignalNode } from '../components/profile/types'
 import { warmthStep } from '../lib/loungeV2Feed'
+import { useT } from '../lib/i18n'
 
 const HEAD_POOL = ['chu_default', 'yh_pigtail', 'chu_sport', 'yh_bob', 'chu_buzz', 'yh_veil', 'chu_shaggy']
 const COLORS = [0xe6a3b6, 0x88b0d8, 0xf0c98a, 0x9ad0b0, 0xc8a6e0, 0xe0b48a, 0x9ec8e8, 0xd99bb0, 0x8fcdb6, 0xe8c07a]
@@ -42,6 +43,7 @@ function buildOnchainProfile(
   isSelf: boolean,
   signals: SignalQuery[],
   actions: ActionLoggedQuery[],
+  t: (key: string, vars?: Record<string, string | number>) => string,
 ): ProfileData {
   // isSelf: 나와 관련된 모든 신호/액션. !isSelf: addr은 상대, 나↔상대 간만.
   const relevant = isSelf
@@ -63,15 +65,15 @@ function buildOnchainProfile(
 
   const score = Math.min(1000, emTotal / 100 + csTotal * 50 + busu * 30 + ium * 20 + gift * 15 + write * 10)
   const tier = score >= 820 ? 'AAA' : score >= 760 ? 'AA' : score >= 690 ? 'A' : score >= 620 ? 'BBB' : score >= 550 ? 'BB' : 'B'
-  const label = score >= 760 ? '매우 좋음' : score >= 620 ? '좋음' : score >= 480 ? '보통' : score > 0 ? '낮음' : '데이터 없음'
+  const label = score >= 760 ? t('page.moiGather.veryGood') : score >= 620 ? t('page.moiGather.good') : score >= 480 ? t('page.moiGather.fair') : score > 0 ? t('page.moiGather.low') : t('page.moiGather.noData')
 
   const signal: SignalNode = {
-    name: isSelf ? '나' : '우리',
+    name: isSelf ? t('page.moiGather.me') : t('page.moiGather.us'),
     children: [
-      { name: 'EM', children: [{ name: '부조', value: emTotal / 1e6 }, { name: '선물', value: gift }] },
-      { name: 'CS', children: [{ name: '참석', value: csSignals.filter(s => s.source === 5).length }, { name: '이음', value: ium }, { name: '대화', value: write }, { name: '모임', value: 0 }] },
-      { name: 'AR', children: [{ name: '관계', value: 0, stub: true }] },
-      { name: 'MP', children: [{ name: '거래', value: 0, stub: true }] },
+      { name: 'EM', children: [{ name: t('page.moiGather.sigGift'), value: emTotal / 1e6 }, { name: t('page.moiGather.sigPresent'), value: gift }] },
+      { name: 'CS', children: [{ name: t('page.moiGather.sigAttend'), value: csSignals.filter(s => s.source === 5).length }, { name: t('page.moiGather.sigIeum'), value: ium }, { name: t('page.moiGather.sigTalk'), value: write }, { name: t('page.moiGather.sigGathering'), value: 0 }] },
+      { name: 'AR', children: [{ name: t('page.moiGather.sigRelation'), value: 0, stub: true }] },
+      { name: 'MP', children: [{ name: t('page.moiGather.sigTrade'), value: 0, stub: true }] },
     ],
   }
 
@@ -90,7 +92,7 @@ function buildOnchainProfile(
   iumPeers.forEach((p) => {
     const pLabel = addrShort(p)
     nodes.push({ id: pLabel, label: pLabel, hue: parseInt(p.slice(2, 6), 16) % 360, here: true })
-    links.push({ source: selfLabel, target: pLabel, type: '이음', value: 1 })
+    links.push({ source: selfLabel, target: pLabel, type: t('page.moiGather.sigIeum'), value: 1 })
   })
 
   return {
@@ -111,6 +113,7 @@ function buildOnchainProfile(
 
 export function MoiGatherPage() {
   const navigate = useNavigate()
+  const t = useT()
   const { purchaseItem, equipItem, unequipItem } = useOnchainHostActions()
   const { balanceSui } = useSuiBalance()
   const plazaMachine = useMemo(
@@ -218,7 +221,7 @@ export function MoiGatherPage() {
     discoverUsers(client, address)
       .then((discovered) => {
         const me: PlazaMoi = {
-          id: 'me', name: '나', role: '나의 모이',
+          id: 'me', name: t('page.moiGather.me'), role: t('page.moiGather.myMoi'),
           x: 0.5, y: 0.92, head: DEFAULT_HEAD, body: DEFAULT_BODY, color: 0x9ec8e8, me: true,
         }
         const sameEvent = discovered.filter((d) => d.degree === 1)
@@ -230,7 +233,7 @@ export function MoiGatherPage() {
           return {
             id: d.address,
             name: addrShort(d.address),
-            role: `공유 이벤트 ${d.mutualCount}개`,
+            role: t('page.moiGather.sharedEvents', { n: d.mutualCount }),
             x, y,
             head: HEAD_POOL[i % HEAD_POOL.length],
             body: RECOLOR_BODY,
@@ -241,11 +244,11 @@ export function MoiGatherPage() {
       })
       .catch(() => {
         setCrowd([{
-          id: 'me', name: '나', role: '나의 모이',
+          id: 'me', name: t('page.moiGather.me'), role: t('page.moiGather.myMoi'),
           x: 0.5, y: 0.92, head: DEFAULT_HEAD, body: DEFAULT_BODY, color: 0x9ec8e8, me: true,
         }])
       })
-  }, [address])
+  }, [address, t])
 
   // 군중 인덱스 — 모이 클릭 시 프로필 조회용
   const crowdById = useMemo(() => Object.fromEntries(crowd.map((m) => [m.id, m])), [crowd])
@@ -294,7 +297,7 @@ export function MoiGatherPage() {
     Promise.all([getSignalEvents(client), getActionLoggedEvents(client)])
       .then(([allSignals, allActions]) => {
         if (isSelf) {
-          setProfileData(buildOnchainProfile(address, true, allSignals, allActions))
+          setProfileData(buildOnchainProfile(address, true, allSignals, allActions, t))
         } else {
           const pairSignals = allSignals.filter(
             (s) => (s.from === address && s.to === targetAddr) || (s.from === targetAddr && s.to === address),
@@ -302,18 +305,18 @@ export function MoiGatherPage() {
           const pairActions = allActions.filter(
             (a) => (a.actor === address && a.target === targetAddr) || (a.actor === targetAddr && a.target === address),
           )
-          setProfileData(buildOnchainProfile(targetAddr, false, pairSignals, pairActions))
+          setProfileData(buildOnchainProfile(targetAddr, false, pairSignals, pairActions, t))
         }
       })
       .catch(() => setProfileData(null))
-  }, [profileMoi?.id, address])
+  }, [profileMoi?.id, address, t])
 
   const emptyProfile: ProfileData = {
-    subject: '나', asOf: 'now',
+    subject: t('page.moiGather.me'), asOf: 'now',
     moiCredit: { value: 0, score: 0, tier: '—', rank: 0, total: 0, onchain: true },
     trace: { L1_raw: { 부조: 0, 이음: 0, 대화: 0, 선물: 0, total: 0 }, L2_fold: { 부조EM: 0, 증여EM: 0, topTies: [] }, L3_phi: { 부조: 0, CS: 0, 이행: 0, op: '' }, L4_integrate: { W: { 부조: 0, cs: 0, 이행: 0 }, formula: '', value: 0 } },
-    graph: { nodes: [], links: [] }, signal: { name: '우리', children: [] },
-    trustRange: { tier: '—', label: '데이터 없음', anon: true },
+    graph: { nodes: [], links: [] }, signal: { name: t('page.moiGather.us'), children: [] },
+    trustRange: { tier: '—', label: t('page.moiGather.noData'), anon: true },
   }
   const currentProfileData = profileData ?? emptyProfile
 
@@ -321,8 +324,8 @@ export function MoiGatherPage() {
     ? {
         photoHue: colorToHue(profileMoi.color),
         photoUrl: profileMoi.photoUrl,
-        hook: profileMoi.me ? (address ? addrShort(address) : '나의 모이') : profileMoi.role,
-        prov: [{ emoji: '💍', text: profileMoi.name, sub: profileMoi.role, tag: '온체인' }],
+        hook: profileMoi.me ? (address ? addrShort(address) : t('page.moiGather.myMoi')) : profileMoi.role,
+        prov: [{ emoji: '💍', text: profileMoi.name, sub: profileMoi.role, tag: t('page.lounge.onchain') }],
         mutualCount: 0,
         balLabel: currentProfileData.trustRange.label,
       }
@@ -331,30 +334,30 @@ export function MoiGatherPage() {
   const handleIeum = () => {
     const m = profileMoi
     setProfileMoiId(null)
-    send({ type: 'SHOW_TOAST', message: m ? `${m.name}님에게 이음 신청을 보냈어요` : '이음 신청을 보냈어요' })
+    send({ type: 'SHOW_TOAST', message: m ? t('page.moiGather.ieumSentTo', { name: m.name }) : t('page.moiGather.ieumSent') })
   }
 
   return (
     <div className="relative mx-auto flex h-[100dvh] max-w-[480px] flex-col overflow-hidden bg-[#0A1626] text-[#E8EFF6]">
       <header className="absolute inset-x-0 top-0 z-20 flex items-center gap-2 bg-gradient-to-b from-[#0A1626] to-transparent px-3 py-3">
-        <button type="button" aria-label="뒤로" onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur">
+        <button type="button" aria-label={t('page.moiGather.back')} onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1">
           <div className="truncate text-[14.5px] font-extrabold text-white">
-            {address ? addrShort(address) : ''} 웨딩라운지
+            {address ? addrShort(address) : ''} {t('page.lounge.weddingLounge')}
           </div>
-          <div className="truncate text-[10px] text-white/50">온체인 참가자 {crowd.length}명</div>
+          <div className="truncate text-[10px] text-white/50">{t('page.moiGather.onchainParticipants', { n: crowd.length })}</div>
         </div>
         <div className="flex flex-col items-center rounded-full bg-white/10 px-2.5 py-1 backdrop-blur">
-          <span className="text-[7.5px] font-bold uppercase tracking-wide text-white/45">우리의 온기</span>
+          <span className="text-[7.5px] font-bold uppercase tracking-wide text-white/45">{t('page.moiGather.ourWarmth')}</span>
           <span className="text-[12px] font-extrabold leading-none text-[#F8A24A]">{warmth.toFixed(1)}°</span>
         </div>
         <div className="flex flex-col items-center rounded-full bg-gradient-to-br from-[#F8C57A] to-[#E8A865] px-3 py-1.5 text-xs font-extrabold text-[#5a3a12]">
           {suiBalance ? <span>{suiBalance} SUI</span> : <span>—</span>}
         </div>
         <button type="button" onClick={() => setShopOpen(true)} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-[12px] font-bold text-white backdrop-blur">
-          <ShoppingBag className="h-4 w-4" /> 샵
+          <ShoppingBag className="h-4 w-4" /> {t('page.moiGather.shop')}
         </button>
       </header>
 
@@ -371,7 +374,7 @@ export function MoiGatherPage() {
         {onboard && (
           <div className="pointer-events-none absolute inset-x-0 bottom-5 z-10 flex justify-center px-6">
             <div className="rounded-2xl border border-white/12 bg-[#0c1a2e]/85 px-4 py-2.5 text-center backdrop-blur">
-              <div className="text-[11px] font-medium text-white/75">모이를 누르면 프로필을 볼 수 있어요</div>
+              <div className="text-[11px] font-medium text-white/75">{t('page.moiGather.tapHint')}</div>
             </div>
           </div>
         )}

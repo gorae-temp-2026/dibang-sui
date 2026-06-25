@@ -1,6 +1,7 @@
 import { type RefObject, memo, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ChukuihamQR } from './ChukuihamQR'
+import { useT } from '../../lib/i18n'
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -151,6 +152,7 @@ interface QRSectionProps {
 }
 
 export const QRSection = memo(function QRSection({ qrUrl, qrRef, glowActive = false }: QRSectionProps) {
+  const t = useT()
   return (
     <div className="flex flex-col items-center gap-3">
       {/* 1. Guest → Couple message flying animation — 주석 처리 */}
@@ -176,7 +178,7 @@ export const QRSection = memo(function QRSection({ qrUrl, qrRef, glowActive = fa
           textShadow: '0 1px 6px rgba(0,0,0,0.8)',
         }}
       >
-        QR을 찍어 축하의 마음을 전해주세요
+        {t('display.qrCta')}
       </p>
     </div>
   )

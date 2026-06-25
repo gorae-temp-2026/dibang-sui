@@ -3,6 +3,7 @@ import { useInvitationForm } from '../../hooks/invitation-create/useInvitationFo
 import type { InvitationUploadItem } from '../../machines/invitationImageUpload.machine';
 import { PhotoPositionModal } from './PhotoPositionModal';
 import { sectionTitleClass } from './styles';
+import { useT } from '../../lib/i18n';
 
 /**
  * 커버 이미지 업로더 — 낙관적 UI.
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function CoverImageUploader({ item, onPickFile, onRetry, onRemoveItem }: Props) {
+  const t = useT();
   const store = useInvitationForm();
   const inputRef = useRef<HTMLInputElement>(null);
   const [posModalOpen, setPosModalOpen] = useState(false);
@@ -52,13 +54,13 @@ export function CoverImageUploader({ item, onPickFile, onRetry, onRemoveItem }: 
 
   return (
     <section className="space-y-4">
-      <h2 className={sectionTitleClass}>커버 이미지</h2>
+      <h2 className={sectionTitleClass}>{t('invite.cover.title')}</h2>
       {previewSrc && (
         <div className="relative w-40 aspect-[9/16] rounded-lg overflow-hidden border border-gray-200">
           {hasCrop && pos && !item ? (
             <img
               src={previewSrc}
-              alt="커버 미리보기"
+              alt={t('invite.cover.previewAlt')}
               className="absolute block max-w-none"
               style={{
                 width: `${(100 / pos.cropArea.width) * 100}%`,
@@ -68,22 +70,22 @@ export function CoverImageUploader({ item, onPickFile, onRetry, onRemoveItem }: 
               }}
             />
           ) : (
-            <img src={previewSrc} alt="커버 미리보기" className="w-full h-full object-cover" />
+            <img src={previewSrc} alt={t('invite.cover.previewAlt')} className="w-full h-full object-cover" />
           )}
           {isUploading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-              <span className="text-sm font-medium text-gray-700">업로드 중...</span>
+              <span className="text-sm font-medium text-gray-700">{t('invite.common.uploading')}</span>
             </div>
           )}
           {isFailed && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/70">
-              <span className="text-sm font-medium text-red-500">업로드 실패</span>
+              <span className="text-sm font-medium text-red-500">{t('invite.upload.failed')}</span>
               <button
                 type="button"
                 onClick={onRetry}
                 className="rounded-md bg-black/60 px-2 py-1 text-sm text-white hover:bg-black/80 transition-colors"
               >
-                재시도
+                {t('invite.upload.retry')}
               </button>
             </div>
           )}
@@ -92,7 +94,7 @@ export function CoverImageUploader({ item, onPickFile, onRetry, onRemoveItem }: 
             onClick={handleDelete}
             className="absolute top-1 right-1 rounded-md bg-black/50 px-1.5 py-0.5 text-sm text-white hover:bg-black/70 transition-colors"
           >
-            삭제
+            {t('invite.common.delete')}
           </button>
           {canAdjustPosition && (
             <button
@@ -100,7 +102,7 @@ export function CoverImageUploader({ item, onPickFile, onRetry, onRemoveItem }: 
               onClick={() => setPosModalOpen(true)}
               className="absolute bottom-1 left-1 rounded-md bg-black/50 px-1.5 py-0.5 text-sm text-white hover:bg-black/70 transition-colors"
             >
-              위치 조정
+              {t('invite.photoPos.adjust')}
             </button>
           )}
         </div>
@@ -113,7 +115,7 @@ export function CoverImageUploader({ item, onPickFile, onRetry, onRemoveItem }: 
           onChange={handleFileChange}
           className="hidden"
         />
-        파일 선택
+        {t('invite.letter.pickFile')}
       </label>
       {isFailed && item?.error && <p className="text-base text-red-500">{item.error}</p>}
       {posModalOpen && store.coverImage && (

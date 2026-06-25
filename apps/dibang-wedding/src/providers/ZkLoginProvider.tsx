@@ -30,6 +30,9 @@ import {
 } from '@gorae/sui-sdk'
 import { env } from '../env'
 import { devLogger } from '../lib/devLogger'
+import { translate, useLangStore } from '../lib/i18n'
+
+const lang = () => useLangStore.getState().lang
 
 // 앱 시작 시 1회: sui-sdk 설정을 env로 덮어쓴다(미설정이면 testnet 기본값 유지).
 if (env.VITE_SUI_PACKAGE_ID) {
@@ -84,7 +87,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
   })
   const devLogin = useCallback(() => {
     const sk = env.VITE_DEV_PRIVATE_KEY
-    if (!sk) throw new Error('VITE_DEV_PRIVATE_KEY 미설정 — dev 로그인 비활성')
+    if (!sk) throw new Error('VITE_DEV_PRIVATE_KEY not set — dev login disabled')
     sessionStorage.setItem(DEV_KEY, sk)
     setDevKeypair(Ed25519Keypair.fromSecretKey(sk))
   }, [])
@@ -108,7 +111,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (redirectUri: string) => {
     const clientId = env.VITE_GOOGLE_CLIENT_ID
     if (!clientId) {
-      throw new Error('VITE_GOOGLE_CLIENT_ID 미설정 — zkLogin 로그인 비활성')
+      throw new Error('Google login is unavailable (missing client ID).')
     }
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
     const epoch = await fetchCurrentEpoch(network)
@@ -133,7 +136,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
 
     const pending = JSON.parse(pendingRaw) as PendingLogin
     const proverUrl = env.VITE_ZK_PROVER_URL
-    if (!proverUrl) throw new Error('VITE_ZK_PROVER_URL 미설정')
+    if (!proverUrl) throw new Error('VITE_ZK_PROVER_URL not set')
 
     const kp = Ed25519Keypair.fromSecretKey(pending.ephemeralSecretKey)
     const proofResult = await fetchZkProof({
@@ -156,7 +159,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       address = computeZkLoginAddressFromSeed(BigInt(addressSeed), claims.iss!, false)
     } else {
       const saltServerUrl = env.VITE_SALT_SERVER_URL
-      if (!saltServerUrl) throw new Error('VITE_SALT_SERVER_URL 미설정')
+      if (!saltServerUrl) throw new Error('VITE_SALT_SERVER_URL not set')
       const salt = await fetchSalt(jwt, saltServerUrl)
       address = zkLoginAddress(jwt, salt)
     }
@@ -188,9 +191,9 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
 
   const showTxToast = useCallback((digest: string, network: string) => {
     const url = `https://suiscan.xyz/${network}/tx/${digest}`
-    toast.success('TX 성공', {
+    toast.success(translate(lang(), 'tx.success'), {
       description: digest.slice(0, 16) + '…',
-      action: { label: '보기 →', onClick: () => window.open(url, '_blank') },
+      action: { label: translate(lang(), 'tx.view'), onClick: () => window.open(url, '_blank') },
       duration: 6000,
     })
     window.dispatchEvent(new CustomEvent('sui:tx-success', { detail: { digest } }))
@@ -207,8 +210,8 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
         showTxToast(res.digest, net)
         return res.digest
       }
-      if (!session) throw new Error('zkLogin 세션 없음 — 먼저 로그인하세요')
-      if (!session.proofInputs) throw new Error('ZK 증명 없음 — VITE_ZK_PROVER_URL 설정 필요')
+      if (!session) throw new Error(translate(lang(), 'tx.noSession'))
+      if (!session.proofInputs) throw new Error(translate(lang(), 'tx.noProof'))
 
       const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
       const client = createJsonRpcClient(network)
@@ -232,7 +235,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       const status = res.effects?.status?.status
       if (status !== 'success') {
         devLogger.log('sui', 'tx_error', { error: res.effects?.status?.error, status })
-        throw new Error(`트랜잭션 실패: ${res.effects?.status?.error ?? status}`)
+        throw new Error(translate(lang(), 'tx.failed', { error: String(res.effects?.status?.error ?? status) }))
       }
       devLogger.log('sui', 'executeOnchain_success', { digest: res.digest, mode: 'zkLogin' })
       showTxToast(res.digest, net)

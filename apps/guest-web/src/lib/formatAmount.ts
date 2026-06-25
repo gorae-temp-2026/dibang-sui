@@ -1,5 +1,16 @@
+import { translate, useLangStore, type Lang } from './i18n'
+
 export function formatAmount(amount: number): string {
   return amount.toLocaleString('ko-KR') + '원'
+}
+
+// 입력 금액의 보조 표기. ko = 한글 금액 어구("오만원"), en = 통화 표기("KRW 50,000").
+// lang 미지정 시 현재 언어 스토어를 읽는다(컴포넌트 밖 호출용).
+export function amountToWords(amount: number, lang?: Lang): string {
+  const l = lang ?? useLangStore.getState().lang
+  if (l === 'ko') return amountToKorean(amount)
+  if (!amount || amount <= 0) return ''
+  return translate(l, 'guestFlow.amount.currency') + ' ' + amount.toLocaleString('en-US')
 }
 
 export function amountToKorean(amount: number): string {

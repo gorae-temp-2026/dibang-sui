@@ -1,4 +1,6 @@
 import { setup, assign, fromPromise } from 'xstate';
+import { translate, useLangStore } from '../lib/i18n';
+const lang = () => useLangStore.getState().lang;
 
 /**
  * uploadItem.machine — 이미지 1건 업로드 파이프라인 (완전 펼침).
@@ -92,11 +94,11 @@ export const uploadItemMachine = setup({
     setStepError: assign({
       error: ({ event }) => {
         const e = (event as unknown as { error?: unknown }).error;
-        return e instanceof Error ? e.message : '업로드 처리에 실패했습니다.';
+        return e instanceof Error ? e.message : translate(lang(), 'machine.upload.failed');
       },
     }),
-    setErrorTooBig: assign({ error: '이미지가 너무 큽니다 (최대 10MB).' }),
-    setErrorNoUrl: assign({ error: '업로드 URL을 확인할 수 없습니다.' }),
+    setErrorTooBig: assign({ error: () => translate(lang(), 'machine.upload.tooBig') }),
+    setErrorNoUrl: assign({ error: () => translate(lang(), 'machine.upload.noUrl') }),
     resetForRetry: assign({
       file: ({ context }) => context.originalFile,
       attempts: 0,

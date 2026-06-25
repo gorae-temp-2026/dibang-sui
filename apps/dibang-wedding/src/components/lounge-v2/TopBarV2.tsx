@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { WarmthOrb } from './WarmthOrb';
+import { useT } from '../../lib/i18n';
 
 // 프로토타입 .top-bar/.tb-back/.top-bar-mini/.tbm-title 정합.
 // 평소: fixed 투명, 플로팅 chevron만. 스크롤 시(>200): 흰 풀바 + mini(라운지명+온기 orb).
@@ -12,6 +13,7 @@ interface TopBarV2Props {
 }
 
 export function TopBarV2({ title, warmthLabel }: TopBarV2Props) {
+  const t = useT();
   const navigate = useNavigate();
   const [mini, setMini] = useState(false);
 
@@ -33,7 +35,7 @@ export function TopBarV2({ title, warmthLabel }: TopBarV2Props) {
       <button
         type="button"
         onClick={() => navigate('/my-wedding')}
-        aria-label="뒤로"
+        aria-label={t('loungeV2.topBar.back')}
         className="flex h-9 w-9 items-center justify-center bg-transparent p-0 text-lng-ink transition-opacity hover:opacity-60"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

@@ -34,13 +34,30 @@ import type { MemoryBookProps } from './MemoryBookV2_4Types'
 import DisplayWeddingMemoryBook from './DisplayWeddingMemoryBook'
 import { decodeHtml } from '../../lib/htmlDecode'
 import { useMemoryBookPreload } from '../../hooks/memorybook/useMemoryBookPreload'
+import { useT, useLangStore } from '../../lib/i18n'
+
+const lang = () => useLangStore.getState().lang
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline helper (v2의 @gorae/shared/lib/formatDate 의존 제거)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function formatKoreanDate(date: string, time?: string): string {
+function formatWeddingDate(date: string, time?: string): string {
   const d = new Date(`${date}T00:00:00`)
+  if (lang() === 'en') {
+    let result = d.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+    if (time) {
+      const [h, m] = time.split(':').map(Number)
+      const dt = new Date(`${date}T${time}:00`)
+      result += `, ${dt.toLocaleTimeString('en-US', { hour: 'numeric', ...(m > 0 ? { minute: '2-digit' } : {}) })}`
+    }
+    return result
+  }
   const year = d.getFullYear()
   const month = d.getMonth() + 1
   const day = d.getDate()
@@ -362,7 +379,7 @@ function PrologueSection({
             marginTop: 0,
           }}
         >
-          {formatKoreanDate(weddingDate, time)}
+          {formatWeddingDate(weddingDate, time)}
         </motion.div>
 
         <motion.div
@@ -427,6 +444,7 @@ function PrologueSection({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function DisplaySection({ data }: MemoryBookProps) {
+  const t = useT()
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-10% 0px' })
 
@@ -484,7 +502,9 @@ function DisplaySection({ data }: MemoryBookProps) {
               paddingRight: 24,
             }}
           >
-            수 많은 <span style={{ color: COLORS.gold }}>마음</span>이 현장에 담겼습니다
+            {t('memorybook.displayHeadingPre')}
+            <span style={{ color: COLORS.gold }}>{t('memorybook.displayHeadingHl')}</span>
+            {t('memorybook.displayHeadingPost')}
           </div>
         </div>
 
@@ -1476,6 +1496,7 @@ function BuildupMessage({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function HighlightTransition({ reducedMotion }: { reducedMotion: boolean }) {
+  const t = useT()
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-5% 0px' })
 
@@ -1541,7 +1562,7 @@ function HighlightTransition({ reducedMotion }: { reducedMotion: boolean }) {
           color: COLORS.textOnDark,
         }}
       >
-        그날의 모든 순간
+        {t('memorybook.highlightSubtitle')}
       </motion.div>
     </div>
   )
@@ -1722,6 +1743,7 @@ function EpilogueSection({
   data,
   reducedMotion,
 }: MemoryBookProps & { reducedMotion: boolean }) {
+  const t = useT()
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-10% 0px' })
 
@@ -1781,7 +1803,7 @@ function EpilogueSection({
               marginTop: 8,
             }}
           >
-            명이 함께했습니다
+            {t('memorybook.statGuests')}
           </div>
         </motion.div>
 
@@ -1808,7 +1830,7 @@ function EpilogueSection({
               marginTop: 8,
             }}
           >
-            개의 마음이 전해졌습니다
+            {t('memorybook.statMessages')}
           </div>
         </motion.div>
 
@@ -1835,7 +1857,7 @@ function EpilogueSection({
               marginTop: 8,
             }}
           >
-            장의 순간이 담겼습니다
+            {t('memorybook.statPhotos')}
           </div>
         </motion.div>
 
@@ -1895,9 +1917,9 @@ function EpilogueSection({
             maxWidth: 380,
           }}
         >
-          가장 빛나는 장면은,
+          {t('memorybook.closingLine1')}
           <br />
-          언제나 함께한 순간이었습니다
+          {t('memorybook.closingLine2')}
         </motion.div>
 
         <motion.div
@@ -1930,7 +1952,7 @@ function EpilogueSection({
             textAlign: 'center',
           }}
         >
-          {formatKoreanDate(couple.weddingDate, couple.time)}
+          {formatWeddingDate(couple.weddingDate, couple.time)}
         </motion.div>
 
         <motion.div
@@ -1976,7 +1998,7 @@ function EpilogueSection({
               marginTop: 4,
             }}
           >
-            디지털방명록
+            {t('memorybook.tagline')}
           </div>
         </motion.div>
 
@@ -1998,6 +2020,7 @@ function EpilogueSection({
 }
 
 function ExitButton({ reducedMotion, inView }: { reducedMotion: boolean; inView: boolean }) {
+  const t = useT()
   const navigate = useNavigate()
 
   return (
@@ -2026,13 +2049,14 @@ function ExitButton({ reducedMotion, inView }: { reducedMotion: boolean; inView:
           color: 'rgba(255, 248, 240, 0.4)',
         }}
       >
-        돌아가기
+        {t('memorybook.back')}
       </span>
     </motion.button>
   )
 }
 
 function ReCurateButton({ reducedMotion, inView }: { reducedMotion: boolean; inView: boolean }) {
+  const t = useT()
   const navigate = useNavigate()
   const weddingId = useContext(WeddingIdContext)
 
@@ -2064,7 +2088,7 @@ function ReCurateButton({ reducedMotion, inView }: { reducedMotion: boolean; inV
           color: 'rgba(255, 248, 240, 0.7)',
         }}
       >
-        다시 큐레이션 하기
+        {t('memorybook.reCurate')}
       </span>
     </motion.button>
   )

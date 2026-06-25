@@ -1,4 +1,5 @@
 import { WarmthOrb } from './WarmthOrb';
+import { useT } from '../../lib/i18n';
 
 // Lounge 카드 — 프로토타입 .hero/.hero-eyebrow/.hero-title/.hero-hosts/.warmth-chip 정합.
 // 정체성(eyebrow / 라운지명 / 호스트 4명) + 우상단 온기 orb(라벨 없음) + 우측하단 사진 공유 버튼(선택).
@@ -25,6 +26,7 @@ export function LoungeHeroCard({
   warmthLabel,
   onSharePhoto,
 }: LoungeHeroCardProps) {
+  const t = useT();
   const hasGroomParents = groomFatherName || groomMotherName;
   const hasBrideParents = brideFatherName || brideMotherName;
 
@@ -38,7 +40,7 @@ export function LoungeHeroCard({
         Wedding Lounge
       </span>
       <h1 className="m-0 mt-[6px] pr-12 text-[22px] font-bold leading-[1.3] tracking-[-0.02em] text-lng-navy/70">
-        {groomName} · {brideName}의 라운지
+        {t('loungeV2.hero.title', { groom: groomName, bride: brideName })}
       </h1>
 
       {(hasGroomParents || hasBrideParents || onSharePhoto) && (
@@ -47,17 +49,17 @@ export function LoungeHeroCard({
             <p className="mb-0 text-[14px] leading-[1.7] text-lng-muted">
               {hasGroomParents && (
                 <span className="block">
-                  <span className="font-medium text-[#9CA3AF]">신랑측 </span>
+                  <span className="font-medium text-[#9CA3AF]">{t('loungeV2.hero.groomSide')} </span>
                   {groomFatherName && (
                     <>
-                      <span className="font-medium text-[#9CA3AF]">부 </span>
+                      <span className="font-medium text-[#9CA3AF]">{t('loungeV2.hero.father')} </span>
                       <span className="font-medium text-lng-text-primary">{groomFatherName}</span>
                     </>
                   )}
                   {groomFatherName && groomMotherName && <span className="mx-[6px] text-lng-line">·</span>}
                   {groomMotherName && (
                     <>
-                      <span className="font-medium text-[#9CA3AF]">모 </span>
+                      <span className="font-medium text-[#9CA3AF]">{t('loungeV2.hero.mother')} </span>
                       <span className="font-medium text-lng-text-primary">{groomMotherName}</span>
                     </>
                   )}
@@ -65,17 +67,17 @@ export function LoungeHeroCard({
               )}
               {hasBrideParents && (
                 <span className="block">
-                  <span className="font-medium text-[#9CA3AF]">신부측 </span>
+                  <span className="font-medium text-[#9CA3AF]">{t('loungeV2.hero.brideSide')} </span>
                   {brideFatherName && (
                     <>
-                      <span className="font-medium text-[#9CA3AF]">부 </span>
+                      <span className="font-medium text-[#9CA3AF]">{t('loungeV2.hero.father')} </span>
                       <span className="font-medium text-lng-text-primary">{brideFatherName}</span>
                     </>
                   )}
                   {brideFatherName && brideMotherName && <span className="mx-[6px] text-lng-line">·</span>}
                   {brideMotherName && (
                     <>
-                      <span className="font-medium text-[#9CA3AF]">모 </span>
+                      <span className="font-medium text-[#9CA3AF]">{t('loungeV2.hero.mother')} </span>
                       <span className="font-medium text-lng-text-primary">{brideMotherName}</span>
                     </>
                   )}
@@ -97,7 +99,7 @@ export function LoungeHeroCard({
                 <circle cx="8.5" cy="8.5" r="1.5" />
                 <path d="M21 15l-5-5L5 21" />
               </svg>
-              사진 공유
+              {t('loungeV2.hero.sharePhoto')}
             </button>
           )}
         </div>

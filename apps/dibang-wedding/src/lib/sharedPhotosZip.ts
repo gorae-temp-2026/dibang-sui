@@ -11,6 +11,9 @@
  */
 import { getSupabaseClient } from './supabase';
 import { getApiBaseUrl } from './api-base';
+import { translate, useLangStore } from './i18n';
+
+const lang = () => useLangStore.getState().lang;
 
 export interface DownloadSharedPhotosZipArgs {
   loungeId: string;
@@ -34,7 +37,7 @@ export async function fetchSharedPhotosZipBlob({
     { headers: token ? { Authorization: `Bearer ${token}` } : {} },
   );
   if (!res.ok) {
-    throw new Error(`ZIP 다운로드 실패: ${res.status}`);
+    throw new Error(translate(lang(), 'sharedPhotosZip.downloadFailed', { status: res.status }));
   }
   return res.blob();
 }

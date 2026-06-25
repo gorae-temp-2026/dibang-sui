@@ -26,9 +26,9 @@ export interface ThemeColors {
   previewText: string;
 }
 
-export const invitationThemes: Record<InvitationTheme, { label: string; colors: ThemeColors }> = {
+export const invitationThemes: Record<InvitationTheme, { labelKey: string; colors: ThemeColors }> = {
   'moi-blue': {
-    label: '모이 블루',
+    labelKey: 'theme.moiBlue',
     colors: {
       coverTextGradient: ['#A8C4D9', '#8FB3CC', '#6B9FBF', '#A8C4D9'],
       previewBg: '#A8C4D9',
@@ -36,7 +36,7 @@ export const invitationThemes: Record<InvitationTheme, { label: string; colors: 
     },
   },
   'moi-pink': {
-    label: '모이 핑크',
+    labelKey: 'theme.moiPink',
     colors: {
       coverTextGradient: ['#FFB8C5', '#FFA29A', '#F8C57A', '#FFE0A8'],
       previewBg: '#E8B4C0',

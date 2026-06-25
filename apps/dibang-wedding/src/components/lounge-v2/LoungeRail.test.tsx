@@ -19,7 +19,7 @@ describe('LoungeRail 접이식 액션 레일', () => {
         actions={[{ key: 'memory', label: '메모리', icon: <span />, onClick: vi.fn() }]}
       />,
     )
-    expect(screen.getByLabelText('레일 펴기')).toBeInTheDocument()
+    expect(screen.getByLabelText('Expand rail')).toBeInTheDocument()
     expect(screen.queryByLabelText('메모리')).not.toBeInTheDocument()
   })
 
@@ -28,7 +28,7 @@ describe('LoungeRail 접이식 액션 레일', () => {
     const onClick = vi.fn()
     render(<LoungeRail actions={[{ key: 'memory', label: '메모리', icon: <span />, onClick }]} />)
 
-    await user.click(screen.getByLabelText('레일 펴기'))
+    await user.click(screen.getByLabelText('Expand rail'))
     await user.click(await screen.findByLabelText('메모리'))
     expect(onClick).toHaveBeenCalledOnce()
   })

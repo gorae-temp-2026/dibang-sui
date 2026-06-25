@@ -6,7 +6,10 @@
 
 import type { FeedItem } from '../types/db-compat';
 import { env } from '../env';
-import { SIDE_LABEL } from './guestLabel';
+import { sideLabel, relationLabel } from './guestLabel';
+import { translate, useLangStore } from './i18n';
+
+const lang = () => useLangStore.getState().lang;
 import {
   FEED_TYPE_TO_LOG,
   LOG_LABEL,
@@ -35,13 +38,12 @@ function str(v: unknown): string {
  *      ("groom",-,-) → "신랑"
  *      (-,"친구/지인","대학교 동기") → "친구/지인 · 대학교 동기" */
 function relationText(d: Data): string {
-  const rawRole = str(d.host_role) || str(d.recipient_slot);
-  // host_role/recipient_slot은 'groom' 등 영문 코드 → 한글 라벨로 표시
-  const role = rawRole ? (SIDE_LABEL[rawRole] ?? rawRole) : '';
-  const category = str(d.relation_category);
+  // host_role/recipient_slot은 'groom' 등 영문 코드 → 현재 언어 라벨로 표시
+  const role = sideLabel(str(d.host_role) || str(d.recipient_slot));
+  const category = relationLabel(str(d.relation_category));
   const detail = str(d.relation_detail);
   const parts: string[] = [];
-  if (role && category) parts.push(`${role}의 ${category}`);
+  if (role && category) parts.push(translate(lang(), 'guest.prefixOf', { side: role, relation: category }));
   else if (role) parts.push(role);
   else if (category) parts.push(category);
   if (detail) parts.push(detail);
@@ -55,7 +57,7 @@ export function feedActorName(item: FeedItem): string {
     str(d.guest_name) ||
     str(d.visitor_name) ||
     str(d.author_name) ||
-    '익명'
+    translate(lang(), 'feed.anonymous')
   );
 }
 
@@ -64,12 +66,12 @@ function authorKey(item: FeedItem): string {
   return feedActorName(item) + '|' + relationText(data(item));
 }
 
-const ACTION_PHRASE: Record<string, string> = {
-  checkin: '현장에 참석했어요',
-  enter: '라운지에 입장했어요',
-  post: '글을 올렸어요',
-  feed: '축하메세지를 남겼어요',
-  memory: '메모리를 올렸어요',
+const ACTION_PHRASE_KEY: Record<string, string> = {
+  checkin: 'feed.action.checkin',
+  enter: 'feed.action.enter',
+  post: 'feed.action.post',
+  feed: 'feed.action.feed',
+  memory: 'feed.action.memory',
 };
 
 /** FeedItem → 모이는 중 로그 한 줄 */
@@ -83,7 +85,7 @@ export function toLogRow(item: FeedItem): LogRow {
     actorName: feedActorName(item),
     relation: relationText(d),
     // 라운지 알림(event)은 자리·선물명이 제각각 → data.event_text 커스텀 문구 우선.
-    message: str(d.event_text) || ACTION_PHRASE[kind] || '',
+    message: str(d.event_text) || (ACTION_PHRASE_KEY[kind] ? translate(lang(), ACTION_PHRASE_KEY[kind]) : ''),
     createdAt: item.created_at,
   };
 }
@@ -185,12 +187,13 @@ export function timeAgo(iso: string): string {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return '';
   const sec = Math.max(0, (Date.now() - then) / 1000);
-  if (sec < 60) return '방금 전';
+  const l = lang();
+  if (sec < 60) return translate(l, 'timeAgo.justNow');
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}분 전`;
+  if (min < 60) return translate(l, 'timeAgo.minutes', { n: min });
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}시간 전`;
+  if (hr < 24) return translate(l, 'timeAgo.hours', { n: hr });
   const day = Math.floor(hr / 24);
-  if (day === 1) return '어제';
-  return `${day}일 전`;
+  if (day === 1) return translate(l, 'timeAgo.yesterday');
+  return translate(l, 'timeAgo.days', { n: day });
 }

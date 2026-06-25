@@ -52,7 +52,7 @@ export const loungeCheckInGateMachine = setup({
 
   states: {
     checking: {
-      description: "로그인 유저의 LoungeCheckIn 존재 여부 확인 중",
+      description: "Checking whether logged-in user has an existing LoungeCheckIn",
       on: {
         CHECK_SUCCESS: {
           target: "hasEntry",
@@ -75,11 +75,11 @@ export const loungeCheckInGateMachine = setup({
     },
 
     hasEntry: {
-      description: "이미 입장한 적 있음 — 라운지로 리디렉트",
+      description: "Already checked in — redirect to lounge",
     },
 
     form: {
-      description: "관계 정보 입력 폼 표시",
+      description: "Show relationship info input form",
       on: {
         SUBMIT: {
           target: "submitting",
@@ -88,7 +88,7 @@ export const loungeCheckInGateMachine = setup({
     },
 
     submitting: {
-      description: "라운지 입장(LoungeCheckIn 생성) API 호출 중",
+      description: "Calling lounge check-in (LoungeCheckIn creation) API",
       on: {
         SUBMIT_SUCCESS: {
           target: "done",
@@ -108,11 +108,11 @@ export const loungeCheckInGateMachine = setup({
     },
 
     done: {
-      description: "입장 완료 — 라운지로 리디렉트",
+      description: "Check-in complete — redirect to lounge",
     },
 
     error: {
-      description: "확인 실패",
+      description: "Check failed",
       on: {
         RETRY: {
           target: "checking",

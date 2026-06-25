@@ -1,3 +1,5 @@
+import { useT } from '../../lib/i18n';
+
 interface SelectionDotProps {
   selected: boolean;
   selectionIndex: number;
@@ -6,12 +8,13 @@ interface SelectionDotProps {
 }
 
 export function SelectionDot({ selected, selectionIndex, onClick, size = 'sm' }: SelectionDotProps) {
+  const t = useT();
   const dim = size === 'md' ? 36 : 26;
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={selected ? '선택 해제' : '선택'}
+      aria-label={selected ? t('memorybook.deselect') : t('memorybook.select')}
       className="absolute top-1.5 right-1.5 -m-2.5 flex h-[46px] w-[46px] items-center justify-center bg-transparent p-0 border-0"
     >
       <span

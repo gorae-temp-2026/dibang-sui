@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { amountToKorean } from '../../lib/formatAmount';
+import { amountToWords } from '../../lib/formatAmount';
 import { serif, springs, colors } from '../../styles/tokens';
+import { useT, useLang } from '../../lib/i18n';
 
 interface StepAmountProps {
   onSelectAmount: (amount: number) => void;
@@ -18,11 +19,13 @@ const STEP_LARGE = 50_000;
 const STEP_XLARGE = 100_000;
 
 export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount = true, hostLabel }: StepAmountProps) {
+  const t = useT();
+  const lang = useLang();
   const [amount, setAmount] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
   const isValid = amount > 0 && amount <= MAX;
-  const korean = amountToKorean(amount);
+  const korean = amountToWords(amount, lang);
 
   function adjust(delta: number) {
     setAmount((prev) => Math.min(MAX, Math.max(MIN, prev + delta)));
@@ -46,8 +49,8 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 24px 32px', maxWidth: 420, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <div style={{ textAlign: 'center' }}>
-        <p style={{ ...serif, fontSize: 18, letterSpacing: '0.15em', color: colors.textMuted }}>축의를 담아요</p>
-        <p style={{ ...serif, marginTop: 16, fontSize: 20, color: colors.textHeading }}>축의금 금액을 정해주세요</p>
+        <p style={{ ...serif, fontSize: 18, letterSpacing: '0.15em', color: colors.textMuted }}>{t('guestFlow.amount.eyebrow')}</p>
+        <p style={{ ...serif, marginTop: 16, fontSize: 20, color: colors.textHeading }}>{t('guestFlow.amount.title')}</p>
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -55,13 +58,13 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
           {/* 직접 입력 가능 — 버튼 조정과 양방향. 표시는 콤마 포맷, 입력은 숫자만 파싱. */}
           <input
             inputMode="numeric"
-            value={amount > 0 ? amount.toLocaleString('ko-KR') : ''}
+            value={amount > 0 ? amount.toLocaleString(lang === 'ko' ? 'ko-KR' : 'en-US') : ''}
             onChange={(e) => {
               const n = Number(e.target.value.replace(/[^0-9]/g, ''));
               setAmount(Math.min(MAX, Math.max(MIN, Number.isNaN(n) ? 0 : n)));
             }}
-            placeholder="0원"
-            aria-label="축의금 금액 직접 입력"
+            placeholder={t('guestFlow.amount.placeholder')}
+            aria-label={t('guestFlow.amount.inputLabel')}
             style={{
               ...serif,
               fontSize: 44,
@@ -95,7 +98,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
               cursor: canDecrease ? 'pointer' : 'default',
             }}
           >
-            -1만
+            {t('guestFlow.amount.minus1man')}
           </motion.button>
           <motion.button
             whileTap={canIncrease ? { scale: 0.95 } : undefined}
@@ -110,7 +113,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
               cursor: canIncrease ? 'pointer' : 'default',
             }}
           >
-            +1만
+            {t('guestFlow.amount.plus1man')}
           </motion.button>
           <motion.button
             whileTap={canDecreaseLarge ? { scale: 0.95 } : undefined}
@@ -125,7 +128,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
               cursor: canDecreaseLarge ? 'pointer' : 'default',
             }}
           >
-            -5만
+            {t('guestFlow.amount.minus5man')}
           </motion.button>
           <motion.button
             whileTap={canIncreaseLarge ? { scale: 0.95 } : undefined}
@@ -140,7 +143,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
               cursor: canIncreaseLarge ? 'pointer' : 'default',
             }}
           >
-            +5만
+            {t('guestFlow.amount.plus5man')}
           </motion.button>
           <motion.button
             whileTap={canDecreaseXLarge ? { scale: 0.95 } : undefined}
@@ -155,7 +158,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
               cursor: canDecreaseXLarge ? 'pointer' : 'default',
             }}
           >
-            -10만
+            {t('guestFlow.amount.minus10man')}
           </motion.button>
           <motion.button
             whileTap={canIncreaseXLarge ? { scale: 0.95 } : undefined}
@@ -170,7 +173,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
               cursor: canIncreaseXLarge ? 'pointer' : 'default',
             }}
           >
-            +10만
+            {t('guestFlow.amount.plus10man')}
           </motion.button>
         </div>
       </div>
@@ -186,7 +189,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
           cursor: isValid ? 'pointer' : 'not-allowed', border: 'none', ...serif,
         }}
       >
-        다음
+        {t('guestFlow.amount.next')}
       </motion.button>
 
       <motion.button
@@ -199,7 +202,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
           border: `1px solid ${colors.borderAccent}`, cursor: 'pointer', ...serif,
         }}
       >
-        이미 축의했어요
+        {t('guestFlow.amount.alreadyPaid')}
       </motion.button>
 
       <motion.button
@@ -211,7 +214,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
           color: colors.textMuted, background: 'transparent', border: 'none', cursor: 'pointer', ...serif,
         }}
       >
-        건너뛰기
+        {t('guestFlow.amount.skip')}
       </motion.button>
 
       {/* 축의대 안내 모달 */}
@@ -244,7 +247,11 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
                 ...serif, fontSize: 20, fontWeight: 600, color: colors.textHeading,
                 lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line',
               }}>
-                {`${hostLabel ? hostLabel.replace(/\s+\S+$/, '') + '측' : ''} 계좌 정보가\n등록되지 않았습니다.\n축의대를 이용해주세요`}
+                {/* 한국어: 수신인 라벨(역할+이름)에서 이름을 떼고 "…측" 접두를 붙인다(단일 토큰 한글 이름 기준).
+                    영어: 영어 이름은 다단어라 마지막 토큰 제거가 이름을 망가뜨리므로 접두 없이 안내문만 표시. */}
+                {lang === 'ko' && hostLabel
+                  ? `${t('guestFlow.amount.noAccountModalPrefix', { role: hostLabel.replace(/\s+\S+$/, '') })} ${t('guestFlow.amount.noAccountModal')}`.trim()
+                  : t('guestFlow.amount.noAccountModal')}
               </p>
               <motion.button
                 whileTap={{ scale: 0.95 }}
@@ -256,7 +263,7 @@ export function StepAmount({ onSelectAmount, onAlreadyPaid, onSkip, hasAccount =
                   border: 'none', cursor: 'pointer', ...serif,
                 }}
               >
-                메시지 전하기
+                {t('guestFlow.amount.sendMessageInstead')}
               </motion.button>
             </motion.div>
           </motion.div>

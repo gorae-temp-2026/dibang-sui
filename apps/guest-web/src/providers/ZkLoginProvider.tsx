@@ -79,7 +79,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (redirectUri: string) => {
     const clientId = env.VITE_GOOGLE_CLIENT_ID
     if (!clientId) {
-      throw new Error('VITE_GOOGLE_CLIENT_ID 미설정 — zkLogin 로그인 비활성')
+      throw new Error('Google login is unavailable (missing client ID).')
     }
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
     const epoch = await fetchCurrentEpoch(network)
@@ -103,7 +103,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
 
     const pending = JSON.parse(pendingRaw) as PendingLogin
     const proverUrl = env.VITE_ZK_PROVER_URL
-    if (!proverUrl) throw new Error('VITE_ZK_PROVER_URL 미설정')
+    if (!proverUrl) throw new Error('VITE_ZK_PROVER_URL not set')
 
     const kp = Ed25519Keypair.fromSecretKey(pending.ephemeralSecretKey)
     const proofResult = await fetchZkProof({
@@ -125,7 +125,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       address = computeZkLoginAddressFromSeed(BigInt(addressSeed), claims.iss!, false)
     } else {
       const saltServerUrl = env.VITE_SALT_SERVER_URL
-      if (!saltServerUrl) throw new Error('VITE_SALT_SERVER_URL 미설정')
+      if (!saltServerUrl) throw new Error('VITE_SALT_SERVER_URL not set')
       const salt = await fetchSalt(jwt, saltServerUrl)
       address = zkLoginAddress(jwt, salt)
     }
@@ -158,7 +158,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
         // 토큰 노출·재처리 방지: 성공 시 프래그먼트 제거.
         if (ok) window.history.replaceState(null, '', window.location.pathname + window.location.search)
       })
-      .catch((e) => console.error('[zkLogin] 콜백 처리 실패:', e))
+      .catch((e) => console.error('[zkLogin] callback handling failed:', e))
   }, [completeLoginFromUrl])
 
   const logout = useCallback(() => {
@@ -174,8 +174,8 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
         const res = await executeAndAssert(devClient, { transaction: tx, signer: devKeypair })
         return res.digest
       }
-      if (!session) throw new Error('zkLogin 세션 없음 — 먼저 로그인하세요')
-      if (!session.proofInputs) throw new Error('ZK 증명 없음 — VITE_ZK_PROVER_URL 설정 필요')
+      if (!session) throw new Error('No zkLogin session — please log in first')
+      if (!session.proofInputs) throw new Error('No ZK proof — VITE_ZK_PROVER_URL must be set')
 
       const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
       const client = createJsonRpcClient(network)
@@ -197,7 +197,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
         options: { showEffects: true, showObjectChanges: true },
       })
       const status = res.effects?.status?.status
-      if (status !== 'success') throw new Error(`트랜잭션 실패: ${res.effects?.status?.error ?? status}`)
+      if (status !== 'success') throw new Error(`Transaction failed: ${res.effects?.status?.error ?? status}`)
       return res.digest
     },
     [session, devKeypair],

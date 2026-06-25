@@ -69,7 +69,7 @@ SELECT
               w.host_bride_father_id, w.host_bride_mother_id
           )) AS placeholder_host_weddings,
     (SELECT COUNT(*) FROM v3_users
-        WHERE name = '사용자' OR split_part(email, '@', 1) = name) AS name_fallback_users,
+        WHERE name IN ('사용자', 'User') OR split_part(email, '@', 1) = name) AS name_fallback_users,
     (SELECT COUNT(*) FROM v3_weddings WHERE status = 'deleted') AS deleted_weddings,
     (SELECT COUNT(*) FROM (
         SELECT 1 FROM v3_weddings

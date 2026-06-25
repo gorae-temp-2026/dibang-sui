@@ -1,4 +1,7 @@
 import { setup, assign } from 'xstate';
+import { translate, useLangStore } from '../lib/i18n';
+
+const lang = () => useLangStore.getState().lang;
 
 // invitation.machine — 게스트 청첩장 페이지(InvitationPage) flow (XS-8).
 //
@@ -123,14 +126,14 @@ export const invitationPageMachine = setup({
       initial: 'idle',
       states: {
         idle: {
-          description: '페이지 진입 후 타이머 대기',
+          description: 'Waiting on timer after page entry',
           on: {
             RSVP_TIMER_DONE: { target: 'modalOpen' },
             RSVP_OPEN: { target: 'modalOpen' },
           },
         },
         modalOpen: {
-          description: '모달 표시 — 폼 작성 중',
+          description: 'Modal shown — filling out the form',
           on: {
             RSVP_CLOSE: { target: 'idle' },
             RSVP_SUBMIT: [
@@ -140,25 +143,25 @@ export const invitationPageMachine = setup({
           },
         },
         submitting: {
-          description: 'RSVP API 호출 중',
+          description: 'Calling RSVP API',
           on: {
             RSVP_SUCCESS: { target: 'submitted', actions: ['markRsvpSubmitted', 'clearRsvpError'] },
             RSVP_ERROR: {
               target: 'modalOpen',
               actions: {
                 type: 'setRsvpError',
-                params: ({ event }) => ({ error: event.type === 'RSVP_ERROR' ? event.error : 'RSVP 제출에 실패했습니다.' }),
+                params: ({ event }) => ({ error: event.type === 'RSVP_ERROR' ? event.error : translate(lang(), 'machine.rsvpSubmitFailed') }),
               },
             },
             RSVP_DUPLICATE: { target: 'duplicate', actions: 'markRsvpSubmitted' },
           },
         },
         submitted: {
-          description: 'RSVP 제출 완료',
+          description: 'RSVP submission complete',
           on: { RSVP_OPEN: { target: 'duplicate' } },
         },
         duplicate: {
-          description: '이미 제출됨 안내',
+          description: 'Already-submitted notice',
           on: { RSVP_CLOSE: { target: 'submitted' } },
         },
       },

@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { hierarchy, partition, type HierarchyRectangularNode } from 'd3-hierarchy'
 import { arc } from 'd3-shape'
 import type { SignalNode } from './types'
+import { useT } from '../../lib/i18n'
 
 // Fiske 관계모델(RMT): EM 호혜(동등 맞춤) / CS 유대(공동 공유) / AR 위계(서열·권위) / MP 거래(시장 가격).
 const AXIS_COLOR: Record<string, string> = {
@@ -15,6 +16,7 @@ const AXIS_COLOR: Record<string, string> = {
 }
 
 export function SignalSunburst({ data, size = 200 }: { data: SignalNode; size?: number }) {
+  const t = useT()
   const radius = size / 2
   const arcs = useMemo(() => {
     const root = hierarchy<SignalNode>(data)
@@ -44,7 +46,7 @@ export function SignalSunburst({ data, size = 200 }: { data: SignalNode; size?: 
   }, [data, radius])
 
   return (
-    <svg viewBox={`${-radius} ${-radius} ${size} ${size}`} width={size} height={size} role="img" aria-label="우리 signal sunburst">
+    <svg viewBox={`${-radius} ${-radius} ${size} ${size}`} width={size} height={size} role="img" aria-label={t('profile.signalSunburstAria')}>
       {arcs.map((a, i) => (
         <path key={i} d={a.path} fill={a.color} fillOpacity={a.opacity} stroke="#0A1626" strokeWidth={0.6}>
           <title>{a.label}</title>

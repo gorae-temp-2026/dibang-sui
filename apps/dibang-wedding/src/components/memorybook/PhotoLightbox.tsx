@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import useEmblaCarousel from 'embla-carousel-react';
+import { useT } from '../../lib/i18n';
 
 // _scenario/wedding-memorybook-ui-2026-05-24/SCENARIOS.md §S-03.
 // embla 라이트박스 — 좌우 스와이프, 키보드, 우상단 동그라미로 선택 토글.
@@ -30,6 +31,7 @@ export function PhotoLightbox({
   onClose,
   onToggle,
 }: Props) {
+  const t = useT();
   const [emblaRef, emblaApi] = useEmblaCarousel({
     startIndex: index,
     loop: false,
@@ -77,7 +79,7 @@ export function PhotoLightbox({
     <div
       onClick={onClose}
       className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-black/95 p-4"
-      aria-label="사진 확대보기"
+      aria-label={t('memorybook.lightboxLabel')}
     >
       <div ref={emblaRef} className="w-full max-w-[720px] overflow-hidden">
         <div className="flex">
@@ -98,7 +100,7 @@ export function PhotoLightbox({
                   {url ? (
                     <img
                       src={url}
-                      alt={`${p.guestName}의 사진`}
+                      alt={t('memorybook.photoAlt', { name: p.guestName })}
                       draggable={false}
                       decoding="async"
                       loading={isCurrent ? 'eager' : 'lazy'}
@@ -115,7 +117,7 @@ export function PhotoLightbox({
                       e.stopPropagation();
                       onToggle(p.id);
                     }}
-                    aria-label={sel ? '선택 해제' : '선택'}
+                    aria-label={sel ? t('memorybook.deselect') : t('memorybook.select')}
                     className="absolute -top-2 -right-2 flex h-14 w-14 items-center justify-center bg-transparent p-0 border-0"
                   >
                     <span
@@ -136,7 +138,7 @@ export function PhotoLightbox({
       {hasPrev && (
         <button
           type="button"
-          aria-label="이전 사진"
+          aria-label={t('memorybook.prevPhoto')}
           onClick={(e) => {
             e.stopPropagation();
             emblaApi?.scrollPrev();
@@ -149,7 +151,7 @@ export function PhotoLightbox({
       {hasNext && (
         <button
           type="button"
-          aria-label="다음 사진"
+          aria-label={t('memorybook.nextPhoto')}
           onClick={(e) => {
             e.stopPropagation();
             emblaApi?.scrollNext();

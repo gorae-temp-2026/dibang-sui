@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useT } from '../lib/i18n';
 import type { RsvpFormData, RsvpHostOption, RsvpMeal } from '../types/invitation';
 
 interface RsvpModalProps {
@@ -10,6 +11,7 @@ interface RsvpModalProps {
 }
 
 export function RsvpModal({ isOpen, onClose, onSubmit, hostOptions }: RsvpModalProps) {
+  const t = useT();
   const [hostKey, setHostKey] = useState<string>(hostOptions[0]?.key ?? '');
   const [attendance, setAttendance] = useState<'참석' | '불참'>('참석');
   const [meal, setMeal] = useState<RsvpMeal>('yes');
@@ -65,28 +67,28 @@ export function RsvpModal({ isOpen, onClose, onSubmit, hostOptions }: RsvpModalP
         <button
           className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full border-none bg-sage-pale text-sage-deep text-lg cursor-pointer font-body flex items-center justify-center transition-all duration-200 hover:bg-sage hover:text-white"
           onClick={onClose}
-          aria-label="닫기"
+          aria-label={t('invitationUi.rsvp.close')}
         >
           x
         </button>
 
         <div className="font-serif text-sm text-sage tracking-[.16em] text-center mb-1.5">
-          참석 의사 전달하기
+          {t('invitationUi.rsvp.eyebrow')}
         </div>
         <h3 className="font-serif font-semibold text-xl text-ink text-center mb-2 tracking-[.02em]">
-          참석 의사 체크하기
+          {t('invitationUi.rsvp.heading')}
         </h3>
         <p className="text-sm text-muted text-center leading-relaxed mb-[26px]">
-          한 분 한 분을 소중히 모실 수 있도록
+          {t('invitationUi.rsvp.intro1')}
           <br />
-          참석 의사를 전해주시면 감사하겠습니다.
+          {t('invitationUi.rsvp.intro2')}
         </p>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           {/* 어느 분의 하객 */}
           <fieldset className="flex flex-col gap-2">
             <legend className="text-sm font-semibold text-ink mb-1.5">
-              어느 분의 하객이신가요?
+              {t('invitationUi.rsvp.hostQuestion')}
               <Req />
             </legend>
             <div className="flex flex-wrap gap-2">
@@ -105,31 +107,31 @@ export function RsvpModal({ isOpen, onClose, onSubmit, hostOptions }: RsvpModalP
           {/* 참석 여부 */}
           <fieldset className="flex flex-col gap-2">
             <legend className="text-sm font-semibold text-ink mb-1.5">
-              참석하실 수 있나요?
+              {t('invitationUi.rsvp.attendQuestion')}
               <Req />
             </legend>
             <div className="flex gap-2">
               <div className={choiceClass(attendance === '참석')} onClick={() => setAttendance('참석')}>
-                참석할게요
+                {t('invitationUi.rsvp.attendYes')}
               </div>
               <div className={choiceClass(attendance === '불참')} onClick={() => setAttendance('불참')}>
-                참석이 어려워요
+                {t('invitationUi.rsvp.attendNo')}
               </div>
             </div>
           </fieldset>
 
           {/* 식사 여부 */}
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm font-semibold text-ink mb-1.5">식사를 하실 예정인가요?</legend>
+            <legend className="text-sm font-semibold text-ink mb-1.5">{t('invitationUi.rsvp.mealQuestion')}</legend>
             <div className="flex gap-2">
               <div className={choiceClass(meal === 'yes')} onClick={() => setMeal('yes')}>
-                네
+                {t('invitationUi.rsvp.mealYes')}
               </div>
               <div className={choiceClass(meal === 'no')} onClick={() => setMeal('no')}>
-                아니오
+                {t('invitationUi.rsvp.mealNo')}
               </div>
               <div className={choiceClass(meal === 'undecided')} onClick={() => setMeal('undecided')}>
-                미정
+                {t('invitationUi.rsvp.mealUndecided')}
               </div>
             </div>
           </fieldset>
@@ -137,14 +139,14 @@ export function RsvpModal({ isOpen, onClose, onSubmit, hostOptions }: RsvpModalP
           {/* 성함 */}
           <fieldset className="flex flex-col gap-2">
             <legend className="text-sm font-semibold text-ink mb-1.5">
-              성함이 어떻게 되시나요?
+              {t('invitationUi.rsvp.nameQuestion')}
               <Req />
             </legend>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="참석자 본인 성함"
+              placeholder={t('invitationUi.rsvp.namePlaceholder')}
               required
               className="w-full py-[13px] px-3.5 border border-sage-line rounded-[10px] text-sm font-body text-ink bg-white focus:outline-none focus:border-sage"
             />
@@ -152,7 +154,7 @@ export function RsvpModal({ isOpen, onClose, onSubmit, hostOptions }: RsvpModalP
 
           {/* 추가 동행 인원 */}
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm font-semibold text-ink mb-1.5">추가 동행 인원이 있나요?</legend>
+            <legend className="text-sm font-semibold text-ink mb-1.5">{t('invitationUi.rsvp.companionQuestion')}</legend>
             <div className="flex gap-2">
               <div
                 className={choiceClass(!hasExtra)}
@@ -161,7 +163,7 @@ export function RsvpModal({ isOpen, onClose, onSubmit, hostOptions }: RsvpModalP
                   setExtraCount(0);
                 }}
               >
-                없습니다
+                {t('invitationUi.rsvp.companionNo')}
               </div>
               <div
                 className={choiceClass(hasExtra)}
@@ -170,7 +172,7 @@ export function RsvpModal({ isOpen, onClose, onSubmit, hostOptions }: RsvpModalP
                   if (extraCount === 0) setExtraCount(1);
                 }}
               >
-                있습니다
+                {t('invitationUi.rsvp.companionYes')}
               </div>
             </div>
             {hasExtra && (
@@ -182,7 +184,7 @@ export function RsvpModal({ isOpen, onClose, onSubmit, hostOptions }: RsvpModalP
                 <button type="button" onClick={() => setExtraCount(extraCount + 1)} className={stepperBtn}>
                   +
                 </button>
-                <span className="text-sm text-muted ml-1">명</span>
+                <span className="text-sm text-muted ml-1">{t('invitationUi.rsvp.peopleUnit')}</span>
               </div>
             )}
           </fieldset>
@@ -190,30 +192,30 @@ export function RsvpModal({ isOpen, onClose, onSubmit, hostOptions }: RsvpModalP
           {/* 동명이인 체크 번호 */}
           <fieldset className="flex flex-col gap-2">
             <legend className="text-sm font-semibold text-ink mb-1.5">
-              동명이인 체크를 위한 번호를 알려주세요
+              {t('invitationUi.rsvp.phoneQuestion')}
             </legend>
             <input
               type="text"
               inputMode="numeric"
               value={phoneLast4}
               onChange={(e) => setPhoneLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              placeholder="핸드폰 번호 뒤 4자리"
+              placeholder={t('invitationUi.rsvp.phonePlaceholder')}
               maxLength={4}
               className="w-full py-[13px] px-3.5 border border-sage-line rounded-[10px] text-sm font-body text-ink bg-white focus:outline-none focus:border-sage"
             />
           </fieldset>
 
           <p className="text-sm text-muted text-center leading-relaxed">
-            참석 의사를 전달해 주셔서 감사합니다.
+            {t('invitationUi.rsvp.thanks1')}
             <br />
-            결혼식 준비에 큰 도움이 됩니다. (선택 사항)
+            {t('invitationUi.rsvp.thanks2')}
           </p>
 
           <button
             className="bg-sage text-white border-none py-3.5 rounded-xl text-sm font-semibold cursor-pointer font-body tracking-[.04em] transition-all duration-200 hover:bg-sage-deep"
             type="submit"
           >
-            RSVP 보내기
+            {t('invitationUi.rsvp.submit')}
           </button>
         </form>
       </div>

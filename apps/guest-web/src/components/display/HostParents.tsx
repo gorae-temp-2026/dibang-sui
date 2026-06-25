@@ -1,6 +1,7 @@
 import { memo, useLayoutEffect, useRef, useState } from 'react'
 import type { DisplayWedding as Wedding } from './types'
 import { serif } from './constants'
+import { useT } from '../../lib/i18n'
 
 // 신랑·신부 이름 (커플) — 동일 클래스/스타일 유지
 const NAME_CLASS =
@@ -110,6 +111,7 @@ function useFitScale(deps: unknown[]) {
  * 헤더 vpScale 스케일러 안에 위치 → 화면 비율 확대는 그대로 유지된다.
  */
 export const HostNamesRow = memo(function HostNamesRow({ wedding }: { wedding: Wedding }) {
+  const t = useT()
   const { rowRef, scale } = useFitScale([
     wedding.groomName,
     wedding.brideName,
@@ -130,7 +132,7 @@ export const HostNamesRow = memo(function HostNamesRow({ wedding }: { wedding: W
         }}
       >
         <Side
-          label="신랑측 혼주"
+          label={t('display.groomFamily')}
           father={wedding.groomFatherName}
           mother={wedding.groomMotherName}
         />
@@ -153,7 +155,7 @@ export const HostNamesRow = memo(function HostNamesRow({ wedding }: { wedding: W
         </div>
 
         <Side
-          label="신부측 혼주"
+          label={t('display.brideFamily')}
           father={wedding.brideFatherName}
           mother={wedding.brideMotherName}
         />

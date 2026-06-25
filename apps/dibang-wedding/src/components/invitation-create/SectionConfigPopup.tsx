@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { ThemeControls } from './ThemeControls';
 import type { ThemeFonts, ThemeColors } from '../../types/invitationDesignConfig';
+import { useT } from '../../lib/i18n';
 
 // 섹션 구성은 EditPanel 최상단 카드로 분리됨. 이 팝업은 폰트·색상(디자인 설정)만 담당.
 interface Props {
@@ -17,6 +18,7 @@ export function SectionConfigPopup({
   open, onClose, triggerRef,
   fonts, colors, onChangeFont, onChangeColors,
 }: Props) {
+  const t = useT();
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export function SectionConfigPopup({
       }`}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-gray-900">디자인 설정</h3>
+        <h3 className="text-lg font-bold text-gray-900">{t('invite.designSettings')}</h3>
         <button
           type="button"
           onClick={onClose}

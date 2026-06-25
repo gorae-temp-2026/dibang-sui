@@ -36,12 +36,15 @@ import {
   type CreateInvitationParams,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
+import { translate, useLangStore } from '../lib/i18n'
+
+const lang = () => useLangStore.getState().lang
 
 export function useOnchainHostActions() {
   const { address, executeOnchain } = useZkLogin()
 
   const requireAddress = useCallback((): string => {
-    if (!address) throw new Error('zkLogin 로그인이 필요합니다')
+    if (!address) throw new Error(translate(lang(), 'common.errNeedLogin'))
     return address
   }, [address])
 

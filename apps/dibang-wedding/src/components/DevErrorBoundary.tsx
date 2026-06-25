@@ -1,5 +1,8 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { devLogger } from '../lib/devLogger'
+import { translate, useLangStore } from '../lib/i18n'
+
+const lang = () => useLangStore.getState().lang
 
 interface Props { children: ReactNode; fallback?: ReactNode }
 interface State { hasError: boolean; error?: Error }
@@ -24,14 +27,14 @@ export class DevErrorBoundary extends Component<Props, State> {
       return this.props.fallback ?? (
         <div className="flex h-screen items-center justify-center bg-[#0A1626] text-white">
           <div className="text-center">
-            <p className="text-lg font-bold">오류가 발생했습니다</p>
+            <p className="text-lg font-bold">{translate(lang(), 'common.errorOccurred')}</p>
             <p className="mt-2 text-sm text-white/60">{this.state.error?.message}</p>
             <button
               type="button"
               onClick={() => this.setState({ hasError: false })}
               className="mt-4 rounded-lg bg-white/10 px-4 py-2 text-sm"
             >
-              다시 시도
+              {translate(lang(), 'common.retry')}
             </button>
           </div>
         </div>

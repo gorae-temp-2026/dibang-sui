@@ -7,6 +7,7 @@
 import { motion } from 'framer-motion';
 import { serif, springs, colors } from '../../styles/tokens';
 import { ScaledContainer } from './ScaledContainer';
+import { useT } from '../../lib/i18n';
 
 interface StepDoneProps {
   /**
@@ -17,6 +18,7 @@ interface StepDoneProps {
 }
 
 export function StepDone({ onGoToLounge }: StepDoneProps) {
+  const t = useT();
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', minHeight: 0 }}>
       {/* 상단: '축하 메세지를 보냈어요'만 (하트·부제 삭제, 작게) */}
@@ -26,7 +28,7 @@ export function StepDone({ onGoToLounge }: StepDoneProps) {
         transition={{ delay: 0.2, ...springs.smooth }}
         style={{ ...serif, fontSize: 18, fontWeight: 700, color: colors.textPrimary, textAlign: 'center', padding: '12px 24px 14px', margin: 0, flexShrink: 0 }}
       >
-        축하 메세지를 보냈어요
+        {t('guestFlow.done.sent')}
       </motion.p>
 
       {/* 웨딩 라운지 미리보기 — 가로 100%·세로 끝까지 full-bleed.
@@ -41,7 +43,7 @@ export function StepDone({ onGoToLounge }: StepDoneProps) {
           <ScaledContainer>
             <iframe
               src="/lounge-mvp-v4.html?day=event"
-              title="웨딩 라운지 미리보기"
+              title={t('guestFlow.done.loungePreviewTitle')}
               loading="lazy"
               style={{ width: '100%', height: '100%', border: 0, display: 'block', background: '#fff' }}
             />
@@ -86,7 +88,7 @@ export function StepDone({ onGoToLounge }: StepDoneProps) {
             ...serif,
           }}
         >
-          라운지 입장하고 사진 공유하기
+          {t('guestFlow.done.enterLounge')}
         </motion.button>
       </motion.div>
     </div>

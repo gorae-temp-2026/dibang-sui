@@ -7,6 +7,7 @@ import { Coins, Wallet, Check, Loader2, ShieldCheck } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet'
 import { giftActor } from '../../machines/gift.machine'
 import { cn } from '../../lib/utils'
+import { useT } from '../../lib/i18n'
 
 const SUI_BLUE = '#4DA2FF'
 const GOLD = '#F8C57A'
@@ -36,6 +37,7 @@ function SuiMark({ className }: { className?: string }) {
 }
 
 export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const t = useT()
   const yone = useSelector(giftActor, (s) => s.context.yone)
   const [step, setStep] = useState<Step>('connect')
   const [addr, setAddr] = useState<string | null>(null)
@@ -74,9 +76,9 @@ export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenC
       <SheetContent side="bottom" className="max-h-[88vh]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <SuiMark className="h-5 w-5" /> 요네 충전
+            <SuiMark className="h-5 w-5" /> {t('settings.charge')}
           </SheetTitle>
-          <SheetDescription>Sui 지갑으로 요네를 충전해요. 충전한 요네는 선물·꾸미기에 바로 쓸 수 있어요.</SheetDescription>
+          <SheetDescription>{t('settings.yoneCharge.desc')}</SheetDescription>
         </SheetHeader>
 
         {/* 현재 잔액(전역 요네 지갑) */}
@@ -91,7 +93,7 @@ export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenC
             <div className="text-[10.5px] font-bold uppercase tracking-wide text-white/45">My Yone</div>
             <div className="flex items-baseline gap-1 text-white">
               <b className="text-[22px] font-black tracking-tight">{yone.toLocaleString()}</b>
-              <span className="text-[11px] text-white/55">요네</span>
+              <span className="text-[11px] text-white/55">{t('settings.yoneUnit')}</span>
             </div>
           </div>
         </div>
@@ -100,10 +102,10 @@ export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenC
           <div>
             <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
               <div className="mb-2 flex items-center gap-2 text-[13px] font-bold text-white">
-                <Wallet className="h-4 w-4" style={{ color: SUI_BLUE }} /> Sui 지갑 연결
+                <Wallet className="h-4 w-4" style={{ color: SUI_BLUE }} /> {t('settings.yoneCharge.connectTitle')}
               </div>
               <p className="text-[12px] leading-relaxed text-white/55">
-                구글 계정으로 지갑 없이 바로 시작할 수 있어요 (zkLogin). 시드문구·키 관리가 필요 없어요.
+                {t('settings.yoneCharge.connectDesc')}
               </p>
             </div>
             <button
@@ -112,10 +114,10 @@ export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenC
               className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-[14px] font-extrabold text-white"
               style={{ background: `linear-gradient(135deg, ${SUI_BLUE}, #2f7fe0)` }}
             >
-              <SuiMark className="h-4 w-4 brightness-0 invert" /> zkLogin으로 연결
+              <SuiMark className="h-4 w-4 brightness-0 invert" /> {t('settings.yoneCharge.connectBtn')}
             </button>
             <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-white/35">
-              <ShieldCheck className="mt-px h-3.5 w-3.5 shrink-0" /> 데모 — 실제 온체인 결제는 연동 예정(TODO). 잔액은 앱 내 데모 지갑에 반영돼요.
+              <ShieldCheck className="mt-px h-3.5 w-3.5 shrink-0" /> {t('settings.yoneCharge.demoNote1')}
             </p>
           </div>
         )}
@@ -124,10 +126,10 @@ export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenC
           <div>
             <div className="mb-3 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[12px]">
               <span className="h-2 w-2 rounded-full" style={{ background: '#46d18a' }} />
-              <span className="text-white/70">Sui 지갑 연결됨</span>
+              <span className="text-white/70">{t('settings.yoneCharge.connected')}</span>
               <span className="ml-auto font-mono text-white/45">{addr}</span>
             </div>
-            <div className="mb-2 text-[12px] font-bold text-white/70">충전 패키지</div>
+            <div className="mb-2 text-[12px] font-bold text-white/70">{t('settings.yoneCharge.packages')}</div>
             <div className="grid grid-cols-2 gap-2.5">
               {PACKAGES.map((p) => {
                 const on = picked?.yone === p.yone
@@ -144,14 +146,14 @@ export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenC
                   >
                     {p.popular && (
                       <span className="absolute -top-2 right-2 rounded-full px-2 py-0.5 text-[9px] font-extrabold text-[#5a3a12]" style={{ background: GOLD }}>
-                        인기
+                        {t('settings.yoneCharge.popular')}
                       </span>
                     )}
                     <div className="flex items-center gap-1 text-white">
                       <Coins className="h-4 w-4" style={{ color: GOLD }} />
                       <b className="text-[18px] font-black">{p.yone.toLocaleString()}</b>
                     </div>
-                    <div className="mt-0.5 text-[11px] text-white/45">요네</div>
+                    <div className="mt-0.5 text-[11px] text-white/45">{t('settings.yoneUnit')}</div>
                     <div className="mt-2 flex items-center gap-1 text-[12px] font-semibold" style={{ color: SUI_BLUE }}>
                       <SuiMark className="h-3.5 w-3.5" /> ≈ {p.sui} SUI
                     </div>
@@ -166,10 +168,10 @@ export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenC
               className="mt-4 w-full rounded-2xl px-4 py-3.5 text-[14px] font-extrabold text-white transition disabled:opacity-40"
               style={{ background: `linear-gradient(135deg, ${SUI_BLUE}, #2f7fe0)` }}
             >
-              {picked ? `${picked.sui} SUI로 ${picked.yone.toLocaleString()} 요네 충전` : '패키지를 선택하세요'}
+              {picked ? t('settings.yoneCharge.payBtn', { sui: picked.sui, yone: picked.yone.toLocaleString() }) : t('settings.yoneCharge.pickPackage')}
             </button>
             <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-white/35">
-              <ShieldCheck className="mt-px h-3.5 w-3.5 shrink-0" /> 데모 — 온체인 tx는 스텁이라 실제 SUI는 차감되지 않아요.
+              <ShieldCheck className="mt-px h-3.5 w-3.5 shrink-0" /> {t('settings.yoneCharge.demoNote2')}
             </p>
           </div>
         )}
@@ -177,8 +179,8 @@ export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenC
         {step === 'paying' && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Loader2 className="mb-4 h-9 w-9 animate-spin" style={{ color: SUI_BLUE }} />
-            <div className="text-[14px] font-bold text-white">Sui 네트워크에서 처리 중…</div>
-            <div className="mt-1 text-[12px] text-white/45">트랜잭션 서명·확인 (데모)</div>
+            <div className="text-[14px] font-bold text-white">{t('settings.yoneCharge.paying')}</div>
+            <div className="mt-1 text-[12px] text-white/45">{t('settings.yoneCharge.payingSub')}</div>
           </div>
         )}
 
@@ -187,14 +189,14 @@ export function YoneChargeSheet({ open, onOpenChange }: { open: boolean; onOpenC
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ background: '#46d18a22' }}>
               <Check className="h-7 w-7" style={{ color: '#46d18a' }} />
             </div>
-            <div className="text-[16px] font-extrabold text-white">{picked?.yone.toLocaleString()} 요네 충전 완료</div>
-            <div className="mt-1 text-[12px] text-white/50">현재 잔액 {yone.toLocaleString()} 요네</div>
+            <div className="text-[16px] font-extrabold text-white">{t('settings.yoneCharge.doneTitle', { yone: picked?.yone.toLocaleString() ?? '' })}</div>
+            <div className="mt-1 text-[12px] text-white/50">{t('settings.yoneCharge.doneBalance', { yone: yone.toLocaleString() })}</div>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
               className="mt-6 w-full rounded-2xl bg-white/10 px-4 py-3.5 text-[14px] font-bold text-white transition hover:bg-white/15"
             >
-              완료
+              {t('common.done')}
             </button>
           </div>
         )}

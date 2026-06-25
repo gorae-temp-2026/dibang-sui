@@ -1,5 +1,7 @@
 import { setup, assign, fromCallback } from 'xstate';
 import { presignedUpload, type PresignedUploadResult } from '../lib/presignedUpload';
+import { translate, useLangStore } from '../lib/i18n';
+const lang = () => useLangStore.getState().lang;
 
 /**
  * Photo Sharing T-15a — 하객 현장사진 공유 업로드 머신.
@@ -198,7 +200,7 @@ export const sharePhotoUploadMachine = setup({
           {
             actions: {
               type: 'setError',
-              params: () => ({ error: `100장 한도 초과` }),
+              params: () => ({ error: translate(lang(), 'machine.share.quotaExceeded') }),
             },
           },
         ],

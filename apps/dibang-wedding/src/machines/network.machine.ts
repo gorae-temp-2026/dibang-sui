@@ -1,4 +1,6 @@
 import { setup, assign } from 'xstate';
+import { translate, useLangStore } from '../lib/i18n';
+const lang = () => useLangStore.getState().lang;
 
 // network.machine — NetworkPage(신뢰 네트워크) flow (XS-12).
 // parallel 2축: moi(아바타 발행) + ium(신뢰관계 발행). 각 idle→submitting→idle(result).
@@ -21,9 +23,9 @@ export type NetworkEvent =
 export const networkMachine = setup({
   types: { context: {} as NetworkContext, events: {} as NetworkEvent },
   actions: {
-    moiPending: assign({ moiResult: 'Moi 발행 중...' }),
+    moiPending: assign({ moiResult: () => translate(lang(), 'machine.network.moiPending') }),
     setMoiResult: assign({ moiResult: (_, p: { result: string }) => p.result }),
-    iumPending: assign({ iumResult: 'Ium 발행 중...' }),
+    iumPending: assign({ iumResult: () => translate(lang(), 'machine.network.iumPending') }),
     setIumResult: assign({ iumResult: (_, p: { result: string }) => p.result }),
   },
 }).createMachine({

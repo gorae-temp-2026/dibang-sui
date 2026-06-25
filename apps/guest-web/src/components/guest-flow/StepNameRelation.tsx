@@ -2,10 +2,21 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { RelationCategory } from '../../machines/guestFlow.machine';
 import { serif, springs, colors } from '../../styles/tokens';
+import { useT } from '../../lib/i18n';
 
 const RELATION_CATEGORIES: RelationCategory[] = [
   '가족/친척', '친구/지인', '동문/동창', '직장동료', '스승/제자', '기타모임',
 ];
+
+// Korean backend VALUE → display label i18n key (values stay as data).
+const RELATION_LABEL_KEYS: Record<RelationCategory, string> = {
+  '가족/친척': 'loungeCheckIn.relation.family',
+  '친구/지인': 'loungeCheckIn.relation.friend',
+  '동문/동창': 'loungeCheckIn.relation.alumni',
+  '직장동료': 'loungeCheckIn.relation.coworker',
+  '스승/제자': 'loungeCheckIn.relation.mentor',
+  '기타모임': 'loungeCheckIn.relation.other',
+};
 
 interface StepNameRelationProps {
   hostLabel: string;
@@ -15,6 +26,7 @@ interface StepNameRelationProps {
 }
 
 export function StepNameRelation({ hostLabel, onSubmit, isSubmitting = false }: StepNameRelationProps) {
+  const t = useT();
   const [name, setName] = useState('');
   const [category, setCategory] = useState<RelationCategory | ''>('');
   const [detail, setDetail] = useState('');
@@ -32,14 +44,14 @@ export function StepNameRelation({ hostLabel, onSubmit, isSubmitting = false }: 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px 24px 32px', maxWidth: 420, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
       <div style={{ textAlign: 'center' }}>
-        <p style={{ ...serif, fontSize: 20, color: colors.textHeading }}>방명록을 남겨주세요</p>
+        <p style={{ ...serif, fontSize: 20, color: colors.textHeading }}>{t('guestFlow.nameRelation.title')}</p>
       </div>
 
       <div style={{ paddingTop: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* 관계 카테고리 선택 */}
         <div>
           <p style={{ ...serif, fontSize: 18, color: colors.textSubtle, marginBottom: 6, paddingLeft: 4 }}>
-            {hostLabel}과의 관계
+            {t('guestFlow.nameRelation.relationTo', { host: hostLabel })}
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {RELATION_CATEGORIES.map((cat) => (
@@ -60,7 +72,7 @@ export function StepNameRelation({ hostLabel, onSubmit, isSubmitting = false }: 
                   ...serif,
                 }}
               >
-                {cat}
+                {t(RELATION_LABEL_KEYS[cat])}
               </motion.button>
             ))}
           </div>
@@ -69,14 +81,14 @@ export function StepNameRelation({ hostLabel, onSubmit, isSubmitting = false }: 
         {/* 관계 상세 */}
         <div>
           <p style={{ ...serif, fontSize: 18, color: colors.textSubtle, marginBottom: 6, paddingLeft: 4 }}>
-            소속 / 관계 (선택)
+            {t('guestFlow.nameRelation.detailLabel')}
           </p>
           <div style={{ borderRadius: 16, border: `1px solid ${colors.border}`, background: 'rgba(255,253,249,0.8)', padding: '16px 20px' }}>
             <input
               type="text"
               value={detail}
               onChange={(e) => setDetail(e.target.value)}
-              placeholder={detailFocused ? '' : '예: 대학 동기, 직장 선배'}
+              placeholder={detailFocused ? '' : t('guestFlow.nameRelation.detailPlaceholder')}
               maxLength={40}
               onFocus={() => setDetailFocused(true)}
               onBlur={() => setDetailFocused(false)}
@@ -98,14 +110,14 @@ export function StepNameRelation({ hostLabel, onSubmit, isSubmitting = false }: 
         {/* 이름 */}
         <div>
           <p style={{ ...serif, fontSize: 18, color: colors.textSubtle, marginBottom: 6, paddingLeft: 4 }}>
-            이름을 입력해주세요
+            {t('guestFlow.nameRelation.nameLabel')}
           </p>
           <div style={{ borderRadius: 16, border: `1px solid ${colors.border}`, background: 'rgba(255,253,249,0.8)', padding: '16px 20px' }}>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={nameFocused ? '' : '홍길동'}
+              placeholder={nameFocused ? '' : t('guestFlow.nameRelation.namePlaceholder')}
               maxLength={10}
               onFocus={() => setNameFocused(true)}
               onBlur={() => setNameFocused(false)}
@@ -146,7 +158,7 @@ export function StepNameRelation({ hostLabel, onSubmit, isSubmitting = false }: 
           ...serif,
         }}
       >
-        {isSubmitting ? '처리 중…' : '다음'}
+        {isSubmitting ? t('guestFlow.nameRelation.submitting') : t('guestFlow.nameRelation.next')}
       </motion.button>
     </div>
   );

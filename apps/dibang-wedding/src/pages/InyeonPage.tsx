@@ -29,8 +29,10 @@ import { useOwnedItems } from '../hooks/useOwnedItems'
 import { useSuiBalance } from '../hooks/useSuiBalance'
 import { useNotes } from '../hooks/useNotes'
 import { useGiftLog } from '../hooks/useGiftLog'
+import { useT } from '../lib/i18n'
 
 export function InyeonPage() {
+  const t = useT()
   const { requestIum, acceptIum, purchaseItem } = useOnchainHostActions()
   const { items: ownedOnchainItems, refetch: refetchItems } = useOwnedItems()
   const { balanceSui, refetch: refetchBalance } = useSuiBalance()
@@ -112,13 +114,13 @@ export function InyeonPage() {
       <header className="flex items-center gap-2.5 border-b border-white/8 bg-[#0a1626]/90 px-4 pb-2.5 pt-3 backdrop-blur">
         <button
           type="button"
-          aria-label="매칭 범위"
+          aria-label={t('page.inyeon.matchRange')}
           onClick={() => send({ type: 'OPEN_FILTER' })}
           className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/12 bg-white/[0.06] text-[#cfe0ee]"
         >
           <SlidersHorizontal className="h-[18px] w-[18px]" />
         </button>
-        <div className="flex-1 text-[19px] font-extrabold tracking-tight text-white">디방인연</div>
+        <div className="flex-1 text-[19px] font-extrabold tracking-tight text-white">{t('inyeon.brand')}</div>
         <div className="rounded-full bg-gradient-to-br from-[#4DA2FF] to-[#2E7BD6] px-3 py-1.5 text-xs font-extrabold text-white">
           💧 {balanceSui.toFixed(3)} SUI
         </div>
@@ -128,7 +130,7 @@ export function InyeonPage() {
       <div className="relative flex-1 overflow-x-hidden overflow-y-visible">
         {screen === 'universe' && discoverLoading && (
           <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-white/50">인연을 찾는 중...</p>
+            <p className="text-sm text-white/50">{t('page.inyeon.finding')}</p>
           </div>
         )}
         {screen === 'universe' && !discoverLoading && (
@@ -306,30 +308,31 @@ export function InyeonPage() {
 // 내 프로필 — 신뢰잔액·이음·중심성을 온체인 신호(useMyCreditStats)로 라이브 표시(#68 배선).
 // 신호 없으면 0/—(온체인 액션 연결되어 신호가 흐르면 채워짐). "내 전체 프로필" → 공유 ProfileSheet(⑤).
 function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
+  const t = useT()
   const { address } = useZkLogin()
   const { data: stats, isLoading } = useMyCreditStats(address ?? undefined)
   return (
     <div className="h-full overflow-y-auto px-5 pb-6 pt-5">
       <div className="text-center">
         <div className="mx-auto h-24 w-24 rounded-full bg-cover bg-center" style={{ backgroundImage: 'url(/assets/inyeon-photos/my-profile.jpg)' }} />
-        <div className="mt-3 text-xl font-extrabold text-white">유상</div>
-        <div className="mt-0.5 text-xs text-white/50">모이 #1024 · 서울</div>
+        <div className="mt-3 text-xl font-extrabold text-white">Yusang</div>
+        <div className="mt-0.5 text-xs text-white/50">{t('page.inyeon.moiSeoul')}</div>
       </div>
 
       <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
         <div className="flex items-center text-[13px] font-bold text-white">
-          🪙 내 신뢰잔액
-          <span className="ml-auto text-[10.5px] font-medium text-white/45">Moi Credit 재료</span>
+          🪙 {t('page.inyeon.myTrustBalance')}
+          <span className="ml-auto text-[10.5px] font-medium text-white/45">{t('page.inyeon.creditMaterial')}</span>
         </div>
         <div className="mt-2.5 flex items-baseline gap-1.5">
           <b className="text-[32px] font-black tracking-tight text-white">{isLoading ? '—' : (stats?.score ?? 0)}</b>
-          <span className="text-xs text-white/50">/ 신뢰 점수</span>
+          <span className="text-xs text-white/50">{t('page.inyeon.trustScoreUnit')}</span>
         </div>
         <div className="mt-3.5 flex gap-2.5">
           {[
-            [isLoading ? '—' : String(stats?.ieum ?? 0), '이음'],
-            [isLoading ? '—' : String(stats?.events ?? 0), '함께한 이벤트'],
-            [isLoading ? '—' : stats?.topPercent != null ? `상위 ${stats.topPercent}%` : '—', '네트워크 중심성'],
+            [isLoading ? '—' : String(stats?.ieum ?? 0), t('page.inyeon.statIeum')],
+            [isLoading ? '—' : String(stats?.events ?? 0), t('page.inyeon.statEvents')],
+            [isLoading ? '—' : stats?.topPercent != null ? t('page.inyeon.topPercent', { p: stats.topPercent }) : '—', t('page.inyeon.statCentrality')],
           ].map(([v, l]) => (
             <div key={l} className="flex-1 rounded-xl bg-white/[0.05] py-2.5 text-center">
               <b className="block text-[17px] font-extrabold text-white">{v}</b>
@@ -338,8 +341,7 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
           ))}
         </div>
         <p className="mt-3 text-[10.5px] leading-relaxed text-white/45">
-          이음·이벤트 참여·기여가 신뢰 attestation으로 쌓여 신뢰잔액이 돼요. 이 잔액이 Moi Credit(온체인 신용)의
-          재료입니다. ※ 타인에겐 익명(범위)으로만 보여요.
+          {t('page.inyeon.trustBalanceDesc')}
         </p>
       </div>
 
@@ -348,13 +350,13 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
         onClick={onOpenProfile}
         className="mt-3 w-full rounded-2xl border border-[#F8C57A]/40 bg-white/[0.05] py-3 text-[13px] font-bold text-[#F8C57A]"
       >
-        🔭 내 전체 프로필 · Moi Credit 분석 보기
+        🔭 {t('page.inyeon.fullProfileCta')}
       </button>
 
       <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-        <div className="text-[13px] font-bold text-white">✍️ 인연 소개글 · 노출 설정</div>
+        <div className="text-[13px] font-bold text-white">✍️ {t('page.inyeon.bioVisibilityTitle')}</div>
         <p className="mt-1.5 text-[10.5px] leading-relaxed text-white/45">
-          추가 사진 업로드 · 소개글 · 매칭 풀 노출 토글 — TODO(②). 대표 사진은 Setting에서 변경.
+          {t('page.inyeon.bioVisibilityDesc')}
         </p>
       </div>
     </div>
@@ -363,6 +365,7 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
 
 // 프로필 상세 (경량) — 이음 전 익명 단계. 전체 신뢰네트워크 그래프·signal sunburst는 ⑤ 공유 프로필에서.
 function DetailSheet({ moi, onClose, onIeum, onOpenFull }: { moi: Moi | null; onClose: () => void; onIeum: (id: number) => void; onOpenFull: (id: number) => void }) {
+  const t = useT()
   return (
     <Sheet open={!!moi} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom">
@@ -390,11 +393,11 @@ function DetailSheet({ moi, onClose, onIeum, onOpenFull }: { moi: Moi | null; on
                 </div>
               ))}
               <div className="flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-3 py-2.5 text-[12px] text-white/70">
-                🤝 공통으로 아는 사람 {moi.mutualCount}명 · 신뢰 {moi.balLabel}
+                🤝 {t('page.inyeon.mutualAndTrust', { n: moi.mutualCount, label: moi.balLabel })}
               </div>
               <div className="flex items-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02] px-3 py-2.5 text-[11px] text-white/45">
                 <Lock className="h-4 w-4 flex-shrink-0" />
-                이름·소속·전체 신뢰네트워크는 이음 후 공개돼요. (전체 그래프·signal은 ⑤ 공유 프로필)
+                {t('page.inyeon.lockedAfterIeum')}
               </div>
             </div>
             <button
@@ -402,14 +405,14 @@ function DetailSheet({ moi, onClose, onIeum, onOpenFull }: { moi: Moi | null; on
               onClick={() => onOpenFull(moi.id)}
               className="mt-4 w-full rounded-2xl border border-[#F8C57A]/40 bg-white/[0.04] py-3 text-[13px] font-bold text-[#F8C57A]"
             >
-              🔭 전체 프로필 · 신뢰 네트워크 보기
+              🔭 {t('page.inyeon.viewFullProfileNetwork')}
             </button>
             <button
               type="button"
               onClick={() => onIeum(moi.id)}
               className="mt-2.5 w-full rounded-2xl bg-gradient-to-br from-[#1E3A5F] to-[#2d6a9e] py-3.5 text-[14.5px] font-extrabold text-white"
             >
-              이음 신청하기
+              {t('page.inyeon.requestIeum')}
             </button>
           </>
         )}

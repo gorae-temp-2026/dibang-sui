@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { colors } from '../../lib/theme';
-import { SIDE_LABEL } from '../../lib/guestLabel';
+import { sideLabel } from '../../lib/guestLabel';
 import type { FeedItem } from '../../types/db-compat';
 
 interface Props {
@@ -12,7 +12,7 @@ export function PinnedAnnouncementBanner({ item }: Props) {
   const data = (item.data ?? {}) as { message?: string; author_name?: string; author_role?: string };
   const message = data.message ?? '';
   const authorName = data.author_name;
-  const authorRole = data.author_role ? (SIDE_LABEL[data.author_role] ?? data.author_role) : null;
+  const authorRole = data.author_role ? (sideLabel(data.author_role) || null) : null;
 
   return (
     <button

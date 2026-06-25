@@ -42,7 +42,7 @@ function makeItem(overrides: Partial<InvitationUploadItem> = {}): InvitationUplo
 describe('GalleryUploader', () => {
   it('기본: 헤더 + (0/60) 카운터 + "+" 셀 노출', () => {
     render(<GalleryUploader {...baseProps} />)
-    expect(screen.getByRole('heading', { name: /갤러리 사진/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Gallery photos/ })).toBeInTheDocument()
     expect(screen.getByText('(0/60)')).toBeInTheDocument()
     expect(document.querySelector('input[type="file"][multiple]')).toBeInTheDocument()
   })
@@ -55,9 +55,9 @@ describe('GalleryUploader', () => {
 
   it('uploading item 칸: localUrl 미리보기 + "업로드 중" 오버레이', () => {
     render(<GalleryUploader {...baseProps} items={[makeItem()]} />)
-    const img = screen.getByAltText('업로드 중인 사진') as HTMLImageElement
+    const img = screen.getByAltText('Photo uploading') as HTMLImageElement
     expect(img.src).toContain('blob:g.jpg')
-    expect(screen.getByText('업로드 중')).toBeInTheDocument()
+    expect(screen.getByText('Uploading')).toBeInTheDocument()
   })
 
   it('failed item 칸: 재시도 → onRetryItem(id), X → onRemoveItem(id)', async () => {
@@ -71,8 +71,8 @@ describe('GalleryUploader', () => {
         items={[makeItem({ id: 'f1', status: 'failed', error: 'boom' })]}
       />,
     )
-    expect(screen.getByText('실패')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: '재시도' }))
+    expect(screen.getByText('Failed')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
     expect(onRetryItem).toHaveBeenCalledWith('f1')
     await userEvent.click(screen.getByRole('button', { name: 'X' }))
     expect(onRemoveItem).toHaveBeenCalledWith('f1')
@@ -80,7 +80,7 @@ describe('GalleryUploader', () => {
 
   it('failed item이 있으면 안내 문구가 보인다', () => {
     render(<GalleryUploader {...baseProps} items={[makeItem({ status: 'failed' })]} />)
-    expect(screen.getByText(/일부 사진 업로드에 실패했습니다/)).toBeInTheDocument()
+    expect(screen.getByText(/Some photos failed to upload/)).toBeInTheDocument()
   })
 
   it('store에 사진 3장: 카운터 3/60 + 사진 3개 + 삭제 클릭 → 1개 제거', async () => {

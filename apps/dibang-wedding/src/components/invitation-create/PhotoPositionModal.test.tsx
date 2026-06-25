@@ -34,16 +34,16 @@ describe('PhotoPositionModal', () => {
 
   it('헤더 + 안내문 + 취소/적용 버튼 노출', () => {
     render(<PhotoPositionModal {...defaultProps} />)
-    expect(screen.getByRole('heading', { name: '사진 위치 조정' })).toBeInTheDocument()
-    expect(screen.getByText(/드래그하여 위치를/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '취소' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '적용' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Adjust photo position' })).toBeInTheDocument()
+    expect(screen.getByText(/Drag to position/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument()
   })
 
   it('취소 버튼 → onClose 호출', async () => {
     const onClose = vi.fn()
     render(<PhotoPositionModal {...defaultProps} onClose={onClose} />)
-    await userEvent.click(screen.getByRole('button', { name: '취소' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
@@ -59,7 +59,7 @@ describe('PhotoPositionModal', () => {
     const onApply = vi.fn()
     const onClose = vi.fn()
     render(<PhotoPositionModal {...defaultProps} onApply={onApply} onClose={onClose} />)
-    await userEvent.click(screen.getByRole('button', { name: '적용' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
     expect(onApply).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
   })

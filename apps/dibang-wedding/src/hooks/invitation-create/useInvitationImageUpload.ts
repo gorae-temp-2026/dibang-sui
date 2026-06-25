@@ -9,6 +9,7 @@ import {
   type InvitationPhotoSubKind,
   type InvitationUploadContext,
 } from '../../queries/invitation/useInvitationPhotoUpload';
+import { useT } from '../../lib/i18n';
 
 // 낙관적 이미지 업로드 브리지 — flow는 머신, 업로드 실행은 본 훅이
 // React Query mutation으로 수행 후 결과를 머신에 send (STATE_MANAGEMENT.md §4).
@@ -25,6 +26,7 @@ export interface UseInvitationImageUploadOptions {
 }
 
 export function useInvitationImageUpload(options: UseInvitationImageUploadOptions) {
+  const t = useT();
   const [state, send, actorRef] = useMachine(invitationImageUploadMachine);
   const mutation = useInvitationPhotoUpload(options.context, options.subKind);
 
@@ -51,11 +53,11 @@ export function useInvitationImageUpload(options: UseInvitationImageUploadOption
         send({
           type: 'ITEM_FAILED',
           id,
-          error: e instanceof Error ? e.message : '업로드에 실패했습니다.',
+          error: e instanceof Error ? e.message : t('lettering.uploadFailed'),
         });
       }
     },
-    [send, actorRef],
+    [send, actorRef, t],
   );
 
   const addFiles = useCallback(

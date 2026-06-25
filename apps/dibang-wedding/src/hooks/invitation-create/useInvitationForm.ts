@@ -4,6 +4,9 @@ import type { WeddingData, InvitationTheme, ImagePosition } from '@gorae/invitat
 import type { InvitationDesignConfig, LetteringConfig, LetteringSource, ThemeFonts, ThemeColors, SectionEntry } from '../../types/invitationDesignConfig';
 import { makeDefaultDesignConfig } from '../../types/invitationDesignConfig';
 import { makeDefaultCanvasConfig, type CanvasConfig, type CanvasItem } from '../../types/canvasConfig';
+import { translate, useLangStore } from '../../lib/i18n';
+
+const lang = () => useLangStore.getState().lang;
 
 export interface AccountSlot {
   role: string;
@@ -166,16 +169,16 @@ const initialState = {
 
 const REQUIRED_FIELDS = ['groomName', 'brideName', 'date', 'time', 'venueName', 'venueAddress'] as const;
 
-const FIELD_LABELS: Record<string, string> = {
-  groomName: '신랑 이름',
-  brideName: '신부 이름',
-  date: '예식 날짜',
-  time: '예식 시간',
-  venueName: '예식장 이름',
-  venueAddress: '예식장 주소',
+const FIELD_LABEL_KEYS: Record<string, string> = {
+  groomName: 'invite.field.groomName',
+  brideName: 'invite.field.brideName',
+  date: 'invite.field.date',
+  time: 'invite.field.time',
+  venueName: 'invite.field.venueName',
+  venueAddress: 'invite.field.venueAddress',
 };
 
-export const DEFAULT_GREETING = '서로가 마주보며 다져온 사랑을\n이제 함께 바라보며 걸어갈 수 있는\n큰 사랑으로 키우려 합니다.\n저희 두 사람이 사랑의 이름으로\n지켜나갈 수 있게 축복해 주시면\n더없는 기쁨으로 간직하겠습니다.';
+export const DEFAULT_GREETING = 'The love we have nurtured facing each other,\nwe now wish to grow into a greater love\nas we walk forward, looking the same way.\nIf you bless the two of us\nto keep it in the name of love,\nwe will cherish it as boundless joy.';
 
 export const useInvitationForm = create<InvitationFormState>((set, get) => ({
   ...initialState,
@@ -269,7 +272,7 @@ export const useInvitationForm = create<InvitationFormState>((set, get) => ({
     for (const field of REQUIRED_FIELDS) {
       if (!state[field]?.trim()) {
         errors.add(field);
-        if (!firstMissing) firstMissing = FIELD_LABELS[field] || field;
+        if (!firstMissing) firstMissing = FIELD_LABEL_KEYS[field] ? translate(lang(), FIELD_LABEL_KEYS[field]) : field;
       }
     }
     set({ errors });
@@ -403,22 +406,23 @@ export function toUpdateInvitationRequest(state: InvitationFormState): UpdateInv
 
 /** 폼 데이터 → 미리보기용 WeddingData로 변환 */
 export function toPreviewData(state: InvitationFormState): WeddingData {
+  const l = lang();
   return {
-    groomName: state.groomName || '신랑',
-    brideName: state.brideName || '신부',
+    groomName: state.groomName || translate(l, 'invitePreview.groom'),
+    brideName: state.brideName || translate(l, 'invitePreview.bride'),
     date: state.date
       ? `${state.date}T${state.time || '00:00'}:00`
       : new Date().toISOString(),
     venue: {
-      name: state.venueName || '예식장',
-      address: state.venueAddress || '주소를 입력하세요',
+      name: state.venueName || translate(l, 'invitePreview.venue'),
+      address: state.venueAddress || translate(l, 'invitePreview.address'),
       hall: state.venueHall || undefined,
     },
     hosts: {
-      groomFatherName: state.groomFatherName || '아버지',
-      groomMotherName: state.groomMotherName || '어머니',
-      brideFatherName: state.brideFatherName || '아버지',
-      brideMotherName: state.brideMotherName || '어머니',
+      groomFatherName: state.groomFatherName || translate(l, 'invitePreview.father'),
+      groomMotherName: state.groomMotherName || translate(l, 'invitePreview.mother'),
+      brideFatherName: state.brideFatherName || translate(l, 'invitePreview.father'),
+      brideMotherName: state.brideMotherName || translate(l, 'invitePreview.mother'),
       groomFatherDeceased: state.groomFatherDeceased,
       groomMotherDeceased: state.groomMotherDeceased,
       brideFatherDeceased: state.brideFatherDeceased,

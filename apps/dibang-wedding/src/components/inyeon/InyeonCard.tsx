@@ -74,13 +74,13 @@ export function InyeonCard({
         <>
           <button
             type="button"
-            aria-label="이전 사진"
+            aria-label={t('inyeon.card.prevPhoto')}
             className="absolute bottom-[34%] left-0 top-0 z-[3] w-[42%] cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onPhotoNav(-1) }}
           />
           <button
             type="button"
-            aria-label="다음 사진"
+            aria-label={t('inyeon.card.nextPhoto')}
             className="absolute bottom-[34%] right-0 top-0 z-[3] w-[42%] cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onPhotoNav(1) }}
           />

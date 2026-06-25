@@ -8,6 +8,7 @@ import {
   timeAgo,
 } from '../../lib/loungeV2Feed';
 import { maskGuestName } from '../../lib/guestLabel';
+import { useT } from '../../lib/i18n';
 import type { StoryGroup } from '../../types/lounge-v2';
 
 // 피드 카드 모달 — 인스타 스토리 2D.
@@ -31,6 +32,7 @@ const AUTO_MS = 5000;
 const SWIPE_PX = 40;
 
 export function FeedCardModal({ groups, openKey, onClose, onItemView, hostNames }: FeedCardModalProps) {
+  const t = useT();
   const [state, send] = useMachine(storyCarouselMachine);
   const cardWrapRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
@@ -152,7 +154,7 @@ export function FeedCardModal({ groups, openKey, onClose, onItemView, hostNames 
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); handleClose(); }}
-        aria-label="닫기"
+        aria-label={t('loungeV2.feedCard.close')}
         className="absolute right-4 top-8 z-10 flex h-9 w-9 items-center justify-center rounded-full text-2xl text-white/80"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -180,7 +182,7 @@ export function FeedCardModal({ groups, openKey, onClose, onItemView, hostNames 
               </div>
               <span className="shrink-0 text-sm text-lng-muted">
                 {timeAgo(item.created_at)}
-                {item.type === 'guestbook_message' && ` · ${feedViewCount(item)}명이 봤어요`}
+                {item.type === 'guestbook_message' && ` · ${t('loungeV2.feedCard.viewCount', { n: feedViewCount(item) })}`}
               </span>
             </div>
             {feedPhotoUrl(item) ? (
@@ -191,13 +193,13 @@ export function FeedCardModal({ groups, openKey, onClose, onItemView, hostNames 
                 />
                 <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/70 to-transparent" />
                 <p className="absolute inset-x-0 bottom-0 px-6 pb-6 font-serif text-lg leading-relaxed text-white">
-                  {liveMessageText(item) || '함께한 마음을 남겼어요'}
+                  {liveMessageText(item) || t('loungeV2.feedCard.fallback')}
                 </p>
               </div>
             ) : (
               <div className="flex flex-1 items-center justify-center bg-gradient-to-b from-[#FCEBDD] to-lng-pink px-7 py-8">
                 <p className="text-center font-serif text-xl leading-relaxed text-lng-ink">
-                  {liveMessageText(item) || '함께한 마음을 남겼어요'}
+                  {liveMessageText(item) || t('loungeV2.feedCard.fallback')}
                 </p>
               </div>
             )}

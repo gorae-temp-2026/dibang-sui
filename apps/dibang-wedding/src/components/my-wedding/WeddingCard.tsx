@@ -4,7 +4,9 @@ import type { WeddingSummary } from '../../types/db-compat';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import { renderQrToCanvas, downloadQrAsPng } from '../../lib/qr-render';
 import { HostSlotSectionContainer } from './HostSlotSectionContainer';
-import { useT } from '../../lib/i18n';
+import { useT, translate, useLangStore } from '../../lib/i18n';
+
+const lang = () => useLangStore.getState().lang;
 
 function formatDday(dateStr: string): string {
   const wedding = new Date(dateStr + 'T00:00:00');
@@ -19,7 +21,7 @@ function formatTime(time?: string): string {
   if (!time) return '';
   const [h, m] = time.split(':');
   const hour = Number(h);
-  const ampm = hour < 12 ? '오전' : '오후';
+  const ampm = translate(lang(), hour < 12 ? 'myWedding.am' : 'myWedding.pm');
   const h12 = hour % 12 || 12;
   return `${ampm} ${h12}:${m}`;
 }
@@ -59,8 +61,8 @@ export function WeddingCard({
   const t = useT();
   const d = new Date(wedding.date);
   const formatted = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-  const dayName = dayNames[d.getDay()];
+  const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dayName = t(`myWedding.day.${dayKeys[d.getDay()]}`);
   const dday = formatDday(wedding.date);
 
   const invitations = wedding.invitations ?? [];
@@ -193,7 +195,7 @@ export function WeddingCard({
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-gray-500">
                             <path d="M12 3C6.48 3 2 6.58 2 10.9c0 2.78 1.86 5.21 4.65 6.6-.15.56-.96 3.56-.99 3.78 0 0-.02.17.09.23.1.06.23.01.23.01.3-.04 3.5-2.3 4.05-2.7.62.09 1.27.14 1.97.14 5.52 0 10-3.58 10-7.96C22 6.58 17.52 3 12 3z" />
                           </svg>
-                          카카오톡 공유
+                          {t('share.kakao')}
                         </button>
                         <button
                           onClick={() => handleCopyLink(inv.slug)}
@@ -203,7 +205,7 @@ export function WeddingCard({
                             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                           </svg>
-                          링크 복사
+                          {t('share.copyLink')}
                         </button>
                       </div>
                     )}
@@ -214,16 +216,16 @@ export function WeddingCard({
                       onClick={(e) => { e.stopPropagation(); navigate(`/invitation/edit/${wedding.id}?invitationId=${inv.id}`); }}
                       className="absolute bottom-3 right-3 z-10 rounded-lg bg-gray-700/80 px-3 py-1.5 text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
                     >
-                      수정하기
+                      {t('myWedding.edit')}
                     </button>
                   )}
                   {hasCover ? (
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                      <span className="rounded-lg bg-black/60 px-4 py-2 text-base font-semibold text-white">청첩장 열기</span>
+                      <span className="rounded-lg bg-black/60 px-4 py-2 text-base font-semibold text-white">{t('myWedding.openInvitation')}</span>
                     </div>
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-base text-gray-400">커버 이미지를 등록하세요</span>
+                      <span className="text-base text-gray-400">{t('myWedding.addCover')}</span>
                     </div>
                   )}
                 </div>
@@ -266,7 +268,7 @@ export function WeddingCard({
             </span>
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-base text-gray-400">커버 이미지를 등록하세요</span>
+            <span className="text-base text-gray-400">{t('myWedding.addCover')}</span>
           </div>
         </div>
       )}
@@ -280,7 +282,7 @@ export function WeddingCard({
           {wedding.groom_name} & {wedding.bride_name}
           {myRole && (
             <span className="inline-block rounded-full bg-sky-100 px-2 py-0.5 text-sm font-medium text-sky-700">
-              {{ groom: '신랑', bride: '신부', groom_father: '신랑 아버지', groom_mother: '신랑 어머니', bride_father: '신부 아버지', bride_mother: '신부 어머니' }[myRole]}
+              {t({ groom: 'myWedding.role.groom', bride: 'myWedding.role.bride', groom_father: 'myWedding.role.groomFather', groom_mother: 'myWedding.role.groomMother', bride_father: 'myWedding.role.brideFather', bride_mother: 'myWedding.role.brideMother' }[myRole] ?? '')}
             </span>
           )}
         </h3>
@@ -296,10 +298,10 @@ export function WeddingCard({
           <div className="flex items-start justify-between mt-1">
             <div className="text-sm text-gray-500 leading-relaxed">
               {(wedding.groom_father_name || wedding.groom_mother_name) && (
-                <p>신랑 부모 {wedding.groom_father_name ?? ''} {wedding.groom_mother_name ?? ''}</p>
+                <p>{t('myWedding.groomParents')} {wedding.groom_father_name ?? ''} {wedding.groom_mother_name ?? ''}</p>
               )}
               {(wedding.bride_father_name || wedding.bride_mother_name) && (
-                <p>신부 부모 {wedding.bride_father_name ?? ''} {wedding.bride_mother_name ?? ''}</p>
+                <p>{t('myWedding.brideParents')} {wedding.bride_father_name ?? ''} {wedding.bride_mother_name ?? ''}</p>
               )}
             </div>
             {isOwner && (
@@ -307,7 +309,7 @@ export function WeddingCard({
                 onClick={() => setHostSlotOpen(true)}
                 className="shrink-0 rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1 text-sm font-medium text-sky-700 hover:bg-sky-100 transition-colors"
               >
-                배우자·혼주 초대
+                {t('myWedding.inviteHosts')}
               </button>
             )}
           </div>
@@ -319,7 +321,7 @@ export function WeddingCard({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setHostSlotOpen(false)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">배우자·혼주 초대</h3>
+              <h3 className="text-lg font-bold text-gray-900">{t('myWedding.inviteHosts')}</h3>
               <button onClick={() => setHostSlotOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
             <HostSlotSectionContainer
@@ -343,14 +345,14 @@ export function WeddingCard({
             <line x1="16" y1="13" x2="8" y2="13" />
             <line x1="16" y1="17" x2="8" y2="17" />
           </svg>
-          <span className="text-sm font-medium">리포트</span>
+          <span className="text-sm font-medium">{t('myWedding.action.report')}</span>
         </button>
         <button onClick={handleLounge} className="flex flex-col items-center gap-1.5 py-2.5 rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
-          <span className="text-sm font-medium">라운지</span>
+          <span className="text-sm font-medium">{t('myWedding.action.lounge')}</span>
         </button>
         <button onClick={handleQR} className="flex flex-col items-center gap-1.5 py-2.5 rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -359,14 +361,14 @@ export function WeddingCard({
             <rect x="2" y="14" width="8" height="8" rx="1" />
             <path d="M14 14h2v2h-2zM20 14h2v2h-2zM14 20h2v2h-2zM20 20h2v2h-2zM17 17h2v2h-2z" />
           </svg>
-          <span className="text-sm font-medium">축의 QR</span>
+          <span className="text-sm font-medium">{t('myWedding.action.giftQr')}</span>
         </button>
         <button onClick={handleMemoryBook} className="flex flex-col items-center gap-1.5 py-2.5 rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
           </svg>
-          <span className="text-sm font-medium">메모리북</span>
+          <span className="text-sm font-medium">{t('myWedding.action.memoryBook')}</span>
         </button>
       </div>
 
@@ -374,14 +376,14 @@ export function WeddingCard({
       {qrOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setQrOpen(false)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-xs mx-4 space-y-4 text-center" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900">축의 QR</h3>
-            <p className="text-sm text-gray-500">현장에서 하객이 스캔하고 축의하는 QR입니다. (출입증) 안내해서 축의대에 비치하세요!</p>
+            <h3 className="text-lg font-bold text-gray-900">{t('myWedding.action.giftQr')}</h3>
+            <p className="text-sm text-gray-500">{t('myWedding.qr.desc')}</p>
             <div className="flex justify-center">
               {/* 디버깅용: 하단 링크 텍스트 제거, QR 클릭 시 해당 링크를 새 탭으로 연다. */}
               <button
                 type="button"
                 onClick={() => window.open(guestFlowUrl, '_blank', 'noopener,noreferrer')}
-                aria-label="QR 링크 새 탭으로 열기"
+                aria-label={t('myWedding.qr.openAria')}
                 className="rounded-lg"
               >
                 <canvas ref={(el) => { qrCanvasRef.current = el; if (el) handleQrModalOpen(); }} className="rounded-lg" />
@@ -391,13 +393,13 @@ export function WeddingCard({
               onClick={handleQrDownload}
               className="w-full rounded-lg bg-gray-700 px-4 py-2.5 text-base font-semibold text-white hover:bg-gray-800 transition-colors"
             >
-              PNG 다운로드
+              {t('myWedding.qr.downloadPng')}
             </button>
             <button
               onClick={() => setQrOpen(false)}
               className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              닫기
+              {t('common.close')}
             </button>
           </div>
         </div>
@@ -407,13 +409,13 @@ export function WeddingCard({
       {loungeErrorOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setLoungeErrorOpen(false)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-xs mx-4 space-y-4 text-center" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900">라운지 정보를 가져올 수 없습니다</h3>
-            <p className="text-sm text-gray-500">잠시 후 다시 시도해 주세요.</p>
+            <h3 className="text-lg font-bold text-gray-900">{t('myWedding.loungeError.title')}</h3>
+            <p className="text-sm text-gray-500">{t('myWedding.loungeError.desc')}</p>
             <button
               onClick={() => setLoungeErrorOpen(false)}
               className="w-full rounded-lg bg-gray-700 px-4 py-2.5 text-base font-semibold text-white hover:bg-gray-800 transition-colors"
             >
-              확인
+              {t('common.confirm')}
             </button>
           </div>
         </div>

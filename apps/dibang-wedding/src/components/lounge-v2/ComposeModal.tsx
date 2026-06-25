@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '../../lib/i18n';
 
 // 온기 더하기 — 프로토타입 #composeModal 원본 UI 이식.
 // 여기서 만드는 건 '피드'(메시지 아님): 작성 시 작성자가 온기 스토리에 노출되고,
@@ -39,6 +40,7 @@ export function ComposeModal({
   uploadError,
   postError,
 }: ComposeModalProps) {
+  const t = useT();
   const [text, setText] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -99,7 +101,7 @@ export function ComposeModal({
       <button
         type="button"
         onClick={close}
-        aria-label="닫기"
+        aria-label={t('loungeV2.compose.close')}
         className="absolute right-5 top-8 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/80"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -116,7 +118,7 @@ export function ComposeModal({
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-semibold text-lng-ink">{name}</p>
           </div>
-          <span className="shrink-0 text-sm text-lng-muted">지금</span>
+          <span className="shrink-0 text-sm text-lng-muted">{t('loungeV2.compose.now')}</span>
         </div>
 
         <div className="relative flex-1">
@@ -130,7 +132,7 @@ export function ComposeModal({
               <button
                 type="button"
                 onClick={removePhoto}
-                aria-label="사진 제거"
+                aria-label={t('loungeV2.compose.removePhoto')}
                 className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-lg text-white"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -140,7 +142,7 @@ export function ComposeModal({
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="메시지를 작성해주세요."
+                placeholder={t('loungeV2.compose.placeholder')}
                 className="absolute inset-x-0 bottom-0 max-h-[55%] w-full resize-none bg-transparent px-5 pb-5 font-serif text-lg leading-relaxed text-white outline-none placeholder:text-white/70"
               />
             </>
@@ -148,13 +150,13 @@ export function ComposeModal({
             <div className="flex h-full flex-col bg-gradient-to-b from-[#FCEBDD] to-lng-pink p-5">
               <label className="mb-3 inline-flex w-fit cursor-pointer items-center gap-1.5 self-center rounded-full bg-white/70 px-3 py-1.5 text-sm font-medium text-lng-muted">
                 <PhotoIcon />
-                <span>사진 추가</span>
+                <span>{t('loungeV2.compose.addPhoto')}</span>
                 <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickPhoto} />
               </label>
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="메시지를 작성해주세요."
+                placeholder={t('loungeV2.compose.placeholder')}
                 className="w-full flex-1 resize-none bg-transparent font-serif text-lg leading-relaxed text-lng-ink outline-none placeholder:text-lng-muted"
               />
             </div>
@@ -170,15 +172,15 @@ export function ComposeModal({
           disabled={isPosting || isUploading || text.trim() === ''}
           className="rounded-full bg-lng-brand px-6 py-2 text-base font-medium text-white disabled:opacity-50"
         >
-          {isUploading ? '사진 올리는 중...' : isPosting ? '게시 중...' : '게시'}
+          {isUploading ? t('loungeV2.compose.uploading') : isPosting ? t('loungeV2.compose.posting') : t('loungeV2.compose.post')}
         </button>
       </div>
 
       {(postError || uploadError) && (
         <p className="mt-3 self-center text-sm text-lng-pink">
           {uploadError
-            ? '사진 업로드에 실패했어요. 다시 시도해 주세요.'
-            : '게시에 실패했어요. 다시 시도해 주세요.'}
+            ? t('loungeV2.compose.uploadError')
+            : t('loungeV2.compose.postError')}
         </p>
       )}
     </div>

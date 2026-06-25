@@ -41,10 +41,10 @@ describe('OnboardingConsentPage — 동의 성공 후 게이트 루프 방지', 
       </QueryClientProvider>,
     )
 
-    await userEvent.click(screen.getByLabelText('(필수) 만 14세 이상 확인'))
-    await userEvent.click(screen.getByLabelText('(필수) 서비스 이용약관 동의'))
-    await userEvent.click(screen.getByLabelText('(필수) 개인정보 수집·이용 동의'))
-    await userEvent.click(screen.getByRole('button', { name: '동의하고 시작' }))
+    await userEvent.click(screen.getByLabelText('(Required) I am 14 or older'))
+    await userEvent.click(screen.getByLabelText('(Required) Terms of service'))
+    await userEvent.click(screen.getByLabelText('(Required) Collection & use of personal data'))
+    await userEvent.click(screen.getByRole('button', { name: 'Agree and start' }))
 
     // 동의 직후 캐시가 비어야(=[]) 도착 페이지의 OnboardingGate가 옛 상태로 되돌리지 않는다.
     // 현재 코드(invalidate만)에서는 캐시가 그대로라 실패(red) → 낙관적 갱신 적용 시 통과.

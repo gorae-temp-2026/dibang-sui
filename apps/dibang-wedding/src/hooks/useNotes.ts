@@ -14,6 +14,9 @@ import {
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
+import { translate, useLangStore } from '../lib/i18n'
+
+const lang = () => useLangStore.getState().lang
 
 export interface Note {
   from: string
@@ -41,7 +44,7 @@ export function useNotes() {
             const blob = await walrusFetch(e.blobId)
             return { from: e.from, to: e.to, text: new TextDecoder().decode(blob), ts: e.ts, noteBoxId: e.noteBoxId }
           } catch {
-            return { from: e.from, to: e.to, text: '(읽을 수 없음)', ts: e.ts, noteBoxId: e.noteBoxId }
+            return { from: e.from, to: e.to, text: translate(lang(), 'note.unreadable'), ts: e.ts, noteBoxId: e.noteBoxId }
           }
         }),
       )
@@ -97,14 +100,14 @@ export function useNotes() {
           return boxId
         }
       }
-      throw new Error('NoteBox 생성 후 ID를 찾을 수 없습니다')
+      throw new Error(translate(lang(), 'note.noteBoxIdMissing'))
     },
     [address, network, executeOnchain],
   )
 
   const sendNote = useCallback(
     async (to: string, text: string) => {
-      if (!address) throw new Error('로그인 필요')
+      if (!address) throw new Error(translate(lang(), 'common.errNeedLogin'))
       const boxId = await findOrCreateNoteBox(to)
       const blob = new TextEncoder().encode(text)
       const blobId = await walrusStore(blob)
