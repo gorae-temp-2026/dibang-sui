@@ -190,7 +190,11 @@ func (r unequipMoiItemNotImpl) VisitUnequipMoiItemResponse(w http.ResponseWriter
 // MemoryBook handlers: handler_memorybook.go.
 
 func (s *Server) GetLounge(ctx context.Context, req GetLoungeRequestObject) (GetLoungeResponseObject, error) {
-	q := db.New(s.LoungeCheckIns.(*loungeCheckInService).pool)
+	svc, ok := s.LoungeCheckIns.(*loungeCheckInService)
+	if !ok {
+		return nil, fmt.Errorf("internal: invalid LoungeCheckIns service type")
+	}
+	q := db.New(svc.pool)
 	row, err := q.GetLoungeByID(ctx, pgtype.UUID{Bytes: req.LoungeId, Valid: true})
 	if err != nil {
 		return nil, err

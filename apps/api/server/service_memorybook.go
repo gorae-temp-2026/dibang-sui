@@ -333,7 +333,7 @@ func (s *memoryBookService) Get(ctx context.Context, weddingID openapi_types.UUI
 			DisplayPhotos: displayPhotos,
 			MecMessages:   mec,
 			Stats: MemoryBookStats{
-				TotalGuests:    int(totalMsg),
+				TotalGuests:    int(totalMsg), // TODO: 메시지 수가 아닌 하객(entry) 수로 변경 필요
 				TotalMessages:  int(totalMsg) + int(cashCount),
 				PhotosUploaded: int(sharedCount),
 			},

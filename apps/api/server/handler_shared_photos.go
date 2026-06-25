@@ -300,8 +300,11 @@ func (s *Server) DownloadSharedPhotosZip(ctx context.Context, req DownloadShared
 		return uploader.Download(c, bucket, path)
 	}
 	go func() {
-		defer pw.Close()
-		_ = WriteSharedPhotosZip(ctx, pw, items, fetch)
+		if err := WriteSharedPhotosZip(ctx, pw, items, fetch); err != nil {
+			_ = pw.CloseWithError(err)
+		} else {
+			_ = pw.Close()
+		}
 	}()
 	return DownloadSharedPhotosZip200ApplicationzipResponse{Body: pr}, nil
 }

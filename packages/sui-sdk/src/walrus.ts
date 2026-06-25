@@ -111,8 +111,7 @@ export async function walrusStorePII(
   if (opts?.encrypt) {
     return walrusStore(await opts.encrypt(data), { epochs: opts?.epochs });
   }
-  // eslint-disable-next-line no-console
-  console.warn('[walrus] PII를 평문으로 저장합니다 — 운영 전 Seal 암호화 적용 필요');
+  // Seal 암호화 미적용 — 운영 전 encrypt 콜백 주입 필요
   return walrusStore(data, { epochs: opts?.epochs });
 }
 

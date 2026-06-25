@@ -20,6 +20,7 @@ export interface UseDisplayWeddingResult {
   photoUrls: string[]
   isLoading: boolean
   notFound: boolean
+  isError: boolean
 }
 
 export function useDisplayWedding(weddingId: string | null): UseDisplayWeddingResult {
@@ -61,6 +62,7 @@ export function useDisplayWedding(weddingId: string | null): UseDisplayWeddingRe
     loungeId: wedding?.lounge.id ?? null,
     photoUrls: invitationQuery.data?.gallery_photos ?? [],
     isLoading: !!weddingId && (weddingQuery.isLoading || (!!firstSlug && invitationQuery.isLoading)),
-    notFound: weddingQuery.isError,
+    notFound: weddingQuery.isError && (weddingQuery.error as any)?.response?.status === 404,
+    isError: weddingQuery.isError && (weddingQuery.error as any)?.response?.status !== 404,
   }
 }
