@@ -15,6 +15,16 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+var validHostSlots = map[string]bool{
+	"groom": true, "bride": true,
+	"groom_father": true, "groom_mother": true,
+	"bride_father": true, "bride_mother": true,
+}
+
+func isValidHostSlot(slot string) bool {
+	return validHostSlots[slot]
+}
+
 type hostInviteService struct {
 	pool *pgxpool.Pool
 }
@@ -138,6 +148,10 @@ func (s *hostInviteService) Accept(ctx context.Context, token string, userID pgt
 		}
 	}
 
+	// Slot 화이트리스트 검증 — SQL injection 방지
+	if !isValidHostSlot(row.Slot) {
+		return nil, fmt.Errorf("invalid slot: %s", row.Slot)
+	}
 	// Check slot not already taken
 	slotCol := fmt.Sprintf("host_%s_id", row.Slot)
 	var existingSlotID pgtype.UUID
