@@ -89,7 +89,8 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false
-      # 청사진(faea79e) 2분리 — prod 적용 전 별도 운영 작업으로 두 버킷 생성·RLS 정책·데이터 이관 필요
+      - key: GOOGLE_CLIENT_ID
+        sync: false
       - key: UPLOAD_BUCKET_PUBLIC
         sync: false
       - key: UPLOAD_BUCKET_PRIVATE
@@ -112,6 +113,16 @@ services:
       - key: VITE_GUEST_WEB_URL
         sync: false
       - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_SUI_NETWORK
+        sync: false
+      - key: VITE_SUI_PACKAGE_ID
+        sync: false
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
+      - key: VITE_ZK_PROVER_URL
+        sync: false
+      - key: VITE_ENOKI_API_KEY
         sync: false
     routes:
       - type: rewrite
