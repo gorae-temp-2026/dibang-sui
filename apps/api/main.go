@@ -76,7 +76,8 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// Auth middleware — Supabase API 위임
+	r.Use(api.InjectRequestMiddleware)
+	// Auth middleware — Supabase + Google JWT
 	r.Use(api.AuthMiddleware(cfg.SupabaseURL, cfg.SupabaseAnonKey, userSvc.EnsureUser, cfg.DevAuthBypass, cfg.DevUserID, cfg.GoogleClientID))
 	log.Println("Auth: Supabase + Google JWT auth middleware enabled")
 	if cfg.DevAuthBypass {

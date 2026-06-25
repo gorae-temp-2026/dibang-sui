@@ -117,7 +117,6 @@ func extractIPFromXFF(r *http.Request) string {
 		return strings.TrimSpace(cf)
 	}
 	if ra := r.RemoteAddr; ra != "" {
-		// "host:port" → host
 		if idx := strings.LastIndexByte(ra, ':'); idx > 0 {
 			return ra[:idx]
 		}

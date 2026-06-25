@@ -85,6 +85,8 @@ func (s *feedService) ListFeed(ctx context.Context, loungeID openapi_types.UUID,
 	}
 
 	// Convert to FeedItem with heart/comment counts.
+	// 성능 참고: 항목당 3회 개별 쿼리(N+1). limit=20 기준 최대 60회.
+	// 배치 쿼리(IN (...) GROUP BY)로 1회로 줄일 수 있으나 sqlc 재설계 필요.
 	items := make([]FeedItem, len(all))
 	for i, row := range all {
 		item := FeedItem{

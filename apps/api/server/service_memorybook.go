@@ -231,6 +231,10 @@ func (s *memoryBookService) Get(ctx context.Context, weddingID openapi_types.UUI
 	if err != nil {
 		return nil, err
 	}
+	totalGuests, err := q.CountGuestbookEntriesByWedding(ctx, wPg)
+	if err != nil {
+		return nil, err
+	}
 	totalMsg, err := q.CountGuestbookMessagesByWedding(ctx, wPg)
 	if err != nil {
 		return nil, err
@@ -333,7 +337,7 @@ func (s *memoryBookService) Get(ctx context.Context, weddingID openapi_types.UUI
 			DisplayPhotos: displayPhotos,
 			MecMessages:   mec,
 			Stats: MemoryBookStats{
-				TotalGuests:    int(totalMsg), // TODO: 메시지 수가 아닌 하객(entry) 수로 변경 필요
+				TotalGuests:    int(totalGuests),
 				TotalMessages:  int(totalMsg) + int(cashCount),
 				PhotosUploaded: int(sharedCount),
 			},

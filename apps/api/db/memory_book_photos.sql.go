@@ -23,6 +23,21 @@ func (q *Queries) CountCashGiftsByWedding(ctx context.Context, weddingID pgtype.
 	return column_1, err
 }
 
+const countGuestbookEntriesByWedding = `-- name: CountGuestbookEntriesByWedding :one
+SELECT count(*)::int
+FROM v3_guestbook_entries ge
+JOIN v3_wedding_lounges wl ON wl.id = ge.lounge_id
+WHERE wl.wedding_id = $1
+`
+
+// 통계용 totalGuests: wedding의 고유 하객(방명록 entry) 수.
+func (q *Queries) CountGuestbookEntriesByWedding(ctx context.Context, weddingID pgtype.UUID) (int32, error) {
+	row := q.db.QueryRow(ctx, countGuestbookEntriesByWedding, weddingID)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const countGuestbookMessagesByWedding = `-- name: CountGuestbookMessagesByWedding :one
 SELECT count(*)::int
 FROM v3_guestbook_messages gm
@@ -30,7 +45,7 @@ JOIN v3_wedding_lounges wl ON wl.id = gm.lounge_id
 WHERE wl.wedding_id = $1
 `
 
-// 통계용 totalGuests: wedding의 모든 라운지의 방명록 메시지 수.
+// 통계용: wedding의 방명록 메시지 수.
 func (q *Queries) CountGuestbookMessagesByWedding(ctx context.Context, weddingID pgtype.UUID) (int32, error) {
 	row := q.db.QueryRow(ctx, countGuestbookMessagesByWedding, weddingID)
 	var column_1 int32

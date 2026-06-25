@@ -51,10 +51,17 @@ JOIN v3_wedding_lounges wl ON wl.id = sp.lounge_id
 WHERE wl.wedding_id = $1;
 
 -- name: CountGuestbookMessagesByWedding :one
--- 통계용 totalGuests: wedding의 모든 라운지의 방명록 메시지 수.
+-- 통계용: wedding의 방명록 메시지 수.
 SELECT count(*)::int
 FROM v3_guestbook_messages gm
 JOIN v3_wedding_lounges wl ON wl.id = gm.lounge_id
+WHERE wl.wedding_id = $1;
+
+-- name: CountGuestbookEntriesByWedding :one
+-- 통계용 totalGuests: wedding의 고유 하객(방명록 entry) 수.
+SELECT count(*)::int
+FROM v3_guestbook_entries ge
+JOIN v3_wedding_lounges wl ON wl.id = ge.lounge_id
 WHERE wl.wedding_id = $1;
 
 -- name: CountCashGiftsByWedding :one
