@@ -29,7 +29,7 @@ export function mount(): void {
   // DEV 전용 — 로그인 우회 프리뷰: 철수 fixture 시드 + staleTime∞(더미 백엔드 refetch 방지). 프로덕션 무영향.
   const queryClient = isDevBypass()
     ? new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, retry: false, refetchOnWindowFocus: false } } })
-    : new QueryClient()
+    : new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } })
   if (isDevBypass()) seedDevFixtures(queryClient)
 
   const rootEl = document.getElementById('root')

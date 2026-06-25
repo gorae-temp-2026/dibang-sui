@@ -70,7 +70,7 @@ export function GiftPicker(props: GiftPickerProps) {
               return (
                 <div key={it.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
                   <div className="flex h-24 items-center justify-center bg-[#f4f1ea]">
-                    <img src={it.url} alt={it.name} className="h-[84px] w-[84px] object-contain" draggable={false} />
+                    <img src={it.url} alt={it.name} className="h-[84px] w-[84px] object-contain" draggable={false} loading="lazy" />
                   </div>
                   <div className="flex flex-1 flex-col p-2.5">
                     <div className="truncate text-[12.5px] font-bold text-white">{it.name}</div>
@@ -106,7 +106,7 @@ export function GiftPicker(props: GiftPickerProps) {
             {offchainInv.map((it) => (
               <div key={it!.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
                 <div className="relative flex h-24 items-center justify-center bg-[#f4f1ea]">
-                  <img src={it!.url} alt={it!.name} className="h-[84px] w-[84px] object-contain" draggable={false} />
+                  <img src={it!.url} alt={it!.name} className="h-[84px] w-[84px] object-contain" draggable={false} loading="lazy" />
                   <span className="absolute left-2 top-2 rounded-full bg-white/20 px-1.5 py-0.5 text-[8.5px] font-extrabold text-white/60">{t('moiGather.offchain')}</span>
                 </div>
                 <div className="flex flex-1 flex-col p-2.5">

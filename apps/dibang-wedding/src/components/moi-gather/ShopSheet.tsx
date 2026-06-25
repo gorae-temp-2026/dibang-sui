@@ -119,7 +119,7 @@ export function ShopSheet(props: ShopSheetProps) {
                   const inPreview = preview[k] === it.id
                   return (
                     <div key={it.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
-                      <div className="flex h-20 items-center justify-center bg-[#f4f1ea]"><img src={it.url} alt={it.name} className="h-16 w-16 object-contain" draggable={false} /></div>
+                      <div className="flex h-20 items-center justify-center bg-[#f4f1ea]"><img src={it.url} alt={it.name} className="h-16 w-16 object-contain" draggable={false} loading="lazy" /></div>
                       <div className="p-2">
                         <div className="truncate text-[12px] font-bold text-white">{it.name}</div>
                         {wornNow ? (
@@ -149,7 +149,7 @@ export function ShopSheet(props: ShopSheetProps) {
                   const canPlace = placedN < have
                   return (
                     <div key={it.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
-                      <div className="flex h-20 items-center justify-center bg-[#f4f1ea]"><img src={it.url} alt={it.name} className="h-16 w-16 object-contain" draggable={false} /></div>
+                      <div className="flex h-20 items-center justify-center bg-[#f4f1ea]"><img src={it.url} alt={it.name} className="h-16 w-16 object-contain" draggable={false} loading="lazy" /></div>
                       <div className="p-2">
                         <div className="truncate text-[12px] font-bold text-white">{it.name} <span className="text-white/45">{placedN}/{have}</span></div>
                         <button type="button" disabled={!canPlace} onClick={() => props.onPlace(it.id)} className={cn('mt-1.5 w-full rounded-lg py-1.5 text-[11px] font-bold', canPlace ? 'bg-white/[0.08] text-white' : 'bg-white/[0.04] text-white/30')}>{canPlace ? t('moiGather.placeInPlaza') : t('moiGather.allPlaced')}</button>
