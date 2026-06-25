@@ -88,7 +88,7 @@ function PendingSlot({ slot }: { slot: RoleSlot }) {
           <span className="absolute -bottom-1 -right-1 text-[14px]">✋</span>
         </div>
       </div>
-      <div className="text-[10.5px] text-lng-muted">{t('loungeV2.gift.candidates', { n: slot.candidates })}</div>
+      <div className="text-[10.5px] text-lng-muted">{t('loungeV2.gift.candidates', { n: slot.candidates ?? 0 })}</div>
       {cd && (
         <div className="mt-0.5 text-[10px] font-semibold text-lng-coral">{cd.expired ? t('loungeV2.gift.closed') : t('loungeV2.gift.closesIn', { label: cd.label })}</div>
       )}

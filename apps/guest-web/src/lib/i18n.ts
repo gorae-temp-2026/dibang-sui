@@ -19,7 +19,13 @@ export const useLangStore = create<LangState>()(
       // 공유 패키지(@gorae/invitation-ui)의 별도 i18n 스토어에 같은 탭 실시간 동기화.
       if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('dibang:lang', { detail: lang }))
     },
-  }), { name: 'dibang:lang' }),
+  }), {
+    name: 'dibang:lang',
+    version: 1,
+    // v0(영문화 전환 이전에 저장된 언어 선택) → v1: 영문 서비스가 기본이므로
+    // 브라우저에 남은 옛 'ko' 저장값을 1회 영어로 초기화한다. 이후 사용자가 바꾼 선택은 그대로 유지.
+    migrate: () => ({ lang: 'en' } as LangState),
+  }),
 )
 
 type Dict = Record<string, string>
