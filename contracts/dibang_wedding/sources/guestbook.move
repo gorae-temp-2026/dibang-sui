@@ -1,7 +1,7 @@
 /// Guestbook 도메인 — 방명록 작성을 *신뢰 신호* + 메시지 본문으로 기록한다.
 ///
 /// write: 신호만(본문 없음, 하위 호환). write_message: 신호 + 메시지 본문 온체인 저장.
-/// TODO: Seal + Walrus 전환 시 message → blob_id(vector<u8>)로 교체.
+/// write_message의 message/guest_name 필드는 이미 Walrus blobId로 사용 중(SDK에서 변환).
 module dibang_wedding::guestbook;
 
 use std::string::String;
@@ -20,7 +20,7 @@ const EEmptyMessage: u64 = 1;
 // === Structs ===
 
 /// 방명록 메시지. soulbound — 작성자에 귀속.
-/// TODO: Seal + Walrus 전환 시 message/guest_name → blob_id.
+/// message/guest_name은 Walrus blobId로 사용(SDK에서 평문→Walrus→blobId 변환).
 public struct GuestbookMessage has key {
     id: UID,
     wedding_id: ID,
@@ -59,7 +59,7 @@ public fun write(
 }
 
 /// 방명록 작성 + 메시지 본문 온체인 저장. 신호 기록 + GuestbookMessage soulbound 발행.
-/// TODO: Seal + Walrus 전환 시 message를 blob_id로 교체.
+/// message/guest_name은 Walrus blobId(SDK에서 변환). 타입은 String(blobId 호환).
 public fun write_message(
     wedding: &Wedding,
     participation: &gathering::Participation,
