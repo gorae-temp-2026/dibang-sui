@@ -29,14 +29,13 @@ export interface SuiContractConfig {
   shopRegistryId?: string;
 }
 
-/** testnet 배포 기본값 (2026-06-22 cutover — 매트릭스 신뢰그래프 + purchase_item/Payment Kit 통합 재배포, digest nNpkRqTV…). 구 0x258e9a 대체. */
+/** testnet 배포 기본값 (2026-06-26 재배포 — signal project 확장 + memory/note 배선). */
 export const TESTNET_CONFIG: SuiContractConfig = {
   network: 'testnet',
-  packageId: '0xd0b7e5cd84de793cc167d4b47e24bf4934a6a4f7da73ebedd0d1e8d72b4644b6',
-  trustRegistryId: '0xe360917e54b95727d16afb63c9ac594d50833032ac5a8f098526bf4fa2a15397',
-  emMoneyMatrixId: '0x33d094cd39fdb6a6e0f69ebe8e6d7a272d2c4faa54baadf635a29fe64d168058',
-  csMatrixId: '0x60708b66db08f01b3c1e02e162e275cc434c21f34219f4bbfb653e0720e89e70',
-  // dibang 샵 PaymentRegistry(managed_funds=true) — create-shop-registry.ts로 생성(2026-06-21).
+  packageId: '0x39ba6062335f2c8083577f07651b4da678d677ecdc26fe88ee38695a60caa66b',
+  trustRegistryId: '0x20ff0c7f1bfd4812fc74bfafba49cb56b4e43404541fd44645ff8dbcb050a823',
+  emMoneyMatrixId: '0x61000a070d0da5f2c4af60a761e39372c27e5246700ea7791b3874c06effb4d2',
+  csMatrixId: '0xfa2466a926b8346e6f1fdcd143e2709020b0ad306d08df84d825d40e325e5328',
   shopRegistryId: '0x06cd52b59efdc3e0c4807204be0b3d449842dc591c57cf2cb6704a2b8c4d482c',
 };
 

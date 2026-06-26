@@ -972,6 +972,18 @@ const KO: Dict = {
   "tx.noSession": "zkLogin 세션 없음 — 먼저 로그인하세요",
   "tx.success": "TX 성공",
   "tx.view": "보기 →",
+  // ── 디방인연 내 프로필(Profile 탭) — 앱엔 정성·1층 활동만, 정확 신용은 온체인 ──
+  'me.handle': '모이 #1024 · 서울',
+  'me.builtUp': '내가 쌓은 것',
+  'me.ieum': '이음',
+  'me.events': '함께한 이벤트',
+  'me.contrib': '기여',
+  'me.activityNote': '이음·참여·기여가 온체인 신뢰 기록으로 쌓여 Moi Credit(온체인 신용)이 돼요. 앱에선 정성 표현만, 정확한 값은 온체인에서.',
+  'me.creditLabel': '크레딧',
+  'me.viewFull': '내 전체 프로필 보기',
+  'me.checkOnchain': '온체인에서 Moi Credit 확인',
+  'me.editTitle': '✍️ 인연 소개글 · 노출 설정',
+  'me.editHint': '추가 사진 업로드 · 소개글 · 매칭 풀 노출 토글 — 곧 제공. 대표 사진은 설정에서 변경.',
 }
 const EN: Dict = {
   'nav.inyeon': 'Inyeon',
@@ -1905,6 +1917,17 @@ const EN: Dict = {
   "tx.noSession": "No zkLogin session — please sign in first",
   "tx.success": "Transaction successful",
   "tx.view": "View →",
+  'me.handle': 'Moi #1024 · Seoul',
+  'me.builtUp': "What you've built",
+  'me.ieum': 'ieum',
+  'me.events': 'Events joined',
+  'me.contrib': 'Contributions',
+  'me.activityNote': 'Ieum, participation, and contributions accrue as on-chain trust records that become your Moi Credit (on-chain credit). In-app shows only qualitative labels — the exact value lives on-chain.',
+  'me.creditLabel': 'Credit',
+  'me.viewFull': 'View my full profile',
+  'me.checkOnchain': 'Check Moi Credit on-chain',
+  'me.editTitle': '✍️ Inyeon bio · visibility',
+  'me.editHint': 'Extra photos · bio · matching-pool toggle — coming soon. Change your photo in Setting.',
 }
 const DICT: Record<Lang, Dict> = { ko: KO, en: EN }
 

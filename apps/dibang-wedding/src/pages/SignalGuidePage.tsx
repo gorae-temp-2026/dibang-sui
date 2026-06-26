@@ -6,15 +6,17 @@ import { useLang, useT } from '../lib/i18n'
 import { SignalSunburst } from '../components/profile/SignalSunburst'
 import type { SignalNode } from '../components/profile/types'
 
-// 예시 시그널 — Fiske 관계모델(EM·CS·AR·MP) 소분류까지 드릴다운(프로필 sunburst와 동일 구조).
-const EXAMPLE_SIGNAL: SignalNode = {
-  name: '시그널',
-  children: [
-    { name: 'EM', children: [{ name: '부조', value: 20 }, { name: '답례', value: 9 }, { name: '선물', value: 6 }] },
-    { name: 'CS', children: [{ name: '함께한 자리', value: 12 }, { name: '나눔', value: 7 }, { name: '대화', value: 5 }] },
-    { name: 'AR', children: [{ name: '선후배', value: 6 }, { name: '멘토링', value: 4 }] },
-    { name: 'MP', children: [{ name: '거래', value: 2, stub: true }] },
-  ],
+// 예시 시그널 — Fiske 관계모델(EM·CS·AR·MP) 소분류까지 드릴다운(프로필 sunburst와 동일 구조). i18n ko/en.
+function makeExampleSignal(ko: boolean): SignalNode {
+  return {
+    name: ko ? '시그널' : 'Signal',
+    children: [
+      { name: 'EM', children: [{ name: ko ? '부조' : 'gift', value: 20 }, { name: ko ? '답례' : 'return', value: 9 }, { name: ko ? '선물' : 'present', value: 6 }] },
+      { name: 'CS', children: [{ name: ko ? '함께한 자리' : 'attendance', value: 12 }, { name: ko ? '나눔' : 'sharing', value: 7 }, { name: ko ? '대화' : 'talk', value: 5 }] },
+      { name: 'AR', children: [{ name: ko ? '선후배' : 'seniority', value: 6 }, { name: ko ? '멘토링' : 'mentoring', value: 4 }] },
+      { name: 'MP', children: [{ name: ko ? '거래' : 'trade', value: 2, stub: true }] },
+    ],
+  }
 }
 
 function Row({ tag, color, title, body }: { tag: string; color: string; title: string; body: string }) {
@@ -56,7 +58,7 @@ export function SignalGuidePage() {
         </p>
 
         <div className="my-5 flex flex-col items-center gap-2">
-          <SignalSunburst data={EXAMPLE_SIGNAL} size={200} />
+          <SignalSunburst data={makeExampleSignal(ko)} size={200} />
           <span className="text-[11px] text-white/45">
             {ko ? '안쪽 = 관계 갈래(EM·CS·AR) · 바깥 = 세부 (예시)' : 'Inner = relation models (EM·CS·AR) · Outer = details (example)'}
           </span>

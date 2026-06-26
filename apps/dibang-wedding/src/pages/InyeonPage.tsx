@@ -10,7 +10,7 @@ import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
 import { useDiscoverUsers } from '../hooks/useDiscoverUsers'
-import { TIER_META } from '../components/inyeon/data'
+import { TIER_META, MOI_INTRO } from '../components/inyeon/data'
 import type { Moi } from '../components/inyeon/types'
 import { SwipeDeck } from '../components/inyeon/SwipeDeck'
 import { InyeonRail } from '../components/inyeon/InyeonRail'
@@ -100,6 +100,7 @@ export function InyeonPage() {
         photoHue: profileMoiForSheet.photos[0]?.hue ?? 210,
         photoUrl: profileMoiForSheet.photos[0]?.url,
         hook: profileMoiForSheet.hook,
+        intro: MOI_INTRO[profileMoiForSheet.id],
         prov: profileMoiForSheet.prov.map((p) => ({ emoji: p.emoji, text: p.text, sub: p.sub, tag: TIER_META[p.tier].label })),
         mutualCount: profileMoiForSheet.mutualCount,
         balLabel: profileMoiForSheet.balLabel,
@@ -282,11 +283,14 @@ export function InyeonPage() {
         onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
         onOpenFull={(id) => send({ type: 'OPEN_PROFILE', id })}
       />
+      {/* 내 전체 프로필 — 내 거라 항상 공개(revealed)·풀페이지. chulsooPlazaProfile=가족·만난사람 노드 포함. */}
       <ProfileSheet
         open={myProfileOpen}
         onOpenChange={(o) => send({ type: o ? 'OPEN_MY_PROFILE' : 'CLOSE_MY_PROFILE' })}
         data={buildProfileFromMoi(null, { creditScore: myCreditScore })}
         context="inyeon"
+        revealed
+        presentation="page"
       />
       {/* 다른 모이 프로필(카드 상세·받은이음·채팅에서 진입) — 이음 전 익명 + 이음 CTA. */}
       <ProfileSheet
@@ -297,6 +301,7 @@ export function InyeonPage() {
           creditScore: myCreditScore,
         })}
         context="inyeon"
+        presentation="page"
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
         onIeum={profileMoiId != null ? () => send({ type: 'OPEN_IEUM', id: profileMoiId }) : undefined}
@@ -319,6 +324,7 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
         <div className="mt-0.5 text-xs text-white/50">{t('page.inyeon.moiSeoul')}</div>
       </div>
 
+      {/* 내가 쌓은 것 = 1층 활동(카운트만). 절대 신용 숫자(신뢰잔액·Moi Credit) 없음. */}
       <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
         <div className="flex items-center text-[13px] font-bold text-white">
           🪙 {t('page.inyeon.myTrustBalance')}
@@ -348,9 +354,16 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
       <button
         type="button"
         onClick={onOpenProfile}
-        className="mt-3 w-full rounded-2xl border border-[#F8C57A]/40 bg-white/[0.05] py-3 text-[13px] font-bold text-[#F8C57A]"
+        className="mt-3 w-full rounded-2xl border border-white/12 bg-white/[0.05] py-3 text-[13px] font-bold text-white"
       >
         🔭 {t('page.inyeon.fullProfileCta')}
+      </button>
+      <button
+        type="button"
+        onClick={() => window.open('https://suiscan.xyz/testnet', '_blank', 'noopener,noreferrer')}
+        className="mt-2 w-full rounded-2xl border border-[#F8C57A]/40 bg-[#F8C57A]/[0.08] py-3 text-[13px] font-bold text-[#F8C57A]"
+      >
+        ⛓ {t('me.checkOnchain')}
       </button>
 
       <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
