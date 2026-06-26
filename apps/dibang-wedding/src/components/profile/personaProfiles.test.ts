@@ -115,8 +115,9 @@ describe('광장 ego 네트워크(하이라이트 인터랙션)', () => {
 
   it('철수 = 전체망 유지(많은 노드) + here(이 결혼식에서 만난 사람) = 광장 hero와 일치', () => {
     const partners = plazaPartnerIds('me')
-    const here = chulsooPlazaProfile.graph.nodes.filter((n) => n.here).map((n) => n.id).sort()
-    expect(here).toEqual([...partners].sort()) // 강조 집합 = 광장 선
+    // here 강조엔 광장 hero + 철수 가족이 섞여 있으므로, 광장 실재 스프라이트(CROWD_BY_ID)만 추려 광장 선과 비교.
+    const hereInPlaza = chulsooPlazaProfile.graph.nodes.filter((n) => n.here && CROWD_BY_ID[n.id]).map((n) => n.id).sort()
+    expect(hereInPlaza).toEqual([...partners].sort()) // 광장 선 = here ∩ 광장 스프라이트
     expect(chulsooPlazaProfile.graph.nodes.length).toBeGreaterThan(10) // 전체 신뢰 네트워크 유지
     expect(chulsooPlazaProfile.moiCredit.score).toBe(834) // 실데이터 불변
   })

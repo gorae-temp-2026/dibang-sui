@@ -11,7 +11,12 @@ import { inyeonMachine } from './inyeon.machine'
 import { POOL, START_YONE, PHOTO_COST, DM_COST, INCOMING, seedDm } from '../components/inyeon/data'
 
 const ctxOf = (a: Actor<typeof inyeonMachine>) => a.getSnapshot().context
-const start = () => createActor(inyeonMachine).start()
+function start() {
+  const a = createActor(inyeonMachine).start()
+  a.send({ type: 'SET_POOL', pool: POOL })
+  a.send({ type: 'SET_INCOMING', incoming: INCOMING })
+  return a
+}
 // 기본 context 위에 일부만 덮은 초기 스냅샷으로 기동(요네 부족 등 도달하기 힘든 분기 검증용).
 function startWith(patch: Partial<ReturnType<typeof ctxOf>>) {
   const base = createActor(inyeonMachine).getSnapshot().context
@@ -22,7 +27,8 @@ function startWith(patch: Partial<ReturnType<typeof ctxOf>>) {
 
 describe('inyeon.machine — 초기', () => {
   it('browsing에서 시작, 요네=START, 오버레이·채팅 비었음', () => {
-    const s = start().getSnapshot()
+    const raw = createActor(inyeonMachine).start()
+    const s = raw.getSnapshot()
     expect(s.value).toBe('browsing')
     expect(s.context.yone).toBe(START_YONE)
     expect(s.context.screen).toBe('universe')
@@ -32,7 +38,8 @@ describe('inyeon.machine — 초기', () => {
     expect(s.context.myProfileOpen).toBe(false)
     expect(s.context.dmRoomId).toBeNull()
     expect(s.context.dms).toEqual({})
-    expect(s.context.incoming).toEqual(INCOMING)
+    expect(s.context.incoming).toEqual([])
+    raw.stop()
   })
 })
 
@@ -60,6 +67,7 @@ describe('inyeon.machine — 카드 탐색', () => {
   it('SWIPE_NEXT → 큐 맨 앞 제거', () => {
     const a = start()
     const first = ctxOf(a).queue[0]
+    expect(first).toBeDefined()
     a.send({ type: 'SWIPE_NEXT' })
     expect(ctxOf(a).queue[0]).not.toBe(first)
   })
@@ -69,7 +77,7 @@ describe('inyeon.machine — 이음(전송→성사)', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
-  it('OPEN_IEUM → composing(activeId 설정), SEND_IEUM → sending → matched, DISMISS → browsing(큐에서 제거)', async () => {
+  it('OPEN_IEUM → composing(activeId 설정), SEND_IEUM → sending → sentPending, DISMISS → browsing(큐에서 제거)', async () => {
     const a = start()
     const id = ctxOf(a).queue[0]
     a.send({ type: 'OPEN_IEUM', id })
@@ -77,9 +85,9 @@ describe('inyeon.machine — 이음(전송→성사)', () => {
     expect(ctxOf(a).activeId).toBe(id)
     a.send({ type: 'SEND_IEUM' })
     expect(a.getSnapshot().value).toBe('sending')
-    await vi.advanceTimersByTimeAsync(700) // mock 650ms 수락
-    expect(a.getSnapshot().value).toBe('matched')
-    expect(ctxOf(a).matchedIds).toContain(id)
+    await vi.advanceTimersByTimeAsync(700)
+    expect(a.getSnapshot().value).toBe('sentPending')
+    expect(ctxOf(a).sentIds).toContain(id)
     a.send({ type: 'DISMISS_MATCH' })
     expect(a.getSnapshot().value).toBe('browsing')
     expect(ctxOf(a).queue).not.toContain(id)
@@ -179,7 +187,7 @@ describe('inyeon.machine — 채팅(DM) 게이트', () => {
   })
 
   it('요네 부족 → error만, 방 안 열림(차감 없음)', () => {
-    const a = startWith({ yone: 10 })
+    const a = startWith({ yone: 10, pool: POOL })
     const tier2 = POOL.find((m) => m.tier === 2)!.id // DM_COST 200 > 10
     a.send({ type: 'OPEN_DM_ROOM', id: tier2 })
     const c = ctxOf(a)

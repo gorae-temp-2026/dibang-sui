@@ -283,7 +283,7 @@ export function InyeonPage() {
         onIeum={(id) => send({ type: 'OPEN_IEUM', id })}
         onOpenFull={(id) => send({ type: 'OPEN_PROFILE', id })}
       />
-      {/* 내 전체 프로필 — 내 거라 항상 공개(revealed)·풀페이지. chulsooPlazaProfile=가족·만난사람 노드 포함. */}
+      {/* 내 전체 프로필 — 내 거라 항상 공개(revealed)·풀페이지. 온체인 신호(buildProfileFromMoi)로 구성. */}
       <ProfileSheet
         open={myProfileOpen}
         onOpenChange={(o) => send({ type: o ? 'OPEN_MY_PROFILE' : 'CLOSE_MY_PROFILE' })}

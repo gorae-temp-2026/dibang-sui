@@ -9,3 +9,23 @@
  * 컨벤션: _code_convention/FRONTEND_TESTING.md § MSW 셋업
  */
 import '@testing-library/jest-dom/vitest'
+import { vi } from 'vitest'
+
+vi.mock('./providers/ZkLoginProvider', async (importOriginal) => {
+  const orig = await importOriginal<Record<string, unknown>>()
+  return {
+    ...orig,
+    useZkLogin: () => ({
+      session: null,
+      address: null,
+      isAuthenticated: false,
+      isDev: false,
+      login: vi.fn(),
+      devLogin: vi.fn(),
+      completeLoginFromUrl: vi.fn().mockResolvedValue(false),
+      logout: vi.fn(),
+      executeOnchain: vi.fn().mockResolvedValue(''),
+    }),
+    ZkLoginProvider: ({ children }: { children: React.ReactNode }) => children,
+  }
+})

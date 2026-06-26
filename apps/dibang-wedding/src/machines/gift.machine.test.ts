@@ -21,6 +21,7 @@ describe('gift 머신 (선물 거래)', () => {
 
   it('전송 → 요네 차감 + 로그(fromMe) + 신뢰 신호 적립', async () => {
     const a = createActor(giftMachine).start()
+    a.send({ type: 'CHARGE', amount: 500 })
     const y0 = a.getSnapshot().context.yone
     await send(a, 'cake', '205', '수아')
     const c = a.getSnapshot().context
@@ -39,6 +40,7 @@ describe('gift 머신 (선물 거래)', () => {
 
   it('요네 부족 → 전송 차단(guard)', async () => {
     const a = createActor(giftMachine).start()
+    a.send({ type: 'CHARGE', amount: 500 })
     await send(a, 'bride_bouquet', 'c1', 'A') // 120
     await send(a, 'bride_bouquet', 'c2', 'B') // 120
     await send(a, 'bride_bouquet', 'c3', 'C') // 120
@@ -52,6 +54,7 @@ describe('gift 머신 (선물 거래)', () => {
 
   it('신뢰 신호는 같은 상대에게 누적', async () => {
     const a = createActor(giftMachine).start()
+    a.send({ type: 'CHARGE', amount: 500 })
     await send(a, 'champagne', '205', '수아')
     await send(a, 'bouquet', '205', '수아')
     expect(a.getSnapshot().context.signals['205']).toBe(2)
