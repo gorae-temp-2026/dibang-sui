@@ -1,7 +1,7 @@
 // Moi Credit 설명 패널 — raw → 2층 fold → 3층 Φ → 4층 통합(공식 뷰). i18n ko/en.
 // 데이터 = sim-scale.mjs 철수 트레이스. 절대값(정확 Moi Credit)은 온체인 오브젝트 맥락에서만 강조.
 import type { ProfileData } from './types'
-import { useT, useLang } from '../../lib/i18n'
+import { useLang } from '../../lib/i18n'
 
 function Layer({ tag, value, formula }: { tag: string; value: string; formula: string }) {
   return (
@@ -16,7 +16,6 @@ function Layer({ tag, value, formula }: { tag: string; value: string; formula: s
 }
 
 export function MoiCreditPanel({ data }: { data: ProfileData }) {
-  const t = useT()
   const { trace, moiCredit } = data
   const ko = useLang() === 'ko'
   return (
