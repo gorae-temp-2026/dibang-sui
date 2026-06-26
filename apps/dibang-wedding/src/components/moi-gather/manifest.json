@@ -6,7 +6,8 @@
       "char": "chu",
       "yone": 0,
       "default": true,
-      "neck_y": 278
+      "neck_y": 278,
+      "en": "Chulsoo Default (Bowl Cut)"
     },
     {
       "file": "heads/chu_buzz.png",
@@ -14,7 +15,8 @@
       "char": "chu",
       "yone": 30,
       "default": false,
-      "neck_y": 278
+      "neck_y": 278,
+      "en": "Chulsoo Buzz Cut"
     },
     {
       "file": "heads/chu_sport.png",
@@ -22,7 +24,8 @@
       "char": "chu",
       "yone": 30,
       "default": false,
-      "neck_y": 278
+      "neck_y": 278,
+      "en": "Chulsoo Sport"
     },
     {
       "file": "heads/chu_shaggy.png",
@@ -30,7 +33,8 @@
       "char": "chu",
       "yone": 40,
       "default": false,
-      "neck_y": 278
+      "neck_y": 278,
+      "en": "Chulsoo Shaggy"
     },
     {
       "file": "heads/yh_pigtail.png",
@@ -38,7 +42,8 @@
       "char": "yh",
       "yone": 0,
       "default": true,
-      "neck_y": 278
+      "neck_y": 278,
+      "en": "Younghee Pigtails (Default)"
     },
     {
       "file": "heads/yh_bob.png",
@@ -46,7 +51,8 @@
       "char": "yh",
       "yone": 40,
       "default": false,
-      "neck_y": 278
+      "neck_y": 278,
+      "en": "Younghee Bob"
     },
     {
       "file": "heads/yh_veil.png",
@@ -54,7 +60,8 @@
       "char": "yh",
       "yone": 90,
       "default": false,
-      "neck_y": 278
+      "neck_y": 278,
+      "en": "Younghee Veil"
     }
   ],
   "bodies": [
@@ -63,42 +70,48 @@
       "ko": "캐주얼(기본·리컬러)",
       "yone": 0,
       "default": true,
-      "neck_y": 256
+      "neck_y": 256,
+      "en": "Casual (Default)"
     },
     {
       "file": "bodies/suit.png",
       "ko": "정장(신랑)",
       "yone": 50,
       "default": false,
-      "neck_y": 256
+      "neck_y": 256,
+      "en": "Suit (Groom)"
     },
     {
       "file": "bodies/singer_mic.png",
       "ko": "축가(마이크)",
       "yone": 60,
       "default": false,
-      "neck_y": 256
+      "neck_y": 256,
+      "en": "Singer (Mic)"
     },
     {
       "file": "bodies/bride_bouquet.png",
       "ko": "웨딩드레스(부케)",
       "yone": 120,
       "default": false,
-      "neck_y": 256
+      "neck_y": 256,
+      "en": "Wedding Dress (Bouquet)"
     },
     {
       "file": "bodies/hanbok_f.png",
       "ko": "한복(여)",
       "yone": 90,
       "default": false,
-      "neck_y": 256
+      "neck_y": 256,
+      "en": "Hanbok (F)"
     },
     {
       "file": "bodies/party.png",
       "ko": "파티(춤)",
       "yone": 40,
       "default": false,
-      "neck_y": 256
+      "neck_y": 256,
+      "en": "Party (Dance)"
     }
   ],
   "items": [
@@ -106,103 +119,120 @@
       "file": "items/fountain.png",
       "ko": "분수",
       "yone": 120,
-      "category": "interior"
+      "category": "interior",
+      "en": "Fountain"
     },
     {
       "file": "items/arch.png",
       "ko": "꽃아치",
       "yone": 100,
-      "category": "interior"
+      "category": "interior",
+      "en": "Flower Arch"
     },
     {
       "file": "items/cake.png",
       "ko": "웨딩케이크",
       "yone": 60,
-      "category": "interior"
+      "category": "interior",
+      "en": "Wedding Cake"
     },
     {
       "file": "items/champagne.png",
       "ko": "샴페인",
       "yone": 30,
-      "category": "interior"
+      "category": "interior",
+      "en": "Champagne"
     },
     {
       "file": "items/bouquet.png",
       "ko": "부케",
       "yone": 25,
-      "category": "interior"
+      "category": "interior",
+      "en": "Bouquet"
     },
     {
       "file": "items/table.png",
       "ko": "웨딩테이블",
       "yone": 40,
-      "category": "interior"
+      "category": "interior",
+      "en": "Wedding Table"
     },
     {
       "file": "items/heart_balloon.png",
       "ko": "하트풍선",
       "yone": 20,
-      "category": "interior"
+      "category": "interior",
+      "en": "Heart Balloon"
     },
     {
       "file": "items/wreath.png",
       "ko": "디방화환",
       "yone": 80,
-      "category": "interior"
+      "category": "interior",
+      "en": "Dibang Wreath"
     },
     {
       "file": "items/gift_box.png",
       "ko": "축의함",
       "yone": 25,
-      "category": "interior"
+      "category": "interior",
+      "en": "Gift Box"
     },
     {
       "file": "items/podium.png",
       "ko": "주례대",
       "yone": 50,
-      "category": "interior"
+      "category": "interior",
+      "en": "Podium"
     },
     {
       "file": "items/garland.png",
       "ko": "가랜드",
       "yone": 15,
-      "category": "interior"
+      "category": "interior",
+      "en": "Garland"
     },
     {
       "file": "items/dove.png",
       "ko": "비둘기",
       "yone": 20,
-      "category": "interior"
+      "category": "interior",
+      "en": "Dove"
     },
     {
       "file": "items/aisle_runner.png",
       "ko": "버진로드",
       "yone": 70,
-      "category": "interior"
+      "category": "interior",
+      "en": "Aisle Runner"
     },
     {
       "file": "items/flower_stand.png",
       "ko": "버진로드 꽃장식",
       "yone": 35,
-      "category": "interior"
+      "category": "interior",
+      "en": "Aisle Flower Stand"
     },
     {
       "file": "items/round_table.png",
       "ko": "라운드 테이블",
       "yone": 40,
-      "category": "interior"
+      "category": "interior",
+      "en": "Round Table"
     },
     {
       "file": "items/chair.png",
       "ko": "의자",
       "yone": 15,
-      "category": "interior"
+      "category": "interior",
+      "en": "Chair"
     },
     {
       "file": "items/candelabra.png",
       "ko": "촛대",
       "yone": 30,
-      "category": "interior"
+      "category": "interior",
+      "en": "Candelabra"
     }
   ],
   "accessories": [
@@ -210,55 +240,64 @@
       "file": "accessories/flower_crown.png",
       "ko": "화관",
       "yone": 15,
-      "anchor": "top"
+      "anchor": "top",
+      "en": "Flower Crown"
     },
     {
       "file": "accessories/tiara.png",
       "ko": "티아라",
       "yone": 25,
-      "anchor": "forehead"
+      "anchor": "forehead",
+      "en": "Tiara"
     },
     {
       "file": "accessories/bow_tie.png",
       "ko": "보타이",
       "yone": 12,
-      "anchor": "neck"
+      "anchor": "neck",
+      "en": "Bow Tie"
     },
     {
       "file": "accessories/glasses.png",
       "ko": "안경",
       "yone": 12,
-      "anchor": "eyes"
+      "anchor": "eyes",
+      "en": "Glasses"
     },
     {
       "file": "accessories/sunglasses.png",
       "ko": "선글라스",
       "yone": 18,
-      "anchor": "eyes"
+      "anchor": "eyes",
+      "en": "Sunglasses"
     },
     {
       "file": "accessories/party_hat.png",
       "ko": "고깔모자",
       "yone": 10,
-      "anchor": "top"
+      "anchor": "top",
+      "en": "Party Hat"
     },
     {
       "file": "accessories/heart_glasses.png",
       "ko": "하트선글라스",
       "yone": 16,
-      "anchor": "eyes"
+      "anchor": "eyes",
+      "en": "Heart Glasses"
     },
     {
       "file": "accessories/wings.png",
       "ko": "천사날개",
       "yone": 30,
-      "anchor": "back"
+      "anchor": "back",
+      "en": "Angel Wings"
     },
     {
       "file": "accessories/corsage.png",
       "ko": "코르사주",
       "yone": 14,
-      "anchor": "chest"
+      "anchor": "chest",
+      "en": "Corsage"
     }
   ],
   "_note": "기본 입장 모이=원본 SVG+옷 랜덤색. 합성=heads(neck_y=278)+bodies(어깨~256, 머리 neck를 collar에 겹쳐 배치). 손그림 톤 통일. 가격=요네."

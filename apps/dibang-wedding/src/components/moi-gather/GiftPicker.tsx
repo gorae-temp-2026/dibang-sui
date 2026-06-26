@@ -4,7 +4,8 @@
 import { useState } from 'react'
 import { Coins } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
-import { SHOP, ITEM_BY_ID } from './data'
+import { SHOP, ITEM_BY_ID, itemDisplayName } from './data'
+import { useLang } from '../../lib/i18n'
 import { cn } from '../../lib/utils'
 import { useT } from '../../lib/i18n'
 import type { MoiItemOnChain } from '@gorae/sui-sdk'
@@ -28,6 +29,7 @@ interface GiftPickerProps {
 
 export function GiftPicker(props: GiftPickerProps) {
   const t = useT()
+  const lang = useLang()
   const { open, onOpenChange, toName, suiBalance, received, ownedOnchainItems, pendingItemId, error } = props
   const [tab, setTab] = useState<'send' | 'received'>('send')
   const sending = pendingItemId != null
@@ -106,11 +108,11 @@ export function GiftPicker(props: GiftPickerProps) {
             {offchainInv.map((it) => (
               <div key={it!.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
                 <div className="relative flex h-24 items-center justify-center bg-[#f4f1ea]">
-                  <img src={it!.url} alt={it!.name} className="h-[84px] w-[84px] object-contain" draggable={false} loading="lazy" />
+                  <img src={it!.url} alt={itemDisplayName(it!, lang)} className="h-[84px] w-[84px] object-contain" draggable={false} loading="lazy" />
                   <span className="absolute left-2 top-2 rounded-full bg-white/20 px-1.5 py-0.5 text-[8.5px] font-extrabold text-white/60">{t('moiGather.offchain')}</span>
                 </div>
                 <div className="flex flex-1 flex-col p-2.5">
-                  <div className="truncate text-[12.5px] font-bold text-white">{it!.name}</div>
+                  <div className="truncate text-[12.5px] font-bold text-white">{itemDisplayName(it!, lang)}</div>
                   <div className="mt-1 text-[10.5px] text-white/45">{t('moiGather.usableInDecor')}</div>
                 </div>
               </div>

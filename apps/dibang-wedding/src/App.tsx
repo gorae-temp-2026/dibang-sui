@@ -79,7 +79,7 @@ function App() {
       <Route path="/lounge/:loungeId/v2" element={<AuthGuard><OnboardingGate><LoungeV2Page /></OnboardingGate></AuthGuard>} />
       <Route path="/lounge/:loungeId/moi-gather" element={<AuthGuard><OnboardingGate><MoiGatherPage /></OnboardingGate></AuthGuard>} />
       <Route path="/lounge/:loungeId/share-photos/upload" element={<AuthGuard><OnboardingGate><SharePhotoUploadPage /></OnboardingGate></AuthGuard>} />
-      <Route path="/lounge/:loungeId" element={<AuthGuard><OnboardingGate><LoungeFeedPage /></OnboardingGate></AuthGuard>} />
+      <Route path="/lounge/:loungeId" element={<AuthGuard><OnboardingGate><LoungeV2Page /></OnboardingGate></AuthGuard>} />
       <Route path="/wedding/:weddingId/report" element={<AuthGuard><OnboardingGate><LedgerPage /></OnboardingGate></AuthGuard>} />
       <Route path="/wedding/:weddingId/memory-book" element={<AuthGuard><OnboardingGate><WeddingMemoryBookPage /></OnboardingGate></AuthGuard>} />
       <Route path="/wedding/:weddingId/memory-book/curate" element={<AuthGuard><OnboardingGate><WeddingMemoryBookCuratePage /></OnboardingGate></AuthGuard>} />

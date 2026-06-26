@@ -4,10 +4,10 @@
 import { useState } from 'react'
 import { Coins, Check } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '../ui/sheet'
-import { SHOP, ITEM_BY_ID, type ShopItem, type EquipSlot } from './data'
+import { SHOP, ITEM_BY_ID, itemDisplayName, type ShopItem, type EquipSlot } from './data'
 import type { PlacedItem } from '../../machines/moiPlaza.machine'
 import { cn } from '../../lib/utils'
-import { useT } from '../../lib/i18n'
+import { useT, useLang } from '../../lib/i18n'
 
 type Cat = 'all' | 'hair' | 'clothes' | 'interior' | 'accessory' | 'mine'
 const CATS: { key: Cat; labelKey: string }[] = [
@@ -72,6 +72,7 @@ function MoiPreview({ head, body, acc }: { head?: string; body?: string; acc?: s
 
 export function ShopSheet(props: ShopSheetProps) {
   const t = useT()
+  const lang = useLang()
   const { open, onOpenChange, yone, owned, placed, equipped, pendingItemId, error } = props
   const [cat, setCat] = useState<Cat>('all')
   const [preview, setPreview] = useState<Partial<Record<'head' | 'body' | 'acc', string>>>({})
@@ -119,9 +120,9 @@ export function ShopSheet(props: ShopSheetProps) {
                   const inPreview = preview[k] === it.id
                   return (
                     <div key={it.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
-                      <div className="flex h-20 items-center justify-center bg-[#f4f1ea]"><img src={it.url} alt={it.name} className="h-16 w-16 object-contain" draggable={false} loading="lazy" /></div>
+                      <div className="flex h-20 items-center justify-center bg-[#f4f1ea]"><img src={it.url} alt={itemDisplayName(it, lang)} className="h-16 w-16 object-contain" draggable={false} loading="lazy" /></div>
                       <div className="p-2">
-                        <div className="truncate text-[12px] font-bold text-white">{it.name}</div>
+                        <div className="truncate text-[12px] font-bold text-white">{itemDisplayName(it, lang)}</div>
                         {wornNow ? (
                           it.slot === 'acc' ? (
                             <button type="button" onClick={() => props.onUnequip('acc')} className="mt-1.5 w-full rounded-lg border border-[#F8C57A]/40 py-1.5 text-[11px] font-bold text-[#F8C57A]">{t('moiGather.wornTakeOff')}</button>
@@ -149,9 +150,9 @@ export function ShopSheet(props: ShopSheetProps) {
                   const canPlace = placedN < have
                   return (
                     <div key={it.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
-                      <div className="flex h-20 items-center justify-center bg-[#f4f1ea]"><img src={it.url} alt={it.name} className="h-16 w-16 object-contain" draggable={false} loading="lazy" /></div>
+                      <div className="flex h-20 items-center justify-center bg-[#f4f1ea]"><img src={it.url} alt={itemDisplayName(it, lang)} className="h-16 w-16 object-contain" draggable={false} loading="lazy" /></div>
                       <div className="p-2">
-                        <div className="truncate text-[12px] font-bold text-white">{it.name} <span className="text-white/45">{placedN}/{have}</span></div>
+                        <div className="truncate text-[12px] font-bold text-white">{itemDisplayName(it, lang)} <span className="text-white/45">{placedN}/{have}</span></div>
                         <button type="button" disabled={!canPlace} onClick={() => props.onPlace(it.id)} className={cn('mt-1.5 w-full rounded-lg py-1.5 text-[11px] font-bold', canPlace ? 'bg-white/[0.08] text-white' : 'bg-white/[0.04] text-white/30')}>{canPlace ? t('moiGather.placeInPlaza') : t('moiGather.allPlaced')}</button>
                       </div>
                     </div>
@@ -206,12 +207,12 @@ export function ShopSheet(props: ShopSheetProps) {
             return (
               <div key={it.id} className="flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04]">
                 <div className="relative flex h-24 items-center justify-center bg-[#f4f1ea]">
-                  <img src={it.url} alt={it.name} className="h-[88px] w-[88px] object-contain" draggable={false} />
+                  <img src={it.url} alt={itemDisplayName(it, lang)} className="h-[88px] w-[88px] object-contain" draggable={false} />
                   {it.isDefault && <span className="absolute left-2 top-2 rounded-full bg-white/80 px-1.5 py-0.5 text-[8.5px] font-extrabold text-[#5a3a12]">{t('moiGather.badgeDefault')}</span>}
                   {have > 0 && !it.isDefault && <span className="absolute left-2 top-2 rounded-full bg-[#46d77f]/90 px-1.5 py-0.5 text-[8.5px] font-extrabold text-[#0a2414]">{t('moiGather.badgeOwned')}{multi && have > 1 ? ` ${have}` : ''}</span>}
                 </div>
                 <div className="flex flex-1 flex-col p-2.5">
-                  <div className="truncate text-[12.5px] font-bold text-white">{it.name}</div>
+                  <div className="truncate text-[12.5px] font-bold text-white">{itemDisplayName(it, lang)}</div>
                   <div className="mt-2">
                     {ownedNonMulti || it.isDefault ? (
                       <div className="w-full rounded-lg border border-white/12 py-2 text-center text-[12px] font-bold text-white/45">{it.isDefault ? t('moiGather.providedDefault') : t('moiGather.ownedState')}</div>

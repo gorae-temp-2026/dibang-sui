@@ -158,13 +158,19 @@ export function InyeonPage() {
             incoming={incoming}
             sentIds={[...new Set([...sentIds, ...sentMoiIds])]}
             unlockedIds={unlockedIds}
-            onAccept={(moiId) => {
-              send({ type: 'ACCEPT_REQ', moiId })
+            onAccept={async (moiId) => {
               const req = incoming.find((r) => r.moiId === moiId)
-              if (req && req.eventId && req.requestId) {
-                acceptIum({ eventId: req.eventId as string, requestId: req.requestId as string })
-                  .then(() => refetchDiscover())
-                  .catch(() => {})
+              if (req?.eventId && req?.requestId) {
+                try {
+                  await acceptIum({ eventId: req.eventId, requestId: req.requestId })
+                  send({ type: 'ACCEPT_REQ', moiId })
+                  refetchDiscover()
+                } catch (e) {
+                  console.error('[accept ieum] failed:', e)
+                }
+              } else {
+                console.warn('[accept ieum] missing eventId/requestId for moiId:', moiId, req)
+                send({ type: 'ACCEPT_REQ', moiId })
               }
             }}
             onDecline={(moiId) => send({ type: 'DECLINE_REQ', moiId })}
