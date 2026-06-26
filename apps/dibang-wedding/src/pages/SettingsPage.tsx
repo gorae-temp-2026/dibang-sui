@@ -3,7 +3,6 @@ import { useRef, type ChangeEvent } from 'react';
 import { useMachine } from '@xstate/react';
 import { settingsMachine } from '../machines/settings.machine';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from '@xstate/react';
 import { ChevronRight } from 'lucide-react';
 import {
   getMeOptions,
@@ -12,9 +11,9 @@ import {
 import { useAuth } from '../providers/AuthContext';
 import { useZkLogin } from '../providers/ZkLoginProvider';
 import { useSignOut } from '../queries/auth/useSignOut';
-import { giftActor } from '../machines/gift.machine';
 import { useT, useLangStore, type Lang } from '../lib/i18n';
 import { useInyeonProfile, fileToProfileDataUrl, fileToWalrusPhoto } from '../stores/inyeonProfile';
+import { useSuiBalance } from '../hooks/useSuiBalance';
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -51,8 +50,7 @@ export function SettingsPage() {
 
   // 저장 진행 + 토스트(2초 자동닫힘) flow는 머신(settings).
   const [, send] = useMachine(settingsMachine);
-  // 요네 잔액 = 전역 요네 지갑(giftActor — 선물·꾸미기 공유). 충전 시트로 적립.
-  const yone = useSelector(giftActor, (s) => s.context.yone);
+  const { balanceSui } = useSuiBalance();
 
   // useSignOut 훅 사용 (라운드 1 1-B). supabase 직접 호출 제거.
   // DEV 지갑 로그인은 Supabase 세션이 아니라 dev 키페어(sessionStorage) 기반이라
@@ -135,7 +133,7 @@ export function SettingsPage() {
           <div className="min-w-0 flex-1">
             <p className="text-sm text-muted">My SUI</p>
             <p className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-navy tabular-nums">{(yone / 1000).toFixed(3)}</span>
+              <span className="text-2xl font-bold text-navy tabular-nums">{(balanceSui / 1_000_000_000).toFixed(3)}</span>
               <span className="text-sm text-muted">SUI</span>
             </p>
           </div>

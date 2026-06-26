@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -37,8 +38,14 @@ func main() {
 
 	ctx := context.Background()
 
-	// DB connection
-	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	// DB connection — Supabase Pooler(PgBouncer transaction mode)와 호환을 위해
+	// simple protocol 강제. prepared statement 캐시 충돌(SQLSTATE 42P05) 방지.
+	poolConfig, err := pgxpool.ParseConfig(cfg.DatabaseURL)
+	if err != nil {
+		log.Fatalf("Unable to parse database URL: %v", err)
+	}
+	poolConfig.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v", err)
 	}

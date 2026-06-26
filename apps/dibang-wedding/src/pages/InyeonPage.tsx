@@ -29,6 +29,8 @@ import { useOwnedItems } from '../hooks/useOwnedItems'
 import { useSuiBalance } from '../hooks/useSuiBalance'
 import { useNotes } from '../hooks/useNotes'
 import { useGiftLog } from '../hooks/useGiftLog'
+import { useAuth } from '../providers/AuthContext'
+import { useInyeonProfile } from '../stores/inyeonProfile'
 import { useT } from '../lib/i18n'
 
 export function InyeonPage() {
@@ -315,13 +317,17 @@ export function InyeonPage() {
 function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
   const t = useT()
   const { address } = useZkLogin()
+  const { session } = useAuth()
+  const photoUrl = useInyeonProfile((s) => s.photoUrl)
+  const displayName = session?.user?.user_metadata?.name ?? (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : t('page.inyeon.unknown'))
+  const subtitle = address ? `${address.slice(0, 8)}…${address.slice(-6)}` : ''
   const { data: stats, isLoading } = useMyCreditStats(address ?? undefined)
   return (
     <div className="h-full overflow-y-auto px-5 pb-6 pt-5">
       <div className="text-center">
-        <div className="mx-auto h-24 w-24 rounded-full bg-cover bg-center" style={{ backgroundImage: 'url(/assets/inyeon-photos/my-profile.jpg)' }} />
-        <div className="mt-3 text-xl font-extrabold text-white">Yusang</div>
-        <div className="mt-0.5 text-xs text-white/50">{t('page.inyeon.moiSeoul')}</div>
+        <div className="mx-auto h-24 w-24 rounded-full bg-cover bg-center" style={{ backgroundImage: `url(${photoUrl})` }} />
+        <div className="mt-3 text-xl font-extrabold text-white">{displayName}</div>
+        <div className="mt-0.5 text-xs text-white/50">{subtitle}</div>
       </div>
 
       {/* 내가 쌓은 것 = 1층 활동(카운트만). 절대 신용 숫자(신뢰잔액·Moi Credit) 없음. */}
