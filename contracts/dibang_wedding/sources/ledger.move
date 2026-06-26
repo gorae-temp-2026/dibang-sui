@@ -40,11 +40,16 @@ const ACTION_WRITE_MESSAGE: u8 = 4;
 const ACTION_ATTEND: u8 = 5;
 /// 초대(청첩장). 혼주→하객 사전 관계 신호(CS○★, "디방의 본질") — 가장 직접적 prior-relationship.
 const ACTION_INVITE: u8 = 6;
+/// 메모리(사진/영상) 공유 — 라운지에 올리는 관계 표현. CS 신호.
+const ACTION_SHARE_MEMORY: u8 = 7;
+/// 쪽지(DM) 전송 — 1:1 비동기 메시징. CS 신호.
+const ACTION_SEND_NOTE: u8 = 8;
 /// 정의된 action_type 최댓값(경계 검증용). 새 동사 추가 시 갱신.
-const ACTION_TYPE_MAX: u8 = 6;
+const ACTION_TYPE_MAX: u8 = 8;
 
 // ⚠️ 발행 계약(인덱서·credit.ts가 의존 — Critical1 교훈): 실제 emit = GIVE_MONEY(cash_gift::give)·
-// WRITE_MESSAGE(guestbook::write)·INVITE(wedding::invite)·GIFT(gift::gift)뿐. REQUEST_IUM·ACCEPT_IUM·ATTEND는
+// WRITE_MESSAGE(guestbook::write)·INVITE(wedding::invite)·GIFT(gift::gift)·SHARE_MEMORY(memory::create_memory)·
+// SEND_NOTE(note::send_note). REQUEST_IUM·ACCEPT_IUM·ATTEND는
 // 예비 상수로 정의만 — 인연 매칭/참석은 ActionLogged가 아니라 *Participated*(event)에서 도출한다.
 // settles는 log에 예비 인자로 있으나 현재 모든 호출이 none — 대여 상환(이행 raw)은 #12 DeFi 재진입 시 활성.
 
@@ -166,6 +171,8 @@ public fun action_gift(): u8 { ACTION_GIFT }
 public fun action_write_message(): u8 { ACTION_WRITE_MESSAGE }
 public fun action_attend(): u8 { ACTION_ATTEND }
 public fun action_invite(): u8 { ACTION_INVITE }
+public fun action_share_memory(): u8 { ACTION_SHARE_MEMORY }
+public fun action_send_note(): u8 { ACTION_SEND_NOTE }
 
 // === Tests ===
 

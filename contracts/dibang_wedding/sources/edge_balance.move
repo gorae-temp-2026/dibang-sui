@@ -131,6 +131,7 @@ public fun record(
 
 // === Views ===
 
+/// 이 엣지의 두 참여자 주소 쌍.
 public fun participants(edge: &EdgeBalance): (address, address) { (edge.p0, edge.p1) }
 
 /// from→to 방향의 타입별 누적값(없으면 0).

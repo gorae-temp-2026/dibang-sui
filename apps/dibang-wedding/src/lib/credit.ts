@@ -10,7 +10,7 @@
 export const KIND = { NONE: 0, BUSU: 1, CS: 2 } as const
 
 // 신호 출처(원천 action) — signal.move 미러. 신뢰 신호의 *행위별* 분해(L1 raw)에 쓴다.
-export const SOURCE = { GIVE_MONEY: 0, ACCEPT_IUM: 2, GIFT: 3, WRITE_MESSAGE: 4, ATTEND: 5, INVITE: 6 } as const
+export const SOURCE = { GIVE_MONEY: 0, ACCEPT_IUM: 2, GIFT: 3, WRITE_MESSAGE: 4, ATTEND: 5, INVITE: 6, SHARE_MEMORY: 7, SEND_NOTE: 8 } as const
 
 const DAMPING = 0.85
 const ITERS = 60
@@ -186,12 +186,14 @@ export interface SignalBreakdown {
   선물: number
   참석: number
   매칭: number
+  메모리: number
+  쪽지: number
   total: number
 }
 
 /** 온체인 분류 신호 → address가 받은 신호의 행위별 카운트. UI(MoiCreditPanel 등) 신용 근거 표시용. */
 export function signalBreakdownFor(signals: SignalEvent[], address: string): SignalBreakdown {
-  const b: SignalBreakdown = { 부조: 0, 방명록: 0, 초대: 0, 선물: 0, 참석: 0, 매칭: 0, total: 0 }
+  const b: SignalBreakdown = { 부조: 0, 방명록: 0, 초대: 0, 선물: 0, 참석: 0, 매칭: 0, 메모리: 0, 쪽지: 0, total: 0 }
   for (const s of signals) {
     if (s.to !== address) continue
     switch (s.source) {
@@ -201,6 +203,8 @@ export function signalBreakdownFor(signals: SignalEvent[], address: string): Sig
       case SOURCE.GIFT: b.선물++; break
       case SOURCE.ATTEND: b.참석++; break
       case SOURCE.ACCEPT_IUM: b.매칭++; break
+      case SOURCE.SHARE_MEMORY: b.메모리++; break
+      case SOURCE.SEND_NOTE: b.쪽지++; break
       default: continue
     }
     b.total++

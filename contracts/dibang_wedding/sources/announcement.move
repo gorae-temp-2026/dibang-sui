@@ -10,6 +10,7 @@ use dibang_wedding::wedding::{Self, WeddingCap};
 
 // === Errors ===
 const ENotCreator: u64 = 0;
+const EEmptyMessage: u64 = 1;
 
 // === Structs ===
 
@@ -47,6 +48,7 @@ public fun create_announcement(
     clock: &Clock,
     ctx: &mut TxContext,
 ): ID {
+    assert!(message.length() > 0, EEmptyMessage);
     let wid = wedding::wedding_id(cap);
     let ann = Announcement {
         id: object::new(ctx),

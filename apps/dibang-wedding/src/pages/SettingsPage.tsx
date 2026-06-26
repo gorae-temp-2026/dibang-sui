@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router';
 import { useRef, type ChangeEvent } from 'react';
 import { useMachine } from '@xstate/react';
 import { settingsMachine } from '../machines/settings.machine';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from '@xstate/react';
 import { ChevronRight } from 'lucide-react';
 import {
@@ -59,10 +59,12 @@ export function SettingsPage() {
   // supabase signOut만으론 안 풀린다. zk.logout()으로 dev 키페어까지 정리해야
   // zk.isAuthenticated가 false가 되어 /login에서 /my-wedding으로 튕기지 않고
   // useApiAuthSync가 X-Dev-Auth 헤더도 제거한다.
+  const queryClient = useQueryClient();
   const handleLogout = () => {
     signOut.mutate(undefined, {
       onSuccess: () => {
         zk.logout();
+        queryClient.clear();
         navigate('/login');
       },
     });

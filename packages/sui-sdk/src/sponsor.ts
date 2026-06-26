@@ -129,7 +129,7 @@ export async function requestSponsorship(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
   });
-  if (!res.ok) throw new Error(`sponsor service error: ${res.status}`);
+  if (!res.ok) throw new Error(`가스 대납 서버 오류 (HTTP ${res.status}). URL=${sponsorUrl}`);
   return (await res.json()) as SponsorResponse;
 }
 
@@ -146,7 +146,7 @@ export async function executeSponsored(
   await client.waitForTransaction({ digest: res.digest });
   const status = res.effects?.status?.status;
   if (status !== 'success') {
-    throw new Error(`sponsored tx failed (${res.effects?.status?.error ?? 'unknown'}) — digest ${res.digest}`);
+    throw new Error(`가스 대납 트랜잭션 실패: ${res.effects?.status?.error ?? 'unknown'} (digest: ${res.digest})`);
   }
   return res;
 }

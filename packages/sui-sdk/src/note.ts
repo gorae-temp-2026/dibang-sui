@@ -7,7 +7,7 @@
  */
 
 import { Transaction } from '@mysten/sui/transactions';
-import { moveTarget } from './constants';
+import { moveTarget, requireMatrixId } from './constants';
 
 // === PTB 빌더 ===
 
@@ -17,6 +17,8 @@ export interface CreateNoteBoxParams {
 
 export interface SendNoteParams {
   noteBoxId: string;
+  /** 보내는 사람의 Participation 객체 ID(이벤트 참가 후 받은 것). */
+  participationId: string;
   to: string;
   blobId: Uint8Array;
 }
@@ -36,8 +38,10 @@ export function buildSendNoteTx(params: SendNoteParams): Transaction {
     target: moveTarget('note', 'send_note'),
     arguments: [
       tx.object(params.noteBoxId),
+      tx.object(params.participationId),
       tx.pure.address(params.to),
       tx.pure('vector<u8>', Array.from(params.blobId) as number[]),
+      tx.object(requireMatrixId('cs')),
       tx.object.clock(),
     ],
   });

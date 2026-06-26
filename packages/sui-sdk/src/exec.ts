@@ -37,7 +37,7 @@ export async function executeAndAssert(
   const status = res.effects?.status?.status;
   if (status !== 'success') {
     const err = res.effects?.status?.error ?? 'unknown error';
-    throw new Error(`transaction failed (${err}) — digest ${res.digest}`);
+    throw new Error(`온체인 트랜잭션 실패: ${err} (digest: ${res.digest}). Move abort라면 컨트랙트의 assert 조건(금액 0, 권한 불일치, 중복 호출 등)을 확인하세요.`);
   }
   return res;
 }

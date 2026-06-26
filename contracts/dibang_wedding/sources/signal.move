@@ -41,11 +41,15 @@ const RESOURCE_NONE: u8 = 0;
 
 // === 미러 상수 (ledger.move action_type / event.move event_type·role 와 동기 — append-only) ===
 const A_GIVE_MONEY: u8 = 0;
+#[allow(unused_const)]
+const A_REQUEST_IUM: u8 = 1;
 const A_ACCEPT_IUM: u8 = 2;
 const A_GIFT: u8 = 3;
 const A_WRITE_MESSAGE: u8 = 4;
 const A_ATTEND: u8 = 5;
 const A_INVITE: u8 = 6;
+const A_SHARE_MEMORY: u8 = 7;
+const A_SEND_NOTE: u8 = 8;
 const E_WEDDING: u8 = 0;
 const R_GUEST: u8 = 1;
 
@@ -81,6 +85,7 @@ public struct SignalEmitted has copy, drop {
 
 // === Constructors / Views ===
 
+/// Signal 값 생성자. 도메인 모듈(ledger, event, ium)이 분류 결과를 조립할 때 사용.
 public fun new_signal(kind: u8, resource_id: u8, source: u8, from: address, to: address, magnitude: u64): Signal {
     Signal { kind, resource_id, source, from, to, magnitude }
 }
@@ -99,9 +104,9 @@ public fun resource_money(): u8 { RESOURCE_MONEY }
 
 // === Classification (project) — 순수 함수, 한 액션 → 0~N 신호 ===
 
-/// ActionLogged 기반 액션을 신호 벡터로 분류한다(부조·방명록·초대·선물). fan-out=벡터 길이. source=action_type 보존.
+/// ActionLogged 기반 액션을 신호 벡터로 분류한다. fan-out=벡터 길이. source=action_type 보존.
 /// - GIVE_MONEY @ WEDDING & role=GUEST & amount>0 → [BUSU(actor→target, amount)] (부조 1개)
-/// - WRITE_MESSAGE / INVITE / GIFT → [CS(actor→target, 1)] (유대 1개)
+/// - WRITE_MESSAGE / INVITE / GIFT / SHARE_MEMORY / SEND_NOTE → [CS(actor→target, 1)] (유대 1개)
 /// - target 없음 / 자기엣지(actor==target) / 그 외 → [] (무신호)
 /// (인연 매칭·참석은 여기 아님 — Participated 기반이라 match_signals/attendance_signals로.)
 public fun project_action(
@@ -119,7 +124,7 @@ public fun project_action(
     if (action_type == A_GIVE_MONEY && event_type == E_WEDDING && role_id == R_GUEST && amount > 0) {
         // 부조(EM) = 돈 자원.
         out.push_back(new_signal(KIND_BUSU, RESOURCE_MONEY, action_type, actor, to, amount));
-    } else if (action_type == A_WRITE_MESSAGE || action_type == A_INVITE || action_type == A_GIFT) {
+    } else if (action_type == A_WRITE_MESSAGE || action_type == A_INVITE || action_type == A_GIFT || action_type == A_SHARE_MEMORY || action_type == A_SEND_NOTE) {
         // 유대(CS) = 자원 무관(0).
         out.push_back(new_signal(KIND_CS, RESOURCE_NONE, action_type, actor, to, 1));
     };
@@ -237,6 +242,66 @@ fun attendance_single_direction() {
     assert_eq!(v.borrow(0).to(), A);
     assert_eq!(v.borrow(0).source(), A_ATTEND);
     assert_eq!(attendance_signals(A, A).length(), 0); // 자기 이벤트 제외
+}
+
+#[test]
+fun share_memory_cs_signal() {
+    let v = project_action(A_SHARE_MEMORY, E_WEDDING, R_GUEST, A, option::some(B), 0);
+    assert_eq!(v.length(), 1);
+    assert_eq!(v.borrow(0).kind(), KIND_CS);
+    assert_eq!(v.borrow(0).source(), A_SHARE_MEMORY);
+    assert_eq!(v.borrow(0).from(), A);
+    assert_eq!(v.borrow(0).to(), B);
+    assert_eq!(v.borrow(0).magnitude(), 1);
+    // 자기엣지·target 없음 → 빈.
+    assert_eq!(project_action(A_SHARE_MEMORY, E_WEDDING, R_GUEST, A, option::some(A), 0).length(), 0);
+    assert_eq!(project_action(A_SHARE_MEMORY, E_WEDDING, R_GUEST, A, option::none(), 0).length(), 0);
+}
+
+#[test]
+fun send_note_cs_signal() {
+    let v = project_action(A_SEND_NOTE, E_WEDDING, R_GUEST, A, option::some(B), 0);
+    assert_eq!(v.length(), 1);
+    assert_eq!(v.borrow(0).kind(), KIND_CS);
+    assert_eq!(v.borrow(0).source(), A_SEND_NOTE);
+    // 인연 이벤트에서도 CS 발생.
+    let v2 = project_action(A_SEND_NOTE, E_INYEON_FOR_TEST(), 3, A, option::some(B), 0);
+    assert_eq!(v2.length(), 1);
+    assert_eq!(v2.borrow(0).kind(), KIND_CS);
+    // 자기엣지·target 없음 → 빈.
+    assert_eq!(project_action(A_SEND_NOTE, E_WEDDING, R_GUEST, A, option::some(A), 0).length(), 0);
+    assert_eq!(project_action(A_SEND_NOTE, E_WEDDING, R_GUEST, A, option::none(), 0).length(), 0);
+}
+
+#[test]
+fun give_money_inyeon_no_signal() {
+    // 인연 맥락 GIVE_MONEY → 부조 아님. event_type=INYEON이면 GUEST여도 무신호.
+    assert_eq!(project_action(A_GIVE_MONEY, E_INYEON_FOR_TEST(), R_GUEST, A, option::some(B), 50_000).length(), 0);
+}
+
+#[test]
+fun unknown_action_type_no_signal() {
+    // 정의되지 않은 action_type → project_action은 빈 벡터(무신호).
+    assert_eq!(project_action(99, E_WEDDING, R_GUEST, A, option::some(B), 100).length(), 0);
+    assert_eq!(project_action(255, E_WEDDING, R_GUEST, A, option::some(B), 0).length(), 0);
+}
+
+#[test]
+fun cs_actions_event_type_agnostic() {
+    // CS 액션(WRITE_MESSAGE/INVITE/GIFT/SHARE_MEMORY/SEND_NOTE)은 event_type에 무관하게 CS 1개.
+    assert_eq!(project_action(A_WRITE_MESSAGE, E_INYEON_FOR_TEST(), 0, A, option::some(B), 0).length(), 1);
+    assert_eq!(project_action(A_INVITE, E_INYEON_FOR_TEST(), 0, A, option::some(B), 0).length(), 1);
+    assert_eq!(project_action(A_SHARE_MEMORY, E_INYEON_FOR_TEST(), 0, A, option::some(B), 0).length(), 1);
+    assert_eq!(project_action(A_SEND_NOTE, E_INYEON_FOR_TEST(), 0, A, option::some(B), 0).length(), 1);
+}
+
+#[test]
+fun busu_resource_id_is_money() {
+    // BUSU 신호의 resource_id = RESOURCE_MONEY(0), CS 신호의 resource_id = RESOURCE_NONE(0).
+    let busu = project_action(A_GIVE_MONEY, E_WEDDING, R_GUEST, A, option::some(B), 100);
+    assert_eq!(busu.borrow(0).resource_id(), resource_money());
+    let cs = project_action(A_WRITE_MESSAGE, E_WEDDING, R_GUEST, A, option::some(B), 0);
+    assert_eq!(cs.borrow(0).resource_id(), 0);
 }
 
 #[test_only]

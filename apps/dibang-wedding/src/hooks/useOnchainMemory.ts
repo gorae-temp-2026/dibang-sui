@@ -4,12 +4,12 @@
  *
  * 사용자 요구("사진·이름 정보는 walrus에 올리고 sui와 연결") 구현:
  *   사진 바이트 → walrusStore → photoBlobId, 글 → walrusStoreString → textBlobId
- *   → memory::create_memory(wedding, text=textBlobId, photo_url=photoBlobId).
+ *   → memory::create_memory(wedding, participation, text=textBlobId, photo_url=photoBlobId, matrix, clock).
  * 온체인엔 **Walrus blobId 참조만** 남는다 — 사진 원본·글 본문 평문은 온체인에 올리지 않는다(VISION §7).
+ * SHARE_MEMORY → CS 신호가 온체인 분류·발행된다.
  *
  * 흐름: loungeId(DB) → getLounge → wedding_id → getWedding → sui_wedding_id
- *       → executeOnchain(create_memory). zkLogin 인증(또는 dev keypair) 상태에서만 동작.
- *       DB 저장(표시용 Supabase)과 함께 best-effort dual-write — 실패해도 DB 메모리는 유지.
+ *       → 온체인 Wedding → eventId → participation 확보 → executeOnchain(create_memory).
  */
 import { useCallback } from 'react'
 import { getLounge, getWedding } from '@gorae/contracts/sdk.gen'
@@ -17,6 +17,9 @@ import {
   buildCreateMemoryTx,
   walrusStore,
   walrusStoreString,
+  getWedding as getOnchainWedding,
+  getParticipationForEvent,
+  createJsonRpcClient,
   configureSui,
   ONCHAIN_BLOB_EPOCHS,
   type SuiNetwork,
@@ -44,8 +47,15 @@ export function useOnchainMemory(loungeId: string) {
         const { data: wedding } = await getWedding({ path: { weddingId }, throwOnError: true })
         const suiWeddingId = wedding?.sui_wedding_id
         if (!suiWeddingId) return null
-        // 2) 사진·글을 Walrus에 올려 blobId만 확보(온체인 평문 회피).
-        //    blobId가 온체인에 남으므로 내구 epoch로 저장(짧으면 GC 후 온체인 참조 dangling).
+        // 2) 온체인 Wedding → eventId + participation 확보
+        const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+        if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID })
+        const client = createJsonRpcClient(net)
+        const ow = await getOnchainWedding(client, suiWeddingId)
+        if (!ow?.eventId) return null
+        const part = await getParticipationForEvent(client, address, ow.eventId)
+        if (!part?.id) return null
+        // 3) 사진·글을 Walrus에 올려 blobId만 확보(온체인 평문 회피).
         let photoBlobId = ''
         if (file) {
           const compressed = await compressImageForUpload(file)
@@ -53,11 +63,9 @@ export function useOnchainMemory(loungeId: string) {
           photoBlobId = await walrusStore(bytes, { epochs: ONCHAIN_BLOB_EPOCHS })
         }
         const textBlobId = text.trim() ? await walrusStoreString(text, { epochs: ONCHAIN_BLOB_EPOCHS }) : ''
-        // 3) 온체인 memory 기록 — text/photo_url 필드엔 Walrus blobId 참조만 들어간다.
-        const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-        if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID })
+        // 4) 온체인 memory 기록 — SHARE_MEMORY CS 신호 발행.
         return await executeOnchain(
-          buildCreateMemoryTx({ weddingId: suiWeddingId, text: textBlobId, photoBlobId }),
+          buildCreateMemoryTx({ weddingId: suiWeddingId, participationId: part.id, text: textBlobId, photoBlobId }),
         )
       } catch (e) {
         console.error('[memory] onchain failed:', e)

@@ -310,3 +310,45 @@ fun non_creator_cannot_assign_role() {
     assign_role(&ev, STRANGER, ROLE_HOST, &clk, scenario.ctx()); // 생성자 아님 → abort
     abort
 }
+
+#[test]
+fun duplicate_participate_creates_two_participations() {
+    // 온체인 멱등성 없음 — 같은 하객이 두 번 participate하면 Participation 2개 생김.
+    // 현재 설계: 중복 방지는 프론트(useOnchainCheckIn 3중 가드)가 담당.
+    // 온체인 방어 추가 시 이 테스트를 expected_failure로 전환.
+    let mut scenario = ts::begin(HOST);
+    let clk = clock::create_for_testing(scenario.ctx());
+    new_event(EVENT_WEDDING, ROLE_HOST, &clk, scenario.ctx());
+
+    scenario.next_tx(GUEST);
+    let ev = scenario.take_shared<Event>();
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    participate(&ev, ROLE_GUEST, &mut cs_mtx, &clk, scenario.ctx());
+    participate(&ev, ROLE_GUEST, &mut cs_mtx, &clk, scenario.ctx());
+    destroy(cs_mtx);
+    ts::return_shared(ev);
+
+    // 하객에게 Participation이 2개 발행됨(중복).
+    scenario.next_tx(GUEST);
+    let p1 = scenario.take_from_sender<Participation>();
+    let p2 = scenario.take_from_sender<Participation>();
+    assert_eq!(p1.role_id(), ROLE_GUEST);
+    assert_eq!(p2.role_id(), ROLE_GUEST);
+    scenario.return_to_sender(p1);
+    scenario.return_to_sender(p2);
+    clock::destroy_for_testing(clk);
+    scenario.end();
+}
+
+#[test, expected_failure(abort_code = EInvalidRole)]
+fun participate_invalid_role_fails() {
+    let mut scenario = ts::begin(HOST);
+    let clk = clock::create_for_testing(scenario.ctx());
+    new_event(EVENT_WEDDING, ROLE_HOST, &clk, scenario.ctx());
+
+    scenario.next_tx(GUEST);
+    let ev = scenario.take_shared<Event>();
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    participate(&ev, 99, &mut cs_mtx, &clk, scenario.ctx()); // 존재하지 않는 역할
+    abort
+}

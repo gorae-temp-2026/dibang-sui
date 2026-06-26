@@ -9,6 +9,7 @@ import {
   buildCreateNoteBoxTx,
   buildSendNoteTx,
   getNoteSentEvents,
+  getAnyParticipation,
   type SuiNetwork,
   moveTarget,
 } from '@gorae/sui-sdk'
@@ -108,14 +109,17 @@ export function useNotes() {
   const sendNote = useCallback(
     async (to: string, text: string) => {
       if (!address) throw new Error(translate(lang(), 'common.errNeedLogin'))
+      const client = createJsonRpcClient(network)
+      const part = await getAnyParticipation(client, address)
+      if (!part?.id) throw new Error('참가 정보 없음')
       const boxId = await findOrCreateNoteBox(to)
       const blob = new TextEncoder().encode(text)
       const blobId = await walrusStore(blob)
       const blobIdBytes = new TextEncoder().encode(blobId)
-      await executeOnchain(buildSendNoteTx({ noteBoxId: boxId, to, blobId: blobIdBytes }))
+      await executeOnchain(buildSendNoteTx({ noteBoxId: boxId, participationId: part.id, to, blobId: blobIdBytes }))
       await fetchNotes()
     },
-    [address, executeOnchain, fetchNotes, findOrCreateNoteBox],
+    [address, network, executeOnchain, fetchNotes, findOrCreateNoteBox],
   )
 
   return { notes, loading, sendNote, refetch: fetchNotes }

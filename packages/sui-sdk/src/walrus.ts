@@ -55,19 +55,19 @@ export async function walrusStore(data: Uint8Array, opts?: { epochs?: number }):
     headers: { 'Content-Type': 'application/octet-stream' },
     body: data as unknown as BodyInit,
   });
-  if (!res.ok) throw new Error(`Walrus store failed: ${res.status}`);
+  if (!res.ok) throw new Error(`Walrus 저장 실패 (HTTP ${res.status}). publisher=${cfg.publisher}, 데이터 크기=${data.length}B`);
   const json = (await res.json()) as Record<string, unknown>;
   const newlyCreated = json.newlyCreated as { blobObject?: { blobId?: string } } | undefined;
   const alreadyCertified = json.alreadyCertified as { blobId?: string } | undefined;
   const blobId = newlyCreated?.blobObject?.blobId ?? alreadyCertified?.blobId;
-  if (!blobId) throw new Error('Walrus: no blobId in response');
+  if (!blobId) throw new Error(`Walrus 응답에 blobId 없음. 응답 키: ${Object.keys(json).join(', ')}`);
   return blobId;
 }
 
 /** blobId의 바이트를 Walrus에서 조회. */
 export async function walrusFetch(blobId: string): Promise<Uint8Array> {
   const res = await fetch(`${activeConfig.aggregator}/v1/blobs/${blobId}`);
-  if (!res.ok) throw new Error(`Walrus fetch failed: ${res.status}`);
+  if (!res.ok) throw new Error(`Walrus 조회 실패 (HTTP ${res.status}). blobId=${blobId}`);
   return new Uint8Array(await res.arrayBuffer());
 }
 

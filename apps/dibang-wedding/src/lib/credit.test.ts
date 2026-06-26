@@ -100,15 +100,29 @@ describe('creditFromSignals (신뢰→신용 · 온체인 분류 신호 집계)'
       cs('host', 'g1', SOURCE.INVITE), // g1 초대+1
       cs('g1', 'host', SOURCE.ATTEND), // host 참석+1
       cs('a', 'b', SOURCE.ACCEPT_IUM), // b 매칭+1
+      cs('g1', 'host', SOURCE.SHARE_MEMORY), // host 메모리+1
+      cs('g1', 'host', SOURCE.SEND_NOTE), // host 쪽지+1
     ]
     const host = signalBreakdownFor(signals, 'host')
     expect(host.부조).toBe(1)
     expect(host.방명록).toBe(1)
     expect(host.참석).toBe(1)
     expect(host.초대).toBe(0)
-    expect(host.total).toBe(3)
+    expect(host.메모리).toBe(1)
+    expect(host.쪽지).toBe(1)
+    expect(host.total).toBe(5)
     expect(signalBreakdownFor(signals, 'g1').초대).toBe(1)
     expect(signalBreakdownFor(signals, 'b').매칭).toBe(1)
     expect(signalBreakdownFor(signals, 'nobody').total).toBe(0)
+  })
+
+  it('메모리·쪽지 신호가 CS 신용에 반영됨', () => {
+    const signals: SignalEvent[] = [
+      cs('g1', 'host', SOURCE.SHARE_MEMORY),
+      cs('g1', 'host', SOURCE.SEND_NOTE),
+    ]
+    const { components } = creditFromSignals(signals)
+    expect(components['host']!.cs).toBeGreaterThan(0)
+    expect(components['g1']!.cs).toBe(0) // 주는 쪽은 CS 적립 없음(authority 기준)
   })
 })

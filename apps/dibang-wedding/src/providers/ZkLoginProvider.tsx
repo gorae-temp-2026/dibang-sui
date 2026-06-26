@@ -8,6 +8,7 @@
  * 실행 중인 ZK prover가 있어야 동작한다. 미설정 시 login()은 안내만 한다.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast, Toaster } from 'sonner'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import type { Transaction } from '@mysten/sui/transactions'
@@ -77,6 +78,7 @@ async function fetchCurrentEpoch(network: SuiNetwork): Promise<number> {
 }
 
 export function ZkLoginProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient()
   // sessionStorage의 기존 세션으로 초기화(브라우저 전용 SPA — effect 내 setState 불필요).
   const [session, setSession] = useState<ZkLoginSession | null>(() => loadSession())
   // [DEV] Google OAuth 없이 고정 keypair로 로그인(헤드리스 테스트). 버튼은 import.meta.env.DEV에서만 노출.
@@ -103,6 +105,7 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
         console.warn('[zkLogin] 세션 만료 — maxEpoch', session.maxEpoch, '현재', epoch)
         clearSession()
         setSession(null)
+        queryClient.clear()
       }
     }).catch(() => { /* 네트워크 실패 시 기존 세션 유지 */ })
     return () => { cancelled = true }
@@ -187,7 +190,8 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
     setSession(null)
     sessionStorage.removeItem(DEV_KEY)
     setDevKeypair(null)
-  }, [])
+    queryClient.clear()
+  }, [queryClient])
 
   const showTxToast = useCallback((digest: string, network: string) => {
     const url = `https://suiscan.xyz/${network}/tx/${digest}`
@@ -210,8 +214,14 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
         showTxToast(res.digest, net)
         return res.digest
       }
-      if (!session) throw new Error(translate(lang(), 'tx.noSession'))
-      if (!session.proofInputs) throw new Error(translate(lang(), 'tx.noProof'))
+      if (!session) {
+        toast.error(translate(lang(), 'tx.fail'), { description: translate(lang(), 'tx.noSession') })
+        throw new Error(translate(lang(), 'tx.noSession'))
+      }
+      if (!session.proofInputs) {
+        toast.error(translate(lang(), 'tx.fail'), { description: translate(lang(), 'tx.noProof') })
+        throw new Error(translate(lang(), 'tx.noProof'))
+      }
 
       const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
       const client = createJsonRpcClient(network)
@@ -235,7 +245,9 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
       const status = res.effects?.status?.status
       if (status !== 'success') {
         devLogger.log('sui', 'tx_error', { error: res.effects?.status?.error, status })
-        throw new Error(translate(lang(), 'tx.failed', { error: String(res.effects?.status?.error ?? status) }))
+        const msg = String(res.effects?.status?.error ?? status ?? 'unknown')
+        toast.error(translate(lang(), 'tx.fail'), { description: msg.slice(0, 80) })
+        throw new Error(translate(lang(), 'tx.failed', { error: msg }))
       }
       devLogger.log('sui', 'executeOnchain_success', { digest: res.digest, mode: 'zkLogin' })
       showTxToast(res.digest, net)

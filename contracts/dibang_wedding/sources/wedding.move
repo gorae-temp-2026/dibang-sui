@@ -366,6 +366,56 @@ fun add_host_with_wrong_cap_fails() {
     scenario.end();
 }
 
+#[test, expected_failure(abort_code = ENotHost)]
+fun invite_as_guest_fails() {
+    let mut scenario = ts::begin(HOST);
+    new_wedding_for_test(&mut scenario);
+
+    // GUEST가 결혼식에 하객으로 참가.
+    scenario.next_tx(@0x6);
+    let ev = scenario.take_shared<gathering::Event>();
+    let clk = sui::clock::create_for_testing(scenario.ctx());
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    gathering::participate(&ev, gathering::role_guest(), &mut cs_mtx, &clk, scenario.ctx());
+    destroy(cs_mtx);
+    ts::return_shared(ev);
+
+    // GUEST가 하객 Participation으로 invite 시도 → ENotHost.
+    scenario.next_tx(@0x6);
+    let wedding = scenario.take_shared<Wedding>();
+    let guest_part = scenario.take_from_sender<gathering::Participation>();
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    invite(&wedding, &guest_part, @0x99, &mut mtx, &clk, scenario.ctx());
+    abort
+}
+
+#[test, expected_failure(abort_code = EWrongEvent)]
+fun invite_wrong_event_fails() {
+    let mut scenario = ts::begin(HOST);
+    new_wedding_for_test(&mut scenario);
+
+    // HOST가 별개의 인연 이벤트를 만들어 다른 Participation을 갖게 함.
+    scenario.next_tx(HOST);
+    let clk = sui::clock::create_for_testing(scenario.ctx());
+    gathering::new_event(gathering::event_inyeon(), gathering::role_initiator(), &clk, scenario.ctx());
+
+    // HOST가 인연 이벤트의 Participation(INITIATOR)으로 결혼식 invite 시도 → EWrongEvent.
+    scenario.next_tx(HOST);
+    let wedding = scenario.take_shared<Wedding>();
+    // HOST는 2개 Participation 보유: wedding HOST + inyeon INITIATOR. 후자를 쓰겠다.
+    // take_from_sender는 순서 보장 안 되므로, 두 개 다 꺼내서 event_id 비교로 분류.
+    let p1 = scenario.take_from_sender<gathering::Participation>();
+    let p2 = scenario.take_from_sender<gathering::Participation>();
+    let (wrong_part, _right_part) = if (gathering::participation_event_id(&p1) == wedding.event_id()) {
+        (p2, p1)
+    } else {
+        (p1, p2)
+    };
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    invite(&wedding, &wrong_part, @0x99, &mut mtx, &clk, scenario.ctx());
+    abort
+}
+
 #[test, expected_failure(abort_code = EVaultAlreadySet)]
 fun set_vault_twice_fails() {
     let mut scenario = ts::begin(HOST);

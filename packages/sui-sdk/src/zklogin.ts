@@ -70,7 +70,7 @@ export async function fetchSalt(jwt: string, saltServerUrl: string): Promise<str
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token: jwt }),
   });
-  if (!res.ok) throw new Error(`salt server error: ${res.status}`);
+  if (!res.ok) throw new Error(`Salt 서버 오류 (HTTP ${res.status}). URL=${saltServerUrl}. JWT가 유효한지, 서버가 가동 중인지 확인하세요.`);
   const data = (await res.json()) as { salt: string };
   return data.salt;
 }
@@ -105,7 +105,7 @@ export async function fetchZkProof(params: {
   const res = await fetch(params.proverUrl, { method: 'POST', headers, body: JSON.stringify(body) });
   if (!res.ok) {
     const errBody = await res.text().catch(() => '');
-    throw new Error(`prover error: ${res.status} ${errBody}`);
+    throw new Error(`ZK Prover 오류 (HTTP ${res.status}). URL=${params.proverUrl}. ${errBody || 'JWT/epoch/키 조합을 확인하세요.'}`);
   }
   const json = await res.json();
   const proof = isEnoki ? (json as { data: ZkProofInputs & { addressSeed?: string } }).data : (json as ZkProofInputs);
@@ -151,7 +151,7 @@ const SESSION_KEY = 'dibang.zklogin.session';
 
 function storageOrThrow(storage?: Storage): Storage {
   const s = storage ?? (typeof sessionStorage !== 'undefined' ? sessionStorage : undefined);
-  if (!s) throw new Error('no Storage available (pass one explicitly outside the browser)');
+  if (!s) throw new Error('Storage를 사용할 수 없습니다(브라우저 외 환경에서는 sessionStorage를 직접 전달하세요).');
   return s;
 }
 

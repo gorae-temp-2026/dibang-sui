@@ -261,6 +261,27 @@ export async function getParticipationForEvent(
   return null;
 }
 
+/** 사용자가 보유한 Participation 중 아무 거나 하나 반환. DM처럼 특정 이벤트를 모를 때 신호 기록용. */
+export async function getAnyParticipation(
+  client: SuiJsonRpcClient,
+  owner: string,
+): Promise<ParticipationOnChain | null> {
+  const objs = await listOwnedByType(client, owner, moveTarget('event', 'Participation'));
+  for (const res of objs) {
+    const f = objectFields(res);
+    if (f && res.data) {
+      return {
+        id: res.data.objectId,
+        eventId: asString(f.event_id),
+        eventType: asNumber(f.event_type),
+        participant: asString(f.participant),
+        roleId: asNumber(f.role_id),
+      };
+    }
+  }
+  return null;
+}
+
 // === 이벤트 조회 타입 ===
 
 export interface RsvpEvent {
@@ -602,6 +623,23 @@ export async function discoverUsers(
       mutualCount: shared.length,
       degree,
     };
+  });
+}
+
+// === 선물(Gift) 이벤트 ===
+
+export interface GiftSentQuery {
+  itemId: string;
+  itemName: string;
+  from: string;
+  to: string;
+}
+
+export async function getGiftSentEvents(client: SuiJsonRpcClient): Promise<GiftSentQuery[]> {
+  const events = await queryAllEvents(client, moveTarget('gift', 'GiftSent'));
+  return events.map((e) => {
+    const p = e.parsedJson as Record<string, unknown>;
+    return { itemId: asString(p.item_id), itemName: asString(p.item_name), from: asString(p.from), to: asString(p.to) };
   });
 }
 

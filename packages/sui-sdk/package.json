@@ -9,12 +9,14 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "test": "vitest run"
   },
   "dependencies": {
     "@mysten/sui": "^2.20.0"
   },
   "devDependencies": {
-    "tsx": "^4.19.0"
+    "tsx": "^4.19.0",
+    "vitest": "^4.1.7"
   }
 }

@@ -11,11 +11,25 @@
 ///   단 구매는 결정#6(2026-06-21)대로 **SUI 결제로 게이트**돼야 한다(무료 발행이면 gift-CS 농사 → moi.move 참조).
 module dibang_wedding::gift;
 
+use std::string::String;
 use sui::clock::Clock;
-use dibang_wedding::moi::MoiItem;
+use sui::event;
+use dibang_wedding::moi::{Self, MoiItem};
 use dibang_wedding::ledger;
 use dibang_wedding::trust_matrix;
 use dibang_wedding::event as gathering;
+
+// === Errors ===
+const ESelfGift: u64 = 0;
+
+// === Events ===
+
+public struct GiftSent has copy, drop {
+    item_id: ID,
+    item_name: String,
+    from: address,
+    to: address,
+}
 
 // === Public functions ===
 
@@ -29,8 +43,12 @@ public fun gift(
     clock: &Clock,
     ctx: &mut TxContext,
 ): ID {
+    assert!(ctx.sender() != recipient, ESelfGift);
+    let item_id = object::id(&item);
+    let item_name = moi::item_name(&item);
     // 자산 이동 — MoiItem은 key+store(거래/선물 의도). 수령자가 소유하게 됨.
     transfer::public_transfer(item, recipient);
+    event::emit(GiftSent { item_id, item_name, from: ctx.sender(), to: recipient });
     // 신호 — 증여 사실. amount=0(아이템 선물, 금전 잔액 아님). role/event는 participation 파생.
     ledger::log(participation, ledger::action_gift(), option::some(recipient), 0, option::none(), matrix, clock, ctx)
 }
@@ -45,8 +63,6 @@ use sui::clock;
 use std::unit_test::{assert_eq, destroy};
 #[test_only]
 use dibang_wedding::wedding;
-#[test_only]
-use dibang_wedding::moi;
 
 #[test_only]
 const HOST: address = @0xA;
@@ -101,4 +117,25 @@ fun gift_transfers_item_and_logs_signal() {
     scenario.return_to_sender(rec);
 
     scenario.end();
+}
+
+#[test, expected_failure(abort_code = ESelfGift)]
+fun self_gift_fails() {
+    let mut scenario = ts::begin(HOST);
+    wedding::create_default_for_testing(scenario.ctx());
+
+    scenario.next_tx(GIVER);
+    let ev = scenario.take_shared<gathering::Event>();
+    let clk = clock::create_for_testing(scenario.ctx());
+    let mut cs_mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    gathering::participate(&ev, gathering::role_guest(), &mut cs_mtx, &clk, scenario.ctx());
+    destroy(cs_mtx);
+    ts::return_shared(ev);
+
+    scenario.next_tx(GIVER);
+    let part = scenario.take_from_sender<gathering::Participation>();
+    let item = moi::mint_item(b"Hat".to_string(), b"deco".to_string(), b"head".to_string(), scenario.ctx());
+    let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
+    gift(&part, item, GIVER, &mut mtx, &clk, scenario.ctx());
+    abort
 }
