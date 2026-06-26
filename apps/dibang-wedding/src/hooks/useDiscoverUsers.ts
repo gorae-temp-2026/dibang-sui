@@ -14,12 +14,16 @@ import type { Moi, IncomingReq } from '../components/inyeon/types'
 
 const lang = () => useLangStore.getState().lang
 
+function avatarUrl(address: string): string {
+  return `https://api.dicebear.com/9.x/avataaars/svg?seed=${address.slice(2, 14)}&backgroundColor=b6e3f4`
+}
+
 function toMoi(user: DiscoveredUser, idx: number): Moi {
   const addrNum = parseInt(user.address.slice(2, 10), 16)
   return {
     id: idx,
     name: `${user.address.slice(0, 6)}…${user.address.slice(-4)}`,
-    photos: [{ hue: addrNum % 360 }],
+    photos: [{ url: avatarUrl(user.address), hue: addrNum % 360 }],
     online: false,
     tier: user.sharedEventIds.length > 0 ? 0 : user.degree <= 6 ? 1 : 2,
     deg: user.degree,
