@@ -309,7 +309,7 @@ export function InyeonPage() {
       <ProfileSheet
         open={myProfileOpen}
         onOpenChange={(o) => send({ type: o ? 'OPEN_MY_PROFILE' : 'CLOSE_MY_PROFILE' })}
-        data={buildProfileFromMoi(null, { creditScore: myCreditScore })}
+        data={buildProfileFromMoi(null, { creditScore: myCreditScore, ieumCount: matchedAddresses.length })}
         context="inyeon"
         revealed
         presentation="page"
