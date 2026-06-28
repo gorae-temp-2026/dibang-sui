@@ -10,7 +10,10 @@
  */
 
 import type { SuiJsonRpcClient, SuiObjectResponse, SuiEvent } from '@mysten/sui/jsonRpc';
+import { normalizeSuiAddress } from '@mysten/sui/utils';
 import { eventType } from './constants';
+
+const norm = (a: string) => normalizeSuiAddress(a);
 
 // === 파싱 헬퍼 ===
 
@@ -561,18 +564,18 @@ function buildDegreeMap(
 ): Map<string, number> {
   const adj = new Map<string, Set<string>>();
   const addEdge = (a: string, b: string) => {
-    if (a === b) return;
-    if (!adj.has(a)) adj.set(a, new Set());
-    if (!adj.has(b)) adj.set(b, new Set());
-    adj.get(a)!.add(b);
-    adj.get(b)!.add(a);
+    const na = norm(a), nb = norm(b);
+    if (na === nb) return;
+    if (!adj.has(na)) adj.set(na, new Set());
+    if (!adj.has(nb)) adj.set(nb, new Set());
+    adj.get(na)!.add(nb);
+    adj.get(nb)!.add(na);
   };
   for (const s of signals) addEdge(s.from, s.to);
-  // 같은 이벤트에 참가한 사람끼리도 1다리
   const byEvent = new Map<string, string[]>();
   for (const p of participations) {
     if (!byEvent.has(p.eventId)) byEvent.set(p.eventId, []);
-    byEvent.get(p.eventId)!.push(p.participant);
+    byEvent.get(p.eventId)!.push(norm(p.participant));
   }
   for (const members of byEvent.values()) {
     for (let i = 0; i < members.length; i++) {
@@ -581,9 +584,10 @@ function buildDegreeMap(
       }
     }
   }
+  const myAddr = norm(myAddress);
   const dist = new Map<string, number>();
-  dist.set(myAddress, 0);
-  const bfsQueue: string[] = [myAddress];
+  dist.set(myAddr, 0);
+  const bfsQueue: string[] = [myAddr];
   let head = 0;
   while (head < bfsQueue.length) {
     const cur = bfsQueue[head++]!;
@@ -610,22 +614,25 @@ export async function discoverUsers(
   ]);
   // WEDDING(eventType=0) 이벤트만 "공유 결혼식"으로 분류 — INYEON(1)은 제외
   const weddingEventIds = new Set(eventCreated.filter((e) => e.eventType === 0).map((e) => e.eventId));
+  const myAddr = norm(myAddress);
   const degreeMap = buildDegreeMap(signals, participations, myAddress);
   const seen = new Set<string>();
   const others = moiEvents.filter((m) => {
-    if (m.owner === myAddress || seen.has(m.owner)) return false;
-    seen.add(m.owner);
+    const o = norm(m.owner);
+    if (o === myAddr || seen.has(o)) return false;
+    seen.add(o);
     return true;
   });
   const myWeddingEventIds = new Set(
-    participations.filter((p) => p.participant === myAddress && weddingEventIds.has(p.eventId)).map((p) => p.eventId),
+    participations.filter((p) => norm(p.participant) === myAddr && weddingEventIds.has(p.eventId)).map((p) => p.eventId),
   );
   return others.map((m) => {
+    const ownerNorm = norm(m.owner);
     const theirWeddingEventIds = participations
-      .filter((p) => p.participant === m.owner && weddingEventIds.has(p.eventId))
+      .filter((p) => norm(p.participant) === ownerNorm && weddingEventIds.has(p.eventId))
       .map((p) => p.eventId);
     const shared = theirWeddingEventIds.filter((eid) => myWeddingEventIds.has(eid));
-    const degree = degreeMap.get(m.owner) ?? 6;
+    const degree = degreeMap.get(ownerNorm) ?? degreeMap.get(m.owner) ?? 6;
     return {
       address: m.owner,
       moiId: m.moiId,
