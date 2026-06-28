@@ -156,7 +156,12 @@ export function InyeonPage() {
           </div>
         )}
 
-        {screen === 'received' && (
+        {screen === 'received' && discoverLoading && (
+          <div className="flex h-full items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+          </div>
+        )}
+        {screen === 'received' && !discoverLoading && (
           <ReceivedScreen
             pool={pool}
             incoming={incoming}
@@ -182,7 +187,12 @@ export function InyeonPage() {
           />
         )}
 
-        {screen === 'chat' && (
+        {screen === 'chat' && discoverLoading && (
+          <div className="flex h-full items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+          </div>
+        )}
+        {screen === 'chat' && !discoverLoading && (
           <ChatScreen
             pool={pool}
             matchedIds={matchedIds}

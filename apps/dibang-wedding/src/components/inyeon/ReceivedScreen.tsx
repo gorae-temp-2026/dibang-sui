@@ -7,7 +7,7 @@ import type { IncomingReq, Moi } from './types'
 import { cn } from '../../lib/utils'
 import { useT } from '../../lib/i18n'
 
-const photoBg = (hue: number) => `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
+const photoBg = (hue: number, url?: string) => url ? `url(${url}) center/cover` : `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
 
 interface ReceivedScreenProps {
   pool: Moi[]
@@ -45,7 +45,7 @@ export function ReceivedScreen({ pool, incoming, sentIds, unlockedIds, onAccept,
                 if (!m) return null
                 return (
                   <div key={r.moiId} className="flex gap-3 rounded-2xl border border-white/8 bg-white/[0.04] p-3">
-                    <div className="h-16 w-16 flex-shrink-0 rounded-xl bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
+                    <div className="h-16 w-16 flex-shrink-0 rounded-xl bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }} />
                     <div className="min-w-0 flex-1">
                       <div className="text-[14px] font-extrabold text-white">{m.name}</div>
                       <div className="text-[11px] text-white/50">{r.rel}</div>
@@ -72,7 +72,7 @@ export function ReceivedScreen({ pool, incoming, sentIds, unlockedIds, onAccept,
                 if (!m) return null
                 return (
                   <div key={id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-3">
-                    <div className="h-12 w-12 flex-shrink-0 rounded-xl bg-cover bg-center blur-[6px]" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
+                    <div className="h-12 w-12 flex-shrink-0 rounded-xl bg-cover bg-center blur-[6px]" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }} />
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-bold text-white/80">{m.name}</div>
                       <div className="text-[11px] text-white/45">{m.prov[0]?.emoji} {m.prov[0]?.text}</div>
@@ -96,7 +96,7 @@ export function ReceivedScreen({ pool, incoming, sentIds, unlockedIds, onAccept,
             <div className="grid grid-cols-3 gap-2">
               {seen.map((m) => (
                 <button key={m.id} type="button" onClick={() => onOpenProfile(m.id)} className="relative aspect-square overflow-hidden rounded-xl">
-                  <div className="absolute inset-0 bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
+                  <div className="absolute inset-0 bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }} />
                   <span className="absolute inset-x-0 bottom-0 bg-[#0d1621]/70 py-1 text-center text-[9px] font-bold text-white">📷 {t('inyeon.received.viewedBadge')}</span>
                 </button>
               ))}

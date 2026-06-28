@@ -4,7 +4,7 @@
 // ★ 모든 대화(DM)는 인연(유니버스)에서 — 라운지에서 이음해도 대화는 여기(핸드오프 §12-3).
 import { useState } from 'react'
 import { useSelector } from '@xstate/react'
-import { ArrowLeft, Gift, Lock, Play, Send, X } from 'lucide-react'
+import { ArrowLeft, Gift, Play, Send, X } from 'lucide-react'
 import { MOI_MEM } from './data'
 import type { Moi } from './types'
 import type { Note } from '../../hooks/useNotes'
@@ -13,10 +13,9 @@ import type { OnchainGiftEntry } from '../../hooks/useGiftLog'
 import { giftActor, type GiftEvent } from '../../machines/gift.machine'
 import { GiftPicker } from '../moi-gather/GiftPicker'
 import { ITEM_BY_ID } from '../moi-gather/data'
-import { cn } from '../../lib/utils'
 import { useT } from '../../lib/i18n'
 
-const photoBg = (hue: number) => `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
+const photoBg = (hue: number, url?: string) => url ? `url(${url}) center/cover` : `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
 
 interface ChatScreenProps {
   pool: Moi[]
@@ -42,7 +41,7 @@ interface ChatScreenProps {
 export function ChatScreen({
   pool,
   matchedIds,
-  chatOpen,
+  chatOpen: _chatOpen,
   ownedOnchainItems,
   suiBalance,
   onPurchase,
@@ -108,7 +107,7 @@ export function ChatScreen({
         {matched.map((m) => (
           <button key={m.id} type="button" onClick={() => onOpenMemory(m.id)} className="flex flex-shrink-0 flex-col items-center gap-1">
             <span className="relative grid h-[58px] w-[58px] place-items-center rounded-full bg-gradient-to-br from-[#F8C57A] to-[#5AA3D6] p-[2.5px]">
-              <span className="h-full w-full rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
+              <span className="h-full w-full rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }} />
               <Play className="absolute h-4 w-4 fill-white text-white drop-shadow" />
             </span>
             <span className="text-[10px] font-bold text-white/80">{m.name}</span>
@@ -119,31 +118,21 @@ export function ChatScreen({
       {/* 대화 목록 */}
       <div className="mb-2 text-[14px] font-extrabold text-white">{t('inyeon.chat.dm')}</div>
       <div className="space-y-2">
-        {matched.map((m) => {
-          const open = !!chatOpen[m.id]
-          const cost = m.tier === 0 ? 0 : m.tier === 1 ? 0.001 : 0.005
-          return (
-            <div key={m.id} className={cn('flex items-center gap-3 rounded-2xl border p-3', open ? 'border-white/8 bg-white/[0.04]' : 'border-white/8 bg-white/[0.02]')}>
-              <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }}>
+        {matched.map((m) => (
+            <div key={m.id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.04] p-3">
+              <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }}>
                 {m.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0A1626] bg-[#46d77f]" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 text-[13.5px] font-bold text-white">
                   {m.name}
-                  {open && <span className="rounded bg-[#F8C57A]/20 px-1.5 py-0.5 text-[9px] font-extrabold text-[#F8C57A]">{t('inyeon.ieum')}</span>}
+                  <span className="rounded bg-[#F8C57A]/20 px-1.5 py-0.5 text-[9px] font-extrabold text-[#F8C57A]">{t('inyeon.ieum')}</span>
                 </div>
-                <div className="text-[11.5px] text-white/45">{open ? t('inyeon.chat.startConversation') : t('inyeon.chat.ieumAcceptedOpen', { cost })}</div>
+                <div className="text-[11.5px] text-white/45">{t('inyeon.chat.startConversation')}</div>
               </div>
-              {open ? (
-                <button type="button" onClick={() => onOpenDmRoom(m.id)} className="rounded-lg bg-white/[0.08] px-3 py-2 text-[11.5px] font-bold text-white">{t('inyeon.chat.open')}</button>
-              ) : (
-                <button type="button" onClick={() => onOpenDmRoom(m.id)} className="flex items-center gap-1 rounded-lg bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] px-3 py-2 text-[11.5px] font-extrabold text-white">
-                  <Lock className="h-3 w-3" /> 💧{cost} SUI
-                </button>
-              )}
+              <button type="button" onClick={() => onOpenDmRoom(m.id)} className="rounded-lg bg-white/[0.08] px-3 py-2 text-[11.5px] font-bold text-white">{t('inyeon.chat.open')}</button>
             </div>
-          )
-        })}
+        ))}
       </div>
 
       {dmRoomId != null && (
@@ -209,7 +198,7 @@ function DmRoom({ moiId, pool, notes, myAddress, giftLog, onchainGifts, onSend, 
           <ArrowLeft className="h-5 w-5" />
         </button>
         <button type="button" onClick={onOpenProfile} className="flex min-w-0 flex-1 items-center gap-2.5">
-          <span className="h-9 w-9 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
+          <span className="h-9 w-9 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }} />
           <span className="min-w-0 text-left">
             <span className="block truncate text-[14px] font-bold text-white">{m.name}</span>
             <span className="block text-[10.5px] text-white/45">{m.online ? t('inyeon.online') : t('inyeon.offline')} · {t('inyeon.chat.tapForProfile')}</span>
@@ -279,12 +268,12 @@ function MemoryViewer({ moiId, pool, onClose }: { moiId: number; pool: Moi[]; on
   const views = (moiId % 30) + 12
   return (
     <div className="absolute inset-0 z-50 flex flex-col bg-black/80 backdrop-blur" onClick={onClose}>
-      <div className="relative flex-1 bg-cover bg-center" style={{ background: photoBg(m.photos[1]?.hue ?? m.photos[0]?.hue ?? 210) }}>
+      <div className="relative flex-1 bg-cover bg-center" style={{ background: photoBg(m.photos[1]?.hue ?? m.photos[0]?.hue ?? 210, m.photos[1]?.url ?? m.photos[0]?.url) }}>
         <button type="button" aria-label={t('inyeon.chat.close')} onClick={onClose} className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white">
           <X className="h-5 w-5" />
         </button>
         <div className="absolute inset-x-0 top-0 flex items-center gap-2.5 bg-gradient-to-b from-black/55 to-transparent p-4">
-          <span className="h-10 w-10 rounded-full border-2 border-white/70 bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210) }} />
+          <span className="h-10 w-10 rounded-full border-2 border-white/70 bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }} />
           <div className="leading-tight">
             <div className="text-[14px] font-extrabold text-white">{m.name}</div>
             <div className="text-[11px] text-white/70">{t('inyeon.chat.memoryViews', { views })}</div>
