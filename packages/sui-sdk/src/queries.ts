@@ -313,13 +313,17 @@ async function queryAllEvents(
   const out: SuiEvent[] = [];
   let cursor: { txDigest: string; eventSeq: string } | null | undefined = null;
   do {
-    const page = await client.queryEvents({
-      query: { MoveEventType: eventType },
-      cursor,
-      order: 'ascending',
-    });
-    out.push(...page.data);
-    cursor = page.hasNextPage ? page.nextCursor : null;
+    try {
+      const page = await client.queryEvents({
+        query: { MoveEventType: eventType },
+        cursor,
+        order: 'ascending',
+      });
+      out.push(...page.data);
+      cursor = page.hasNextPage ? page.nextCursor : null;
+    } catch {
+      break;
+    }
   } while (cursor);
   return out;
 }
