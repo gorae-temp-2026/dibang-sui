@@ -315,25 +315,31 @@ async function queryAllEvents(
   _client: SuiJsonRpcClient,
   et: string,
 ): Promise<SuiEvent[]> {
+  const seen = new Set<string>();
   const out: SuiEvent[] = [];
-  let cursor: unknown = null;
-  let id = 1;
-  do {
-    const body: Record<string, unknown> = {
-      jsonrpc: '2.0', id: id++,
-      method: 'suix_queryEvents',
-      params: [{ MoveEventType: et }, cursor, 50, true],
-    };
-    const resp = await fetch(RPC_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const json = await resp.json() as { result?: { data: SuiEvent[]; hasNextPage: boolean; nextCursor: unknown }; error?: unknown };
-    if (!json.result) break;
-    out.push(...json.result.data);
-    cursor = json.result.hasNextPage ? json.result.nextCursor : null;
-  } while (cursor);
+  for (const descending of [true, false]) {
+    let cursor: unknown = null;
+    let id = 1;
+    do {
+      const body: Record<string, unknown> = {
+        jsonrpc: '2.0', id: id++,
+        method: 'suix_queryEvents',
+        params: [{ MoveEventType: et }, cursor, 50, descending],
+      };
+      const resp = await fetch(RPC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const json = await resp.json() as { result?: { data: SuiEvent[]; hasNextPage: boolean; nextCursor: unknown }; error?: unknown };
+      if (!json.result) break;
+      for (const e of json.result.data) {
+        const key = e.id?.txDigest + ':' + e.id?.eventSeq;
+        if (!seen.has(key)) { seen.add(key); out.push(e); }
+      }
+      cursor = json.result.hasNextPage ? json.result.nextCursor : null;
+    } while (cursor);
+  }
   return out;
 }
 
@@ -617,11 +623,18 @@ export async function discoverUsers(
   const myAddr = norm(myAddress);
   const degreeMap = buildDegreeMap(signals, participations, myAddress);
   const seen = new Set<string>();
-  const others = moiEvents.filter((m) => {
+  // MoiCreated + Participated의 참가자를 합쳐서 사용자 목록 구성 (pruned TX로 MoiCreated만으로 부족할 수 있음)
+  for (const m of moiEvents) {
     const o = norm(m.owner);
-    if (o === myAddr || seen.has(o)) return false;
-    seen.add(o);
-    return true;
+    if (o !== myAddr) seen.add(o);
+  }
+  for (const p of participations) {
+    const o = norm(p.participant);
+    if (o !== myAddr) seen.add(o);
+  }
+  const others = Array.from(seen).map(addr => {
+    const moi = moiEvents.find(m => norm(m.owner) === addr);
+    return { owner: addr, moiId: moi?.moiId ?? '' };
   });
   const myWeddingEventIds = new Set(
     participations.filter((p) => norm(p.participant) === myAddr && weddingEventIds.has(p.eventId)).map((p) => p.eventId),
