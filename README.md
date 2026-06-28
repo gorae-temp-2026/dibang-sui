@@ -1,5 +1,7 @@
 # Dibang — Trust Network DeFi from Real-World Gatherings
 
+> **Live on Sui Testnet** — Package [`0xf33fba09...`](https://suiscan.xyz/testnet/object/0xf33fba09dcade57bb0a27bd0f0bbd698a18d358c74ae7273d0a85bcab9b7e77d) (upgraded to v2: [`0xb529ddd0...`](https://suiscan.xyz/testnet/object/0xb529ddd02c6ef595331bd319c12ac0bb2d9d9cfdb51edd19cd1a5c26719df651))
+
 We don't store who you are. We store who you've been related to.
 
 Dibang turns the gift economy, humanity's oldest form of credit, into a score you can borrow against. We call it Moi Credit. It lives on-chain on Sui, and it gives away nothing about who you are.
@@ -26,7 +28,7 @@ Then we let trust flow across the network the way PageRank flows across links, s
 **Layer 4: Integration**
 The four modes fold into one trust network, and your place in it resolves to a single value: Moi Credit. It's your position in a living web of trust, not the size of any balance.
 
-It's live on Sui testnet now. Relationships are shared objects, Moi Credit is a Move object anyone can read without learning whose it is, and there are already transactions across 100 wallets. (package, Moi Credit object, relationship object: https://suiscan.xyz/testnet/object/0xf33fba09dcade57bb0a27bd0f0bbd698a18d358c74ae7273d0a85bcab9b7e77d/tx-blocks)
+It's live on Sui testnet now. Relationships are shared objects, Moi Credit is a Move object anyone can read without learning whose it is, and there are already transactions across 50+ wallets. The original package ([`0xf33fba09...`](https://suiscan.xyz/testnet/object/0xf33fba09dcade57bb0a27bd0f0bbd698a18d358c74ae7273d0a85bcab9b7e77d)) has been upgraded to v2 ([`0xb529ddd0...`](https://suiscan.xyz/testnet/object/0xb529ddd02c6ef595331bd319c12ac0bb2d9d9cfdb51edd19cd1a5c26719df651)) — all existing on-chain objects remain compatible.
 
 Where this goes is lending. Once a score like this exists on-chain, a lending protocol can read it and put up a loan with nothing behind it but your relationships, settled through Sui's DeFi rails like DeepBook. That part isn't built yet. It's the whole point.
 
