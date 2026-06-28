@@ -36,9 +36,9 @@ export const TESTNET_CONFIG: SuiContractConfig = {
   network: 'testnet',
   packageId: '0xb529ddd02c6ef595331bd319c12ac0bb2d9d9cfdb51edd19cd1a5c26719df651',
   originalPackageId: '0xf33fba09dcade57bb0a27bd0f0bbd698a18d358c74ae7273d0a85bcab9b7e77d',
-  trustRegistryId: '0x20ff0c7f1bfd4812fc74bfafba49cb56b4e43404541fd44645ff8dbcb050a823',
-  emMoneyMatrixId: '0x61000a070d0da5f2c4af60a761e39372c27e5246700ea7791b3874c06effb4d2',
-  csMatrixId: '0xfa2466a926b8346e6f1fdcd143e2709020b0ad306d08df84d825d40e325e5328',
+  trustRegistryId: '0x2d9379a996fabad5bf191bdcf9cf437ab572ccdb24dd62c0811652e7888096c3',
+  emMoneyMatrixId: '0x558e08451a654cf646f1bce545503fa215f88596be79387ec1d949afae0f3419',
+  csMatrixId: '0xa791dafdb1aa97807e7788982d343218d4d07033ee9dd0769635f3b7ed597fc3',
   shopRegistryId: '0x06cd52b59efdc3e0c4807204be0b3d449842dc591c57cf2cb6704a2b8c4d482c',
 };
 
