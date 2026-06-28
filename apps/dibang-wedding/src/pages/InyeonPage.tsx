@@ -5,6 +5,7 @@
 import { useEffect, useMemo } from 'react'
 import { useMachine, useSelector } from '@xstate/react'
 import { fromPromise } from 'xstate'
+import { normalizeSuiAddress } from '@mysten/sui/utils'
 import { giftActor } from '../machines/gift.machine'
 import { SlidersHorizontal, Lock } from 'lucide-react'
 import { inyeonMachine, type InyeonScreen } from '../machines/inyeon.machine'
@@ -78,7 +79,10 @@ export function InyeonPage() {
   useEffect(() => {
     if (matchedAddresses.length > 0 && pool.length > 0) {
       const moiIds = matchedAddresses
-        .map((addr) => pool.find((m) => (m as Moi & { suiAddress?: string }).suiAddress === addr)?.id)
+        .map((addr) => {
+          const norm = normalizeSuiAddress(addr)
+          return pool.find((m) => normalizeSuiAddress((m as Moi & { suiAddress?: string }).suiAddress ?? '') === norm)?.id
+        })
         .filter((id): id is number => id != null)
       if (moiIds.length > 0) send({ type: 'SET_MATCHED', moiIds })
     }

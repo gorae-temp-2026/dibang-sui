@@ -6,6 +6,7 @@
  * 공통 인연·함께 참여한 결혼식·관계 거리(degree)를 계산한다.
  */
 import { useEffect, useState } from 'react'
+import { normalizeSuiAddress } from '@mysten/sui/utils'
 import { createJsonRpcClient, discoverUsers, getIumRequestedEvents, getIumAcceptedEvents, getOwnedIumRequests, type DiscoveredUser, type SuiNetwork } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
@@ -39,7 +40,7 @@ function toMoi(user: DiscoveredUser, idx: number): Moi {
     barsF: Math.max(0, 5 - user.degree),
     net: user.mutualCount,
     // 실 데이터 확장 필드(Moi 타입에 없지만 런타임에 접근 가능)
-    ...(({ suiAddress: user.address, suiMoiId: user.moiId, ieumCount: 0 }) as Record<string, unknown>),
+    ...(({ suiAddress: normalizeSuiAddress(user.address), suiMoiId: user.moiId, ieumCount: 0 }) as Record<string, unknown>),
   }
 }
 
@@ -63,6 +64,8 @@ export function useDiscoverUsers() {
   useEffect(() => {
     if (!address) return
     setLoading(true)
+    const n = (a: string) => normalizeSuiAddress(a)
+    const myAddr = n(address)
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
     const client = createJsonRpcClient(network)
     Promise.all([
@@ -77,7 +80,7 @@ export function useDiscoverUsers() {
         for (const m of moiList) {
           const addr = (m as Moi & { suiAddress?: string }).suiAddress
           if (addr) {
-            const count = acceptedEvents.filter(e => e.initiator === addr || e.receiver === addr).length;
+            const count = acceptedEvents.filter(e => n(e.initiator) === n(addr) || n(e.receiver) === n(addr)).length;
             (m as Moi & { ieumCount?: number }).ieumCount = count
           }
         }
@@ -87,7 +90,7 @@ export function useDiscoverUsers() {
         const acceptedEventIds = new Set(acceptedEvents.map((a) => a.eventId))
 
         // 내가 보낸 이음 (수락된 건 제외)
-        const mySent = iumEvents.filter((e) => e.initiator === address && !acceptedEventIds.has(e.eventId))
+        const mySent = iumEvents.filter((e) => n(e.initiator) === myAddr && !acceptedEventIds.has(e.eventId))
         setSentMoiIds(mySent.map((s) => {
           const targetMoi = moiList.find((m) => (m as Moi & { suiAddress?: string }).suiAddress === s.toUser)
           return targetMoi?.id ?? -1
@@ -95,12 +98,12 @@ export function useDiscoverUsers() {
 
         // 나한테 온 이음 — 소유한 IumRequest에서 requestId 확보 (수락 안 한 것만 남아있음)
         const requestByEvent = new Map(ownedRequests.map((r) => [r.eventId, r.requestId]))
-        const myRequests = iumEvents.filter((e) => e.toUser === address && !acceptedEventIds.has(e.eventId))
+        const myRequests = iumEvents.filter((e) => n(e.toUser) === myAddr && !acceptedEventIds.has(e.eventId))
         setIncoming(
           myRequests
             .filter((req) => requestByEvent.has(req.eventId))
             .map((req) => {
-              const senderMoi = moiList.find((m) => (m as Moi & { suiAddress?: string }).suiAddress === req.initiator)
+              const senderMoi = moiList.find((m) => n((m as Moi & { suiAddress?: string }).suiAddress ?? '') === n(req.initiator))
               return {
                 moiId: senderMoi?.id ?? -1,
                 rel: translate(lang(), 'page.inyeon.requestIeum'),
@@ -113,8 +116,8 @@ export function useDiscoverUsers() {
 
         // 매칭 성사된 상대 주소 목록 (채팅 진입용)
         const matched = acceptedEvents
-          .filter((a) => a.initiator === address || a.receiver === address)
-          .map((a) => a.initiator === address ? a.receiver : a.initiator)
+          .filter((a) => n(a.initiator) === myAddr || n(a.receiver) === myAddr)
+          .map((a) => n(n(a.initiator) === myAddr ? a.receiver : a.initiator))
         setMatchedAddresses(matched)
       })
       .catch((err) => { console.error('[useDiscoverUsers] error:', err) })
