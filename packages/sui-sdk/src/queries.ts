@@ -306,24 +306,30 @@ export interface RsvpEvent {
  * 레이트리밋에 걸릴 수 있다. 프로덕션에서는 전용 인덱서(sui-indexer-alt-framework로 체크포인트
  * 스트리밍 → 자체 DB)로 ID별 인덱스를 만들어 이 함수를 대체해야 한다. (MVP/테스트넷 한정 사용.)
  */
+const RPC_URL = 'https://fullnode.testnet.sui.io:443';
+
 async function queryAllEvents(
-  client: SuiJsonRpcClient,
-  eventType: string,
+  _client: SuiJsonRpcClient,
+  et: string,
 ): Promise<SuiEvent[]> {
   const out: SuiEvent[] = [];
-  let cursor: { txDigest: string; eventSeq: string } | null | undefined = null;
+  let cursor: unknown = null;
+  let id = 1;
   do {
-    try {
-      const page = await client.queryEvents({
-        query: { MoveEventType: eventType },
-        cursor,
-        order: 'descending',
-      });
-      out.push(...page.data);
-      cursor = page.hasNextPage ? page.nextCursor : null;
-    } catch {
-      break;
-    }
+    const body: Record<string, unknown> = {
+      jsonrpc: '2.0', id: id++,
+      method: 'suix_queryEvents',
+      params: [{ MoveEventType: et }, cursor, 50, true],
+    };
+    const resp = await fetch(RPC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const json = await resp.json() as { result?: { data: SuiEvent[]; hasNextPage: boolean; nextCursor: unknown }; error?: unknown };
+    if (!json.result) break;
+    out.push(...json.result.data);
+    cursor = json.result.hasNextPage ? json.result.nextCursor : null;
   } while (cursor);
   return out;
 }
