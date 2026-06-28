@@ -317,7 +317,7 @@ async function queryAllEvents(
       const page = await client.queryEvents({
         query: { MoveEventType: eventType },
         cursor,
-        order: 'ascending',
+        order: 'descending',
       });
       out.push(...page.data);
       cursor = page.hasNextPage ? page.nextCursor : null;
