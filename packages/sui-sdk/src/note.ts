@@ -35,7 +35,7 @@ export function buildCreateNoteBoxTx(params: CreateNoteBoxParams): Transaction {
 export function buildSendNoteTx(params: SendNoteParams): Transaction {
   const tx = new Transaction();
   tx.moveCall({
-    target: moveTarget('note', 'send_note'),
+    target: moveTarget('note', 'send_note_v2'),
     arguments: [
       tx.object(params.noteBoxId),
       tx.object(params.participationId),

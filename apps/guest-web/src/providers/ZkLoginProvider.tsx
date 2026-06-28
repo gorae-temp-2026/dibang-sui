@@ -34,6 +34,7 @@ if (env.VITE_SUI_PACKAGE_ID) {
   configureSui({
     network: (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet',
     packageId: env.VITE_SUI_PACKAGE_ID,
+    originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID,
   })
 }
 

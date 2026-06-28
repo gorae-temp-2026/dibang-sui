@@ -10,7 +10,7 @@
  */
 
 import type { SuiJsonRpcClient, SuiObjectResponse, SuiEvent } from '@mysten/sui/jsonRpc';
-import { moveTarget } from './constants';
+import { eventType } from './constants';
 
 // === 파싱 헬퍼 ===
 
@@ -156,7 +156,7 @@ export async function getOwnedMoiItems(
   client: SuiJsonRpcClient,
   owner: string,
 ): Promise<MoiItemOnChain[]> {
-  const objs = await listOwnedByType(client, owner, moveTarget('moi', 'MoiItem'));
+  const objs = await listOwnedByType(client, owner, eventType('moi', 'MoiItem'));
   const items: MoiItemOnChain[] = [];
   for (const res of objs) {
     const f = objectFields(res);
@@ -199,7 +199,7 @@ export async function getOwnedMoiIds(
   client: SuiJsonRpcClient,
   owner: string,
 ): Promise<string[]> {
-  const objs = await listOwnedByType(client, owner, moveTarget('moi', 'Moi'));
+  const objs = await listOwnedByType(client, owner, eventType('moi', 'Moi'));
   return objs.filter((o) => o.data).map((o) => o.data!.objectId);
 }
 
@@ -208,7 +208,7 @@ export async function getOwnedWeddingCapIds(
   client: SuiJsonRpcClient,
   owner: string,
 ): Promise<string[]> {
-  const objs = await listOwnedByType(client, owner, moveTarget('wedding', 'WeddingCap'));
+  const objs = await listOwnedByType(client, owner, eventType('wedding', 'WeddingCap'));
   return objs.filter((o) => o.data).map((o) => o.data!.objectId);
 }
 
@@ -221,7 +221,7 @@ export async function getWeddingCapForWedding(
   owner: string,
   weddingId: string,
 ): Promise<string | null> {
-  const objs = await listOwnedByType(client, owner, moveTarget('wedding', 'WeddingCap'));
+  const objs = await listOwnedByType(client, owner, eventType('wedding', 'WeddingCap'));
   for (const res of objs) {
     const f = objectFields(res);
     if (f && res.data && asString(f.wedding_id) === weddingId) {
@@ -245,7 +245,7 @@ export async function getParticipationForEvent(
   owner: string,
   eventId: string,
 ): Promise<ParticipationOnChain | null> {
-  const objs = await listOwnedByType(client, owner, moveTarget('event', 'Participation'));
+  const objs = await listOwnedByType(client, owner, eventType('event', 'Participation'));
   for (const res of objs) {
     const f = objectFields(res);
     if (f && res.data && asString(f.event_id) === eventId) {
@@ -266,7 +266,7 @@ export async function getAnyParticipation(
   client: SuiJsonRpcClient,
   owner: string,
 ): Promise<ParticipationOnChain | null> {
-  const objs = await listOwnedByType(client, owner, moveTarget('event', 'Participation'));
+  const objs = await listOwnedByType(client, owner, eventType('event', 'Participation'));
   for (const res of objs) {
     const f = objectFields(res);
     if (f && res.data) {
@@ -329,7 +329,7 @@ export async function getRsvpEvents(
   client: SuiJsonRpcClient,
   weddingId: string,
 ): Promise<RsvpEvent[]> {
-  const events = await queryAllEvents(client, moveTarget('rsvp', 'RsvpSubmitted'));
+  const events = await queryAllEvents(client, eventType('rsvp', 'RsvpSubmitted'));
   const out: RsvpEvent[] = [];
   for (const e of events) {
     const p = e.parsedJson as Record<string, unknown>;
@@ -410,7 +410,7 @@ export async function getInvitationForWedding(
   const wedding = await getWedding(client, weddingId);
   const host = wedding?.hosts[0] ?? null;
   if (!host) return null; // 온체인 Wedding(=주최자)을 못 찾으면 정당성 검증 불가 → 채택 안 함
-  const events = await queryAllEvents(client, moveTarget('invitation', 'InvitationCreated'));
+  const events = await queryAllEvents(client, eventType('invitation', 'InvitationCreated'));
   let latestId: string | null = null;
   for (const e of events) {
     const p = e.parsedJson as Record<string, unknown>;
@@ -437,7 +437,7 @@ export interface ActionLoggedQuery {
 }
 
 export async function getActionLoggedEvents(client: SuiJsonRpcClient): Promise<ActionLoggedQuery[]> {
-  const events = await queryAllEvents(client, moveTarget('ledger', 'ActionLogged'));
+  const events = await queryAllEvents(client, eventType('ledger', 'ActionLogged'));
   return events.map((e) => {
     const p = e.parsedJson as Record<string, unknown>;
     return {
@@ -460,7 +460,7 @@ export interface EventCreatedQuery {
 }
 
 export async function getEventCreatedEvents(client: SuiJsonRpcClient): Promise<EventCreatedQuery[]> {
-  const events = await queryAllEvents(client, moveTarget('event', 'EventCreated'));
+  const events = await queryAllEvents(client, eventType('event', 'EventCreated'));
   return events.map((e) => {
     const p = e.parsedJson as Record<string, unknown>;
     return { eventId: asString(p.event_id), eventType: asNumber(p.event_type), creator: asString(p.creator) };
@@ -475,7 +475,7 @@ export interface ParticipatedQuery {
 }
 
 export async function getParticipatedEvents(client: SuiJsonRpcClient): Promise<ParticipatedQuery[]> {
-  const events = await queryAllEvents(client, moveTarget('event', 'Participated'));
+  const events = await queryAllEvents(client, eventType('event', 'Participated'));
   return events.map((e) => {
     const p = e.parsedJson as Record<string, unknown>;
     return { eventId: asString(p.event_id), participant: asString(p.participant), roleId: asNumber(p.role_id) };
@@ -501,7 +501,7 @@ export interface SignalQuery {
 }
 
 export async function getSignalEvents(client: SuiJsonRpcClient): Promise<SignalQuery[]> {
-  const events = await queryAllEvents(client, moveTarget('signal', 'SignalEmitted'));
+  const events = await queryAllEvents(client, eventType('signal', 'SignalEmitted'));
   return events.map((e) => {
     const p = e.parsedJson as Record<string, unknown>;
     return {
@@ -525,7 +525,7 @@ export interface MoiCreatedQuery {
 }
 
 export async function getMoiCreatedEvents(client: SuiJsonRpcClient): Promise<MoiCreatedQuery[]> {
-  const events = await queryAllEvents(client, moveTarget('moi', 'MoiCreated'));
+  const events = await queryAllEvents(client, eventType('moi', 'MoiCreated'));
   return events.map((e) => {
     const p = e.parsedJson as Record<string, unknown>;
     return { moiId: asString(p.moi_id), owner: asString(p.owner) };
@@ -636,7 +636,7 @@ export interface GiftSentQuery {
 }
 
 export async function getGiftSentEvents(client: SuiJsonRpcClient): Promise<GiftSentQuery[]> {
-  const events = await queryAllEvents(client, moveTarget('gift', 'GiftSent'));
+  const events = await queryAllEvents(client, eventType('gift', 'GiftSent'));
   return events.map((e) => {
     const p = e.parsedJson as Record<string, unknown>;
     return { itemId: asString(p.item_id), itemName: asString(p.item_name), from: asString(p.from), to: asString(p.to) };
@@ -652,7 +652,7 @@ export interface IumRequestedQuery {
 }
 
 export async function getIumRequestedEvents(client: SuiJsonRpcClient): Promise<IumRequestedQuery[]> {
-  const events = await queryAllEvents(client, moveTarget('ium', 'IumRequested'));
+  const events = await queryAllEvents(client, eventType('ium', 'IumRequested'));
   return events.map((e) => {
     const p = e.parsedJson as Record<string, unknown>;
     return { eventId: asString(p.event_id), initiator: asString(p.initiator), toUser: asString(p.to_user) };
@@ -668,7 +668,7 @@ export interface IumAcceptedQuery {
 }
 
 export async function getIumAcceptedEvents(client: SuiJsonRpcClient): Promise<IumAcceptedQuery[]> {
-  const events = await queryAllEvents(client, moveTarget('ium', 'IumAccepted'));
+  const events = await queryAllEvents(client, eventType('ium', 'IumAccepted'));
   return events.map((e) => {
     const p = e.parsedJson as Record<string, unknown>;
     return { eventId: asString(p.event_id), initiator: asString(p.initiator), receiver: asString(p.receiver) };
@@ -687,7 +687,7 @@ export async function getOwnedIumRequests(
   client: SuiJsonRpcClient,
   owner: string,
 ): Promise<OwnedIumRequest[]> {
-  const objs = await listOwnedByType(client, owner, moveTarget('ium', 'IumRequest'));
+  const objs = await listOwnedByType(client, owner, eventType('ium', 'IumRequest'));
   const out: OwnedIumRequest[] = [];
   for (const res of objs) {
     const f = objectFields(res);
@@ -716,7 +716,7 @@ export async function getNoteSentEvents(
   client: SuiJsonRpcClient,
   myAddress: string,
 ): Promise<NoteSentQuery[]> {
-  const events = await queryAllEvents(client, moveTarget('note', 'NoteSent'));
+  const events = await queryAllEvents(client, eventType('note', 'NoteSent'));
   return events
     .map((e) => {
       const p = e.parsedJson as Record<string, unknown>;

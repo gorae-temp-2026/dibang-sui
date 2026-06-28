@@ -41,8 +41,19 @@ public struct MemoryCreated has copy, drop {
 
 // === Public functions ===
 
-/// 메모리 작성 — 참가자가 라운지에 사진/영상을 올린다. SHARE_MEMORY CS 신호 기록.
+/// [v1 호환용] 원본 시그니처 유지 — v2 사용 권장.
 public fun create_memory(
+    _event_id: ID,
+    _title: String,
+    _blob_id: String,
+    _clock: &Clock,
+    _ctx: &mut TxContext,
+): ID {
+    abort 0
+}
+
+/// 메모리 작성 — 참가자가 라운지에 사진/영상을 올린다. SHARE_MEMORY CS 신호 기록.
+public fun create_memory_v2(
     wedding: &Wedding,
     participation: &gathering::Participation,
     text: String,
@@ -117,7 +128,7 @@ fun create_memory_logs_share_memory_action() {
     let part = scenario.take_from_sender<gathering::Participation>();
     let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
     let clk = clock::create_for_testing(scenario.ctx());
-    create_memory(&wedding, &part, b"great day".to_string(), b"https://img.test/1.jpg".to_string(), &mut mtx, &clk, scenario.ctx());
+    create_memory_v2(&wedding, &part, b"great day".to_string(), b"https://img.test/1.jpg".to_string(), &mut mtx, &clk, scenario.ctx());
     assert_eq!(trust_matrix::pi_of(&mtx, HOST), 138_750_000);
     destroy(mtx);
     clock::destroy_for_testing(clk);

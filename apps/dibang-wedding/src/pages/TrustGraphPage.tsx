@@ -60,7 +60,7 @@ export function TrustGraphPage() {
 
   useEffect(() => {
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID })
+    if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID })
     const client = createJsonRpcClient(network)
     let cancelled = false
     function fetchData() {

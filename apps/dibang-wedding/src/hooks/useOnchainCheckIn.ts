@@ -63,7 +63,7 @@ export function useOnchainCheckIn() {
           if (!suiWeddingId) return null
           // 3) 온체인 Wedding → eventId
           const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-          if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID })
+          if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID })
           const client = createJsonRpcClient(net)
           const ow = await getOnchainWedding(client, suiWeddingId)
           if (!ow?.eventId) return null

@@ -28,7 +28,7 @@ export interface CreateMemoryParams {
 export function buildCreateMemoryTx(params: CreateMemoryParams): Transaction {
   const tx = new Transaction();
   tx.moveCall({
-    target: moveTarget('memory', 'create_memory'),
+    target: moveTarget('memory', 'create_memory_v2'),
     arguments: [
       tx.object(params.weddingId),
       tx.object(params.participationId),

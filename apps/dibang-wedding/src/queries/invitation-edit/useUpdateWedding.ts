@@ -80,7 +80,7 @@ export function useUpdateWedding(weddingId: string, invitationId: string) {
           const suiWeddingId = weddingRec?.sui_wedding_id;
           if (suiWeddingId) {
             const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
-            if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID });
+            if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID });
             const client = createJsonRpcClient(network);
             // 주최자(primary_host) 발행분 중 최신 온체인 Invitation(제3자 위조분 거름).
             const inv = await getInvitationForWedding(client, suiWeddingId);

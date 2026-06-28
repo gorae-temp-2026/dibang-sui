@@ -55,9 +55,20 @@ public fun create_note_box(other: address, ctx: &mut TxContext): ID {
     box_id
 }
 
+/// [v1 호환용] 원본 시그니처 유지 — v2 사용 권장.
+public fun send_note(
+    _note_box: &NoteBox,
+    _to: address,
+    _blob_id: vector<u8>,
+    _clock: &sui::clock::Clock,
+    _ctx: &TxContext,
+) {
+    abort 0
+}
+
 /// 쪽지 전송 — blob_id(Walrus 메시지)를 이벤트로 기록 + SEND_NOTE CS 신호.
 /// NoteBox participants만 호출 가능(sender 확인).
-public fun send_note(
+public fun send_note_v2(
     note_box: &NoteBox,
     participation: &gathering::Participation,
     to: address,
@@ -139,7 +150,7 @@ fun send_note_logs_send_note_action() {
     let note_box = scenario.take_shared<NoteBox>();
     let part = scenario.take_from_sender<gathering::Participation>();
     let mut mtx = trust_matrix::new_for_testing(trust_matrix::kind_cs(), 0, scenario.ctx());
-    send_note(&note_box, &part, RECEIVER, b"hello", &mut mtx, &clk, scenario.ctx());
+    send_note_v2(&note_box, &part, RECEIVER, b"hello", &mut mtx, &clk, scenario.ctx());
     assert_eq!(trust_matrix::pi_of(&mtx, RECEIVER), 138_750_000);
     destroy(mtx);
     scenario.return_to_sender(part);

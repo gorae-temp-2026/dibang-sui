@@ -40,6 +40,10 @@ opus 4.8 은 과하게 생각하지 마라.
 - Move는 `~/.claude/skills/sui-dev-skills/` + `_code_convention/SUI_MOVE.md` 따르고 **TDD**(`sui move test` red→green).
   SDK/프론트는 `_code_convention/SUI_SDK.md` 따르고 `tsc --noEmit`. 가능하면 **testnet 실호출**로 검증.
 - 온체인·보안 변경은 **독립 적대적 리뷰**로 검증(빌드/유닛이 못 잡는 결함 — 이미 CRITICAL 2건 발견 사례).
+- **[최우선] Move 컨트랙트 변경 시 반드시 원본 패키지(`0xf33fba09`)의 upgrade로 배포.** 새로 `sui client publish` 금지.
+  - Published.toml `original-id` = `0xf33fba09...` 고정, UpgradeCap = `0xc84847707c...`
+  - compatible upgrade 정책: 기존 public 함수 시그니처 변경/삭제 금지. 바꿔야 하면 `_v2` 접미사로 새 함수 추가 + 원본은 `abort 0` 유지.
+  - **두 가지 패키지 ID 구분**: `originalPackageId`(`0xf33fba09`) = 오브젝트 type·이벤트 조회용, `packageId`(현재 `0xb529ddd0`) = moveCall target(함수 호출)용.
 
 ## 4. 구현 현황 인지
 - **Moi·MoiItem·Ium·InteriorItem·GatherPlace는 오프체인 미구현(그린필드)** — "전환" 아님, 온체인 신규 구축. (`05`)

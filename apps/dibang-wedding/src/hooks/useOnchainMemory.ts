@@ -49,7 +49,7 @@ export function useOnchainMemory(loungeId: string) {
         if (!suiWeddingId) return null
         // 2) 온체인 Wedding → eventId + participation 확보
         const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-        if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID })
+        if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID })
         const client = createJsonRpcClient(net)
         const ow = await getOnchainWedding(client, suiWeddingId)
         if (!ow?.eventId) return null

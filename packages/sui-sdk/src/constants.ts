@@ -10,8 +10,10 @@ export type SuiNetwork = 'testnet' | 'mainnet' | 'devnet';
 
 export interface SuiContractConfig {
   network: SuiNetwork;
-  /** dibang_wedding Move 패키지 ID */
+  /** dibang_wedding Move 패키지 ID — moveCall target(함수 호출)용. upgrade 시 최신 패키지 ID. */
   packageId: string;
+  /** 원본 패키지 ID — 오브젝트 type prefix·이벤트 조회 필터용. upgrade 후에도 변하지 않는다. */
+  originalPackageId?: string;
   /**
    * TrustRegistry shared object ID(bootstrap 후 주입). 신호→매트릭스 라우팅 색인.
    * 결정#42(온체인 레지스트리). PTB는 이 색인으로 매트릭스 ID를 얻어 tx 입력에 넣는다.
@@ -29,10 +31,11 @@ export interface SuiContractConfig {
   shopRegistryId?: string;
 }
 
-/** testnet 배포 기본값 (2026-06-26 재배포 — signal project 확장 + memory/note 배선). */
+/** testnet 배포 기본값 (2026-06-28 upgrade — 0xf33fba09 원본의 v2). */
 export const TESTNET_CONFIG: SuiContractConfig = {
   network: 'testnet',
-  packageId: '0x39ba6062335f2c8083577f07651b4da678d677ecdc26fe88ee38695a60caa66b',
+  packageId: '0xb529ddd02c6ef595331bd319c12ac0bb2d9d9cfdb51edd19cd1a5c26719df651',
+  originalPackageId: '0xf33fba09dcade57bb0a27bd0f0bbd698a18d358c74ae7273d0a85bcab9b7e77d',
   trustRegistryId: '0x20ff0c7f1bfd4812fc74bfafba49cb56b4e43404541fd44645ff8dbcb050a823',
   emMoneyMatrixId: '0x61000a070d0da5f2c4af60a761e39372c27e5246700ea7791b3874c06effb4d2',
   csMatrixId: '0xfa2466a926b8346e6f1fdcd143e2709020b0ad306d08df84d825d40e325e5328',
@@ -71,10 +74,19 @@ export function requireMatrixId(which: 'emMoney' | 'cs'): string {
   return id;
 }
 
-/** `${packageId}::${module}::${fn}` 형태의 moveCall target 문자열을 만든다. */
+/** `${packageId}::${module}::${fn}` 형태의 moveCall target 문자열을 만든다. upgraded 패키지 ID 사용. */
 export function moveTarget(
   moduleName: string,
   fn: string,
 ): `${string}::${string}::${string}` {
   return `${activeConfig.packageId}::${moduleName}::${fn}`;
+}
+
+/** `${originalPackageId}::${module}::${type}` — 이벤트·오브젝트 type 조회용. 원본 패키지 ID 사용. */
+export function eventType(
+  moduleName: string,
+  typeName: string,
+): string {
+  const base = activeConfig.originalPackageId ?? activeConfig.packageId;
+  return `${base}::${moduleName}::${typeName}`;
 }

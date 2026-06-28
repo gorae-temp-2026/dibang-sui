@@ -51,7 +51,7 @@ export function useOnchainAnnouncement(loungeId: string) {
         if (!suiWeddingId) return null
         // 2) 호스트가 이 결혼식의 WeddingCap을 보유해야 공지 생성 가능(없으면 온체인 미수행).
         const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-        if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID })
+        if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID })
         const client = createJsonRpcClient(net)
         const capId = await getWeddingCapForWedding(client, address, suiWeddingId)
         if (!capId) return null

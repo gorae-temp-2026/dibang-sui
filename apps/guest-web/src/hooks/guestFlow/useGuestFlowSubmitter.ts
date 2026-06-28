@@ -128,7 +128,7 @@ export function useGuestFlowSubmitter(
           const address = zk.address;
           if (zk.isAuthenticated && address && suiWeddingId) {
             const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
-            if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID });
+            if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID });
             const client = createJsonRpcClient(net);
             getWedding(client, suiWeddingId)
               .then(async (w) => {
@@ -186,7 +186,7 @@ export function useGuestFlowSubmitter(
     const hasBody = !!pending && pending !== HEART_SENTINEL;
     const slotCode = SLOT_CODE[state.context.recipientSlot ?? 'groom'] ?? 0;
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
-    if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID });
+    if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID });
     const client = createJsonRpcClient(network);
     (async () => {
       const w = await getWedding(client, suiWeddingId);

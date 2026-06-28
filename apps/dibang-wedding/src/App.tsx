@@ -21,7 +21,6 @@ const QrPage = lazy(() => import('./pages/QrPage').then(m => ({ default: m.QrPag
 const DmPage = lazy(() => import('./pages/DmPage').then(m => ({ default: m.DmPage })))
 const InvitationCreatePage = lazy(() => import('./pages/InvitationCreatePage').then(m => ({ default: m.InvitationCreatePage })))
 const InvitationEditPage = lazy(() => import('./pages/InvitationEditPage').then(m => ({ default: m.InvitationEditPage })))
-const LoungeFeedPage = lazy(() => import('./pages/LoungeFeedPage').then(m => ({ default: m.LoungeFeedPage })))
 const LoungeV2Page = lazy(() => import('./pages/LoungeV2Page').then(m => ({ default: m.LoungeV2Page })))
 const MoiGatherPage = lazy(() => import('./pages/MoiGatherPage').then(m => ({ default: m.MoiGatherPage })))
 const LoungeCheckInGatePage = lazy(() => import('./pages/LoungeCheckInGatePage').then(m => ({ default: m.LoungeCheckInGatePage })))
