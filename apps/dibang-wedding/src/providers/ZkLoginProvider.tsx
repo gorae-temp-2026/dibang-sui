@@ -207,52 +207,62 @@ export function ZkLoginProvider({ children }: { children: ReactNode }) {
   const executeOnchain = useCallback(
     async (tx: Transaction): Promise<string> => {
       const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-      if (devKeypair) {
-        const devClient = createJsonRpcClient(net)
-        devLogger.log('sui', 'executeOnchain_start', { mode: 'devKeypair' })
-        const res = await executeAndAssert(devClient, { transaction: tx, signer: devKeypair })
-        devLogger.log('sui', 'executeOnchain_success', { digest: res.digest })
+      try {
+        if (devKeypair) {
+          const devClient = createJsonRpcClient(net)
+          devLogger.log('sui', 'executeOnchain_start', { mode: 'devKeypair' })
+          const res = await executeAndAssert(devClient, { transaction: tx, signer: devKeypair })
+          devLogger.log('sui', 'executeOnchain_success', { digest: res.digest })
+          showTxToast(res.digest, net)
+          return res.digest
+        }
+        if (!session) {
+          toast.error(translate(lang(), 'tx.fail'), { description: translate(lang(), 'tx.noSession') })
+          throw new Error(translate(lang(), 'tx.noSession'))
+        }
+        if (!session.proofInputs) {
+          toast.error(translate(lang(), 'tx.fail'), { description: translate(lang(), 'tx.noProof') })
+          throw new Error(translate(lang(), 'tx.noProof'))
+        }
+
+        const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
+        const client = createJsonRpcClient(network)
+        const ephemeral = ephemeralKeypairFromSession(session)
+
+        tx.setSender(session.address)
+        const built = await tx.build({ client })
+        const { signature: ephSig } = await ephemeral.signTransaction(built)
+        const zkSig = buildZkLoginSignature({
+          proofInputs: session.proofInputs,
+          maxEpoch: session.maxEpoch,
+          userSignature: ephSig,
+          salt: session.salt,
+          jwt: session.jwt,
+        })
+        const res = await client.executeTransactionBlock({
+          transactionBlock: built,
+          signature: zkSig,
+          options: { showEffects: true, showObjectChanges: true },
+        })
+        const status = res.effects?.status?.status
+        if (status !== 'success') {
+          devLogger.log('sui', 'tx_error', { error: res.effects?.status?.error, status })
+          const msg = String(res.effects?.status?.error ?? status ?? 'unknown')
+          toast.error(translate(lang(), 'tx.fail'), { description: msg.slice(0, 80) })
+          throw new Error(translate(lang(), 'tx.failed', { error: msg }))
+        }
+        devLogger.log('sui', 'executeOnchain_success', { digest: res.digest, mode: 'zkLogin' })
         showTxToast(res.digest, net)
         return res.digest
+      } catch (err) {
+        const msg = String((err as Error).message ?? err)
+        if (msg.includes('Balance') || msg.includes('balance') || msg.includes('insufficient') || msg.includes('not enough')) {
+          toast.error(translate(lang(), 'tx.insufficientGas'), { description: translate(lang(), 'tx.insufficientGasDesc'), duration: 8000 })
+        } else if (!msg.includes('tx.fail') && !msg.includes('tx.noSession') && !msg.includes('tx.noProof')) {
+          toast.error(translate(lang(), 'tx.fail'), { description: msg.slice(0, 80) })
+        }
+        throw err
       }
-      if (!session) {
-        toast.error(translate(lang(), 'tx.fail'), { description: translate(lang(), 'tx.noSession') })
-        throw new Error(translate(lang(), 'tx.noSession'))
-      }
-      if (!session.proofInputs) {
-        toast.error(translate(lang(), 'tx.fail'), { description: translate(lang(), 'tx.noProof') })
-        throw new Error(translate(lang(), 'tx.noProof'))
-      }
-
-      const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-      const client = createJsonRpcClient(network)
-      const ephemeral = ephemeralKeypairFromSession(session)
-
-      tx.setSender(session.address)
-      const built = await tx.build({ client })
-      const { signature: ephSig } = await ephemeral.signTransaction(built)
-      const zkSig = buildZkLoginSignature({
-        proofInputs: session.proofInputs,
-        maxEpoch: session.maxEpoch,
-        userSignature: ephSig,
-        salt: session.salt,
-        jwt: session.jwt,
-      })
-      const res = await client.executeTransactionBlock({
-        transactionBlock: built,
-        signature: zkSig,
-        options: { showEffects: true, showObjectChanges: true },
-      })
-      const status = res.effects?.status?.status
-      if (status !== 'success') {
-        devLogger.log('sui', 'tx_error', { error: res.effects?.status?.error, status })
-        const msg = String(res.effects?.status?.error ?? status ?? 'unknown')
-        toast.error(translate(lang(), 'tx.fail'), { description: msg.slice(0, 80) })
-        throw new Error(translate(lang(), 'tx.failed', { error: msg }))
-      }
-      devLogger.log('sui', 'executeOnchain_success', { digest: res.digest, mode: 'zkLogin' })
-      showTxToast(res.digest, net)
-      return res.digest
     },
     [session, devKeypair, showTxToast],
   )
