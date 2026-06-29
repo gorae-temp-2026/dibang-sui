@@ -284,13 +284,6 @@ export function InyeonPage() {
         onCancel={() => send({ type: 'CANCEL_IEUM' })}
       />
       <MatchOverlay
-        open={state.matches('sentPending')}
-        moi={activeMoi}
-        pending
-        onDismiss={() => send({ type: 'DISMISS_MATCH' })}
-        onOpenChat={() => send({ type: 'DISMISS_MATCH' })}
-      />
-      <MatchOverlay
         open={state.matches('matched')}
         moi={activeMoi}
         onDismiss={() => send({ type: 'DISMISS_MATCH' })}
@@ -326,7 +319,7 @@ export function InyeonPage() {
         presentation="page"
         meeting={profileMeeting}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
-        onIeum={profileMoiId != null ? () => send({ type: 'OPEN_IEUM', id: profileMoiId }) : undefined}
+        onIeum={profileMoiId != null && !matchedIds.includes(profileMoiId) ? () => send({ type: 'OPEN_IEUM', id: profileMoiId }) : undefined}
       />
     </div>
   )

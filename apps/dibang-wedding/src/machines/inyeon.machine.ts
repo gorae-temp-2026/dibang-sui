@@ -289,10 +289,13 @@ export const inyeonMachine = setup({
         src: 'sendIeum',
         input: ({ context }) => ({ targetId: context.activeId }),
         onDone: {
-          target: 'sentPending',
+          target: 'browsing',
           actions: assign({
             sentIds: ({ context }) =>
               context.activeId ? [...context.sentIds, context.activeId] : context.sentIds,
+            queue: ({ context }) => context.queue.filter((id) => id !== context.activeId),
+            activeId: () => null,
+            message: () => '',
           }),
         },
         onError: {

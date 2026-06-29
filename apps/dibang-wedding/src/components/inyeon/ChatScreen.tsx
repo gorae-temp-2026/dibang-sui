@@ -17,6 +17,15 @@ import { useT } from '../../lib/i18n'
 
 const photoBg = (hue: number, url?: string) => url ? `url(${url}) center/cover` : `linear-gradient(150deg, hsl(${hue} 52% 34%), hsl(${(hue + 36) % 360} 48% 16%))`
 
+function formatTimeAgo(ts: number): string {
+  const diff = Date.now() - ts
+  if (diff < 60_000) return 'now'
+  if (diff < 3600_000) return `${Math.floor(diff / 60_000)}m`
+  if (diff < 86400_000) return `${Math.floor(diff / 3600_000)}h`
+  const d = new Date(ts)
+  return `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
+
 interface ChatScreenProps {
   pool: Moi[]
   matchedIds: number[]
@@ -103,7 +112,7 @@ export function ChatScreen({
         <span className="text-[14px] font-extrabold text-white">🎞️ {t('inyeon.chat.memory')}</span>
         <span className="text-[10.5px] text-white/40">{t('inyeon.chat.memorySub')}</span>
       </div>
-      <div className="mb-4 flex gap-3 overflow-x-auto pb-1">
+      <div className="mb-4 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {matched.map((m) => (
           <button key={m.id} type="button" onClick={() => onOpenMemory(m.id)} className="flex flex-shrink-0 flex-col items-center gap-1">
             <span className="relative grid h-[58px] w-[58px] place-items-center rounded-full bg-gradient-to-br from-[#F8C57A] to-[#5AA3D6] p-[2.5px]">
@@ -118,8 +127,12 @@ export function ChatScreen({
       {/* 대화 목록 */}
       <div className="mb-2 text-[14px] font-extrabold text-white">{t('inyeon.chat.dm')}</div>
       <div className="space-y-2">
-        {matched.map((m) => (
-            <div key={m.id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.04] p-3">
+        {matched.map((m) => {
+          const addr = (m as Moi & { suiAddress?: string }).suiAddress
+          const lastNote = addr && myAddress ? notes.filter(n => (n.from === addr && n.to === myAddress) || (n.from === myAddress && n.to === addr)).sort((a, b) => b.ts - a.ts)[0] : undefined
+          const timeLabel = lastNote ? formatTimeAgo(lastNote.ts) : undefined
+          return (
+            <button key={m.id} type="button" onClick={() => onOpenDmRoom(m.id)} className="flex w-full items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.04] p-3 text-left">
               <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }}>
                 {m.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0A1626] bg-[#46d77f]" />}
               </div>
@@ -128,11 +141,12 @@ export function ChatScreen({
                   {m.name}
                   <span className="rounded bg-[#F8C57A]/20 px-1.5 py-0.5 text-[9px] font-extrabold text-[#F8C57A]">{t('inyeon.ieum')}</span>
                 </div>
-                <div className="text-[11.5px] text-white/45">{t('inyeon.chat.startConversation')}</div>
+                <div className="text-[11.5px] text-white/45">{lastNote ? lastNote.text.slice(0, 30) : t('inyeon.chat.startConversation')}</div>
               </div>
-              <button type="button" onClick={() => onOpenDmRoom(m.id)} className="rounded-lg bg-white/[0.08] px-3 py-2 text-[11.5px] font-bold text-white">{t('inyeon.chat.open')}</button>
-            </div>
-        ))}
+              {timeLabel && <span className="flex-shrink-0 text-[10.5px] text-white/35">{timeLabel}</span>}
+            </button>
+          )
+        })}
       </div>
 
       {dmRoomId != null && (

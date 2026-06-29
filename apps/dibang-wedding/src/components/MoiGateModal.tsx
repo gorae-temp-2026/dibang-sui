@@ -7,6 +7,7 @@ import { moiGateMachine } from '../machines/moiGate.machine'
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
+import { useNavigate } from 'react-router'
 import { useT } from '../lib/i18n'
 
 /**
@@ -15,6 +16,7 @@ import { useT } from '../lib/i18n'
  * flow는 moiGate 머신, 온체인 createMoi는 submit actor 주입, 보유 여부는 React Query(머신 밖).
  */
 export function MoiGateModal() {
+  const navigate = useNavigate()
   const { address, isAuthenticated } = useZkLogin()
   const { createMoi } = useOnchainHostActions()
   const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
@@ -68,9 +70,15 @@ export function MoiGateModal() {
           {busy ? t('myWedding.moiGate.creating') : t('myWedding.moiGate.create')}
         </button>
         {state.context.error && (
-          <p className="mt-2 text-xs text-red-500">❌ {state.context.error}</p>
+          <p className="mt-2 text-xs text-red-500">{state.context.error}</p>
         )}
-        {/* 닫기 버튼 없음 — 강제(만들어야 진행). */}
+        <button
+          type="button"
+          onClick={() => navigate('/settings')}
+          className="mt-3 w-full text-center text-sm text-muted hover:text-navy"
+        >
+          {t('myWedding.moiGate.back')}
+        </button>
       </div>
     </div>
   )
