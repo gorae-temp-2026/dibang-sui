@@ -319,6 +319,7 @@ export function InyeonPage() {
         context="inyeon"
         presentation="page"
         meeting={profileMeeting}
+        sharedEventIds={(profileMoiForSheet as Moi & { sharedEventIds?: string[] })?.sharedEventIds}
         giftSignal={profileMoiId != null ? giftSignals[String(profileMoiId)] ?? 0 : 0}
         onIeum={profileMoiId != null && !matchedIds.includes(profileMoiId) ? () => send({ type: 'OPEN_IEUM', id: profileMoiId }) : undefined}
       />

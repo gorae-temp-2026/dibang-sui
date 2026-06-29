@@ -40,7 +40,7 @@ function toMoi(user: DiscoveredUser, idx: number): Moi {
     barsF: Math.max(0, 5 - user.degree),
     net: user.mutualCount,
     // 실 데이터 확장 필드(Moi 타입에 없지만 런타임에 접근 가능)
-    ...(({ suiAddress: normalizeSuiAddress(user.address), suiMoiId: user.moiId, ieumCount: 0 }) as Record<string, unknown>),
+    ...(({ suiAddress: normalizeSuiAddress(user.address), suiMoiId: user.moiId, ieumCount: 0, sharedEventIds: user.sharedEventIds }) as Record<string, unknown>),
   }
 }
 

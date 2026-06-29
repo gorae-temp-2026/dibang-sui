@@ -31,6 +31,8 @@ interface ProfileSheetProps {
   context?: ProfileContext
   /** 상단 만남 맥락(사진·후크·소개글·출처). */
   meeting?: MeetingContext
+  /** 공유 이벤트(결혼식) ID 목록 — "어디서 만났나" 섹션에 표시. */
+  sharedEventIds?: string[]
   /** 받은 선물 신뢰 신호 누적. ② 시그널에 가시화(이음 후). */
   giftSignal?: number
   /** 이음 신청 CTA. 미지정 시 버튼 숨김. */
@@ -41,7 +43,7 @@ interface ProfileSheetProps {
   revealed?: boolean
 }
 
-export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', meeting, giftSignal, onIeum, presentation = 'sheet', revealed = false }: ProfileSheetProps) {
+export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', meeting, sharedEventIds, giftSignal, onIeum, presentation = 'sheet', revealed = false }: ProfileSheetProps) {
   const t = useT()
   const offline = context === 'lounge'
   const showDetail = offline || revealed // 이음 후/라운지 = 시그널·인연 망 상세 공개
@@ -97,53 +99,55 @@ export function ProfileSheet({ open, onOpenChange, data, context = 'inyeon', mee
                   {p.tag && <span className="flex-shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/70">{p.tag}</span>}
                 </div>
               ))}
+              {sharedEventIds && sharedEventIds.length > 0 && (
+                <div className="mt-1 space-y-1.5">
+                  {sharedEventIds.map((eid) => (
+                    <div key={eid} className="flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-3 py-2.5">
+                      <span className="text-lg">💒</span>
+                      <div className="min-w-0 flex-1">
+                        <b className="text-[13px] font-bold text-white">{t('profile.sharedEvent')}</b>
+                        <span className="block truncate font-mono text-[10px] text-white/40">{eid.slice(0, 16)}…</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Section>
         </>
       )}
 
-      {/* 인연 망 — 이음 전엔 '이음 수'만, 이음 후엔 그래프(가운데 정렬) */}
+      {/* 인연 망 — 모든 사람에게 그래프 공개 */}
       <Section title={t('profile.network')}>
-        {showDetail ? (
-          <>
-            <div className="flex justify-center">
-              <InyeonGraph data={data} size={250} />
-            </div>
-            <p className="mt-1.5 text-center text-[10px] text-white/40">{offline ? t('profile.netRealName') : t('profile.netMyWeb')} · {t('profile.strongNeighbors', { n: ieumCount })}</p>
-            {data.graph.nodes.some((n) => n.here) && (
-              <p className="mt-1 flex items-center justify-center gap-1.5 text-[10px] text-white/45">
-                <span className="inline-block h-2 w-2 flex-shrink-0 rounded-full ring-2 ring-[#F8C57A]" />
-                {offline ? t('profile.metHere') : t('profile.directlyLinked')} · {t('profile.restWiderWeb')}
-              </p>
-            )}
-          </>
-        ) : (
-          <div className="flex items-center justify-between gap-2 rounded-xl bg-white/[0.04] px-3.5 py-3">
-            <span className="flex items-center gap-1.5 text-[13px] font-bold text-white">🔗 {t('profile.ieumCount', { n: ieumCount })}</span>
-            <span className="flex items-center gap-1 text-[10.5px] text-white/45"><Lock className="h-3 w-3" /> {t('profile.afterIeum')}</span>
-          </div>
+        <div className="flex justify-center">
+          <InyeonGraph data={data} size={250} />
+        </div>
+        <p className="mt-1.5 text-center text-[10px] text-white/40">{offline ? t('profile.netRealName') : t('profile.netMyWeb')} · {t('profile.strongNeighbors', { n: ieumCount })}</p>
+        {data.graph.nodes.some((n) => n.here) && (
+          <p className="mt-1 flex items-center justify-center gap-1.5 text-[10px] text-white/45">
+            <span className="inline-block h-2 w-2 flex-shrink-0 rounded-full ring-2 ring-[#F8C57A]" />
+            {offline ? t('profile.metHere') : t('profile.directlyLinked')} · {t('profile.restWiderWeb')}
+          </p>
         )}
       </Section>
 
-      {/* 나와의 시그널 — 이음 후만(가운데 정렬) */}
-      {showDetail && (
-        <Section title={t('profile.signal')}>
-          <div className="flex justify-center">
-            <SignalSunburst data={data.signal} size={180} />
+      {/* 나와의 시그널 — 모든 사람에게 표시 */}
+      <Section title={t('profile.signal')}>
+        <div className="flex justify-center">
+          <SignalSunburst data={data.signal} size={180} />
+        </div>
+        <ul className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-white/70">
+          <li><b className="text-[#D4687A]">EM</b> {t('profile.signal.em')}</li>
+          <li><b className="text-[#5B89B3]">CS</b> {t('profile.signal.cs')}</li>
+          <li><b className="text-[#B8884A]">AR</b> {t('profile.signal.ar')}</li>
+          <li><b className="text-[#9999AD]">MP</b> {t('profile.signal.mp')}</li>
+        </ul>
+        {giftSignal != null && giftSignal > 0 && (
+          <div className="mt-2 rounded-xl border border-[#F8C57A]/30 bg-[#F8C57A]/10 px-3 py-2 text-center text-[11.5px] text-white/85">
+            💝 {t('profile.giftSignal')} <b className="text-[#F8C57A]">+{giftSignal}</b>
           </div>
-          <ul className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-white/70">
-            <li><b className="text-[#D4687A]">EM</b> {t('profile.signal.em')}</li>
-            <li><b className="text-[#5B89B3]">CS</b> {t('profile.signal.cs')}</li>
-            <li><b className="text-[#B8884A]">AR</b> {t('profile.signal.ar')}</li>
-            <li><b className="text-[#9999AD]">MP</b> {t('profile.signal.mp')}</li>
-          </ul>
-          {giftSignal != null && giftSignal > 0 && (
-            <div className="mt-2 rounded-xl border border-[#F8C57A]/30 bg-[#F8C57A]/10 px-3 py-2 text-center text-[11.5px] text-white/85">
-              💝 {t('profile.giftSignal')} <b className="text-[#F8C57A]">+{giftSignal}</b>
-            </div>
-          )}
-        </Section>
-      )}
+        )}
+      </Section>
 
       {/* 크레딧 — 정성(좋음/보통)만, 정확 수치는 온체인 */}
       <Section title={t('profile.credit')}>

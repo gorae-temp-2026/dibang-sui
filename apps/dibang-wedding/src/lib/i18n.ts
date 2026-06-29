@@ -101,6 +101,7 @@ const KO: Dict = {
   'inyeon.closeness.1': '조금 떨어진 인연',
   'inyeon.closeness.2': '새 인연',
   // 프로필 섹션·크레딧
+  'profile.sharedEvent': '함께 참석한 결혼식',
   'profile.whereMet': '📍 어디서 마주쳤나',
   'profile.bio': '소개글',
   'profile.network': '인연 망',
@@ -1062,6 +1063,7 @@ const EN: Dict = {
   'inyeon.closeness.0': 'Close connection',
   'inyeon.closeness.1': 'A bit distant',
   'inyeon.closeness.2': 'New connection',
+  'profile.sharedEvent': 'Shared wedding event',
   'profile.whereMet': '📍 Where you crossed paths',
   'profile.bio': 'About',
   'profile.network': 'Connection web',
