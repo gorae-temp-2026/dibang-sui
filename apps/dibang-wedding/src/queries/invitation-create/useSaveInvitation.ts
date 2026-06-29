@@ -68,6 +68,7 @@ export function useSaveInvitation() {
   const { isAuthenticated } = useZkLogin();
 
   return useMutation({
+    retry: false,
     mutationFn: async ({ weddingReq, invitationReq }: SaveInvitationPayload): Promise<SaveInvitationResult> => {
       // Step 1: Supabase createWedding → weddingId 확보 (D0-1: Supabase 먼저)
       const { data: wedding } = await createWedding({

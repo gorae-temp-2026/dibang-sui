@@ -42,6 +42,7 @@ export function useUpdateWedding(weddingId: string, invitationId: string) {
   const { isAuthenticated, executeOnchain } = useZkLogin();
 
   return useMutation({
+    retry: false,
     mutationFn: async ({ weddingReq, invitationReq }: UpdateWeddingPayload) => {
       await updateWedding({
         path: { weddingId },

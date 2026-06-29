@@ -19,6 +19,7 @@ export function useInvitationPhotoUpload(
   subKind: InvitationPhotoSubKind,
 ) {
   return useMutation({
+    retry: false,
     mutationFn: async (file: File): Promise<string> => {
       const compressed = await compressImageForUpload(file);
       const results = await presignedUpload({
