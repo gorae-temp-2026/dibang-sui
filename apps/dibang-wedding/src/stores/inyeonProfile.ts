@@ -12,9 +12,13 @@ export const DEFAULT_INYEON_PHOTO = '/assets/inyeon-photos/my-profile.jpg'
 interface InyeonProfileState {
   /** 내 디방인연 대표 사진 url (기본 = my-profile.jpg, 변경 시 data URL). */
   photoUrl: string
+  /** 인연 전용 추가 사진 URL (최대 3장). Walrus URL 또는 data URL. */
+  extraPhotos: string[]
   /** 인연 소개글 — 다른 모이가 내 프로필을 볼 때 표시되는 짧은 자기소개. */
   bio: string
   setPhotoUrl: (url: string) => void
+  addExtraPhoto: (url: string) => void
+  removeExtraPhoto: (index: number) => void
   setBio: (bio: string) => void
   reset: () => void
 }
@@ -23,10 +27,13 @@ export const useInyeonProfile = create<InyeonProfileState>()(
   persist(
     (set) => ({
       photoUrl: DEFAULT_INYEON_PHOTO,
+      extraPhotos: [],
       bio: '',
       setPhotoUrl: (photoUrl) => set({ photoUrl }),
+      addExtraPhoto: (url) => set((s) => ({ extraPhotos: s.extraPhotos.length < 3 ? [...s.extraPhotos, url] : s.extraPhotos })),
+      removeExtraPhoto: (index) => set((s) => ({ extraPhotos: s.extraPhotos.filter((_, i) => i !== index) })),
       setBio: (bio) => set({ bio: bio.slice(0, 100) }),
-      reset: () => set({ photoUrl: DEFAULT_INYEON_PHOTO, bio: '' }),
+      reset: () => set({ photoUrl: DEFAULT_INYEON_PHOTO, extraPhotos: [], bio: '' }),
     }),
     { name: 'dibang:inyeon-profile' },
   ),

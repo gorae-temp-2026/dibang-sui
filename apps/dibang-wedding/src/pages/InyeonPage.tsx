@@ -2,7 +2,7 @@
 // 구조: 다크 셸 + 상단(매칭범위·지갑) + 본문 스크린(유니버스 덱/받은이음/채팅/프로필) + 우측 irail + 시트.
 // 흐름: 카드 탐색 → 사진 게이트(2장무료/3장째 요네) → 이음 신청(한마디) → 매칭 → (Moi Credit 재료).
 // 받은이음·채팅 화면은 스텁(TODO), 프로필 상세는 ⑤ 공유 프로필 컴포넌트에서 본구현 예정.
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useMachine, useSelector } from '@xstate/react'
 import { fromPromise } from 'xstate'
 import { normalizeSuiAddress } from '@mysten/sui/utils'
@@ -31,7 +31,7 @@ import { useSuiBalance } from '../hooks/useSuiBalance'
 import { useNotes } from '../hooks/useNotes'
 import { useGiftLog } from '../hooks/useGiftLog'
 import { useAuth } from '../providers/AuthContext'
-import { useInyeonProfile } from '../stores/inyeonProfile'
+import { useInyeonProfile, fileToWalrusPhoto, fileToProfileDataUrl } from '../stores/inyeonProfile'
 import { useT } from '../lib/i18n'
 
 export function InyeonPage() {
@@ -332,8 +332,13 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
   const { address } = useZkLogin()
   const { session } = useAuth()
   const photoUrl = useInyeonProfile((s) => s.photoUrl)
+  const extraPhotos = useInyeonProfile((s) => s.extraPhotos)
+  const addExtraPhoto = useInyeonProfile((s) => s.addExtraPhoto)
+  const removeExtraPhoto = useInyeonProfile((s) => s.removeExtraPhoto)
   const bio = useInyeonProfile((s) => s.bio)
   const setBio = useInyeonProfile((s) => s.setBio)
+  const extraFileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
   const displayName = session?.user?.user_metadata?.name ?? (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : t('page.inyeon.unknown'))
   const subtitle = address ? `${address.slice(0, 8)}…${address.slice(-6)}` : ''
   const { data: stats, isLoading } = useMyCreditStats(address ?? undefined)
@@ -386,6 +391,55 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
       >
         ⛓ {t('me.checkOnchain')}
       </button>
+
+      {/* 인연 전용 사진 관리 */}
+      <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+        <div className="flex items-center text-[13px] font-bold text-white">
+          📸 {t('page.inyeon.photosTitle')}
+          <span className="ml-auto text-[10.5px] font-medium text-white/45">{t('page.inyeon.bioInyeonOnly')}</span>
+        </div>
+        <div className="mt-3 flex gap-2.5">
+          {/* 대표 사진 (고정) */}
+          <div className="relative">
+            <div className="h-[72px] w-[72px] rounded-xl bg-cover bg-center ring-1 ring-white/20" style={{ backgroundImage: `url(${photoUrl})` }} />
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[#0A1626]/80 px-1.5 py-0.5 text-[8px] font-bold text-white/70">{t('page.inyeon.photosMain')}</span>
+          </div>
+          {/* 추가 사진 (최대 3장) */}
+          {[0, 1, 2].map((i) => {
+            const url = extraPhotos[i]
+            return url ? (
+              <button key={i} type="button" onClick={() => removeExtraPhoto(i)} className="group relative h-[72px] w-[72px] rounded-xl bg-cover bg-center ring-1 ring-white/20" style={{ backgroundImage: `url(${url})` }}>
+                <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="text-xs font-bold text-white/80">✕</span>
+                </span>
+              </button>
+            ) : (
+              <button
+                key={i}
+                type="button"
+                onClick={() => extraFileRef.current?.click()}
+                disabled={uploading || extraPhotos.length !== i}
+                className="flex h-[72px] w-[72px] flex-col items-center justify-center gap-0.5 rounded-xl border border-dashed border-white/20 text-white/40 disabled:opacity-30"
+              >
+                <span className="text-lg">+</span>
+                <span className="text-[9px]">{uploading && extraPhotos.length === i ? '...' : t('page.inyeon.photosAdd')}</span>
+              </button>
+            )
+          })}
+        </div>
+        <input ref={extraFileRef} type="file" accept="image/*" onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+          const f = e.target.files?.[0]; e.target.value = '';
+          if (!f || extraPhotos.length >= 3) return;
+          setUploading(true);
+          try {
+            const { url } = await fileToWalrusPhoto(f);
+            addExtraPhoto(url);
+          } catch {
+            addExtraPhoto(await fileToProfileDataUrl(f));
+          } finally { setUploading(false); }
+        }} className="hidden" />
+        <p className="mt-2.5 text-[10.5px] leading-relaxed text-white/40">{t('page.inyeon.photosDesc')}</p>
+      </div>
 
       <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
         <div className="flex items-center text-[13px] font-bold text-white">
