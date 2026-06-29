@@ -7,8 +7,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { DAppKitProvider } from '@mysten/dapp-kit-react'
-import { dAppKit } from './lib/dapp-kit'
 import { ZkLoginProvider } from './providers/ZkLoginProvider'
 import { AuthProvider } from './providers/AuthProvider'
 import { isDevBypass } from './dev/devBypass'
@@ -38,15 +36,13 @@ export function mount(): void {
   createRoot(rootEl).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <DAppKitProvider dAppKit={dAppKit}>
-          <ZkLoginProvider>
-            <BrowserRouter>
-              <AuthProvider>
-                <App />
-              </AuthProvider>
-            </BrowserRouter>
-          </ZkLoginProvider>
-        </DAppKitProvider>
+        <ZkLoginProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </BrowserRouter>
+        </ZkLoginProvider>
       </QueryClientProvider>
     </StrictMode>,
   )
