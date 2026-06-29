@@ -332,6 +332,8 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
   const { address } = useZkLogin()
   const { session } = useAuth()
   const photoUrl = useInyeonProfile((s) => s.photoUrl)
+  const bio = useInyeonProfile((s) => s.bio)
+  const setBio = useInyeonProfile((s) => s.setBio)
   const displayName = session?.user?.user_metadata?.name ?? (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : t('page.inyeon.unknown'))
   const subtitle = address ? `${address.slice(0, 8)}…${address.slice(-6)}` : ''
   const { data: stats, isLoading } = useMyCreditStats(address ?? undefined)
@@ -386,10 +388,24 @@ function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
       </button>
 
       <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-        <div className="text-[13px] font-bold text-white">✍️ {t('page.inyeon.bioVisibilityTitle')}</div>
-        <p className="mt-1.5 text-[10.5px] leading-relaxed text-white/45">
-          {t('page.inyeon.bioVisibilityDesc')}
-        </p>
+        <div className="flex items-center text-[13px] font-bold text-white">
+          ✍️ {t('page.inyeon.bioVisibilityTitle')}
+          <span className="ml-auto text-[10.5px] font-medium text-white/45">{t('page.inyeon.bioInyeonOnly')}</span>
+        </div>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder={t('page.inyeon.bioPlaceholder')}
+          maxLength={100}
+          rows={3}
+          className="mt-2.5 w-full resize-none rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-[13px] text-white placeholder:text-white/30 focus:border-[#87CEEB]/50 focus:outline-none"
+        />
+        <div className="mt-1.5 flex items-center justify-between">
+          <p className="text-[10.5px] leading-relaxed text-white/45">
+            {t('page.inyeon.bioVisibilityDesc')}
+          </p>
+          <span className="text-[10px] text-white/30">{bio.length}/100</span>
+        </div>
       </div>
     </div>
   )
