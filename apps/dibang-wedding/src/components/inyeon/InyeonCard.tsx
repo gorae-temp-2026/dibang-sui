@@ -23,6 +23,7 @@ interface InyeonCardProps {
   onUnlock: () => void
   onPass: () => void
   onOpenProfile: () => void
+  onIeum?: () => void
 }
 
 export function InyeonCard({
@@ -35,6 +36,7 @@ export function InyeonCard({
   onUnlock,
   onPass,
   onOpenProfile,
+  onIeum,
 }: InyeonCardProps) {
   const t = useT()
   const locked = photoIdx >= FREE_PHOTOS && !unlocked
@@ -118,8 +120,11 @@ export function InyeonCard({
         </button>
       )}
 
-      {/* 하단 정보 (익명) — 큰 하단 패딩으로 액션·그립 영역 위로 띄움(버튼과 겹침 방지). */}
-      <div className="absolute inset-x-0 bottom-0 z-[4] p-5 pb-28 text-white">
+      {/* 하단 정보 (익명) — 탭하면 프로필 모달. */}
+      <div
+        className="absolute inset-x-0 bottom-0 z-[4] cursor-pointer p-5 pb-28 text-white"
+        onClick={isTop ? (e) => { e.stopPropagation(); onOpenProfile() } : undefined}
+      >
         <div className="flex items-center gap-2 text-[15px] font-bold">
           <span className="text-lg">{moi.prov[0]?.emoji}</span>
           {t(`inyeon.tier.${moi.tier}.hook`)}
@@ -143,8 +148,8 @@ export function InyeonCard({
             </button>
             <button
               type="button"
-              aria-label={t('inyeon.viewProfile')}
-              onClick={(e) => { e.stopPropagation(); onOpenProfile() }}
+              aria-label={t('inyeon.requestIeum')}
+              onClick={(e) => { e.stopPropagation(); onIeum ? onIeum() : onOpenProfile() }}
               className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5E8A] to-[#5AA3D6] text-white shadow-lg transition active:scale-90"
             >
               <IeumIcon className="h-[22px] w-[22px]" />
