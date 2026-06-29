@@ -1,0 +1,72 @@
+[
+  {
+    "name": "강건우",
+    "weddingId": "0xde1e13a46bd8fe8e94663756031513025b5d8eab301c46391a9352d283236278",
+    "eventId": "0x7fc31d536ecc710c5bc4384037910a5a5063a474d5488d84c0a260969d6a1dbb",
+    "loungeId": "0x6be2160acafe1f5a1bf3aa94f2b64e81ac84813899ae4744276916c4cdc19192",
+    "vaultId": "0xdd8fdaeae3c5fdb1640cefb3c528aee2de06bc11efb84292c55b6c0b018b1580"
+  },
+  {
+    "name": "강병주",
+    "weddingId": "0x919b0fc7c1c8e0fb8e4a9aa644f4f0011b839af712c9e673340d27f68ce7f591",
+    "eventId": "0x6debe5d73ef3079ade5e02e2d3f9e161e5bef24b661a3c205624982eaf2c2c8b",
+    "loungeId": "0x86e3cd8d55d95a9c8e57a21f19c95e9d41653dedf5ed0378f1f43b7fa31254db",
+    "vaultId": "0xfd47a8a0232fb6b4360cf7766236bdc27c4fcde14fa5e465db777001672c0ece"
+  },
+  {
+    "name": "강수하",
+    "weddingId": "0x72d1e4a5f96fa8018fe10ffb4293a117d66a095a4f366372aaa0fbf946dec24d",
+    "eventId": "0x490ee527d16feca169ce928a896a6a85159d12003d20661d56032a38917d5fc9",
+    "loungeId": "0x348da6fcd951ced425dc5799fcd53b806311a536df09918113c7d0d3bb52027e",
+    "vaultId": "0x43e48e8de88ae580588ca1a3a7a905e5ee3177bf77f65fe62c7b6c238bd9b1d3"
+  },
+  {
+    "name": "강우준",
+    "weddingId": "0xf0561995a400576c0615f7a819f7bf6e3c47216821165d5c3c72a3796e0d0068",
+    "eventId": "0xceed7f110ee6ac94ae633d915d6089cc74b8b964eaade164f8f265e7f5c05c05",
+    "loungeId": "0x0c4e4338c1c6dfe27e635e5404f14b88b9e912f37d2f1ef30ca512edb9627c90",
+    "vaultId": "0xaa529e9cba538dc17197fe076997b2390cfa7916287501f953be688ebd2727ae"
+  },
+  {
+    "name": "강윤주",
+    "weddingId": "0x43d1df9c49227a75196c84508be43d35af5a9c6387ed49f7dc661ff4052b0a83",
+    "eventId": "0xea195601e6bf98c2a82f64d04a68d97357e28d59bb9051c3678db21f80af5c0e",
+    "loungeId": "",
+    "vaultId": "0x3967e89e51883e958ff17de1563ac0fcb662fbc24cf832757628d71c2c3c186b"
+  },
+  {
+    "name": "강채수",
+    "weddingId": "0x89eaf796729aa276af6d0201427a35d790403ba84f8018a2d987bf2d3f4c5fe4",
+    "eventId": "0x128dffe3c010c1b26b585a12f33c1e43c9ea371ee97caebd9601ff2424076105",
+    "loungeId": "0x306ac559044e02847f106f1ab8d37172492e1cf5835dccd60c8b5c0d462ea1cc",
+    "vaultId": "0xb7219a678d0a306e2b598ad110d3c30004db0ce37761ad354f41fad9fff956e1"
+  },
+  {
+    "name": "권예예",
+    "weddingId": "0xddcdaeff1257d39a37dd2d5730e36782ee190e6edc4ae7fbad1d38d3fccd1544",
+    "eventId": "0x2a03f7fc4284f83079e02a8c6e446983124e9edf6d64c67f6d83547597fcc3bd",
+    "loungeId": "0x318825b7116600742dc27693a4b9d46d89e65931b52494b3df54b8e57a93f700",
+    "vaultId": "0x94f28fb5bb92347d62dcb0e8e65bb20df2fdcabc8c8d142ceb76930f7b193929"
+  },
+  {
+    "name": "권윤아",
+    "weddingId": "0x7f94cf919125038b4b3815fefdae084e5158e620f511fe8658c80cecb73f0062",
+    "eventId": "0xcd27624e93945c7c67ee62a123d80c760307808c9e3bab29b7b92643b97d3c51",
+    "loungeId": "",
+    "vaultId": "0x2759c7a4f4e6b77ae62edcad848907ec5175e53f898fb889ec07b72e3229109e"
+  },
+  {
+    "name": "권하도",
+    "weddingId": "0xf410638e93615618a8ad455ba9b63d1b4b0828be22a75f062aa520e6b7be66fa",
+    "eventId": "0xdde50129fd77ff6dfb80a15a09e4483054f37297b126ba045faa48f486add195",
+    "loungeId": "0x2ec965279b3c2666f38db78b081ef0b305c5691f401cae6bf14b59c3742562fe",
+    "vaultId": "0xb09ef812a7e13623c4d85bed9a8923e251f4ec7c476555219d8a52d641bfca4e"
+  },
+  {
+    "name": "김람연",
+    "weddingId": "0x4a8d4424637ab39453f4b5406c9911933177ccb248e2a0db0a5e3d51060b3027",
+    "eventId": "0xeff177e01d27fbef78e7291e273833091621b715a66a8066f494a3e57a85068f",
+    "loungeId": "0x029332b847d8377623d8bdd26b06a6d1e890ee1919128b6f284a41ee7c4ea3b4",
+    "vaultId": "0xc0f11451b1affbff688a439db627e2f9c979c421965e6ad0d0ae74112f41a228"
+  }
+]
