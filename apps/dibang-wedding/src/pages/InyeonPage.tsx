@@ -32,6 +32,7 @@ import { useNotes } from '../hooks/useNotes'
 import { useGiftLog } from '../hooks/useGiftLog'
 import { useAuth } from '../providers/AuthContext'
 import { useInyeonProfile, fileToWalrusPhoto, fileToProfileDataUrl } from '../stores/inyeonProfile'
+import { useInyeonProfileSync } from '../hooks/useInyeonProfileSync'
 import { useT } from '../lib/i18n'
 
 export function InyeonPage() {
@@ -332,6 +333,7 @@ export function InyeonPage() {
 function MeScreen({ onOpenProfile }: { onOpenProfile: () => void }) {
   const t = useT()
   const { address } = useZkLogin()
+  useInyeonProfileSync()
   const { session } = useAuth()
   const photoUrl = useInyeonProfile((s) => s.photoUrl)
   const extraPhotos = useInyeonProfile((s) => s.extraPhotos)

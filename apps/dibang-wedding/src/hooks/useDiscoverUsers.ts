@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { normalizeSuiAddress } from '@mysten/sui/utils'
 import { createJsonRpcClient, discoverUsers, getIumRequestedEvents, getIumAcceptedEvents, getOwnedIumRequests, type DiscoveredUser, type SuiNetwork } from '@gorae/sui-sdk'
+import { fetchInyeonProfiles } from './useInyeonProfileSync'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
 import { translate, useLangStore } from '../lib/i18n'
@@ -74,14 +75,22 @@ export function useDiscoverUsers() {
       getIumAcceptedEvents(client),
       getOwnedIumRequests(client, address),
     ])
-      .then(([discovered, iumEvents, acceptedEvents, ownedRequests]) => {
+      .then(async ([discovered, iumEvents, acceptedEvents, ownedRequests]) => {
         const moiList = discovered.map(toMoi)
-        // 이음 성사 수 채우기(IumAccepted에서 유저별 카운트)
+        // DB에서 추가 사진 + 소개글 조회
+        const allAddrs = moiList.map(m => (m as Moi & { suiAddress?: string }).suiAddress).filter(Boolean) as string[]
+        const profileMap = await fetchInyeonProfiles(allAddrs)
+        // 이음 성사 수 + 추가 사진 합치기
         for (const m of moiList) {
           const addr = (m as Moi & { suiAddress?: string }).suiAddress
           if (addr) {
             const count = acceptedEvents.filter(e => n(e.initiator) === n(addr) || n(e.receiver) === n(addr)).length;
             (m as Moi & { ieumCount?: number }).ieumCount = count
+            const profile = profileMap.get(addr)
+            if (profile?.extraPhotos?.length) {
+              const addrNum = parseInt(addr.slice(2, 10), 16)
+              m.photos = [...m.photos, ...profile.extraPhotos.map((url, i) => ({ url, hue: (addrNum + (i + 1) * 60) % 360 }))]
+            }
           }
         }
         setUsers(moiList)
