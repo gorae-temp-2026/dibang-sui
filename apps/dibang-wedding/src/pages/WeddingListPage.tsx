@@ -321,7 +321,7 @@ export function WeddingListPage() {
         </div>
       ) : (
         upcoming.map((w) => (
-          <EventCard key={w.id} wedding={w} onClick={() => navigate(`/lounge/${w.lounge_id}/v2`)} />
+          <EventCard key={w.id} wedding={w} onClick={() => w.lounge_id ? navigate(`/lounge/${w.lounge_id}/v2`) : undefined} />
         ))
       )}
 
@@ -362,7 +362,7 @@ export function WeddingListPage() {
         </div>
       ) : (
         past.map((w) => (
-          <EventCard key={w.id} wedding={w} onClick={() => navigate(`/lounge/${w.lounge_id}/v2`)} />
+          <EventCard key={w.id} wedding={w} onClick={() => w.lounge_id ? navigate(`/lounge/${w.lounge_id}/v2`) : undefined} />
         ))
       )}
     </div>

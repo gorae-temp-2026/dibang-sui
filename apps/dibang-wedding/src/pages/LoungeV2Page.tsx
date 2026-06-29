@@ -174,7 +174,8 @@ export function LoungeV2Page() {
     pullDistance.current = 0;
   }, [state, send, feedQuery]);
 
-  if (!loungeId) {
+  const isValidUuid = loungeId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(loungeId);
+  if (!isValidUuid) {
     return <div className="p-4 text-base text-lng-muted">{t('page.lounge.noLoungeId')}</div>;
   }
 

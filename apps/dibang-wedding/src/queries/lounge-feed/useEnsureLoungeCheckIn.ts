@@ -22,7 +22,7 @@ export function useEnsureLoungeCheckIn(loungeId: string | undefined) {
   const { mutate } = mutation;
 
   useEffect(() => {
-    if (!loungeId || createdRef.current) return;
+    if (!loungeId || createdRef.current || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(loungeId)) return;
     createdRef.current = true;
     mutate(
       { path: { loungeId } },
