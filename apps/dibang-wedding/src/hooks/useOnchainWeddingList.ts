@@ -12,6 +12,7 @@ import { env } from '../env'
 export interface OnchainWeddingItem {
   eventId: string
   weddingId: string | null
+  loungeId: string | null
   creator: string
   role: 'host' | 'guest'
   date: string
@@ -47,6 +48,7 @@ export function useOnchainWeddingList() {
           const roleId = myPart?.roleId ?? (isHost ? 0 : 1)
 
           let weddingId: string | null = null
+          let loungeId: string | null = null
           try {
             const objs = await client.queryEvents({
               query: { MoveEventType: `${env.VITE_SUI_PACKAGE_ID || '0xf3c24dcc1455a12c3b066e4d9d40112d7be66dd0ccdfe729b9781b42e28f975e'}::wedding::WeddingCreated` },
@@ -57,13 +59,16 @@ export function useOnchainWeddingList() {
               return String(p.event_id) === e.eventId
             })
             if (found) {
-              weddingId = String((found.parsedJson as Record<string, unknown>).wedding_id)
+              const p = found.parsedJson as Record<string, unknown>
+              weddingId = String(p.wedding_id)
+              if (p.lounge_id) loungeId = String(p.lounge_id)
             }
           } catch {}
 
           result.push({
             eventId: e.eventId,
             weddingId,
+            loungeId,
             creator: e.creator,
             role: roleId === 0 ? 'host' : 'guest',
             date: '',

@@ -268,7 +268,7 @@ export function WeddingListPage() {
       date: ow.date || new Date().toISOString().slice(0, 10),
       venue_name: t('page.weddingList.onchainWedding'),
       venue_hall: ow.creator.slice(0, 10) + '...',
-      lounge_id: '',
+      lounge_id: ow.loungeId ?? '',
       type: 'wedding',
     }));
   const weddingList = [...dbList, ...onchainOnly];
