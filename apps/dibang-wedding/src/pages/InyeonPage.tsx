@@ -43,9 +43,12 @@ export function InyeonPage() {
   const zk = useZkLogin()
   const { data: myStats } = useMyCreditStats(zk.address ?? undefined)
   const myCreditScore = myStats?.score ?? 0
+  const toSignalNode = (em: number, cs: number) => ({ name: 'root', children: [
+    { name: 'EM', value: em }, { name: 'CS', value: cs }, { name: 'AR', value: 0, stub: true }, { name: 'MP', value: 0, stub: true },
+  ] })
   const noteActions = useNotes()
   const { gifts: onchainGiftLog, refetch: refetchGiftLog } = useGiftLog()
-  const { users: discoveredUsers, incoming: discoveredIncoming, sentMoiIds, matchedAddresses, loading: discoverLoading, refetch: refetchDiscover } = useDiscoverUsers()
+  const { users: discoveredUsers, incoming: discoveredIncoming, sentMoiIds, matchedAddresses, mySignal, loading: discoverLoading, refetch: refetchDiscover } = useDiscoverUsers()
   const pool = discoveredUsers
   const moiById = (id: number | null) => (id == null ? null : pool.find((m) => m.id === id) ?? null)
 
@@ -304,7 +307,7 @@ export function InyeonPage() {
       <ProfileSheet
         open={myProfileOpen}
         onOpenChange={(o) => send({ type: o ? 'OPEN_MY_PROFILE' : 'CLOSE_MY_PROFILE' })}
-        data={buildProfileFromMoi(null, { creditScore: myCreditScore, ieumCount: matchedAddresses.length })}
+        data={buildProfileFromMoi(null, { creditScore: myCreditScore, ieumCount: matchedAddresses.length, signal: toSignalNode(mySignal.em, mySignal.cs) })}
         context="inyeon"
         revealed
         presentation="page"
@@ -316,6 +319,10 @@ export function InyeonPage() {
         data={buildProfileFromMoi(profileMoiForSheet, {
           ieumCount: (profileMoiForSheet as Moi & { ieumCount?: number })?.ieumCount ?? 0,
           creditScore: myCreditScore,
+          signal: toSignalNode(
+            (profileMoiForSheet as Moi & { signalEM?: number })?.signalEM ?? 0,
+            (profileMoiForSheet as Moi & { signalCS?: number })?.signalCS ?? 0,
+          ),
         })}
         context="inyeon"
         presentation="page"

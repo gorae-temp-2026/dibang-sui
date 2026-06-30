@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react'
 import { normalizeSuiAddress } from '@mysten/sui/utils'
-import { createJsonRpcClient, discoverUsers, getIumRequestedEvents, getIumAcceptedEvents, getOwnedIumRequests, type DiscoveredUser, type SuiNetwork } from '@gorae/sui-sdk'
+import { createJsonRpcClient, discoverUsers, getIumRequestedEvents, getIumAcceptedEvents, getOwnedIumRequests, getSignalEvents, type DiscoveredUser, type SuiNetwork } from '@gorae/sui-sdk'
 import { fetchInyeonProfiles } from './useInyeonProfileSync'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
@@ -51,6 +51,7 @@ export function useDiscoverUsers() {
   const [incoming, setIncoming] = useState<IncomingReq[]>([])
   const [sentMoiIds, setSentMoiIds] = useState<number[]>([])
   const [matchedAddresses, setMatchedAddresses] = useState<string[]>([])
+  const [mySignal, setMySignal] = useState<{ em: number; cs: number }>({ em: 0, cs: 0 })
   const [loading, setLoading] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -74,8 +75,9 @@ export function useDiscoverUsers() {
       getIumRequestedEvents(client),
       getIumAcceptedEvents(client),
       getOwnedIumRequests(client, address),
+      getSignalEvents(client),
     ])
-      .then(async ([discovered, iumEvents, acceptedEvents, ownedRequests]) => {
+      .then(async ([discovered, iumEvents, acceptedEvents, ownedRequests, signalEvents]) => {
         const moiList = discovered.map(toMoi)
         // DB에서 추가 사진 + 소개글 조회
         const allAddrs = moiList.map(m => (m as Moi & { suiAddress?: string }).suiAddress).filter(Boolean) as string[]
@@ -86,6 +88,12 @@ export function useDiscoverUsers() {
           if (addr) {
             const count = acceptedEvents.filter(e => n(e.initiator) === n(addr) || n(e.receiver) === n(addr)).length;
             (m as Moi & { ieumCount?: number }).ieumCount = count
+            // signal 계산: 나↔상대 간 EM/CS
+            const pairSignals = signalEvents.filter(s => (n(s.from) === myAddr && n(s.to) === n(addr)) || (n(s.from) === n(addr) && n(s.to) === myAddr))
+            const em = pairSignals.filter(s => s.kind === 0).reduce((sum, s) => sum + s.magnitude, 0)
+            const cs = pairSignals.filter(s => s.kind !== 0).reduce((sum, s) => sum + s.magnitude, 0);
+            (m as Moi & { signalEM?: number; signalCS?: number }).signalEM = em;
+            (m as Moi & { signalEM?: number; signalCS?: number }).signalCS = cs
             const profile = profileMap.get(addr)
             if (profile?.extraPhotos?.length) {
               const addrNum = parseInt(addr.slice(2, 10), 16)
@@ -128,10 +136,16 @@ export function useDiscoverUsers() {
           .filter((a) => n(a.initiator) === myAddr || n(a.receiver) === myAddr)
           .map((a) => n(n(a.initiator) === myAddr ? a.receiver : a.initiator))
         setMatchedAddresses(matched)
+
+        // 내 전체 signal (MeScreen ProfileSheet용)
+        const mySignals = signalEvents.filter(s => n(s.from) === myAddr || n(s.to) === myAddr)
+        const totalEM = mySignals.filter(s => s.kind === 0).reduce((sum, s) => sum + s.magnitude, 0)
+        const totalCS = mySignals.filter(s => s.kind !== 0).reduce((sum, s) => sum + s.magnitude, 0)
+        setMySignal({ em: totalEM, cs: totalCS })
       })
       .catch((err) => { console.error('[useDiscoverUsers] error:', err) })
       .finally(() => setLoading(false))
   }, [address, refreshKey])
 
-  return { users, incoming, sentMoiIds, matchedAddresses, loading, refetch }
+  return { users, incoming, sentMoiIds, matchedAddresses, mySignal, loading, refetch }
 }

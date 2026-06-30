@@ -19,7 +19,7 @@ const EMPTY_TRACE = {
   L4_integrate: { W: { 부조: 0, cs: 0, 이행: 0 }, formula: '', value: 0 },
 }
 
-export function buildProfileFromMoi(moi: Moi | null, options?: { ieumCount?: number; creditScore?: number }): ProfileData {
+export function buildProfileFromMoi(moi: Moi | null, options?: { ieumCount?: number; creditScore?: number; signal?: ProfileData['signal'] }): ProfileData {
   const addr = (moi as Moi & { suiAddress?: string })?.suiAddress ?? ''
   const addrNum = addr ? parseInt(addr.slice(2, 10), 16) : 210
   const name = addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : translate(lang(), 'feed.unknownPlain')
@@ -53,7 +53,7 @@ export function buildProfileFromMoi(moi: Moi | null, options?: { ieumCount?: num
         value: 1,
       })),
     },
-    signal: EMPTY_SIGNAL,
+    signal: options?.signal ?? EMPTY_SIGNAL,
     trustRange: {
       tier: score >= 300 ? 'high' : score >= 100 ? 'medium' : 'low',
       label: translate(lang(), score >= 300 ? 'trust.high' : score >= 100 ? 'trust.medium' : 'trust.low'),
