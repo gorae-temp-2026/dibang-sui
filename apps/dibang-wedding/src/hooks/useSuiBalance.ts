@@ -12,6 +12,12 @@ export function useSuiBalance() {
   const refetch = useCallback(() => setRefreshKey((k) => k + 1), [])
 
   useEffect(() => {
+    const handler = () => setTimeout(refetch, 2000)
+    window.addEventListener('sui:tx-success', handler)
+    return () => window.removeEventListener('sui:tx-success', handler)
+  }, [refetch])
+
+  useEffect(() => {
     if (!address) return
     setLoading(true)
     const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
