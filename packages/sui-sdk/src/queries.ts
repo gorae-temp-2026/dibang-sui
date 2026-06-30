@@ -315,31 +315,23 @@ async function queryAllEvents(
   _client: SuiJsonRpcClient,
   et: string,
 ): Promise<SuiEvent[]> {
-  const seen = new Set<string>();
   const out: SuiEvent[] = [];
-  for (const descending of [true, false]) {
-    let cursor: unknown = null;
-    let id = 1;
-    do {
-      const body: Record<string, unknown> = {
-        jsonrpc: '2.0', id: id++,
-        method: 'suix_queryEvents',
-        params: [{ MoveEventType: et }, cursor, 50, descending],
-      };
+  let cursor: unknown = null;
+  let id = 1;
+  do {
+    let json: { result?: { data: SuiEvent[]; hasNextPage: boolean; nextCursor: unknown }; error?: unknown };
+    try {
       const resp = await fetch(RPC_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ jsonrpc: '2.0', id: id++, method: 'suix_queryEvents', params: [{ MoveEventType: et }, cursor, 50, true] }),
       });
-      const json = await resp.json() as { result?: { data: SuiEvent[]; hasNextPage: boolean; nextCursor: unknown }; error?: unknown };
-      if (!json.result) break;
-      for (const e of json.result.data) {
-        const key = e.id?.txDigest + ':' + e.id?.eventSeq;
-        if (!seen.has(key)) { seen.add(key); out.push(e); }
-      }
-      cursor = json.result.hasNextPage ? json.result.nextCursor : null;
-    } while (cursor);
-  }
+      json = await resp.json();
+    } catch { break; }
+    if (!json.result) break;
+    out.push(...json.result.data);
+    cursor = json.result.hasNextPage ? json.result.nextCursor : null;
+  } while (cursor);
   return out;
 }
 
