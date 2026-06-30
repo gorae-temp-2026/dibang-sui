@@ -309,7 +309,7 @@ export interface RsvpEvent {
  * 레이트리밋에 걸릴 수 있다. 프로덕션에서는 전용 인덱서(sui-indexer-alt-framework로 체크포인트
  * 스트리밍 → 자체 DB)로 ID별 인덱스를 만들어 이 함수를 대체해야 한다. (MVP/테스트넷 한정 사용.)
  */
-const RPC_URL = 'https://fullnode.testnet.sui.io:443';
+const RPC_URL = 'https://sui-testnet-rpc.publicnode.com';
 
 async function queryAllEvents(
   _client: SuiJsonRpcClient,
