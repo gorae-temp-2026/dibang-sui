@@ -5,6 +5,7 @@ import {
   getParticipatedEvents,
   type SuiNetwork,
 } from '@gorae/sui-sdk'
+import { normalizeSuiAddress } from '@mysten/sui/utils'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { env } from '../env'
 
@@ -30,11 +31,13 @@ export function useOnchainWeddingList() {
     Promise.all([getEventCreatedEvents(client), getParticipatedEvents(client)])
       .then(async ([events, parts]) => {
         const weddingEvents = events.filter((e) => e.eventType === 0)
-        const myParts = parts.filter((p) => p.participant === address)
+        const norm = (a: string) => normalizeSuiAddress(a)
+        const myAddr = norm(address)
+        const myParts = parts.filter((p) => norm(p.participant) === myAddr)
         const myEventIds = new Set(myParts.map((p) => p.eventId))
 
         const myWeddings = weddingEvents.filter(
-          (e) => e.creator === address || myEventIds.has(e.eventId),
+          (e) => norm(e.creator) === myAddr || myEventIds.has(e.eventId),
         )
 
         const result: OnchainWeddingItem[] = []
