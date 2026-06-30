@@ -132,10 +132,10 @@ export function ChatScreen({
           const lastNote = addr && myAddress ? notes.filter(n => (n.from === addr && n.to === myAddress) || (n.from === myAddress && n.to === addr)).sort((a, b) => b.ts - a.ts)[0] : undefined
           const timeLabel = lastNote ? formatTimeAgo(lastNote.ts) : undefined
           return (
-            <button key={m.id} type="button" onClick={() => onOpenDmRoom(m.id)} className="flex w-full items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.04] p-3 text-left">
-              <div className="relative h-12 w-12 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }}>
+            <div key={m.id} className="flex w-full items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.04] p-3 text-left cursor-pointer" onClick={() => onOpenDmRoom(m.id)}>
+              <button type="button" onClick={(e) => { e.stopPropagation(); onOpenProfile(m.id) }} className="relative h-12 w-12 flex-shrink-0 rounded-full bg-cover bg-center" style={{ background: photoBg(m.photos[0]?.hue ?? 210, m.photos[0]?.url) }}>
                 {m.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0A1626] bg-[#46d77f]" />}
-              </div>
+              </button>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 text-[13.5px] font-bold text-white">
                   {m.name}
@@ -144,7 +144,7 @@ export function ChatScreen({
                 <div className="text-[11.5px] text-white/45">{lastNote ? lastNote.text.slice(0, 30) : t('inyeon.chat.startConversation')}</div>
               </div>
               {timeLabel && <span className="flex-shrink-0 text-[10.5px] text-white/35">{timeLabel}</span>}
-            </button>
+            </div>
           )
         })}
       </div>

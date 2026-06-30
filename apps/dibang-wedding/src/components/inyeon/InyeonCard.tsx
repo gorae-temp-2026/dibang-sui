@@ -71,19 +71,28 @@ export function InyeonCard({
         ))}
       </div>
 
-      {/* 좌우 탭존 (맨 위 카드만) */}
+      {/* 카드 클릭 → 프로필 (맨 위 카드만, 전체 영역) */}
       {isTop && (
+        <button
+          type="button"
+          aria-label={t('inyeon.viewProfile')}
+          className="absolute inset-0 z-[2] cursor-pointer"
+          onClick={(e) => { e.stopPropagation(); onOpenProfile() }}
+        />
+      )}
+      {/* 좌우 탭존 — photos 2장 이상일 때만, 좁은 가장자리 (맨 위 카드만) */}
+      {isTop && moi.photos.length > 1 && (
         <>
           <button
             type="button"
             aria-label={t('inyeon.card.prevPhoto')}
-            className="absolute bottom-[34%] left-0 top-0 z-[3] w-[42%] cursor-pointer"
+            className="absolute bottom-[34%] left-0 top-0 z-[3] w-[15%] cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onPhotoNav(-1) }}
           />
           <button
             type="button"
             aria-label={t('inyeon.card.nextPhoto')}
-            className="absolute bottom-[34%] right-0 top-0 z-[3] w-[42%] cursor-pointer"
+            className="absolute bottom-[34%] right-0 top-0 z-[3] w-[15%] cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onPhotoNav(1) }}
           />
         </>
@@ -120,11 +129,8 @@ export function InyeonCard({
         </button>
       )}
 
-      {/* 하단 정보 (익명) — 탭하면 프로필 모달. */}
-      <div
-        className="absolute inset-x-0 bottom-0 z-[4] cursor-pointer p-5 pb-28 text-white"
-        onClick={isTop ? (e) => { e.stopPropagation(); onOpenProfile() } : undefined}
-      >
+      {/* 하단 정보 (익명) */}
+      <div className="absolute inset-x-0 bottom-0 z-[4] p-5 pb-28 text-white">
         <div className="flex items-center gap-2 text-[15px] font-bold">
           <span className="text-lg">{moi.prov[0]?.emoji}</span>
           {t(`inyeon.tier.${moi.tier}.hook`)}
