@@ -188,7 +188,9 @@ export const inyeonMachine = setup({
     },
     // 받은이음 수락 = 상대가 먼저 다가왔으니 대화는 상대 부담(무료로 열림).
     ACCEPT_REQ: {
+      target: '.matched',
       actions: assign({
+        activeId: ({ event }) => event.type === 'ACCEPT_REQ' ? event.moiId : null,
         matchedIds: ({ context, event }) =>
           event.type === 'ACCEPT_REQ' && !context.matchedIds.includes(event.moiId)
             ? [...context.matchedIds, event.moiId]
