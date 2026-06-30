@@ -75,25 +75,29 @@ export function useDiscoverUsers() {
       getIumRequestedEvents(client),
       getIumAcceptedEvents(client),
       getOwnedIumRequests(client, address),
-      getSignalEvents(client),
     ])
-      .then(async ([discovered, iumEvents, acceptedEvents, ownedRequests, signalEvents]) => {
+      .then(async ([discovered, iumEvents, acceptedEvents, ownedRequests]) => {
+        // signal은 별도 조회 — 실패해도 카드 표시에 영향 없음
+        let signalEvents: Awaited<ReturnType<typeof getSignalEvents>> = []
+        try { signalEvents = await getSignalEvents(client) } catch { /* best-effort */ }
+
         const moiList = discovered.map(toMoi)
         // DB에서 추가 사진 + 소개글 조회
         const allAddrs = moiList.map(m => (m as Moi & { suiAddress?: string }).suiAddress).filter(Boolean) as string[]
-        const profileMap = await fetchInyeonProfiles(allAddrs)
-        // 이음 성사 수 + 추가 사진 합치기
+        const profileMap = await fetchInyeonProfiles(allAddrs).catch(() => new Map<string, { extraPhotos: string[]; bio: string }>())
+        // 이음 성사 수 + signal + 추가 사진 합치기
         for (const m of moiList) {
           const addr = (m as Moi & { suiAddress?: string }).suiAddress
           if (addr) {
             const count = acceptedEvents.filter(e => n(e.initiator) === n(addr) || n(e.receiver) === n(addr)).length;
             (m as Moi & { ieumCount?: number }).ieumCount = count
-            // signal 계산: 나↔상대 간 EM/CS
-            const pairSignals = signalEvents.filter(s => (n(s.from) === myAddr && n(s.to) === n(addr)) || (n(s.from) === n(addr) && n(s.to) === myAddr))
-            const em = pairSignals.filter(s => s.kind === 0).reduce((sum, s) => sum + s.magnitude, 0)
-            const cs = pairSignals.filter(s => s.kind !== 0).reduce((sum, s) => sum + s.magnitude, 0);
-            (m as Moi & { signalEM?: number; signalCS?: number }).signalEM = em;
-            (m as Moi & { signalEM?: number; signalCS?: number }).signalCS = cs
+            if (signalEvents.length > 0) {
+              const pairSignals = signalEvents.filter(s => (n(s.from) === myAddr && n(s.to) === n(addr)) || (n(s.from) === n(addr) && n(s.to) === myAddr))
+              const em = pairSignals.filter(s => s.kind === 0).reduce((sum, s) => sum + s.magnitude, 0)
+              const cs = pairSignals.filter(s => s.kind !== 0).reduce((sum, s) => sum + s.magnitude, 0);
+              (m as Moi & { signalEM?: number; signalCS?: number }).signalEM = em;
+              (m as Moi & { signalEM?: number; signalCS?: number }).signalCS = cs
+            }
             const profile = profileMap.get(addr)
             if (profile?.extraPhotos?.length) {
               const addrNum = parseInt(addr.slice(2, 10), 16)

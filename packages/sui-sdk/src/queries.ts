@@ -612,12 +612,13 @@ export async function discoverUsers(
   client: SuiJsonRpcClient,
   myAddress: string,
 ): Promise<DiscoveredUser[]> {
-  const [moiEvents, participations, signals, eventCreated] = await Promise.all([
+  const [moiEvents, participations, eventCreated] = await Promise.all([
     getMoiCreatedEvents(client),
     getParticipatedEvents(client),
-    getSignalEvents(client),
     getEventCreatedEvents(client),
   ]);
+  let signals: SignalQuery[] = [];
+  try { signals = await getSignalEvents(client); } catch { /* best-effort — signal 실패해도 카드 표시 */ }
   // WEDDING(eventType=0) 이벤트만 "공유 결혼식"으로 분류 — INYEON(1)은 제외
   const weddingEventIds = new Set(eventCreated.filter((e) => e.eventType === 0).map((e) => e.eventId));
   const myAddr = norm(myAddress);
