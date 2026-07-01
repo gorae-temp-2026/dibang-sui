@@ -13,6 +13,13 @@ import { useT, useLang, type Lang } from '../lib/i18n';
 // 이벤트 일반화: type(wedding|party) + party는 title 표시. fixture에서 주입(없으면 wedding).
 type EventItem = ParticipatedWedding & { type?: 'wedding' | 'party'; title?: string };
 
+// 라운지 라우트(/lounge/:id/v2 → LoungeV2 → DB /lounges/{uuid})는 DB 라운지 UUID만 받는다.
+// 온체인 전용 결혼식(WeddingCreated 이벤트의 lounge_id = 온체인 객체 ID 0x…)은 대응 DB 라운지
+// 레코드가 없어 그 ID로 진입하면 DB가 400 → "[Error] No loungeId" + 재시도 루프가 된다.
+// 따라서 lounge_id가 DB UUID일 때만 진입을 허용한다(온체인 lounge 직접 열람 라우트는 별도 과제).
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isDbLoungeId = (id?: string | null): boolean => !!id && UUID_RE.test(id);
+
 function formatDday(dateStr: string): string {
   const wedding = new Date(dateStr + 'T00:00:00');
   const today = new Date();
@@ -321,7 +328,7 @@ export function WeddingListPage() {
         </div>
       ) : (
         upcoming.map((w) => (
-          <EventCard key={w.id} wedding={w} onClick={() => w.lounge_id ? navigate(`/lounge/${w.lounge_id}/v2`) : undefined} />
+          <EventCard key={w.id} wedding={w} onClick={() => isDbLoungeId(w.lounge_id) ? navigate(`/lounge/${w.lounge_id}/v2`) : undefined} />
         ))
       )}
 
@@ -362,7 +369,7 @@ export function WeddingListPage() {
         </div>
       ) : (
         past.map((w) => (
-          <EventCard key={w.id} wedding={w} onClick={() => w.lounge_id ? navigate(`/lounge/${w.lounge_id}/v2`) : undefined} />
+          <EventCard key={w.id} wedding={w} onClick={() => isDbLoungeId(w.lounge_id) ? navigate(`/lounge/${w.lounge_id}/v2`) : undefined} />
         ))
       )}
     </div>
