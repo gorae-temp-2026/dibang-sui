@@ -133,7 +133,7 @@ export function SettingsPage() {
           <div className="min-w-0 flex-1">
             <p className="text-sm text-muted">My SUI</p>
             <p className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-navy tabular-nums">{(balanceSui / 1_000_000_000).toFixed(3)}</span>
+              <span className="text-2xl font-bold text-navy tabular-nums">{balanceSui.toFixed(3)}</span>
               <span className="text-sm text-muted">SUI</span>
             </p>
           </div>
