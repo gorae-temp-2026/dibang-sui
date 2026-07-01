@@ -1290,6 +1290,184 @@ export type AdminDashboardHealth = {
     checks: Array<AdminHealthCheck>;
 };
 
+export type OnchainWedding = {
+    id: string;
+    status: string;
+    hosts: Array<string>;
+    vaultId?: string | null;
+    eventId: string;
+};
+
+export type OnchainWeddingLounge = {
+    id: string;
+    weddingId: string;
+};
+
+export type OnchainCashGiftVault = {
+    id: string;
+    weddingId: string;
+    /**
+     * MIST 잔액(u64 → string)
+     */
+    balance: string;
+};
+
+export type OnchainMoi = {
+    id: string;
+    owner: string;
+    /**
+     * slot → MoiItem ID
+     */
+    equipped: {
+        [key: string]: string;
+    };
+};
+
+export type OnchainMoiItem = {
+    id: string;
+    name: string;
+    itemType: string;
+    slot: string;
+};
+
+export type OnchainParticipation = {
+    id: string;
+    eventId: string;
+    eventType: number;
+    participant: string;
+    roleId: number;
+};
+
+export type OnchainInvitation = {
+    id: string;
+    weddingId: string;
+    creator: string;
+    slug: string;
+    groomNameBlobId: string;
+    brideNameBlobId: string;
+    date: string;
+    time: string;
+    venueName: string;
+    venueHall: string;
+    coverPhotoBlobId: string;
+    greetingBlobId: string;
+};
+
+export type OnchainWeddingCap = {
+    /**
+     * 매칭 Cap ID, 없으면 null
+     */
+    capId: string | null;
+};
+
+export type OnchainBalance = {
+    /**
+     * SUI 잔액(MIST, u64 → string)
+     */
+    mist: string;
+};
+
+export type OnchainRsvpEvent = {
+    weddingId: string;
+    submitter: string;
+    recipientSlot: number;
+    attendance: number;
+    companionCount: number;
+    meal: number;
+    submittedAt: number;
+};
+
+export type OnchainActionLogged = {
+    eventId: string;
+    actionType: number;
+    actor: string;
+    target?: string | null;
+    roleId: number;
+    amount: number;
+    ts: number;
+};
+
+export type OnchainEventCreated = {
+    eventId: string;
+    eventType: number;
+    creator: string;
+};
+
+export type OnchainParticipated = {
+    eventId: string;
+    participant: string;
+    roleId: number;
+};
+
+export type OnchainSignal = {
+    eventId: string;
+    kind: number;
+    resourceId: number;
+    source: number;
+    from: string;
+    to: string;
+    magnitude: number;
+    ts: number;
+};
+
+export type OnchainMoiCreated = {
+    moiId: string;
+    owner: string;
+};
+
+export type OnchainDiscoveredUser = {
+    address: string;
+    moiId: string;
+    sharedEventIds: Array<string>;
+    mutualCount: number;
+    degree: number;
+};
+
+export type OnchainGiftSent = {
+    itemId: string;
+    itemName: string;
+    from: string;
+    to: string;
+};
+
+export type OnchainIumRequested = {
+    eventId: string;
+    initiator: string;
+    toUser: string;
+};
+
+export type OnchainIumAccepted = {
+    eventId: string;
+    initiator: string;
+    receiver: string;
+};
+
+export type OnchainOwnedIumRequest = {
+    requestId: string;
+    eventId: string;
+    initiator: string;
+};
+
+export type OnchainNoteSent = {
+    noteBoxId: string;
+    from: string;
+    to: string;
+    blobId: string;
+    ts: number;
+};
+
+export type OnchainNoteBoxCreated = {
+    noteBoxId: string;
+    participantA: string;
+    participantB: string;
+};
+
+export type OnchainWeddingCreated = {
+    eventId: string;
+    weddingId: string;
+    loungeId: string;
+};
+
 export type LoungeCheckInWritable = {
     id: string;
     /**
@@ -5035,3 +5213,511 @@ export type AdminDeleteLoungeCheckInResponses = {
 };
 
 export type AdminDeleteLoungeCheckInResponse = AdminDeleteLoungeCheckInResponses[keyof AdminDeleteLoungeCheckInResponses];
+
+export type GetOnchainWeddingData = {
+    body?: never;
+    path: {
+        weddingId: string;
+    };
+    query?: never;
+    url: '/onchain/weddings/{weddingId}';
+};
+
+export type GetOnchainWeddingResponses = {
+    /**
+     * OK
+     */
+    200: OnchainWedding | null;
+};
+
+export type GetOnchainWeddingResponse = GetOnchainWeddingResponses[keyof GetOnchainWeddingResponses];
+
+export type GetOnchainWeddingLoungeData = {
+    body?: never;
+    path: {
+        loungeId: string;
+    };
+    query?: never;
+    url: '/onchain/lounges/{loungeId}';
+};
+
+export type GetOnchainWeddingLoungeResponses = {
+    /**
+     * OK
+     */
+    200: OnchainWeddingLounge | null;
+};
+
+export type GetOnchainWeddingLoungeResponse = GetOnchainWeddingLoungeResponses[keyof GetOnchainWeddingLoungeResponses];
+
+export type GetOnchainVaultData = {
+    body?: never;
+    path: {
+        vaultId: string;
+    };
+    query?: never;
+    url: '/onchain/vaults/{vaultId}';
+};
+
+export type GetOnchainVaultResponses = {
+    /**
+     * OK
+     */
+    200: OnchainCashGiftVault | null;
+};
+
+export type GetOnchainVaultResponse = GetOnchainVaultResponses[keyof GetOnchainVaultResponses];
+
+export type GetOnchainMoiData = {
+    body?: never;
+    path: {
+        moiId: string;
+    };
+    query?: never;
+    url: '/onchain/mois/{moiId}';
+};
+
+export type GetOnchainMoiResponses = {
+    /**
+     * OK
+     */
+    200: OnchainMoi | null;
+};
+
+export type GetOnchainMoiResponse = GetOnchainMoiResponses[keyof GetOnchainMoiResponses];
+
+export type GetOnchainInvitationData = {
+    body?: never;
+    path: {
+        invitationId: string;
+    };
+    query?: never;
+    url: '/onchain/invitations/{invitationId}';
+};
+
+export type GetOnchainInvitationResponses = {
+    /**
+     * OK
+     */
+    200: OnchainInvitation | null;
+};
+
+export type GetOnchainInvitationResponse = GetOnchainInvitationResponses[keyof GetOnchainInvitationResponses];
+
+export type GetOnchainMoiItemData = {
+    body?: never;
+    path: {
+        itemId: string;
+    };
+    query?: never;
+    url: '/onchain/moi-items/{itemId}';
+};
+
+export type GetOnchainMoiItemResponses = {
+    /**
+     * OK
+     */
+    200: OnchainMoiItem | null;
+};
+
+export type GetOnchainMoiItemResponse = GetOnchainMoiItemResponses[keyof GetOnchainMoiItemResponses];
+
+export type GetOnchainOwnedMoiIdsData = {
+    body?: never;
+    path: {
+        address: string;
+    };
+    query?: never;
+    url: '/onchain/addresses/{address}/moi-ids';
+};
+
+export type GetOnchainOwnedMoiIdsResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type GetOnchainOwnedMoiIdsResponse = GetOnchainOwnedMoiIdsResponses[keyof GetOnchainOwnedMoiIdsResponses];
+
+export type GetOnchainOwnedMoiItemsData = {
+    body?: never;
+    path: {
+        address: string;
+    };
+    query?: never;
+    url: '/onchain/addresses/{address}/moi-items';
+};
+
+export type GetOnchainOwnedMoiItemsResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainMoiItem>;
+};
+
+export type GetOnchainOwnedMoiItemsResponse = GetOnchainOwnedMoiItemsResponses[keyof GetOnchainOwnedMoiItemsResponses];
+
+export type GetOnchainOwnedWeddingCapsData = {
+    body?: never;
+    path: {
+        address: string;
+    };
+    query?: never;
+    url: '/onchain/addresses/{address}/wedding-caps';
+};
+
+export type GetOnchainOwnedWeddingCapsResponses = {
+    /**
+     * OK
+     */
+    200: Array<string>;
+};
+
+export type GetOnchainOwnedWeddingCapsResponse = GetOnchainOwnedWeddingCapsResponses[keyof GetOnchainOwnedWeddingCapsResponses];
+
+export type GetOnchainWeddingCapData = {
+    body?: never;
+    path: {
+        address: string;
+    };
+    query: {
+        weddingId: string;
+    };
+    url: '/onchain/addresses/{address}/wedding-cap';
+};
+
+export type GetOnchainWeddingCapResponses = {
+    /**
+     * OK
+     */
+    200: OnchainWeddingCap;
+};
+
+export type GetOnchainWeddingCapResponse = GetOnchainWeddingCapResponses[keyof GetOnchainWeddingCapResponses];
+
+export type GetOnchainParticipationData = {
+    body?: never;
+    path: {
+        address: string;
+    };
+    query: {
+        eventId: string;
+    };
+    url: '/onchain/addresses/{address}/participations';
+};
+
+export type GetOnchainParticipationResponses = {
+    /**
+     * OK
+     */
+    200: OnchainParticipation | null;
+};
+
+export type GetOnchainParticipationResponse = GetOnchainParticipationResponses[keyof GetOnchainParticipationResponses];
+
+export type GetOnchainAnyParticipationData = {
+    body?: never;
+    path: {
+        address: string;
+    };
+    query?: never;
+    url: '/onchain/addresses/{address}/any-participation';
+};
+
+export type GetOnchainAnyParticipationResponses = {
+    /**
+     * OK
+     */
+    200: OnchainParticipation | null;
+};
+
+export type GetOnchainAnyParticipationResponse = GetOnchainAnyParticipationResponses[keyof GetOnchainAnyParticipationResponses];
+
+export type GetOnchainOwnedIumRequestsData = {
+    body?: never;
+    path: {
+        address: string;
+    };
+    query?: never;
+    url: '/onchain/addresses/{address}/ium-requests';
+};
+
+export type GetOnchainOwnedIumRequestsResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainOwnedIumRequest>;
+};
+
+export type GetOnchainOwnedIumRequestsResponse = GetOnchainOwnedIumRequestsResponses[keyof GetOnchainOwnedIumRequestsResponses];
+
+export type GetOnchainBalanceData = {
+    body?: never;
+    path: {
+        address: string;
+    };
+    query?: never;
+    url: '/onchain/addresses/{address}/balance';
+};
+
+export type GetOnchainBalanceResponses = {
+    /**
+     * OK
+     */
+    200: OnchainBalance;
+};
+
+export type GetOnchainBalanceResponse = GetOnchainBalanceResponses[keyof GetOnchainBalanceResponses];
+
+export type GetOnchainSignalsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/onchain/events/signals';
+};
+
+export type GetOnchainSignalsResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainSignal>;
+};
+
+export type GetOnchainSignalsResponse = GetOnchainSignalsResponses[keyof GetOnchainSignalsResponses];
+
+export type GetOnchainParticipatedData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/onchain/events/participated';
+};
+
+export type GetOnchainParticipatedResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainParticipated>;
+};
+
+export type GetOnchainParticipatedResponse = GetOnchainParticipatedResponses[keyof GetOnchainParticipatedResponses];
+
+export type GetOnchainEventCreatedData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/onchain/events/event-created';
+};
+
+export type GetOnchainEventCreatedResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainEventCreated>;
+};
+
+export type GetOnchainEventCreatedResponse = GetOnchainEventCreatedResponses[keyof GetOnchainEventCreatedResponses];
+
+export type GetOnchainActionLoggedData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/onchain/events/action-logged';
+};
+
+export type GetOnchainActionLoggedResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainActionLogged>;
+};
+
+export type GetOnchainActionLoggedResponse = GetOnchainActionLoggedResponses[keyof GetOnchainActionLoggedResponses];
+
+export type GetOnchainMoiCreatedData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/onchain/events/moi-created';
+};
+
+export type GetOnchainMoiCreatedResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainMoiCreated>;
+};
+
+export type GetOnchainMoiCreatedResponse = GetOnchainMoiCreatedResponses[keyof GetOnchainMoiCreatedResponses];
+
+export type GetOnchainGiftSentData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/onchain/events/gift-sent';
+};
+
+export type GetOnchainGiftSentResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainGiftSent>;
+};
+
+export type GetOnchainGiftSentResponse = GetOnchainGiftSentResponses[keyof GetOnchainGiftSentResponses];
+
+export type GetOnchainIumRequestedData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/onchain/events/ium-requested';
+};
+
+export type GetOnchainIumRequestedResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainIumRequested>;
+};
+
+export type GetOnchainIumRequestedResponse = GetOnchainIumRequestedResponses[keyof GetOnchainIumRequestedResponses];
+
+export type GetOnchainIumAcceptedData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/onchain/events/ium-accepted';
+};
+
+export type GetOnchainIumAcceptedResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainIumAccepted>;
+};
+
+export type GetOnchainIumAcceptedResponse = GetOnchainIumAcceptedResponses[keyof GetOnchainIumAcceptedResponses];
+
+export type GetOnchainRsvpData = {
+    body?: never;
+    path?: never;
+    query: {
+        weddingId: string;
+    };
+    url: '/onchain/events/rsvp';
+};
+
+export type GetOnchainRsvpResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainRsvpEvent>;
+};
+
+export type GetOnchainRsvpResponse = GetOnchainRsvpResponses[keyof GetOnchainRsvpResponses];
+
+export type GetOnchainNotesSentData = {
+    body?: never;
+    path?: never;
+    query: {
+        address: string;
+    };
+    url: '/onchain/events/notes-sent';
+};
+
+export type GetOnchainNotesSentResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainNoteSent>;
+};
+
+export type GetOnchainNotesSentResponse = GetOnchainNotesSentResponses[keyof GetOnchainNotesSentResponses];
+
+export type GetOnchainNoteBoxesData = {
+    body?: never;
+    path?: never;
+    query: {
+        address: string;
+    };
+    url: '/onchain/events/note-boxes';
+};
+
+export type GetOnchainNoteBoxesResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainNoteBoxCreated>;
+};
+
+export type GetOnchainNoteBoxesResponse = GetOnchainNoteBoxesResponses[keyof GetOnchainNoteBoxesResponses];
+
+export type GetOnchainWeddingsCreatedData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/onchain/events/weddings-created';
+};
+
+export type GetOnchainWeddingsCreatedResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainWeddingCreated>;
+};
+
+export type GetOnchainWeddingsCreatedResponse = GetOnchainWeddingsCreatedResponses[keyof GetOnchainWeddingsCreatedResponses];
+
+export type GetOnchainDiscoverData = {
+    body?: never;
+    path?: never;
+    query: {
+        address: string;
+    };
+    url: '/onchain/discover';
+};
+
+export type GetOnchainDiscoverResponses = {
+    /**
+     * OK
+     */
+    200: Array<OnchainDiscoveredUser>;
+};
+
+export type GetOnchainDiscoverResponse = GetOnchainDiscoverResponses[keyof GetOnchainDiscoverResponses];
+
+export type GetOnchainInvitationForWeddingData = {
+    body?: never;
+    path: {
+        weddingId: string;
+    };
+    query?: never;
+    url: '/onchain/weddings/{weddingId}/invitation';
+};
+
+export type GetOnchainInvitationForWeddingResponses = {
+    /**
+     * OK
+     */
+    200: OnchainInvitation | null;
+};
+
+export type GetOnchainInvitationForWeddingResponse = GetOnchainInvitationForWeddingResponses[keyof GetOnchainInvitationForWeddingResponses];
+
+export type InvalidateOnchainCacheData = {
+    body?: never;
+    path?: never;
+    query: {
+        address: string;
+    };
+    url: '/onchain/cache/invalidate';
+};
+
+export type InvalidateOnchainCacheResponses = {
+    /**
+     * Invalidated
+     */
+    204: void;
+};
+
+export type InvalidateOnchainCacheResponse = InvalidateOnchainCacheResponses[keyof InvalidateOnchainCacheResponses];

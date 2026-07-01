@@ -14,6 +14,7 @@
 - [API_CONVENTIONS.md](API_CONVENTIONS.md) — API 설계 컨벤션 6개 항목 (복합 생성, 비로그인 분리, pagination, 에러, URL, security)
 - [API_CONSUMER_NEEDS.md](API_CONSUMER_NEEDS.md) — 소비자별(dibang-wedding, guest-web) API 필요 목록
 - [API_ENDPOINT_MAP.md](API_ENDPOINT_MAP.md) — 전체 58개 엔드포인트 매핑 (method, path, operationId, 인증, 소비자). spec operationId 기준 단일 진실원 (R7 동기화, 2026-05-18)
+- [2026-07-01-onchain-query-go-proxy/](2026-07-01-onchain-query-go-proxy/SUMMARY.md) — 온체인 읽기 24+신규4종을 브라우저 직접→Go API GraphQL 프록시로 이관 (CORS·rate-limit·JSON-RPC sunset 해소). INV·BE·FE 설계 + 전 게이트(P0-V·P1-V·P2-V) 통과. **구현 완료·로컬검증, 미배포**
 
 ## 기술 스택
 - [tech-stack-map.html](tech-stack-map.html) — v3 기술 스택 다이어그램 (브라우저에서 열기)

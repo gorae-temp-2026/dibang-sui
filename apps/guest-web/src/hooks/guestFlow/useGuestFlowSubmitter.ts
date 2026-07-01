@@ -16,9 +16,10 @@ import { useCreateGuestbookEntryMutation } from '../../queries/guestFlow/useCrea
 import { useCreateGuestbookMessageMutation } from '../../queries/guestFlow/useCreateGuestbookMessageMutation';
 import { useCreateCashGiftMutation } from '../../queries/guestFlow/useCreateCashGiftMutation';
 import { useZkLogin } from '../../providers/ZkLoginProvider';
-import { buildParticipateTx, buildGiveTx, buildWriteTx, buildWriteMessageTx, walrusStoreString, walrusStorePIIString, getWedding, getParticipationForEvent, createJsonRpcClient, configureSui, ONCHAIN_BLOB_EPOCHS, type SuiNetwork } from '@gorae/sui-sdk';
+import { buildParticipateTx, buildGiveTx, buildWriteTx, buildWriteMessageTx, walrusStoreString, walrusStorePIIString, ONCHAIN_BLOB_EPOCHS } from '@gorae/sui-sdk';
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/*).
+import { getOnchainWedding, getOnchainParticipation } from '@gorae/contracts/sdk.gen';
 import type { RecipientSlot } from '../../machines/guestFlow.machine';
-import { env } from '../../env';
 
 type GuestFlowState = StateFrom<typeof guestFlowMachine>;
 type Send = (event: GuestFlowEvent) => void;
@@ -54,13 +55,13 @@ export function useGuestFlowSubmitter(
 
   // 참가 보장 — 기존 Participation이 있으면 그 ID, 없으면 1회만 participate 후 ID. 동시 호출은 같은 promise 공유.
   const ensureParticipation = useCallback(
-    (client: ReturnType<typeof createJsonRpcClient>, eventId: string, address: string): Promise<string | null> => {
+    (eventId: string, address: string): Promise<string | null> => {
       if (!participateRef.current) {
         const p = (async () => {
-          let pid = (await getParticipationForEvent(client, address, eventId))?.id ?? null;
+          let pid = (await getOnchainParticipation({ path: { address }, query: { eventId }, throwOnError: true })).data?.id ?? null;
           if (!pid) {
             await zk.executeOnchain(buildParticipateTx({ eventId, roleId: 1 }));
-            pid = (await getParticipationForEvent(client, address, eventId))?.id ?? null;
+            pid = (await getOnchainParticipation({ path: { address }, query: { eventId }, throwOnError: true })).data?.id ?? null;
           }
           return pid;
         })();
@@ -127,14 +128,12 @@ export function useGuestFlowSubmitter(
           const suiWeddingId = wedding?.sui_wedding_id ?? null;
           const address = zk.address;
           if (zk.isAuthenticated && address && suiWeddingId) {
-            const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
-            if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID });
-            const client = createJsonRpcClient(net);
-            getWedding(client, suiWeddingId)
-              .then(async (w) => {
+            getOnchainWedding({ path: { weddingId: suiWeddingId }, throwOnError: true })
+              .then(async (res) => {
+                const w = res.data;
                 if (!w?.eventId || !w?.vaultId) return;
                 // 1) participate(단일 보장 — done 경로와 공유)
-                const partId = await ensureParticipation(client, w.eventId, address);
+                const partId = await ensureParticipation(w.eventId, address);
                 if (!partId) return;
                 // 2) give(SUI 전송)
                 const amount = BigInt(c.amount) * 1_000_000n; // 원 → MIST(데모 환산)
@@ -185,14 +184,11 @@ export function useGuestFlowSubmitter(
     const pending = state.context.pendingMessage;
     const hasBody = !!pending && pending !== HEART_SENTINEL;
     const slotCode = SLOT_CODE[state.context.recipientSlot ?? 'groom'] ?? 0;
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
-    if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID });
-    const client = createJsonRpcClient(network);
     (async () => {
-      const w = await getWedding(client, suiWeddingId);
+      const w = (await getOnchainWedding({ path: { weddingId: suiWeddingId }, throwOnError: true })).data;
       if (!w?.eventId) return;
       // 1) participate(단일 보장 — give 경로와 공유, 이중 발행 방지)
-      const partId = await ensureParticipation(client, w.eventId, address);
+      const partId = await ensureParticipation(w.eventId, address);
       if (!partId) return;
       // 2) 방명록 작성 → 온체인 기록. 본문·이름 모두 Walrus blobId 참조만 온체인에 싣는다(평문 금지, VISION §7).
       if (hasBody) {

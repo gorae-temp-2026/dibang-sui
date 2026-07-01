@@ -61,6 +61,12 @@ type Server struct {
 	// Consents: onboarding 동의 게이트 + 마케팅 토글 (S-01, S-04).
 	// main.go에서 setter로 주입 (_scenario/2026-05-26-user-consent-onboarding/SCENARIOS.md).
 	Consents ConsentService
+
+	// Onchain: /onchain/* 읽기 프록시. Sui GraphQL 업스트림 리더(+캐시 래핑).
+	// main.go setter로 주입 (_architecture/2026-07-01-onchain-query-go-proxy/).
+	Onchain OnchainReader
+	// OnchainPkg: 이벤트/타입 필터용 original package id(config.SuiOriginalPackageID).
+	OnchainPkg string
 }
 
 var _ StrictServerInterface = (*Server)(nil)

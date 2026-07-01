@@ -3,12 +3,12 @@ import { useMachine } from '@xstate/react'
 import { fromPromise } from 'xstate'
 import { useQuery } from '@tanstack/react-query'
 import { getWeddingOptions } from '@gorae/contracts/@tanstack/react-query.gen'
-import { createJsonRpcClient, getWeddingCapForWedding, type SuiNetwork } from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접 → Go API 프록시. getOnchainWeddingCap은 {capId} 객체 반환.
+import { getOnchainWeddingCap } from '@gorae/contracts/sdk.gen'
 import { onchainTxMachine } from '../../machines/onchainTx.machine'
 import { useOnchainHostActions } from '../../hooks/useOnchainHostActions'
 import { useOnchainVault } from '../../hooks/useOnchainWedding'
 import { useZkLogin } from '../../providers/ZkLoginProvider'
-import { env } from '../../env'
 import { useT, translate, useLangStore } from '../../lib/i18n'
 
 const lang = () => useLangStore.getState().lang
@@ -39,9 +39,7 @@ export function WithdrawSection({ weddingId }: { weddingId: string }) {
             const sui = parseFloat(amount)
             if (!Number.isFinite(sui) || sui <= 0) throw new Error(translate(lang(), 'myWedding.withdraw.errAmount'))
             const mist = BigInt(Math.round(sui * Number(MIST_PER_SUI)))
-            const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-            const client = createJsonRpcClient(network)
-            const capId = await getWeddingCapForWedding(client, address, suiWeddingId)
+            const capId = (await getOnchainWeddingCap({ path: { address }, query: { weddingId: suiWeddingId }, throwOnError: true })).data?.capId
             if (!capId) throw new Error(translate(lang(), 'myWedding.withdraw.errNoCap'))
             return withdraw({ vaultId: suiVaultId, capId, amount: mist })
           }),

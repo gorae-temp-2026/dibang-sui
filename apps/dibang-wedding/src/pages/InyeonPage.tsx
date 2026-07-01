@@ -4,6 +4,8 @@
 // 받은이음·채팅 화면은 스텁(TODO), 프로필 상세는 ⑤ 공유 프로필 컴포넌트에서 본구현 예정.
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useMachine, useSelector } from '@xstate/react'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/*). (TX 빌더·getConfig는 SDK 유지)
+import { getOnchainIumAccepted, getOnchainParticipation } from '@gorae/contracts/sdk.gen'
 import { fromPromise } from 'xstate'
 import { normalizeSuiAddress } from '@mysten/sui/utils'
 import { giftActor } from '../machines/gift.machine'
@@ -219,18 +221,17 @@ export function InyeonPage() {
               refetchBalance()
             }}
             onSendOnchainGift={async (recipientAddress) => {
-              const { createJsonRpcClient, getParticipationForEvent, getIumAcceptedEvents, buildPurchaseAndGiftTx, getConfig } = await import('@gorae/sui-sdk')
+              const { buildPurchaseAndGiftTx, getConfig } = await import('@gorae/sui-sdk')
               const config = getConfig()
-              const client = createJsonRpcClient((config.network as 'testnet') ?? 'testnet')
               const addr = zk.address
               if (!addr) throw new Error('로그인 필요')
-              const accepted = await getIumAcceptedEvents(client)
+              const accepted = (await getOnchainIumAccepted({ throwOnError: true })).data ?? []
               const myMatch = accepted.find(a =>
                 (a.initiator === addr && a.receiver === recipientAddress) ||
                 (a.receiver === addr && a.initiator === recipientAddress)
               )
               if (!myMatch) throw new Error('이음 매칭을 찾을 수 없음')
-              const part = await getParticipationForEvent(client, addr, myMatch.eventId)
+              const part = (await getOnchainParticipation({ path: { address: addr }, query: { eventId: myMatch.eventId }, throwOnError: true })).data
               if (!part) throw new Error('Participation을 찾을 수 없음')
               // 한 PTB: purchase_item → gift (구매+선물 동시)
               const tx = buildPurchaseAndGiftTx({

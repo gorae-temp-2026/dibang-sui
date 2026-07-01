@@ -1,20 +1,18 @@
 /**
  * 쪽지(DM) hook — Walrus 저장 + Sui NoteSent 이벤트로 비동기 쪽지.
+ * 온체인 읽기는 Go API 프록시(/onchain/*), TX·Walrus는 SDK 유지.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  createJsonRpcClient,
   walrusStore,
   walrusFetch,
   buildCreateNoteBoxTx,
   buildSendNoteTx,
-  getNoteSentEvents,
-  getAnyParticipation,
-  type SuiNetwork,
-  moveTarget,
 } from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시.
+import { getOnchainNotesSent, getOnchainAnyParticipation, getOnchainNoteBoxes } from '@gorae/contracts/sdk.gen'
+import type { OnchainNoteBoxCreated } from '@gorae/contracts'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-import { env } from '../env'
 import { translate, useLangStore } from '../lib/i18n'
 
 const lang = () => useLangStore.getState().lang
@@ -31,14 +29,12 @@ export function useNotes() {
   const { address, executeOnchain } = useZkLogin()
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(false)
-  const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
 
   const fetchNotes = useCallback(async () => {
     if (!address) return
     setLoading(true)
     try {
-      const client = createJsonRpcClient(network)
-      const events = await getNoteSentEvents(client, address)
+      const events = (await getOnchainNotesSent({ query: { address }, throwOnError: true })).data ?? []
       const decoded = await Promise.all(
         events.map(async (e) => {
           try {
@@ -55,7 +51,7 @@ export function useNotes() {
     } finally {
       setLoading(false)
     }
-  }, [address, network])
+  }, [address])
 
   useEffect(() => { fetchNotes() }, [fetchNotes])
 
@@ -67,50 +63,47 @@ export function useNotes() {
 
   const noteBoxCache = useRef<Record<string, string>>({})
 
+  const matchBox = useCallback(
+    (boxes: OnchainNoteBoxCreated[], to: string): string | null => {
+      const found = boxes.find(
+        (b) => (b.participantA === address && b.participantB === to) || (b.participantA === to && b.participantB === address),
+      )
+      return found ? found.noteBoxId : null
+    },
+    [address],
+  )
+
   const findOrCreateNoteBox = useCallback(
     async (to: string): Promise<string> => {
       if (noteBoxCache.current[to]) return noteBoxCache.current[to]
-      const client = createJsonRpcClient(network)
-      const events = await client.queryEvents({
-        query: { MoveEventType: moveTarget('note', 'NoteBoxCreated') },
-        limit: 50,
-      })
-      for (const e of events.data) {
-        const p = e.parsedJson as Record<string, unknown>
-        const a = String(p.participant_a ?? '')
-        const b = String(p.participant_b ?? '')
-        if ((a === address && b === to) || (a === to && b === address)) {
-          const boxId = String(p.note_box_id ?? '')
-          noteBoxCache.current[to] = boxId
-          return boxId
-        }
+      // 서버가 participant_a/b==address 로 필터한 NoteBoxCreated 목록.
+      const boxes = (await getOnchainNoteBoxes({ query: { address: address ?? '' }, throwOnError: true })).data ?? []
+      const existing = matchBox(boxes, to)
+      if (existing) {
+        noteBoxCache.current[to] = existing
+        return existing
       }
       await executeOnchain(buildCreateNoteBoxTx({ other: to }))
-      const events2 = await client.queryEvents({
-        query: { MoveEventType: moveTarget('note', 'NoteBoxCreated') },
-        limit: 50,
-        order: 'descending',
-      })
-      for (const e of events2.data) {
-        const p = e.parsedJson as Record<string, unknown>
-        const a = String(p.participant_a ?? '')
-        const b = String(p.participant_b ?? '')
-        if ((a === address && b === to) || (a === to && b === address)) {
-          const boxId = String(p.note_box_id ?? '')
+      // read-after-write: 생성 직후 인덱서 지연 + 캐시 → 재조회 재시도(PLAN-V 지적).
+      // (P1-11의 tx-success 무효화가 서버 캐시를 비우지만 인덱서 반영 윈도가 있어 폴링.)
+      for (let attempt = 0; attempt < 5; attempt++) {
+        await new Promise((r) => setTimeout(r, 800))
+        const retry = (await getOnchainNoteBoxes({ query: { address: address ?? '' }, throwOnError: true })).data ?? []
+        const boxId = matchBox(retry, to)
+        if (boxId) {
           noteBoxCache.current[to] = boxId
           return boxId
         }
       }
       throw new Error(translate(lang(), 'note.noteBoxIdMissing'))
     },
-    [address, network, executeOnchain],
+    [address, executeOnchain, matchBox],
   )
 
   const sendNote = useCallback(
     async (to: string, text: string) => {
       if (!address) throw new Error(translate(lang(), 'common.errNeedLogin'))
-      const client = createJsonRpcClient(network)
-      const part = await getAnyParticipation(client, address)
+      const part = (await getOnchainAnyParticipation({ path: { address }, throwOnError: true })).data
       if (!part?.id) throw new Error('참가 정보 없음')
       const boxId = await findOrCreateNoteBox(to)
       const blob = new TextEncoder().encode(text)
@@ -119,7 +112,7 @@ export function useNotes() {
       await executeOnchain(buildSendNoteTx({ noteBoxId: boxId, participationId: part.id, to, blobId: blobIdBytes }))
       await fetchNotes()
     },
-    [address, network, executeOnchain, fetchNotes, findOrCreateNoteBox],
+    [address, executeOnchain, fetchNotes, findOrCreateNoteBox],
   )
 
   return { notes, loading, sendNote, refetch: fetchNotes }

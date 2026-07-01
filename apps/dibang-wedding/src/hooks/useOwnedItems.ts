@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
-import { createJsonRpcClient, getOwnedMoiItems, type MoiItemOnChain, type SuiNetwork } from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/addresses/{address}/moi-items).
+import { getOnchainOwnedMoiItems } from '@gorae/contracts/sdk.gen'
+import type { OnchainMoiItem } from '@gorae/contracts'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-import { env } from '../env'
 
 export function useOwnedItems() {
   const { address } = useZkLogin()
-  const [items, setItems] = useState<MoiItemOnChain[]>([])
+  const [items, setItems] = useState<OnchainMoiItem[]>([])
   const [loading, setLoading] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -14,10 +15,8 @@ export function useOwnedItems() {
   useEffect(() => {
     if (!address) return
     setLoading(true)
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    const client = createJsonRpcClient(network)
-    getOwnedMoiItems(client, address)
-      .then(setItems)
+    getOnchainOwnedMoiItems({ path: { address }, throwOnError: true })
+      .then((res) => setItems(res.data ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [address, refreshKey])

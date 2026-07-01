@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AcceptHostInviteData, AcceptHostInviteErrors, AcceptHostInviteResponses, AdminClearWeddingHostSlotData, AdminClearWeddingHostSlotErrors, AdminClearWeddingHostSlotResponses, AdminCreateHostInviteData, AdminCreateHostInviteErrors, AdminCreateHostInviteResponses, AdminDeleteCashGiftData, AdminDeleteCashGiftErrors, AdminDeleteCashGiftResponses, AdminDeleteGuestbookEntryData, AdminDeleteGuestbookEntryErrors, AdminDeleteGuestbookEntryResponses, AdminDeleteGuestbookMessageData, AdminDeleteGuestbookMessageErrors, AdminDeleteGuestbookMessageResponses, AdminDeleteHostInviteData, AdminDeleteHostInviteErrors, AdminDeleteHostInviteResponses, AdminDeleteLoungeCheckInData, AdminDeleteLoungeCheckInErrors, AdminDeleteLoungeCheckInResponses, AdminDeleteMemoryBookPhotoData, AdminDeleteMemoryBookPhotoErrors, AdminDeleteMemoryBookPhotoResponses, AdminDeleteMemoryData, AdminDeleteMemoryErrors, AdminDeleteMemoryResponses, AdminDeleteMobileInvitationData, AdminDeleteMobileInvitationErrors, AdminDeleteMobileInvitationResponses, AdminDeleteRsvpData, AdminDeleteRsvpErrors, AdminDeleteRsvpResponses, AdminDeleteSharedPhotoData, AdminDeleteSharedPhotoErrors, AdminDeleteSharedPhotoResponses, AdminDeleteWeddingData, AdminDeleteWeddingErrors, AdminDeleteWeddingResponses, AdminMoveWeddingHostSlotData, AdminMoveWeddingHostSlotErrors, AdminMoveWeddingHostSlotResponses, AdminUpdateCashGiftData, AdminUpdateCashGiftErrors, AdminUpdateCashGiftResponses, AdminUpdateGuestbookEntryData, AdminUpdateGuestbookEntryErrors, AdminUpdateGuestbookEntryResponses, AdminUpdateGuestbookMessageData, AdminUpdateGuestbookMessageErrors, AdminUpdateGuestbookMessageResponses, AdminUpdateHostInviteData, AdminUpdateHostInviteErrors, AdminUpdateHostInviteResponses, AdminUpdateLoungeData, AdminUpdateLoungeErrors, AdminUpdateLoungeResponses, AdminUpdateMemoryData, AdminUpdateMemoryErrors, AdminUpdateMemoryResponses, AdminUpdateMobileInvitationData, AdminUpdateMobileInvitationErrors, AdminUpdateMobileInvitationResponses, AdminUpdateRsvpData, AdminUpdateRsvpErrors, AdminUpdateRsvpResponses, AdminUpdateUserData, AdminUpdateUserErrors, AdminUpdateUserResponses, AdminUpdateWeddingData, AdminUpdateWeddingErrors, AdminUpdateWeddingResponses, CancelHostInviteData, CancelHostInviteErrors, CancelHostInviteResponses, ClaimGuestbookEntryData, ClaimGuestbookEntryErrors, ClaimGuestbookEntryResponses, CreateAnnouncementData, CreateAnnouncementErrors, CreateAnnouncementResponses, CreateCashGiftData, CreateCashGiftErrors, CreateCashGiftResponses, CreateConsentsData, CreateConsentsErrors, CreateConsentsResponses, CreateFeedCommentData, CreateFeedCommentErrors, CreateFeedCommentResponses, CreateGuestbookEntryData, CreateGuestbookEntryErrors, CreateGuestbookEntryResponses, CreateGuestbookMessageData, CreateGuestbookMessageErrors, CreateGuestbookMessageResponses, CreateHostInviteData, CreateHostInviteErrors, CreateHostInviteResponses, CreateInteriorItemData, CreateInteriorItemErrors, CreateInteriorItemResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateIumData, CreateIumErrors, CreateIumResponses, CreateLoungeCheckInData, CreateLoungeCheckInErrors, CreateLoungeCheckInResponses, CreateMemoryData, CreateMemoryErrors, CreateMemoryResponses, CreateMobileInvitationPhotoData, CreateMobileInvitationPhotoErrors, CreateMobileInvitationPhotoResponses, CreatePresignedUploadData, CreatePresignedUploadErrors, CreatePresignedUploadResponses, CreateRsvpData, CreateRsvpErrors, CreateRsvpResponses, CreateSharedPhotoData, CreateSharedPhotoErrors, CreateSharedPhotoResponses, CreateWeddingData, CreateWeddingErrors, CreateWeddingResponses, DeleteAnnouncementData, DeleteAnnouncementErrors, DeleteAnnouncementResponses, DeleteCashGiftData, DeleteCashGiftErrors, DeleteCashGiftResponses, DeleteFeedCommentData, DeleteFeedCommentErrors, DeleteFeedCommentResponses, DeleteInvitationData, DeleteInvitationErrors, DeleteInvitationResponses, DeleteIumData, DeleteIumErrors, DeleteIumResponses, DeleteMemoryData, DeleteMemoryErrors, DeleteMemoryResponses, DownloadSharedPhotosZipData, DownloadSharedPhotosZipErrors, DownloadSharedPhotosZipResponses, EquipMoiItemData, EquipMoiItemErrors, EquipMoiItemResponses, GetAdminDashboardHealthData, GetAdminDashboardHealthErrors, GetAdminDashboardHealthResponses, GetAdminDashboardRecentData, GetAdminDashboardRecentErrors, GetAdminDashboardRecentResponses, GetAdminDashboardStatsData, GetAdminDashboardStatsErrors, GetAdminDashboardStatsResponses, GetAdminUserData, GetAdminUserErrors, GetAdminUserResponses, GetCashGiftsSummaryData, GetCashGiftsSummaryErrors, GetCashGiftsSummaryResponses, GetGatherPlaceData, GetGatherPlaceErrors, GetGatherPlaceResponses, GetHostInviteData, GetHostInviteErrors, GetHostInviteResponses, GetInvitationData, GetInvitationErrors, GetInvitationResponses, GetLoungeData, GetLoungeErrors, GetLoungeResponses, GetMeData, GetMeErrors, GetMeResponses, GetMoiData, GetMoiErrors, GetMoiResponses, GetMyGuestbookEntryData, GetMyGuestbookEntryErrors, GetMyGuestbookEntryResponses, GetMyLoungeCheckInData, GetMyLoungeCheckInErrors, GetMyLoungeCheckInResponses, GetMyMoiData, GetMyMoiErrors, GetMyMoiResponses, GetMyParticipatedWeddingsData, GetMyParticipatedWeddingsErrors, GetMyParticipatedWeddingsResponses, GetMyWeddingsData, GetMyWeddingsErrors, GetMyWeddingsResponses, GetUserData, GetUserErrors, GetUserResponses, GetWeddingData, GetWeddingErrors, GetWeddingMemoryBookData, GetWeddingMemoryBookErrors, GetWeddingMemoryBookResponses, GetWeddingResponses, GetWeddingSharedPhotoGroupsData, GetWeddingSharedPhotoGroupsErrors, GetWeddingSharedPhotoGroupsResponses, HeartInvitationData, HeartInvitationResponses, HostCreateCashGiftData, HostCreateCashGiftErrors, HostCreateCashGiftResponses, ListAdminUserActivitiesData, ListAdminUserActivitiesErrors, ListAdminUserActivitiesResponses, ListAdminUsersData, ListAdminUsersErrors, ListAdminUsersResponses, ListAnnouncementsData, ListAnnouncementsErrors, ListAnnouncementsResponses, ListCashGiftsData, ListCashGiftsErrors, ListCashGiftsResponses, ListFeedCommentsData, ListFeedCommentsErrors, ListFeedCommentsResponses, ListFeedData, ListFeedErrors, ListFeedResponses, ListGuestbookEntriesData, ListGuestbookEntriesErrors, ListGuestbookEntriesResponses, ListHostInvitesData, ListHostInvitesErrors, ListHostInvitesResponses, ListInteriorItemsData, ListInteriorItemsErrors, ListInteriorItemsResponses, ListLoungeCheckInsData, ListLoungeCheckInsErrors, ListLoungeCheckInsResponses, ListMemoriesData, ListMemoriesErrors, ListMemoriesResponses, ListMobileInvitationPhotosData, ListMobileInvitationPhotosErrors, ListMobileInvitationPhotosResponses, ListMyIumsData, ListMyIumsErrors, ListMyIumsResponses, ListMyMoiItemsData, ListMyMoiItemsErrors, ListMyMoiItemsResponses, ListRsvpsData, ListRsvpsErrors, ListRsvpsResponses, ListSharedPhotosData, ListSharedPhotosErrors, ListSharedPhotosResponses, PlaceInteriorItemData, PlaceInteriorItemErrors, PlaceInteriorItemResponses, RecordGuestbookMessageViewData, RecordGuestbookMessageViewErrors, RecordGuestbookMessageViewResponses, ReplaceWeddingMemoryBookPhotosData, ReplaceWeddingMemoryBookPhotosErrors, ReplaceWeddingMemoryBookPhotosResponses, SendMoiItemData, SendMoiItemErrors, SendMoiItemResponses, ShareInvitationData, ShareInvitationErrors, ShareInvitationResponses, ToggleFeedHeartData, ToggleFeedHeartErrors, ToggleFeedHeartResponses, UnequipMoiItemData, UnequipMoiItemErrors, UnequipMoiItemResponses, UnplaceInteriorItemData, UnplaceInteriorItemErrors, UnplaceInteriorItemResponses, UpdateAnnouncementData, UpdateAnnouncementErrors, UpdateAnnouncementResponses, UpdateCashGiftData, UpdateCashGiftErrors, UpdateCashGiftResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMarketingConsentData, UpdateMarketingConsentErrors, UpdateMarketingConsentResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateWeddingData, UpdateWeddingErrors, UpdateWeddingResponses, UpdateWeddingSuiIdsData, UpdateWeddingSuiIdsErrors, UpdateWeddingSuiIdsResponses } from './types.gen';
+import type { AcceptHostInviteData, AcceptHostInviteErrors, AcceptHostInviteResponses, AdminClearWeddingHostSlotData, AdminClearWeddingHostSlotErrors, AdminClearWeddingHostSlotResponses, AdminCreateHostInviteData, AdminCreateHostInviteErrors, AdminCreateHostInviteResponses, AdminDeleteCashGiftData, AdminDeleteCashGiftErrors, AdminDeleteCashGiftResponses, AdminDeleteGuestbookEntryData, AdminDeleteGuestbookEntryErrors, AdminDeleteGuestbookEntryResponses, AdminDeleteGuestbookMessageData, AdminDeleteGuestbookMessageErrors, AdminDeleteGuestbookMessageResponses, AdminDeleteHostInviteData, AdminDeleteHostInviteErrors, AdminDeleteHostInviteResponses, AdminDeleteLoungeCheckInData, AdminDeleteLoungeCheckInErrors, AdminDeleteLoungeCheckInResponses, AdminDeleteMemoryBookPhotoData, AdminDeleteMemoryBookPhotoErrors, AdminDeleteMemoryBookPhotoResponses, AdminDeleteMemoryData, AdminDeleteMemoryErrors, AdminDeleteMemoryResponses, AdminDeleteMobileInvitationData, AdminDeleteMobileInvitationErrors, AdminDeleteMobileInvitationResponses, AdminDeleteRsvpData, AdminDeleteRsvpErrors, AdminDeleteRsvpResponses, AdminDeleteSharedPhotoData, AdminDeleteSharedPhotoErrors, AdminDeleteSharedPhotoResponses, AdminDeleteWeddingData, AdminDeleteWeddingErrors, AdminDeleteWeddingResponses, AdminMoveWeddingHostSlotData, AdminMoveWeddingHostSlotErrors, AdminMoveWeddingHostSlotResponses, AdminUpdateCashGiftData, AdminUpdateCashGiftErrors, AdminUpdateCashGiftResponses, AdminUpdateGuestbookEntryData, AdminUpdateGuestbookEntryErrors, AdminUpdateGuestbookEntryResponses, AdminUpdateGuestbookMessageData, AdminUpdateGuestbookMessageErrors, AdminUpdateGuestbookMessageResponses, AdminUpdateHostInviteData, AdminUpdateHostInviteErrors, AdminUpdateHostInviteResponses, AdminUpdateLoungeData, AdminUpdateLoungeErrors, AdminUpdateLoungeResponses, AdminUpdateMemoryData, AdminUpdateMemoryErrors, AdminUpdateMemoryResponses, AdminUpdateMobileInvitationData, AdminUpdateMobileInvitationErrors, AdminUpdateMobileInvitationResponses, AdminUpdateRsvpData, AdminUpdateRsvpErrors, AdminUpdateRsvpResponses, AdminUpdateUserData, AdminUpdateUserErrors, AdminUpdateUserResponses, AdminUpdateWeddingData, AdminUpdateWeddingErrors, AdminUpdateWeddingResponses, CancelHostInviteData, CancelHostInviteErrors, CancelHostInviteResponses, ClaimGuestbookEntryData, ClaimGuestbookEntryErrors, ClaimGuestbookEntryResponses, CreateAnnouncementData, CreateAnnouncementErrors, CreateAnnouncementResponses, CreateCashGiftData, CreateCashGiftErrors, CreateCashGiftResponses, CreateConsentsData, CreateConsentsErrors, CreateConsentsResponses, CreateFeedCommentData, CreateFeedCommentErrors, CreateFeedCommentResponses, CreateGuestbookEntryData, CreateGuestbookEntryErrors, CreateGuestbookEntryResponses, CreateGuestbookMessageData, CreateGuestbookMessageErrors, CreateGuestbookMessageResponses, CreateHostInviteData, CreateHostInviteErrors, CreateHostInviteResponses, CreateInteriorItemData, CreateInteriorItemErrors, CreateInteriorItemResponses, CreateInvitationData, CreateInvitationErrors, CreateInvitationResponses, CreateIumData, CreateIumErrors, CreateIumResponses, CreateLoungeCheckInData, CreateLoungeCheckInErrors, CreateLoungeCheckInResponses, CreateMemoryData, CreateMemoryErrors, CreateMemoryResponses, CreateMobileInvitationPhotoData, CreateMobileInvitationPhotoErrors, CreateMobileInvitationPhotoResponses, CreatePresignedUploadData, CreatePresignedUploadErrors, CreatePresignedUploadResponses, CreateRsvpData, CreateRsvpErrors, CreateRsvpResponses, CreateSharedPhotoData, CreateSharedPhotoErrors, CreateSharedPhotoResponses, CreateWeddingData, CreateWeddingErrors, CreateWeddingResponses, DeleteAnnouncementData, DeleteAnnouncementErrors, DeleteAnnouncementResponses, DeleteCashGiftData, DeleteCashGiftErrors, DeleteCashGiftResponses, DeleteFeedCommentData, DeleteFeedCommentErrors, DeleteFeedCommentResponses, DeleteInvitationData, DeleteInvitationErrors, DeleteInvitationResponses, DeleteIumData, DeleteIumErrors, DeleteIumResponses, DeleteMemoryData, DeleteMemoryErrors, DeleteMemoryResponses, DownloadSharedPhotosZipData, DownloadSharedPhotosZipErrors, DownloadSharedPhotosZipResponses, EquipMoiItemData, EquipMoiItemErrors, EquipMoiItemResponses, GetAdminDashboardHealthData, GetAdminDashboardHealthErrors, GetAdminDashboardHealthResponses, GetAdminDashboardRecentData, GetAdminDashboardRecentErrors, GetAdminDashboardRecentResponses, GetAdminDashboardStatsData, GetAdminDashboardStatsErrors, GetAdminDashboardStatsResponses, GetAdminUserData, GetAdminUserErrors, GetAdminUserResponses, GetCashGiftsSummaryData, GetCashGiftsSummaryErrors, GetCashGiftsSummaryResponses, GetGatherPlaceData, GetGatherPlaceErrors, GetGatherPlaceResponses, GetHostInviteData, GetHostInviteErrors, GetHostInviteResponses, GetInvitationData, GetInvitationErrors, GetInvitationResponses, GetLoungeData, GetLoungeErrors, GetLoungeResponses, GetMeData, GetMeErrors, GetMeResponses, GetMoiData, GetMoiErrors, GetMoiResponses, GetMyGuestbookEntryData, GetMyGuestbookEntryErrors, GetMyGuestbookEntryResponses, GetMyLoungeCheckInData, GetMyLoungeCheckInErrors, GetMyLoungeCheckInResponses, GetMyMoiData, GetMyMoiErrors, GetMyMoiResponses, GetMyParticipatedWeddingsData, GetMyParticipatedWeddingsErrors, GetMyParticipatedWeddingsResponses, GetMyWeddingsData, GetMyWeddingsErrors, GetMyWeddingsResponses, GetOnchainActionLoggedData, GetOnchainActionLoggedResponses, GetOnchainAnyParticipationData, GetOnchainAnyParticipationResponses, GetOnchainBalanceData, GetOnchainBalanceResponses, GetOnchainDiscoverData, GetOnchainDiscoverResponses, GetOnchainEventCreatedData, GetOnchainEventCreatedResponses, GetOnchainGiftSentData, GetOnchainGiftSentResponses, GetOnchainInvitationData, GetOnchainInvitationForWeddingData, GetOnchainInvitationForWeddingResponses, GetOnchainInvitationResponses, GetOnchainIumAcceptedData, GetOnchainIumAcceptedResponses, GetOnchainIumRequestedData, GetOnchainIumRequestedResponses, GetOnchainMoiCreatedData, GetOnchainMoiCreatedResponses, GetOnchainMoiData, GetOnchainMoiItemData, GetOnchainMoiItemResponses, GetOnchainMoiResponses, GetOnchainNoteBoxesData, GetOnchainNoteBoxesResponses, GetOnchainNotesSentData, GetOnchainNotesSentResponses, GetOnchainOwnedIumRequestsData, GetOnchainOwnedIumRequestsResponses, GetOnchainOwnedMoiIdsData, GetOnchainOwnedMoiIdsResponses, GetOnchainOwnedMoiItemsData, GetOnchainOwnedMoiItemsResponses, GetOnchainOwnedWeddingCapsData, GetOnchainOwnedWeddingCapsResponses, GetOnchainParticipatedData, GetOnchainParticipatedResponses, GetOnchainParticipationData, GetOnchainParticipationResponses, GetOnchainRsvpData, GetOnchainRsvpResponses, GetOnchainSignalsData, GetOnchainSignalsResponses, GetOnchainVaultData, GetOnchainVaultResponses, GetOnchainWeddingCapData, GetOnchainWeddingCapResponses, GetOnchainWeddingData, GetOnchainWeddingLoungeData, GetOnchainWeddingLoungeResponses, GetOnchainWeddingResponses, GetOnchainWeddingsCreatedData, GetOnchainWeddingsCreatedResponses, GetUserData, GetUserErrors, GetUserResponses, GetWeddingData, GetWeddingErrors, GetWeddingMemoryBookData, GetWeddingMemoryBookErrors, GetWeddingMemoryBookResponses, GetWeddingResponses, GetWeddingSharedPhotoGroupsData, GetWeddingSharedPhotoGroupsErrors, GetWeddingSharedPhotoGroupsResponses, HeartInvitationData, HeartInvitationResponses, HostCreateCashGiftData, HostCreateCashGiftErrors, HostCreateCashGiftResponses, InvalidateOnchainCacheData, InvalidateOnchainCacheResponses, ListAdminUserActivitiesData, ListAdminUserActivitiesErrors, ListAdminUserActivitiesResponses, ListAdminUsersData, ListAdminUsersErrors, ListAdminUsersResponses, ListAnnouncementsData, ListAnnouncementsErrors, ListAnnouncementsResponses, ListCashGiftsData, ListCashGiftsErrors, ListCashGiftsResponses, ListFeedCommentsData, ListFeedCommentsErrors, ListFeedCommentsResponses, ListFeedData, ListFeedErrors, ListFeedResponses, ListGuestbookEntriesData, ListGuestbookEntriesErrors, ListGuestbookEntriesResponses, ListHostInvitesData, ListHostInvitesErrors, ListHostInvitesResponses, ListInteriorItemsData, ListInteriorItemsErrors, ListInteriorItemsResponses, ListLoungeCheckInsData, ListLoungeCheckInsErrors, ListLoungeCheckInsResponses, ListMemoriesData, ListMemoriesErrors, ListMemoriesResponses, ListMobileInvitationPhotosData, ListMobileInvitationPhotosErrors, ListMobileInvitationPhotosResponses, ListMyIumsData, ListMyIumsErrors, ListMyIumsResponses, ListMyMoiItemsData, ListMyMoiItemsErrors, ListMyMoiItemsResponses, ListRsvpsData, ListRsvpsErrors, ListRsvpsResponses, ListSharedPhotosData, ListSharedPhotosErrors, ListSharedPhotosResponses, PlaceInteriorItemData, PlaceInteriorItemErrors, PlaceInteriorItemResponses, RecordGuestbookMessageViewData, RecordGuestbookMessageViewErrors, RecordGuestbookMessageViewResponses, ReplaceWeddingMemoryBookPhotosData, ReplaceWeddingMemoryBookPhotosErrors, ReplaceWeddingMemoryBookPhotosResponses, SendMoiItemData, SendMoiItemErrors, SendMoiItemResponses, ShareInvitationData, ShareInvitationErrors, ShareInvitationResponses, ToggleFeedHeartData, ToggleFeedHeartErrors, ToggleFeedHeartResponses, UnequipMoiItemData, UnequipMoiItemErrors, UnequipMoiItemResponses, UnplaceInteriorItemData, UnplaceInteriorItemErrors, UnplaceInteriorItemResponses, UpdateAnnouncementData, UpdateAnnouncementErrors, UpdateAnnouncementResponses, UpdateCashGiftData, UpdateCashGiftErrors, UpdateCashGiftResponses, UpdateInvitationData, UpdateInvitationErrors, UpdateInvitationResponses, UpdateMarketingConsentData, UpdateMarketingConsentErrors, UpdateMarketingConsentResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateWeddingData, UpdateWeddingErrors, UpdateWeddingResponses, UpdateWeddingSuiIdsData, UpdateWeddingSuiIdsErrors, UpdateWeddingSuiIdsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -1114,5 +1114,266 @@ export const adminDeleteSharedPhoto = <ThrowOnError extends boolean = false>(opt
 export const adminDeleteLoungeCheckIn = <ThrowOnError extends boolean = false>(options: Options<AdminDeleteLoungeCheckInData, ThrowOnError>) => (options.client ?? client).delete<AdminDeleteLoungeCheckInResponses, AdminDeleteLoungeCheckInErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/admin/lounge-check-ins/{id}',
+    ...options
+});
+
+/**
+ * 온체인 Wedding 조회(없으면 null)
+ */
+export const getOnchainWedding = <ThrowOnError extends boolean = false>(options: Options<GetOnchainWeddingData, ThrowOnError>) => (options.client ?? client).get<GetOnchainWeddingResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/weddings/{weddingId}',
+    ...options
+});
+
+/**
+ * 온체인 WeddingLounge 조회(없으면 null)
+ */
+export const getOnchainWeddingLounge = <ThrowOnError extends boolean = false>(options: Options<GetOnchainWeddingLoungeData, ThrowOnError>) => (options.client ?? client).get<GetOnchainWeddingLoungeResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/lounges/{loungeId}',
+    ...options
+});
+
+/**
+ * 온체인 CashGiftVault 조회(없으면 null)
+ */
+export const getOnchainVault = <ThrowOnError extends boolean = false>(options: Options<GetOnchainVaultData, ThrowOnError>) => (options.client ?? client).get<GetOnchainVaultResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/vaults/{vaultId}',
+    ...options
+});
+
+/**
+ * 온체인 Moi 조회(없으면 null)
+ */
+export const getOnchainMoi = <ThrowOnError extends boolean = false>(options: Options<GetOnchainMoiData, ThrowOnError>) => (options.client ?? client).get<GetOnchainMoiResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/mois/{moiId}',
+    ...options
+});
+
+/**
+ * 온체인 Invitation 조회(없으면 null)
+ */
+export const getOnchainInvitation = <ThrowOnError extends boolean = false>(options: Options<GetOnchainInvitationData, ThrowOnError>) => (options.client ?? client).get<GetOnchainInvitationResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/invitations/{invitationId}',
+    ...options
+});
+
+/**
+ * 온체인 MoiItem 단건 조회(없으면 null)
+ */
+export const getOnchainMoiItem = <ThrowOnError extends boolean = false>(options: Options<GetOnchainMoiItemData, ThrowOnError>) => (options.client ?? client).get<GetOnchainMoiItemResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/moi-items/{itemId}',
+    ...options
+});
+
+/**
+ * 주소 소유 Moi ID 목록
+ */
+export const getOnchainOwnedMoiIds = <ThrowOnError extends boolean = false>(options: Options<GetOnchainOwnedMoiIdsData, ThrowOnError>) => (options.client ?? client).get<GetOnchainOwnedMoiIdsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/addresses/{address}/moi-ids',
+    ...options
+});
+
+/**
+ * 주소 소유 MoiItem 목록
+ */
+export const getOnchainOwnedMoiItems = <ThrowOnError extends boolean = false>(options: Options<GetOnchainOwnedMoiItemsData, ThrowOnError>) => (options.client ?? client).get<GetOnchainOwnedMoiItemsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/addresses/{address}/moi-items',
+    ...options
+});
+
+/**
+ * 주소 소유 WeddingCap ID 목록
+ */
+export const getOnchainOwnedWeddingCaps = <ThrowOnError extends boolean = false>(options: Options<GetOnchainOwnedWeddingCapsData, ThrowOnError>) => (options.client ?? client).get<GetOnchainOwnedWeddingCapsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/addresses/{address}/wedding-caps',
+    ...options
+});
+
+/**
+ * 특정 weddingId용 WeddingCap(capId 또는 null)
+ */
+export const getOnchainWeddingCap = <ThrowOnError extends boolean = false>(options: Options<GetOnchainWeddingCapData, ThrowOnError>) => (options.client ?? client).get<GetOnchainWeddingCapResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/addresses/{address}/wedding-cap',
+    ...options
+});
+
+/**
+ * 특정 eventId용 Participation(없으면 null)
+ */
+export const getOnchainParticipation = <ThrowOnError extends boolean = false>(options: Options<GetOnchainParticipationData, ThrowOnError>) => (options.client ?? client).get<GetOnchainParticipationResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/addresses/{address}/participations',
+    ...options
+});
+
+/**
+ * 주소 보유 Participation 아무거나(없으면 null)
+ */
+export const getOnchainAnyParticipation = <ThrowOnError extends boolean = false>(options: Options<GetOnchainAnyParticipationData, ThrowOnError>) => (options.client ?? client).get<GetOnchainAnyParticipationResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/addresses/{address}/any-participation',
+    ...options
+});
+
+/**
+ * 주소 소유 IumRequest 목록
+ */
+export const getOnchainOwnedIumRequests = <ThrowOnError extends boolean = false>(options: Options<GetOnchainOwnedIumRequestsData, ThrowOnError>) => (options.client ?? client).get<GetOnchainOwnedIumRequestsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/addresses/{address}/ium-requests',
+    ...options
+});
+
+/**
+ * 주소 SUI 잔액(MIST)
+ */
+export const getOnchainBalance = <ThrowOnError extends boolean = false>(options: Options<GetOnchainBalanceData, ThrowOnError>) => (options.client ?? client).get<GetOnchainBalanceResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/addresses/{address}/balance',
+    ...options
+});
+
+/**
+ * SignalEmitted 전량
+ */
+export const getOnchainSignals = <ThrowOnError extends boolean = false>(options?: Options<GetOnchainSignalsData, ThrowOnError>) => (options?.client ?? client).get<GetOnchainSignalsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/signals',
+    ...options
+});
+
+/**
+ * Participated 전량
+ */
+export const getOnchainParticipated = <ThrowOnError extends boolean = false>(options?: Options<GetOnchainParticipatedData, ThrowOnError>) => (options?.client ?? client).get<GetOnchainParticipatedResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/participated',
+    ...options
+});
+
+/**
+ * EventCreated 전량
+ */
+export const getOnchainEventCreated = <ThrowOnError extends boolean = false>(options?: Options<GetOnchainEventCreatedData, ThrowOnError>) => (options?.client ?? client).get<GetOnchainEventCreatedResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/event-created',
+    ...options
+});
+
+/**
+ * ActionLogged 전량
+ */
+export const getOnchainActionLogged = <ThrowOnError extends boolean = false>(options?: Options<GetOnchainActionLoggedData, ThrowOnError>) => (options?.client ?? client).get<GetOnchainActionLoggedResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/action-logged',
+    ...options
+});
+
+/**
+ * MoiCreated 전량
+ */
+export const getOnchainMoiCreated = <ThrowOnError extends boolean = false>(options?: Options<GetOnchainMoiCreatedData, ThrowOnError>) => (options?.client ?? client).get<GetOnchainMoiCreatedResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/moi-created',
+    ...options
+});
+
+/**
+ * GiftSent 전량
+ */
+export const getOnchainGiftSent = <ThrowOnError extends boolean = false>(options?: Options<GetOnchainGiftSentData, ThrowOnError>) => (options?.client ?? client).get<GetOnchainGiftSentResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/gift-sent',
+    ...options
+});
+
+/**
+ * IumRequested 전량
+ */
+export const getOnchainIumRequested = <ThrowOnError extends boolean = false>(options?: Options<GetOnchainIumRequestedData, ThrowOnError>) => (options?.client ?? client).get<GetOnchainIumRequestedResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/ium-requested',
+    ...options
+});
+
+/**
+ * IumAccepted 전량
+ */
+export const getOnchainIumAccepted = <ThrowOnError extends boolean = false>(options?: Options<GetOnchainIumAcceptedData, ThrowOnError>) => (options?.client ?? client).get<GetOnchainIumAcceptedResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/ium-accepted',
+    ...options
+});
+
+/**
+ * RsvpSubmitted(weddingId 필터)
+ */
+export const getOnchainRsvp = <ThrowOnError extends boolean = false>(options: Options<GetOnchainRsvpData, ThrowOnError>) => (options.client ?? client).get<GetOnchainRsvpResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/rsvp',
+    ...options
+});
+
+/**
+ * NoteSent(from/to == address 필터)
+ */
+export const getOnchainNotesSent = <ThrowOnError extends boolean = false>(options: Options<GetOnchainNotesSentData, ThrowOnError>) => (options.client ?? client).get<GetOnchainNotesSentResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/notes-sent',
+    ...options
+});
+
+/**
+ * NoteBoxCreated(participant_a/b == address 필터)
+ */
+export const getOnchainNoteBoxes = <ThrowOnError extends boolean = false>(options: Options<GetOnchainNoteBoxesData, ThrowOnError>) => (options.client ?? client).get<GetOnchainNoteBoxesResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/note-boxes',
+    ...options
+});
+
+/**
+ * WeddingCreated 전량
+ */
+export const getOnchainWeddingsCreated = <ThrowOnError extends boolean = false>(options?: Options<GetOnchainWeddingsCreatedData, ThrowOnError>) => (options?.client ?? client).get<GetOnchainWeddingsCreatedResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/events/weddings-created',
+    ...options
+});
+
+/**
+ * 유저 발견(MoiCreated+Participated+EventCreated+Signal 4스캔 + BFS degree)
+ */
+export const getOnchainDiscover = <ThrowOnError extends boolean = false>(options: Options<GetOnchainDiscoverData, ThrowOnError>) => (options.client ?? client).get<GetOnchainDiscoverResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/discover',
+    ...options
+});
+
+/**
+ * 결혼식의 정당 청첩장(creator=host 검증, 없으면 null)
+ */
+export const getOnchainInvitationForWedding = <ThrowOnError extends boolean = false>(options: Options<GetOnchainInvitationForWeddingData, ThrowOnError>) => (options.client ?? client).get<GetOnchainInvitationForWeddingResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/weddings/{weddingId}/invitation',
+    ...options
+});
+
+/**
+ * TX 성공 후 캐시 무효화(per-user 키 + 전역 이벤트 키 drop)
+ */
+export const invalidateOnchainCache = <ThrowOnError extends boolean = false>(options: Options<InvalidateOnchainCacheData, ThrowOnError>) => (options.client ?? client).post<InvalidateOnchainCacheResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/onchain/cache/invalidate',
     ...options
 });

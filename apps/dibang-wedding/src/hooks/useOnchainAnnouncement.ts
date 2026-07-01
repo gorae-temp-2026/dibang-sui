@@ -16,18 +16,14 @@
  *   중복 발행의 비용이 낮다. (대조: event::participate는 신뢰 신호 이중계상을 막으려 클라가 가드한다.)
  */
 import { useCallback } from 'react'
-import { getLounge, getWedding } from '@gorae/contracts/sdk.gen'
+// getWedding/getLounge = DB(Go API 기존). getOnchainWeddingCap = 온체인 프록시(/onchain/*).
+import { getLounge, getWedding, getOnchainWeddingCap } from '@gorae/contracts/sdk.gen'
 import {
   buildCreateAnnouncementTx,
   walrusStoreString,
-  getWeddingCapForWedding,
-  createJsonRpcClient,
-  configureSui,
   ONCHAIN_BLOB_EPOCHS,
-  type SuiNetwork,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-import { env } from '../env'
 
 export interface OnchainAnnouncementInput {
   message: string
@@ -50,10 +46,8 @@ export function useOnchainAnnouncement(loungeId: string) {
         const suiWeddingId = wedding?.sui_wedding_id
         if (!suiWeddingId) return null
         // 2) 호스트가 이 결혼식의 WeddingCap을 보유해야 공지 생성 가능(없으면 온체인 미수행).
-        const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-        if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID })
-        const client = createJsonRpcClient(net)
-        const capId = await getWeddingCapForWedding(client, address, suiWeddingId)
+        // ⚠️ getOnchainWeddingCap은 {capId} 객체 반환(P0-V 관찰) → data.capId로 읽음.
+        const capId = (await getOnchainWeddingCap({ path: { address }, query: { weddingId: suiWeddingId }, throwOnError: true })).data?.capId
         if (!capId) return null
         // 3) 공지 본문 → Walrus → blobId(온체인 평문 회피). blobId가 온체인에 남으므로 내구 epoch로 저장.
         const messageBlobId = await walrusStoreString(message, { epochs: ONCHAIN_BLOB_EPOCHS })

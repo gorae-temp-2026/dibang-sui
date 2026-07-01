@@ -29,6 +29,9 @@ services:
         sync: false
       - key: UPLOAD_BUCKET_PRIVATE
         sync: false
+      # 온체인 읽기 프록시(/onchain/*) Sui GraphQL 업스트림
+      - key: SUI_GRAPHQL_URL
+        value: https://graphql.testnet.sui.io/graphql
 
   # dibang-wedding Dev (Static)
   - type: web
@@ -95,6 +98,9 @@ services:
         sync: false
       - key: UPLOAD_BUCKET_PRIVATE
         sync: false
+      # 온체인 읽기 프록시(/onchain/*) Sui GraphQL 업스트림
+      - key: SUI_GRAPHQL_URL
+        value: https://graphql.testnet.sui.io/graphql
 
   # dibang-wedding Prod (Static)
   - type: web

@@ -7,10 +7,11 @@
  */
 import { useEffect, useState } from 'react'
 import { normalizeSuiAddress } from '@mysten/sui/utils'
-import { createJsonRpcClient, discoverUsers, getIumRequestedEvents, getIumAcceptedEvents, getOwnedIumRequests, getSignalEvents, type DiscoveredUser, type SuiNetwork } from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/*, GraphQL). CORS·rate-limit·sunset 해소.
+import { getOnchainDiscover, getOnchainIumRequested, getOnchainIumAccepted, getOnchainOwnedIumRequests, getOnchainSignals } from '@gorae/contracts/sdk.gen'
+import type { OnchainDiscoveredUser, OnchainSignal } from '@gorae/contracts'
 import { fetchInyeonProfiles } from './useInyeonProfileSync'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-import { env } from '../env'
 import { translate, useLangStore } from '../lib/i18n'
 import type { Moi, IncomingReq } from '../components/inyeon/types'
 
@@ -20,7 +21,7 @@ function avatarUrl(address: string): string {
   return `https://api.dicebear.com/9.x/avataaars/svg?seed=${address.slice(2, 14)}&backgroundColor=b6e3f4`
 }
 
-function toMoi(user: DiscoveredUser, idx: number): Moi {
+function toMoi(user: OnchainDiscoveredUser, idx: number): Moi {
   const addrNum = parseInt(user.address.slice(2, 10), 16)
   return {
     id: idx,
@@ -68,18 +69,20 @@ export function useDiscoverUsers() {
     setLoading(true)
     const n = (a: string) => normalizeSuiAddress(a)
     const myAddr = n(address)
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    const client = createJsonRpcClient(network)
     Promise.all([
-      discoverUsers(client, address),
-      getIumRequestedEvents(client),
-      getIumAcceptedEvents(client),
-      getOwnedIumRequests(client, address),
+      getOnchainDiscover({ query: { address }, throwOnError: true }),
+      getOnchainIumRequested({ throwOnError: true }),
+      getOnchainIumAccepted({ throwOnError: true }),
+      getOnchainOwnedIumRequests({ path: { address }, throwOnError: true }),
     ])
-      .then(async ([discovered, iumEvents, acceptedEvents, ownedRequests]) => {
-        // signal은 별도 조회 — 실패해도 카드 표시에 영향 없음
-        let signalEvents: Awaited<ReturnType<typeof getSignalEvents>> = []
-        try { signalEvents = await getSignalEvents(client) } catch { /* best-effort */ }
+      .then(async ([discRes, iumRes, accRes, ownedRes]) => {
+        const discovered = discRes.data ?? []
+        const iumEvents = iumRes.data ?? []
+        const acceptedEvents = accRes.data ?? []
+        const ownedRequests = ownedRes.data ?? []
+        // signal은 별도 조회 — 실패해도 카드 표시에 영향 없음(best-effort, RQ 없이 개별)
+        let signalEvents: OnchainSignal[] = []
+        try { const r = await getOnchainSignals(); signalEvents = r.data ?? [] } catch { /* best-effort */ }
 
         const moiList = discovered.map(toMoi)
         // DB에서 추가 사진 + 소개글 조회

@@ -2874,6 +2874,197 @@ type MoveHostSlotRequest struct {
 // MoveHostSlotRequestToSlot 이동 대상(비어 있어야 함) 슬롯
 type MoveHostSlotRequestToSlot string
 
+// OnchainActionLogged defines model for OnchainActionLogged.
+type OnchainActionLogged struct {
+	ActionType int     `json:"actionType"`
+	Actor      string  `json:"actor"`
+	Amount     int64   `json:"amount"`
+	EventId    string  `json:"eventId"`
+	RoleId     int     `json:"roleId"`
+	Target     *string `json:"target,omitempty"`
+	Ts         int64   `json:"ts"`
+}
+
+// OnchainBalance defines model for OnchainBalance.
+type OnchainBalance struct {
+	// Mist SUI 잔액(MIST, u64 → string)
+	Mist string `json:"mist"`
+}
+
+// OnchainCashGiftVault defines model for OnchainCashGiftVault.
+type OnchainCashGiftVault struct {
+	// Balance MIST 잔액(u64 → string)
+	Balance   string `json:"balance"`
+	Id        string `json:"id"`
+	WeddingId string `json:"weddingId"`
+}
+
+// OnchainDiscoveredUser defines model for OnchainDiscoveredUser.
+type OnchainDiscoveredUser struct {
+	Address        string   `json:"address"`
+	Degree         int      `json:"degree"`
+	MoiId          string   `json:"moiId"`
+	MutualCount    int      `json:"mutualCount"`
+	SharedEventIds []string `json:"sharedEventIds"`
+}
+
+// OnchainEventCreated defines model for OnchainEventCreated.
+type OnchainEventCreated struct {
+	Creator   string `json:"creator"`
+	EventId   string `json:"eventId"`
+	EventType int    `json:"eventType"`
+}
+
+// OnchainGiftSent defines model for OnchainGiftSent.
+type OnchainGiftSent struct {
+	From     string `json:"from"`
+	ItemId   string `json:"itemId"`
+	ItemName string `json:"itemName"`
+	To       string `json:"to"`
+}
+
+// OnchainInvitation defines model for OnchainInvitation.
+type OnchainInvitation struct {
+	BrideNameBlobId  string `json:"brideNameBlobId"`
+	CoverPhotoBlobId string `json:"coverPhotoBlobId"`
+	Creator          string `json:"creator"`
+	Date             string `json:"date"`
+	GreetingBlobId   string `json:"greetingBlobId"`
+	GroomNameBlobId  string `json:"groomNameBlobId"`
+	Id               string `json:"id"`
+	Slug             string `json:"slug"`
+	Time             string `json:"time"`
+	VenueHall        string `json:"venueHall"`
+	VenueName        string `json:"venueName"`
+	WeddingId        string `json:"weddingId"`
+}
+
+// OnchainIumAccepted defines model for OnchainIumAccepted.
+type OnchainIumAccepted struct {
+	EventId   string `json:"eventId"`
+	Initiator string `json:"initiator"`
+	Receiver  string `json:"receiver"`
+}
+
+// OnchainIumRequested defines model for OnchainIumRequested.
+type OnchainIumRequested struct {
+	EventId   string `json:"eventId"`
+	Initiator string `json:"initiator"`
+	ToUser    string `json:"toUser"`
+}
+
+// OnchainMoi defines model for OnchainMoi.
+type OnchainMoi struct {
+	// Equipped slot → MoiItem ID
+	Equipped map[string]string `json:"equipped"`
+	Id       string            `json:"id"`
+	Owner    string            `json:"owner"`
+}
+
+// OnchainMoiCreated defines model for OnchainMoiCreated.
+type OnchainMoiCreated struct {
+	MoiId string `json:"moiId"`
+	Owner string `json:"owner"`
+}
+
+// OnchainMoiItem defines model for OnchainMoiItem.
+type OnchainMoiItem struct {
+	Id       string `json:"id"`
+	ItemType string `json:"itemType"`
+	Name     string `json:"name"`
+	Slot     string `json:"slot"`
+}
+
+// OnchainNoteBoxCreated defines model for OnchainNoteBoxCreated.
+type OnchainNoteBoxCreated struct {
+	NoteBoxId    string `json:"noteBoxId"`
+	ParticipantA string `json:"participantA"`
+	ParticipantB string `json:"participantB"`
+}
+
+// OnchainNoteSent defines model for OnchainNoteSent.
+type OnchainNoteSent struct {
+	BlobId    string `json:"blobId"`
+	From      string `json:"from"`
+	NoteBoxId string `json:"noteBoxId"`
+	To        string `json:"to"`
+	Ts        int64  `json:"ts"`
+}
+
+// OnchainOwnedIumRequest defines model for OnchainOwnedIumRequest.
+type OnchainOwnedIumRequest struct {
+	EventId   string `json:"eventId"`
+	Initiator string `json:"initiator"`
+	RequestId string `json:"requestId"`
+}
+
+// OnchainParticipated defines model for OnchainParticipated.
+type OnchainParticipated struct {
+	EventId     string `json:"eventId"`
+	Participant string `json:"participant"`
+	RoleId      int    `json:"roleId"`
+}
+
+// OnchainParticipation defines model for OnchainParticipation.
+type OnchainParticipation struct {
+	EventId     string `json:"eventId"`
+	EventType   int    `json:"eventType"`
+	Id          string `json:"id"`
+	Participant string `json:"participant"`
+	RoleId      int    `json:"roleId"`
+}
+
+// OnchainRsvpEvent defines model for OnchainRsvpEvent.
+type OnchainRsvpEvent struct {
+	Attendance     int    `json:"attendance"`
+	CompanionCount int    `json:"companionCount"`
+	Meal           int    `json:"meal"`
+	RecipientSlot  int    `json:"recipientSlot"`
+	SubmittedAt    int64  `json:"submittedAt"`
+	Submitter      string `json:"submitter"`
+	WeddingId      string `json:"weddingId"`
+}
+
+// OnchainSignal defines model for OnchainSignal.
+type OnchainSignal struct {
+	EventId    string `json:"eventId"`
+	From       string `json:"from"`
+	Kind       int    `json:"kind"`
+	Magnitude  int64  `json:"magnitude"`
+	ResourceId int    `json:"resourceId"`
+	Source     int    `json:"source"`
+	To         string `json:"to"`
+	Ts         int64  `json:"ts"`
+}
+
+// OnchainWedding defines model for OnchainWedding.
+type OnchainWedding struct {
+	EventId string   `json:"eventId"`
+	Hosts   []string `json:"hosts"`
+	Id      string   `json:"id"`
+	Status  string   `json:"status"`
+	VaultId *string  `json:"vaultId,omitempty"`
+}
+
+// OnchainWeddingCap defines model for OnchainWeddingCap.
+type OnchainWeddingCap struct {
+	// CapId 매칭 Cap ID, 없으면 null
+	CapId *string `json:"capId"`
+}
+
+// OnchainWeddingCreated defines model for OnchainWeddingCreated.
+type OnchainWeddingCreated struct {
+	EventId   string `json:"eventId"`
+	LoungeId  string `json:"loungeId"`
+	WeddingId string `json:"weddingId"`
+}
+
+// OnchainWeddingLounge defines model for OnchainWeddingLounge.
+type OnchainWeddingLounge struct {
+	Id        string `json:"id"`
+	WeddingId string `json:"weddingId"`
+}
+
 // ParticipatedWedding defines model for ParticipatedWedding.
 type ParticipatedWedding struct {
 	BrideName  string             `json:"bride_name"`
@@ -3479,6 +3670,41 @@ type ListSharedPhotosParams struct {
 type DownloadSharedPhotosZipParams struct {
 	// GuestUserId ZIP에 묶을 하객 그룹
 	GuestUserId openapi_types.UUID `form:"guest_user_id" json:"guest_user_id"`
+}
+
+// GetOnchainParticipationParams defines parameters for GetOnchainParticipation.
+type GetOnchainParticipationParams struct {
+	EventId string `form:"eventId" json:"eventId"`
+}
+
+// GetOnchainWeddingCapParams defines parameters for GetOnchainWeddingCap.
+type GetOnchainWeddingCapParams struct {
+	WeddingId string `form:"weddingId" json:"weddingId"`
+}
+
+// InvalidateOnchainCacheParams defines parameters for InvalidateOnchainCache.
+type InvalidateOnchainCacheParams struct {
+	Address string `form:"address" json:"address"`
+}
+
+// GetOnchainDiscoverParams defines parameters for GetOnchainDiscover.
+type GetOnchainDiscoverParams struct {
+	Address string `form:"address" json:"address"`
+}
+
+// GetOnchainNoteBoxesParams defines parameters for GetOnchainNoteBoxes.
+type GetOnchainNoteBoxesParams struct {
+	Address string `form:"address" json:"address"`
+}
+
+// GetOnchainNotesSentParams defines parameters for GetOnchainNotesSent.
+type GetOnchainNotesSentParams struct {
+	Address string `form:"address" json:"address"`
+}
+
+// GetOnchainRsvpParams defines parameters for GetOnchainRsvp.
+type GetOnchainRsvpParams struct {
+	WeddingId string `form:"weddingId" json:"weddingId"`
 }
 
 // ListMyIumsParams defines parameters for ListMyIums.

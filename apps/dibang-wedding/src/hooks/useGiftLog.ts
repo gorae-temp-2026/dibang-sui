@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
-import { createJsonRpcClient, getActionLoggedEvents, type SuiNetwork } from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/events/action-logged).
+import { getOnchainActionLogged } from '@gorae/contracts/sdk.gen'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-import { env } from '../env'
 
 export interface OnchainGiftEntry {
   actor: string
@@ -21,10 +21,9 @@ export function useGiftLog() {
   useEffect(() => {
     if (!address) return
     setLoading(true)
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    const client = createJsonRpcClient(network)
-    getActionLoggedEvents(client)
-      .then((actions) => {
+    getOnchainActionLogged({ throwOnError: true })
+      .then((res) => {
+        const actions = res.data ?? []
         const myGifts = actions
           .filter((a) => a.actionType === 3 && (a.actor === address || a.target === address))
           .map((a) => ({

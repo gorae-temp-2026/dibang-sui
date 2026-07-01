@@ -1,13 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
-import {
-  createJsonRpcClient,
-  getActionLoggedEvents,
-  getParticipatedEvents,
-  getNoteSentEvents,
-  type SuiNetwork,
-} from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/*).
+import { getOnchainActionLogged, getOnchainParticipated, getOnchainNotesSent } from '@gorae/contracts/sdk.gen'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-import { env } from '../env'
 import { translate, useLangStore } from '../lib/i18n'
 
 const lang = () => useLangStore.getState().lang
@@ -43,23 +37,23 @@ export function useOnchainLoungeFeed(weddingId?: string) {
   useEffect(() => {
     if (!address) return
     setLoading(true)
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    const client = createJsonRpcClient(network)
-
     Promise.all([
-      getActionLoggedEvents(client),
-      getParticipatedEvents(client),
-      getNoteSentEvents(client, address),
-    ]).then(([actions, parts, notes]) => {
+      getOnchainActionLogged({ throwOnError: true }),
+      getOnchainParticipated({ throwOnError: true }),
+      getOnchainNotesSent({ query: { address }, throwOnError: true }),
+    ]).then(([actRes, partRes, notesRes]) => {
+      const actions = actRes.data ?? []
+      const parts = partRes.data ?? []
+      const notes = notesRes.data ?? []
       const feed: OnchainFeedItem[] = []
 
       for (const a of actions) {
         if (a.actionType === 0) {
-          feed.push({ id: `give-${a.ts}`, type: 'give', actor: a.actor, target: a.target, amount: a.amount, ts: a.ts })
+          feed.push({ id: `give-${a.ts}`, type: 'give', actor: a.actor, target: a.target ?? null, amount: a.amount, ts: a.ts })
         } else if (a.actionType === 4) {
-          feed.push({ id: `write-${a.ts}`, type: 'write', actor: a.actor, target: a.target, amount: 0, ts: a.ts })
+          feed.push({ id: `write-${a.ts}`, type: 'write', actor: a.actor, target: a.target ?? null, amount: 0, ts: a.ts })
         } else if (a.actionType === 6) {
-          feed.push({ id: `invite-${a.ts}`, type: 'participate', actor: a.actor, target: a.target, amount: 0, ts: a.ts })
+          feed.push({ id: `invite-${a.ts}`, type: 'participate', actor: a.actor, target: a.target ?? null, amount: 0, ts: a.ts })
         }
       }
 

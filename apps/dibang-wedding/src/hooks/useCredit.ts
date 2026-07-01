@@ -5,24 +5,21 @@
 // (signal.move), 집계=오프체인(credit.ts). 전환기 DB-first(useSaveInvitation 등)의 *반대 방향*이자 그 이관 목표의 일부.
 // 상세: _architecture/SUI_CONTRACT_DESIGN_DIRECTION §10-B / CLAUDE.md 상단 SSOT 배너.
 import { useQuery } from '@tanstack/react-query';
-import { createJsonRpcClient, getSignalEvents, type SuiNetwork } from '@gorae/sui-sdk';
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/events/signals).
+import { getOnchainSignals } from '@gorae/contracts/sdk.gen';
 import { creditFromSignals, signalBreakdownFor, SOURCE, type CreditResult } from '../lib/credit';
-import { env } from '../env';
-
-const network = (): SuiNetwork => (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
 
 /** 온체인 신호 전체 → 지갑별 신용 맵(0~1) + 구성요소. */
 export function useCredit() {
-  const net = network();
   return useQuery({
-    queryKey: ['onchain-credit', net],
+    queryKey: ['onchain-credit'],
     queryFn: async (): Promise<CreditResult> => {
-      const client = createJsonRpcClient(net);
-      // SignalQuery(eventId·ts 포함)는 SignalEvent의 상위집합 → 그대로 집계에 투입.
-      const signals = await getSignalEvents(client);
+      // OnchainSignal(eventId·ts 포함)은 SignalEvent의 상위집합 → 그대로 집계에 투입.
+      const signals = (await getOnchainSignals({ throwOnError: true })).data ?? [];
       return creditFromSignals(signals);
     },
     staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -53,14 +50,13 @@ export interface MyCreditStats {
  * address 없으면 비활성. 신호가 아직 없으면 hasData=false(0 표시).
  */
 export function useMyCreditStats(address?: string) {
-  const net = network();
   return useQuery({
-    queryKey: ['onchain-credit-stats', net, address ?? ''],
+    queryKey: ['onchain-credit-stats', address ?? ''],
     enabled: !!address,
     staleTime: 60_000,
+    refetchOnWindowFocus: false,
     queryFn: async (): Promise<MyCreditStats> => {
-      const client = createJsonRpcClient(net);
-      const signals = await getSignalEvents(client);
+      const signals = (await getOnchainSignals({ throwOnError: true })).data ?? [];
       const result = creditFromSignals(signals);
       const breakdown = signalBreakdownFor(signals, address!);
       // "함께한 이벤트" = 내가 *보낸* 참석(ATTEND) 신호 수. breakdown.참석은 *받은* 것(혼주 기준)이라 부적합.

@@ -6,36 +6,30 @@
 // 없으므로 그대로 DB(Supabase/Go API)에서 읽는다 — 둘을 합성해 청첩장을 렌더한다.
 // 상세: _architecture/SUI_CONTRACT_DESIGN_DIRECTION §SSOT 선언·§10-A / CLAUDE.md 상단 SSOT 배너.
 import { useQuery } from '@tanstack/react-query';
-import {
-  createJsonRpcClient,
-  getWedding,
-  getCashGiftVault,
-  type SuiNetwork,
-  type WeddingOnChain,
-  type CashGiftVaultOnChain,
-} from '@gorae/sui-sdk';
-import { env } from '../env';
-
-const network = (): SuiNetwork => (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/*).
+import { getOnchainWedding, getOnchainVault } from '@gorae/contracts/sdk.gen';
+import type { OnchainWedding, OnchainCashGiftVault } from '@gorae/contracts';
 
 /** 온체인 Wedding 앵커(혼주·event_id·vault·status) — 신뢰/구조 SSOT. weddingId 없으면 비활성. */
 export function useOnchainWedding(weddingId?: string) {
   return useQuery({
-    queryKey: ['onchain-wedding', weddingId, network()],
+    queryKey: ['onchain-wedding', weddingId],
     enabled: !!weddingId,
-    queryFn: async (): Promise<WeddingOnChain | null> =>
-      getWedding(createJsonRpcClient(network()), weddingId!),
-    staleTime: 30_000,
+    queryFn: async (): Promise<OnchainWedding | null> =>
+      (await getOnchainWedding({ path: { weddingId: weddingId! }, throwOnError: true })).data ?? null,
+    staleTime: 300_000, // 거의 불변(BE-3)
+    refetchOnWindowFocus: false,
   });
 }
 
 /** 온체인 축의 모금함(실 SUI 잔액) — 부조 합계의 SSOT. vaultId 없으면 비활성. */
 export function useOnchainVault(vaultId?: string) {
   return useQuery({
-    queryKey: ['onchain-vault', vaultId, network()],
+    queryKey: ['onchain-vault', vaultId],
     enabled: !!vaultId,
-    queryFn: async (): Promise<CashGiftVaultOnChain | null> =>
-      getCashGiftVault(createJsonRpcClient(network()), vaultId!),
-    staleTime: 30_000,
+    queryFn: async (): Promise<OnchainCashGiftVault | null> =>
+      (await getOnchainVault({ path: { vaultId: vaultId! }, throwOnError: true })).data ?? null,
+    staleTime: 10_000, // give마다 변함(BE-3)
+    refetchOnWindowFocus: false,
   });
 }

@@ -3,11 +3,11 @@ import { useMachine } from '@xstate/react'
 import { fromPromise } from 'xstate'
 import { useQuery } from '@tanstack/react-query'
 import { getWeddingOptions } from '@gorae/contracts/@tanstack/react-query.gen'
-import { createJsonRpcClient, getWeddingCapForWedding, type SuiNetwork } from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접 → Go API 프록시. getOnchainWeddingCap은 {capId} 객체 반환.
+import { getOnchainWeddingCap } from '@gorae/contracts/sdk.gen'
 import { addHostMachine } from '../../machines/addHost.machine'
 import { useOnchainHostActions } from '../../hooks/useOnchainHostActions'
 import { useZkLogin } from '../../providers/ZkLoginProvider'
-import { env } from '../../env'
 import { useT, translate, useLangStore } from '../../lib/i18n'
 
 const lang = () => useLangStore.getState().lang
@@ -32,9 +32,7 @@ export function AddHostSection({ weddingId }: { weddingId: string }) {
           submit: fromPromise<string, { newHost: string }>(async ({ input }) => {
             if (!suiWeddingId) throw new Error(translate(lang(), 'myWedding.addHost.errNoOnchain'))
             if (!address) throw new Error(translate(lang(), 'common.errNeedLogin'))
-            const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-            const client = createJsonRpcClient(network)
-            const capId = await getWeddingCapForWedding(client, address, suiWeddingId)
+            const capId = (await getOnchainWeddingCap({ path: { address }, query: { weddingId: suiWeddingId }, throwOnError: true })).data?.capId
             if (!capId) throw new Error(translate(lang(), 'myWedding.addHost.errNoCap'))
             return addHost({ weddingId: suiWeddingId, capId, newHost: input.newHost.trim() })
           }),

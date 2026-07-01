@@ -2,11 +2,11 @@ import { useEffect, useMemo } from 'react'
 import { useMachine } from '@xstate/react'
 import { fromPromise } from 'xstate'
 import { useQuery } from '@tanstack/react-query'
-import { createJsonRpcClient, getOwnedMoiIds, type SuiNetwork } from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/*).
+import { getOnchainOwnedMoiIds } from '@gorae/contracts/sdk.gen'
 import { moiGateMachine } from '../machines/moiGate.machine'
 import { useOnchainHostActions } from '../hooks/useOnchainHostActions'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-import { env } from '../env'
 import { useNavigate } from 'react-router'
 import { useT } from '../lib/i18n'
 
@@ -19,12 +19,13 @@ export function MoiGateModal() {
   const navigate = useNavigate()
   const { address, isAuthenticated } = useZkLogin()
   const { createMoi } = useOnchainHostActions()
-  const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
 
   const { data: moiIds, refetch } = useQuery({
     queryKey: ['ownedMoi', address],
-    queryFn: () => getOwnedMoiIds(createJsonRpcClient(network), address!),
+    queryFn: async () => (await getOnchainOwnedMoiIds({ path: { address: address! }, throwOnError: true })).data ?? [],
     enabled: isAuthenticated && !!address,
+    staleTime: 15_000, // owned 오브젝트 TTL(BE-3). createMoi 후 즉시반영은 ownedMoi 키 무효화가 보장.
+    refetchOnWindowFocus: false,
   })
 
   const machine = useMemo(

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
-import { createJsonRpcClient, type SuiNetwork } from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/addresses/{address}/balance).
+import { getOnchainBalance } from '@gorae/contracts/sdk.gen'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-import { env } from '../env'
 
 export function useSuiBalance() {
   const { address } = useZkLogin()
@@ -20,10 +20,8 @@ export function useSuiBalance() {
   useEffect(() => {
     if (!address) return
     setLoading(true)
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    const client = createJsonRpcClient(network)
-    client.getBalance({ owner: address, coinType: '0x2::sui::SUI' })
-      .then((b) => setBalanceMist(BigInt(b.totalBalance)))
+    getOnchainBalance({ path: { address }, throwOnError: true })
+      .then((res) => setBalanceMist(BigInt(res.data?.mist ?? '0')))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [address, refreshKey])

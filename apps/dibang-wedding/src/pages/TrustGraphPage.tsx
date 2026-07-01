@@ -5,8 +5,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router'
 import ForceGraph2D from 'react-force-graph-2d'
-import { createJsonRpcClient, getSignalEvents, getParticipatedEvents, getMoiCreatedEvents, getIumAcceptedEvents, configureSui, type SuiNetwork } from '@gorae/sui-sdk'
-import { env } from '../env'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/*).
+import { getOnchainSignals, getOnchainParticipated, getOnchainMoiCreated, getOnchainIumAccepted } from '@gorae/contracts/sdk.gen'
 
 interface RawEdge { from: string; to: string; value: number; kind: string; ts: number }
 interface GNode { id: string; label: string; hue: number; signalCount: number; iumCount: number }
@@ -59,14 +59,19 @@ export function TrustGraphPage() {
   }, [])
 
   useEffect(() => {
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID })
-    const client = createJsonRpcClient(network)
     let cancelled = false
     function fetchData() {
-    Promise.all([getSignalEvents(client), getParticipatedEvents(client), getMoiCreatedEvents(client), getIumAcceptedEvents(client)])
-      .then(([signals, participations, _moiEvents, iumAccepted]) => {
+    Promise.all([
+      getOnchainSignals({ throwOnError: true }),
+      getOnchainParticipated({ throwOnError: true }),
+      getOnchainMoiCreated({ throwOnError: true }),
+      getOnchainIumAccepted({ throwOnError: true }),
+    ])
+      .then(([sigRes, partRes, _moiRes, iumRes]) => {
         if (cancelled) return
+        const signals = sigRes.data ?? []
+        const participations = partRes.data ?? []
+        const iumAccepted = iumRes.data ?? []
         const edges: RawEdge[] = []; let minTs = Infinity, maxTs = 0
         for (const s of signals) {
           if (s.ts < minTs) minTs = s.ts; if (s.ts > maxTs) maxTs = s.ts

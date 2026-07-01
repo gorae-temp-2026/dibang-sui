@@ -2,7 +2,7 @@
 // 이 파일이 DB(Supabase) 먼저 저장 후 온체인을 dual-write로 얹는 건 *전환기*일 뿐 "DB 우선"이 아니다.
 // 목표(미완): 앱을 온체인(RPC/indexer) 읽기로 이관. 상세: CLAUDE.md 상단 SSOT 배너.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateWedding, updateInvitation, getWedding } from '@gorae/contracts/sdk.gen';
+import { updateWedding, updateInvitation, getWedding, getOnchainInvitationForWedding } from '@gorae/contracts/sdk.gen';
 import { getMyWeddingsQueryKey, getWeddingQueryKey } from '@gorae/contracts/@tanstack/react-query.gen';
 import type { UpdateWeddingRequest, UpdateInvitationRequest } from '../../types/db-compat';
 import {
@@ -10,14 +10,9 @@ import {
   walrusStore,
   walrusStoreString,
   walrusStorePIIString,
-  getInvitationForWedding,
-  createJsonRpcClient,
-  configureSui,
   ONCHAIN_BLOB_EPOCHS,
-  type SuiNetwork,
 } from '@gorae/sui-sdk';
 import { useZkLogin } from '../../providers/ZkLoginProvider';
-import { env } from '../../env';
 
 export interface UpdateWeddingPayload {
   weddingReq: UpdateWeddingRequest;
@@ -80,11 +75,8 @@ export function useUpdateWedding(weddingId: string, invitationId: string) {
           const { data: weddingRec } = await getWedding({ path: { weddingId }, throwOnError: true });
           const suiWeddingId = weddingRec?.sui_wedding_id;
           if (suiWeddingId) {
-            const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet';
-            if (env.VITE_SUI_PACKAGE_ID) configureSui({ network, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID });
-            const client = createJsonRpcClient(network);
-            // 주최자(primary_host) 발행분 중 최신 온체인 Invitation(제3자 위조분 거름).
-            const inv = await getInvitationForWedding(client, suiWeddingId);
+            // 주최자(primary_host) 발행분 중 최신 온체인 Invitation(제3자 위조분 거름). Go API 프록시.
+            const inv = (await getOnchainInvitationForWedding({ path: { weddingId: suiWeddingId }, throwOnError: true })).data;
             if (inv?.id) {
               const info = weddingReq.info;
               const groomNameBlobId = info?.groom_name?.trim()

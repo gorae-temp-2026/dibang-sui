@@ -21,17 +21,12 @@
  *    이 3중으로 어디서 몇 번 호출되든 (address,event)당 participate는 1회만 나간다.
  */
 import { useCallback } from 'react'
-import { getLounge, getWedding } from '@gorae/contracts/sdk.gen'
+// getWedding/getLounge = DB(Go API 기존). getOnchainWedding/Participation = 온체인 프록시(/onchain/*).
+import { getLounge, getWedding, getOnchainWedding, getOnchainParticipation } from '@gorae/contracts/sdk.gen'
 import {
   buildParticipateTx,
-  getWedding as getOnchainWedding,
-  getParticipationForEvent,
-  createJsonRpcClient,
-  configureSui,
-  type SuiNetwork,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
-import { env } from '../env'
 
 // 같은 (address|loungeId) participate 요청을 공유하는 in-flight 가드(모듈 스코프 — 컴포넌트 마운트 경계를 넘어 공유).
 const inflightParticipate = new Map<string, Promise<string | null>>()
@@ -61,14 +56,11 @@ export function useOnchainCheckIn() {
           const { data: wedding } = await getWedding({ path: { weddingId }, throwOnError: true })
           const suiWeddingId = wedding?.sui_wedding_id
           if (!suiWeddingId) return null
-          // 3) 온체인 Wedding → eventId
-          const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-          if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID })
-          const client = createJsonRpcClient(net)
-          const ow = await getOnchainWedding(client, suiWeddingId)
+          // 3) 온체인 Wedding → eventId (Go API 프록시)
+          const ow = (await getOnchainWedding({ path: { weddingId: suiWeddingId }, throwOnError: true })).data
           if (!ow?.eventId) return null
           // 4) 이미 참가했으면(다른 세션·재입장 등) 중복 발행 안 함 → 세션 완료로 기록.
-          const existingPart = (await getParticipationForEvent(client, address, ow.eventId))?.id
+          const existingPart = (await getOnchainParticipation({ path: { address }, query: { eventId: ow.eventId }, throwOnError: true })).data?.id
           if (existingPart) {
             doneParticipate.add(key)
             return null

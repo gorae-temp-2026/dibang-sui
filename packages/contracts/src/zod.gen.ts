@@ -1319,6 +1319,170 @@ export const zAdminDashboardHealth = z.object({
     checks: z.array(zAdminHealthCheck)
 });
 
+export const zOnchainWedding = z.object({
+    id: z.string(),
+    status: z.string(),
+    hosts: z.array(z.string()),
+    vaultId: z.string().nullish(),
+    eventId: z.string()
+});
+
+export const zOnchainWeddingLounge = z.object({
+    id: z.string(),
+    weddingId: z.string()
+});
+
+export const zOnchainCashGiftVault = z.object({
+    id: z.string(),
+    weddingId: z.string(),
+    balance: z.string()
+});
+
+export const zOnchainMoi = z.object({
+    id: z.string(),
+    owner: z.string(),
+    equipped: z.record(z.string(), z.string())
+});
+
+export const zOnchainMoiItem = z.object({
+    id: z.string(),
+    name: z.string(),
+    itemType: z.string(),
+    slot: z.string()
+});
+
+export const zOnchainParticipation = z.object({
+    id: z.string(),
+    eventId: z.string(),
+    eventType: z.int(),
+    participant: z.string(),
+    roleId: z.int()
+});
+
+export const zOnchainInvitation = z.object({
+    id: z.string(),
+    weddingId: z.string(),
+    creator: z.string(),
+    slug: z.string(),
+    groomNameBlobId: z.string(),
+    brideNameBlobId: z.string(),
+    date: z.string(),
+    time: z.string(),
+    venueName: z.string(),
+    venueHall: z.string(),
+    coverPhotoBlobId: z.string(),
+    greetingBlobId: z.string()
+});
+
+export const zOnchainWeddingCap = z.object({
+    capId: z.string().nullable()
+});
+
+export const zOnchainBalance = z.object({
+    mist: z.string()
+});
+
+export const zOnchainRsvpEvent = z.object({
+    weddingId: z.string(),
+    submitter: z.string(),
+    recipientSlot: z.int(),
+    attendance: z.int(),
+    companionCount: z.int(),
+    meal: z.int(),
+    submittedAt: z.coerce.bigint().min(BigInt('-9223372036854775808'), { error: 'Invalid value: Expected int64 to be >= -9223372036854775808' }).max(BigInt('9223372036854775807'), { error: 'Invalid value: Expected int64 to be <= 9223372036854775807' })
+});
+
+export const zOnchainActionLogged = z.object({
+    eventId: z.string(),
+    actionType: z.int(),
+    actor: z.string(),
+    target: z.string().nullish(),
+    roleId: z.int(),
+    amount: z.coerce.bigint().min(BigInt('-9223372036854775808'), { error: 'Invalid value: Expected int64 to be >= -9223372036854775808' }).max(BigInt('9223372036854775807'), { error: 'Invalid value: Expected int64 to be <= 9223372036854775807' }),
+    ts: z.coerce.bigint().min(BigInt('-9223372036854775808'), { error: 'Invalid value: Expected int64 to be >= -9223372036854775808' }).max(BigInt('9223372036854775807'), { error: 'Invalid value: Expected int64 to be <= 9223372036854775807' })
+});
+
+export const zOnchainEventCreated = z.object({
+    eventId: z.string(),
+    eventType: z.int(),
+    creator: z.string()
+});
+
+export const zOnchainParticipated = z.object({
+    eventId: z.string(),
+    participant: z.string(),
+    roleId: z.int()
+});
+
+export const zOnchainSignal = z.object({
+    eventId: z.string(),
+    kind: z.int(),
+    resourceId: z.int(),
+    source: z.int(),
+    from: z.string(),
+    to: z.string(),
+    magnitude: z.coerce.bigint().min(BigInt('-9223372036854775808'), { error: 'Invalid value: Expected int64 to be >= -9223372036854775808' }).max(BigInt('9223372036854775807'), { error: 'Invalid value: Expected int64 to be <= 9223372036854775807' }),
+    ts: z.coerce.bigint().min(BigInt('-9223372036854775808'), { error: 'Invalid value: Expected int64 to be >= -9223372036854775808' }).max(BigInt('9223372036854775807'), { error: 'Invalid value: Expected int64 to be <= 9223372036854775807' })
+});
+
+export const zOnchainMoiCreated = z.object({
+    moiId: z.string(),
+    owner: z.string()
+});
+
+export const zOnchainDiscoveredUser = z.object({
+    address: z.string(),
+    moiId: z.string(),
+    sharedEventIds: z.array(z.string()),
+    mutualCount: z.int(),
+    degree: z.int()
+});
+
+export const zOnchainGiftSent = z.object({
+    itemId: z.string(),
+    itemName: z.string(),
+    from: z.string(),
+    to: z.string()
+});
+
+export const zOnchainIumRequested = z.object({
+    eventId: z.string(),
+    initiator: z.string(),
+    toUser: z.string()
+});
+
+export const zOnchainIumAccepted = z.object({
+    eventId: z.string(),
+    initiator: z.string(),
+    receiver: z.string()
+});
+
+export const zOnchainOwnedIumRequest = z.object({
+    requestId: z.string(),
+    eventId: z.string(),
+    initiator: z.string()
+});
+
+export const zOnchainNoteSent = z.object({
+    noteBoxId: z.string(),
+    from: z.string(),
+    to: z.string(),
+    blobId: z.string(),
+    ts: z.coerce.bigint().min(BigInt('-9223372036854775808'), { error: 'Invalid value: Expected int64 to be >= -9223372036854775808' }).max(BigInt('9223372036854775807'), { error: 'Invalid value: Expected int64 to be <= 9223372036854775807' })
+});
+
+export const zOnchainNoteBoxCreated = z.object({
+    noteBoxId: z.string(),
+    participantA: z.string(),
+    participantB: z.string()
+});
+
+export const zOnchainWeddingCreated = z.object({
+    eventId: z.string(),
+    weddingId: z.string(),
+    loungeId: z.string()
+});
+
 export const zLoungeCheckInWritable = z.object({
     id: z.uuid(),
     user_id: z.uuid(),
@@ -2504,3 +2668,236 @@ export const zAdminDeleteLoungeCheckInPath = z.object({
  * Deleted
  */
 export const zAdminDeleteLoungeCheckInResponse = z.void();
+
+export const zGetOnchainWeddingPath = z.object({
+    weddingId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainWeddingResponse = zOnchainWedding.nullable();
+
+export const zGetOnchainWeddingLoungePath = z.object({
+    loungeId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainWeddingLoungeResponse = zOnchainWeddingLounge.nullable();
+
+export const zGetOnchainVaultPath = z.object({
+    vaultId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainVaultResponse = zOnchainCashGiftVault.nullable();
+
+export const zGetOnchainMoiPath = z.object({
+    moiId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainMoiResponse = zOnchainMoi.nullable();
+
+export const zGetOnchainInvitationPath = z.object({
+    invitationId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainInvitationResponse = zOnchainInvitation.nullable();
+
+export const zGetOnchainMoiItemPath = z.object({
+    itemId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainMoiItemResponse = zOnchainMoiItem.nullable();
+
+export const zGetOnchainOwnedMoiIdsPath = z.object({
+    address: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainOwnedMoiIdsResponse = z.array(z.string());
+
+export const zGetOnchainOwnedMoiItemsPath = z.object({
+    address: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainOwnedMoiItemsResponse = z.array(zOnchainMoiItem);
+
+export const zGetOnchainOwnedWeddingCapsPath = z.object({
+    address: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainOwnedWeddingCapsResponse = z.array(z.string());
+
+export const zGetOnchainWeddingCapPath = z.object({
+    address: z.string()
+});
+
+export const zGetOnchainWeddingCapQuery = z.object({
+    weddingId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainWeddingCapResponse = zOnchainWeddingCap;
+
+export const zGetOnchainParticipationPath = z.object({
+    address: z.string()
+});
+
+export const zGetOnchainParticipationQuery = z.object({
+    eventId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainParticipationResponse = zOnchainParticipation.nullable();
+
+export const zGetOnchainAnyParticipationPath = z.object({
+    address: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainAnyParticipationResponse = zOnchainParticipation.nullable();
+
+export const zGetOnchainOwnedIumRequestsPath = z.object({
+    address: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainOwnedIumRequestsResponse = z.array(zOnchainOwnedIumRequest);
+
+export const zGetOnchainBalancePath = z.object({
+    address: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainBalanceResponse = zOnchainBalance;
+
+/**
+ * OK
+ */
+export const zGetOnchainSignalsResponse = z.array(zOnchainSignal);
+
+/**
+ * OK
+ */
+export const zGetOnchainParticipatedResponse = z.array(zOnchainParticipated);
+
+/**
+ * OK
+ */
+export const zGetOnchainEventCreatedResponse = z.array(zOnchainEventCreated);
+
+/**
+ * OK
+ */
+export const zGetOnchainActionLoggedResponse = z.array(zOnchainActionLogged);
+
+/**
+ * OK
+ */
+export const zGetOnchainMoiCreatedResponse = z.array(zOnchainMoiCreated);
+
+/**
+ * OK
+ */
+export const zGetOnchainGiftSentResponse = z.array(zOnchainGiftSent);
+
+/**
+ * OK
+ */
+export const zGetOnchainIumRequestedResponse = z.array(zOnchainIumRequested);
+
+/**
+ * OK
+ */
+export const zGetOnchainIumAcceptedResponse = z.array(zOnchainIumAccepted);
+
+export const zGetOnchainRsvpQuery = z.object({
+    weddingId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainRsvpResponse = z.array(zOnchainRsvpEvent);
+
+export const zGetOnchainNotesSentQuery = z.object({
+    address: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainNotesSentResponse = z.array(zOnchainNoteSent);
+
+export const zGetOnchainNoteBoxesQuery = z.object({
+    address: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainNoteBoxesResponse = z.array(zOnchainNoteBoxCreated);
+
+/**
+ * OK
+ */
+export const zGetOnchainWeddingsCreatedResponse = z.array(zOnchainWeddingCreated);
+
+export const zGetOnchainDiscoverQuery = z.object({
+    address: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainDiscoverResponse = z.array(zOnchainDiscoveredUser);
+
+export const zGetOnchainInvitationForWeddingPath = z.object({
+    weddingId: z.string()
+});
+
+/**
+ * OK
+ */
+export const zGetOnchainInvitationForWeddingResponse = zOnchainInvitation.nullable();
+
+export const zInvalidateOnchainCacheQuery = z.object({
+    address: z.string()
+});
+
+/**
+ * Invalidated
+ */
+export const zInvalidateOnchainCacheResponse = z.void();

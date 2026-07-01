@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { acceptHostInvite, adminClearWeddingHostSlot, adminCreateHostInvite, adminDeleteCashGift, adminDeleteGuestbookEntry, adminDeleteGuestbookMessage, adminDeleteHostInvite, adminDeleteLoungeCheckIn, adminDeleteMemory, adminDeleteMemoryBookPhoto, adminDeleteMobileInvitation, adminDeleteRsvp, adminDeleteSharedPhoto, adminDeleteWedding, adminMoveWeddingHostSlot, adminUpdateCashGift, adminUpdateGuestbookEntry, adminUpdateGuestbookMessage, adminUpdateHostInvite, adminUpdateLounge, adminUpdateMemory, adminUpdateMobileInvitation, adminUpdateRsvp, adminUpdateUser, adminUpdateWedding, cancelHostInvite, claimGuestbookEntry, createAnnouncement, createCashGift, createConsents, createFeedComment, createGuestbookEntry, createGuestbookMessage, createHostInvite, createInteriorItem, createInvitation, createIum, createLoungeCheckIn, createMemory, createMobileInvitationPhoto, createPresignedUpload, createRsvp, createSharedPhoto, createWedding, deleteAnnouncement, deleteCashGift, deleteFeedComment, deleteInvitation, deleteIum, deleteMemory, downloadSharedPhotosZip, equipMoiItem, getAdminDashboardHealth, getAdminDashboardRecent, getAdminDashboardStats, getAdminUser, getCashGiftsSummary, getGatherPlace, getHostInvite, getInvitation, getLounge, getMe, getMoi, getMyGuestbookEntry, getMyLoungeCheckIn, getMyMoi, getMyParticipatedWeddings, getMyWeddings, getUser, getWedding, getWeddingMemoryBook, getWeddingSharedPhotoGroups, heartInvitation, hostCreateCashGift, listAdminUserActivities, listAdminUsers, listAnnouncements, listCashGifts, listFeed, listFeedComments, listGuestbookEntries, listHostInvites, listInteriorItems, listLoungeCheckIns, listMemories, listMobileInvitationPhotos, listMyIums, listMyMoiItems, listRsvps, listSharedPhotos, type Options, placeInteriorItem, recordGuestbookMessageView, replaceWeddingMemoryBookPhotos, sendMoiItem, shareInvitation, toggleFeedHeart, unequipMoiItem, unplaceInteriorItem, updateAnnouncement, updateCashGift, updateInvitation, updateMarketingConsent, updateMe, updateWedding, updateWeddingSuiIds } from '../sdk.gen';
-import type { AcceptHostInviteData, AcceptHostInviteError, AcceptHostInviteResponse, AdminClearWeddingHostSlotData, AdminClearWeddingHostSlotError, AdminClearWeddingHostSlotResponse, AdminCreateHostInviteData, AdminCreateHostInviteError, AdminCreateHostInviteResponse, AdminDeleteCashGiftData, AdminDeleteCashGiftError, AdminDeleteCashGiftResponse, AdminDeleteGuestbookEntryData, AdminDeleteGuestbookEntryError, AdminDeleteGuestbookEntryResponse, AdminDeleteGuestbookMessageData, AdminDeleteGuestbookMessageError, AdminDeleteGuestbookMessageResponse, AdminDeleteHostInviteData, AdminDeleteHostInviteError, AdminDeleteHostInviteResponse, AdminDeleteLoungeCheckInData, AdminDeleteLoungeCheckInError, AdminDeleteLoungeCheckInResponse, AdminDeleteMemoryBookPhotoData, AdminDeleteMemoryBookPhotoError, AdminDeleteMemoryBookPhotoResponse, AdminDeleteMemoryData, AdminDeleteMemoryError, AdminDeleteMemoryResponse, AdminDeleteMobileInvitationData, AdminDeleteMobileInvitationError, AdminDeleteMobileInvitationResponse, AdminDeleteRsvpData, AdminDeleteRsvpError, AdminDeleteRsvpResponse, AdminDeleteSharedPhotoData, AdminDeleteSharedPhotoError, AdminDeleteSharedPhotoResponse, AdminDeleteWeddingData, AdminDeleteWeddingError, AdminDeleteWeddingResponse, AdminMoveWeddingHostSlotData, AdminMoveWeddingHostSlotError, AdminMoveWeddingHostSlotResponse, AdminUpdateCashGiftData, AdminUpdateCashGiftError, AdminUpdateCashGiftResponse, AdminUpdateGuestbookEntryData, AdminUpdateGuestbookEntryError, AdminUpdateGuestbookEntryResponse, AdminUpdateGuestbookMessageData, AdminUpdateGuestbookMessageError, AdminUpdateGuestbookMessageResponse, AdminUpdateHostInviteData, AdminUpdateHostInviteError, AdminUpdateHostInviteResponse, AdminUpdateLoungeData, AdminUpdateLoungeError, AdminUpdateLoungeResponse, AdminUpdateMemoryData, AdminUpdateMemoryError, AdminUpdateMemoryResponse, AdminUpdateMobileInvitationData, AdminUpdateMobileInvitationError, AdminUpdateMobileInvitationResponse, AdminUpdateRsvpData, AdminUpdateRsvpError, AdminUpdateRsvpResponse, AdminUpdateUserData, AdminUpdateUserError, AdminUpdateUserResponse, AdminUpdateWeddingData, AdminUpdateWeddingError, AdminUpdateWeddingResponse, CancelHostInviteData, CancelHostInviteError, CancelHostInviteResponse, ClaimGuestbookEntryData, ClaimGuestbookEntryError, ClaimGuestbookEntryResponse, CreateAnnouncementData, CreateAnnouncementError, CreateAnnouncementResponse, CreateCashGiftData, CreateCashGiftError, CreateCashGiftResponse, CreateConsentsData, CreateConsentsError, CreateFeedCommentData, CreateFeedCommentError, CreateFeedCommentResponse, CreateGuestbookEntryData, CreateGuestbookEntryError, CreateGuestbookEntryResponse, CreateGuestbookMessageData, CreateGuestbookMessageError, CreateGuestbookMessageResponse, CreateHostInviteData, CreateHostInviteError, CreateHostInviteResponse, CreateInteriorItemData, CreateInteriorItemError, CreateInteriorItemResponse, CreateInvitationData, CreateInvitationError, CreateInvitationResponse, CreateIumData, CreateIumError, CreateIumResponse, CreateLoungeCheckInData, CreateLoungeCheckInError, CreateLoungeCheckInResponse, CreateMemoryData, CreateMemoryError, CreateMemoryResponse, CreateMobileInvitationPhotoData, CreateMobileInvitationPhotoError, CreateMobileInvitationPhotoResponse, CreatePresignedUploadData, CreatePresignedUploadError, CreatePresignedUploadResponse, CreateRsvpData, CreateRsvpError, CreateRsvpResponse, CreateSharedPhotoData, CreateSharedPhotoError, CreateSharedPhotoResponse, CreateWeddingData, CreateWeddingError, CreateWeddingResponse, DeleteAnnouncementData, DeleteAnnouncementError, DeleteAnnouncementResponse, DeleteCashGiftData, DeleteCashGiftError, DeleteCashGiftResponse, DeleteFeedCommentData, DeleteFeedCommentError, DeleteFeedCommentResponse, DeleteInvitationData, DeleteInvitationError, DeleteInvitationResponse, DeleteIumData, DeleteIumError, DeleteIumResponse, DeleteMemoryData, DeleteMemoryError, DeleteMemoryResponse, DownloadSharedPhotosZipData, DownloadSharedPhotosZipError, DownloadSharedPhotosZipResponse, EquipMoiItemData, EquipMoiItemError, EquipMoiItemResponse, GetAdminDashboardHealthData, GetAdminDashboardHealthError, GetAdminDashboardHealthResponse, GetAdminDashboardRecentData, GetAdminDashboardRecentError, GetAdminDashboardRecentResponse, GetAdminDashboardStatsData, GetAdminDashboardStatsError, GetAdminDashboardStatsResponse, GetAdminUserData, GetAdminUserError, GetAdminUserResponse, GetCashGiftsSummaryData, GetCashGiftsSummaryError, GetCashGiftsSummaryResponse, GetGatherPlaceData, GetGatherPlaceError, GetGatherPlaceResponse, GetHostInviteData, GetHostInviteError, GetHostInviteResponse, GetInvitationData, GetInvitationError, GetInvitationResponse, GetLoungeData, GetLoungeError, GetLoungeResponse, GetMeData, GetMeError, GetMeResponse, GetMoiData, GetMoiError, GetMoiResponse, GetMyGuestbookEntryData, GetMyGuestbookEntryError, GetMyGuestbookEntryResponse, GetMyLoungeCheckInData, GetMyLoungeCheckInError, GetMyLoungeCheckInResponse, GetMyMoiData, GetMyMoiError, GetMyMoiResponse, GetMyParticipatedWeddingsData, GetMyParticipatedWeddingsError, GetMyParticipatedWeddingsResponse, GetMyWeddingsData, GetMyWeddingsError, GetMyWeddingsResponse, GetUserData, GetUserError, GetUserResponse, GetWeddingData, GetWeddingError, GetWeddingMemoryBookData, GetWeddingMemoryBookError, GetWeddingMemoryBookResponse, GetWeddingResponse, GetWeddingSharedPhotoGroupsData, GetWeddingSharedPhotoGroupsError, GetWeddingSharedPhotoGroupsResponse, HeartInvitationData, HeartInvitationResponse, HostCreateCashGiftData, HostCreateCashGiftError, HostCreateCashGiftResponse, ListAdminUserActivitiesData, ListAdminUserActivitiesError, ListAdminUserActivitiesResponse, ListAdminUsersData, ListAdminUsersError, ListAdminUsersResponse, ListAnnouncementsData, ListAnnouncementsError, ListAnnouncementsResponse, ListCashGiftsData, ListCashGiftsError, ListCashGiftsResponse, ListFeedCommentsData, ListFeedCommentsError, ListFeedCommentsResponse, ListFeedData, ListFeedError, ListFeedResponse, ListGuestbookEntriesData, ListGuestbookEntriesError, ListGuestbookEntriesResponse, ListHostInvitesData, ListHostInvitesError, ListHostInvitesResponse, ListInteriorItemsData, ListInteriorItemsError, ListInteriorItemsResponse, ListLoungeCheckInsData, ListLoungeCheckInsError, ListLoungeCheckInsResponse, ListMemoriesData, ListMemoriesError, ListMemoriesResponse, ListMobileInvitationPhotosData, ListMobileInvitationPhotosError, ListMobileInvitationPhotosResponse, ListMyIumsData, ListMyIumsError, ListMyIumsResponse, ListMyMoiItemsData, ListMyMoiItemsError, ListMyMoiItemsResponse, ListRsvpsData, ListRsvpsError, ListRsvpsResponse, ListSharedPhotosData, ListSharedPhotosError, ListSharedPhotosResponse, PlaceInteriorItemData, PlaceInteriorItemError, PlaceInteriorItemResponse, RecordGuestbookMessageViewData, RecordGuestbookMessageViewError, RecordGuestbookMessageViewResponse, ReplaceWeddingMemoryBookPhotosData, ReplaceWeddingMemoryBookPhotosError, ReplaceWeddingMemoryBookPhotosResponse, SendMoiItemData, SendMoiItemError, SendMoiItemResponse, ShareInvitationData, ShareInvitationError, ShareInvitationResponse, ToggleFeedHeartData, ToggleFeedHeartError, ToggleFeedHeartResponse, UnequipMoiItemData, UnequipMoiItemError, UnequipMoiItemResponse, UnplaceInteriorItemData, UnplaceInteriorItemError, UnplaceInteriorItemResponse, UpdateAnnouncementData, UpdateAnnouncementError, UpdateAnnouncementResponse, UpdateCashGiftData, UpdateCashGiftError, UpdateCashGiftResponse, UpdateInvitationData, UpdateInvitationError, UpdateInvitationResponse, UpdateMarketingConsentData, UpdateMarketingConsentError, UpdateMeData, UpdateMeError, UpdateMeResponse, UpdateWeddingData, UpdateWeddingError, UpdateWeddingResponse, UpdateWeddingSuiIdsData, UpdateWeddingSuiIdsError, UpdateWeddingSuiIdsResponse } from '../types.gen';
+import { acceptHostInvite, adminClearWeddingHostSlot, adminCreateHostInvite, adminDeleteCashGift, adminDeleteGuestbookEntry, adminDeleteGuestbookMessage, adminDeleteHostInvite, adminDeleteLoungeCheckIn, adminDeleteMemory, adminDeleteMemoryBookPhoto, adminDeleteMobileInvitation, adminDeleteRsvp, adminDeleteSharedPhoto, adminDeleteWedding, adminMoveWeddingHostSlot, adminUpdateCashGift, adminUpdateGuestbookEntry, adminUpdateGuestbookMessage, adminUpdateHostInvite, adminUpdateLounge, adminUpdateMemory, adminUpdateMobileInvitation, adminUpdateRsvp, adminUpdateUser, adminUpdateWedding, cancelHostInvite, claimGuestbookEntry, createAnnouncement, createCashGift, createConsents, createFeedComment, createGuestbookEntry, createGuestbookMessage, createHostInvite, createInteriorItem, createInvitation, createIum, createLoungeCheckIn, createMemory, createMobileInvitationPhoto, createPresignedUpload, createRsvp, createSharedPhoto, createWedding, deleteAnnouncement, deleteCashGift, deleteFeedComment, deleteInvitation, deleteIum, deleteMemory, downloadSharedPhotosZip, equipMoiItem, getAdminDashboardHealth, getAdminDashboardRecent, getAdminDashboardStats, getAdminUser, getCashGiftsSummary, getGatherPlace, getHostInvite, getInvitation, getLounge, getMe, getMoi, getMyGuestbookEntry, getMyLoungeCheckIn, getMyMoi, getMyParticipatedWeddings, getMyWeddings, getOnchainActionLogged, getOnchainAnyParticipation, getOnchainBalance, getOnchainDiscover, getOnchainEventCreated, getOnchainGiftSent, getOnchainInvitation, getOnchainInvitationForWedding, getOnchainIumAccepted, getOnchainIumRequested, getOnchainMoi, getOnchainMoiCreated, getOnchainMoiItem, getOnchainNoteBoxes, getOnchainNotesSent, getOnchainOwnedIumRequests, getOnchainOwnedMoiIds, getOnchainOwnedMoiItems, getOnchainOwnedWeddingCaps, getOnchainParticipated, getOnchainParticipation, getOnchainRsvp, getOnchainSignals, getOnchainVault, getOnchainWedding, getOnchainWeddingCap, getOnchainWeddingLounge, getOnchainWeddingsCreated, getUser, getWedding, getWeddingMemoryBook, getWeddingSharedPhotoGroups, heartInvitation, hostCreateCashGift, invalidateOnchainCache, listAdminUserActivities, listAdminUsers, listAnnouncements, listCashGifts, listFeed, listFeedComments, listGuestbookEntries, listHostInvites, listInteriorItems, listLoungeCheckIns, listMemories, listMobileInvitationPhotos, listMyIums, listMyMoiItems, listRsvps, listSharedPhotos, type Options, placeInteriorItem, recordGuestbookMessageView, replaceWeddingMemoryBookPhotos, sendMoiItem, shareInvitation, toggleFeedHeart, unequipMoiItem, unplaceInteriorItem, updateAnnouncement, updateCashGift, updateInvitation, updateMarketingConsent, updateMe, updateWedding, updateWeddingSuiIds } from '../sdk.gen';
+import type { AcceptHostInviteData, AcceptHostInviteError, AcceptHostInviteResponse, AdminClearWeddingHostSlotData, AdminClearWeddingHostSlotError, AdminClearWeddingHostSlotResponse, AdminCreateHostInviteData, AdminCreateHostInviteError, AdminCreateHostInviteResponse, AdminDeleteCashGiftData, AdminDeleteCashGiftError, AdminDeleteCashGiftResponse, AdminDeleteGuestbookEntryData, AdminDeleteGuestbookEntryError, AdminDeleteGuestbookEntryResponse, AdminDeleteGuestbookMessageData, AdminDeleteGuestbookMessageError, AdminDeleteGuestbookMessageResponse, AdminDeleteHostInviteData, AdminDeleteHostInviteError, AdminDeleteHostInviteResponse, AdminDeleteLoungeCheckInData, AdminDeleteLoungeCheckInError, AdminDeleteLoungeCheckInResponse, AdminDeleteMemoryBookPhotoData, AdminDeleteMemoryBookPhotoError, AdminDeleteMemoryBookPhotoResponse, AdminDeleteMemoryData, AdminDeleteMemoryError, AdminDeleteMemoryResponse, AdminDeleteMobileInvitationData, AdminDeleteMobileInvitationError, AdminDeleteMobileInvitationResponse, AdminDeleteRsvpData, AdminDeleteRsvpError, AdminDeleteRsvpResponse, AdminDeleteSharedPhotoData, AdminDeleteSharedPhotoError, AdminDeleteSharedPhotoResponse, AdminDeleteWeddingData, AdminDeleteWeddingError, AdminDeleteWeddingResponse, AdminMoveWeddingHostSlotData, AdminMoveWeddingHostSlotError, AdminMoveWeddingHostSlotResponse, AdminUpdateCashGiftData, AdminUpdateCashGiftError, AdminUpdateCashGiftResponse, AdminUpdateGuestbookEntryData, AdminUpdateGuestbookEntryError, AdminUpdateGuestbookEntryResponse, AdminUpdateGuestbookMessageData, AdminUpdateGuestbookMessageError, AdminUpdateGuestbookMessageResponse, AdminUpdateHostInviteData, AdminUpdateHostInviteError, AdminUpdateHostInviteResponse, AdminUpdateLoungeData, AdminUpdateLoungeError, AdminUpdateLoungeResponse, AdminUpdateMemoryData, AdminUpdateMemoryError, AdminUpdateMemoryResponse, AdminUpdateMobileInvitationData, AdminUpdateMobileInvitationError, AdminUpdateMobileInvitationResponse, AdminUpdateRsvpData, AdminUpdateRsvpError, AdminUpdateRsvpResponse, AdminUpdateUserData, AdminUpdateUserError, AdminUpdateUserResponse, AdminUpdateWeddingData, AdminUpdateWeddingError, AdminUpdateWeddingResponse, CancelHostInviteData, CancelHostInviteError, CancelHostInviteResponse, ClaimGuestbookEntryData, ClaimGuestbookEntryError, ClaimGuestbookEntryResponse, CreateAnnouncementData, CreateAnnouncementError, CreateAnnouncementResponse, CreateCashGiftData, CreateCashGiftError, CreateCashGiftResponse, CreateConsentsData, CreateConsentsError, CreateFeedCommentData, CreateFeedCommentError, CreateFeedCommentResponse, CreateGuestbookEntryData, CreateGuestbookEntryError, CreateGuestbookEntryResponse, CreateGuestbookMessageData, CreateGuestbookMessageError, CreateGuestbookMessageResponse, CreateHostInviteData, CreateHostInviteError, CreateHostInviteResponse, CreateInteriorItemData, CreateInteriorItemError, CreateInteriorItemResponse, CreateInvitationData, CreateInvitationError, CreateInvitationResponse, CreateIumData, CreateIumError, CreateIumResponse, CreateLoungeCheckInData, CreateLoungeCheckInError, CreateLoungeCheckInResponse, CreateMemoryData, CreateMemoryError, CreateMemoryResponse, CreateMobileInvitationPhotoData, CreateMobileInvitationPhotoError, CreateMobileInvitationPhotoResponse, CreatePresignedUploadData, CreatePresignedUploadError, CreatePresignedUploadResponse, CreateRsvpData, CreateRsvpError, CreateRsvpResponse, CreateSharedPhotoData, CreateSharedPhotoError, CreateSharedPhotoResponse, CreateWeddingData, CreateWeddingError, CreateWeddingResponse, DeleteAnnouncementData, DeleteAnnouncementError, DeleteAnnouncementResponse, DeleteCashGiftData, DeleteCashGiftError, DeleteCashGiftResponse, DeleteFeedCommentData, DeleteFeedCommentError, DeleteFeedCommentResponse, DeleteInvitationData, DeleteInvitationError, DeleteInvitationResponse, DeleteIumData, DeleteIumError, DeleteIumResponse, DeleteMemoryData, DeleteMemoryError, DeleteMemoryResponse, DownloadSharedPhotosZipData, DownloadSharedPhotosZipError, DownloadSharedPhotosZipResponse, EquipMoiItemData, EquipMoiItemError, EquipMoiItemResponse, GetAdminDashboardHealthData, GetAdminDashboardHealthError, GetAdminDashboardHealthResponse, GetAdminDashboardRecentData, GetAdminDashboardRecentError, GetAdminDashboardRecentResponse, GetAdminDashboardStatsData, GetAdminDashboardStatsError, GetAdminDashboardStatsResponse, GetAdminUserData, GetAdminUserError, GetAdminUserResponse, GetCashGiftsSummaryData, GetCashGiftsSummaryError, GetCashGiftsSummaryResponse, GetGatherPlaceData, GetGatherPlaceError, GetGatherPlaceResponse, GetHostInviteData, GetHostInviteError, GetHostInviteResponse, GetInvitationData, GetInvitationError, GetInvitationResponse, GetLoungeData, GetLoungeError, GetLoungeResponse, GetMeData, GetMeError, GetMeResponse, GetMoiData, GetMoiError, GetMoiResponse, GetMyGuestbookEntryData, GetMyGuestbookEntryError, GetMyGuestbookEntryResponse, GetMyLoungeCheckInData, GetMyLoungeCheckInError, GetMyLoungeCheckInResponse, GetMyMoiData, GetMyMoiError, GetMyMoiResponse, GetMyParticipatedWeddingsData, GetMyParticipatedWeddingsError, GetMyParticipatedWeddingsResponse, GetMyWeddingsData, GetMyWeddingsError, GetMyWeddingsResponse, GetOnchainActionLoggedData, GetOnchainActionLoggedResponse, GetOnchainAnyParticipationData, GetOnchainAnyParticipationResponse, GetOnchainBalanceData, GetOnchainBalanceResponse, GetOnchainDiscoverData, GetOnchainDiscoverResponse, GetOnchainEventCreatedData, GetOnchainEventCreatedResponse, GetOnchainGiftSentData, GetOnchainGiftSentResponse, GetOnchainInvitationData, GetOnchainInvitationForWeddingData, GetOnchainInvitationForWeddingResponse, GetOnchainInvitationResponse, GetOnchainIumAcceptedData, GetOnchainIumAcceptedResponse, GetOnchainIumRequestedData, GetOnchainIumRequestedResponse, GetOnchainMoiCreatedData, GetOnchainMoiCreatedResponse, GetOnchainMoiData, GetOnchainMoiItemData, GetOnchainMoiItemResponse, GetOnchainMoiResponse, GetOnchainNoteBoxesData, GetOnchainNoteBoxesResponse, GetOnchainNotesSentData, GetOnchainNotesSentResponse, GetOnchainOwnedIumRequestsData, GetOnchainOwnedIumRequestsResponse, GetOnchainOwnedMoiIdsData, GetOnchainOwnedMoiIdsResponse, GetOnchainOwnedMoiItemsData, GetOnchainOwnedMoiItemsResponse, GetOnchainOwnedWeddingCapsData, GetOnchainOwnedWeddingCapsResponse, GetOnchainParticipatedData, GetOnchainParticipatedResponse, GetOnchainParticipationData, GetOnchainParticipationResponse, GetOnchainRsvpData, GetOnchainRsvpResponse, GetOnchainSignalsData, GetOnchainSignalsResponse, GetOnchainVaultData, GetOnchainVaultResponse, GetOnchainWeddingCapData, GetOnchainWeddingCapResponse, GetOnchainWeddingData, GetOnchainWeddingLoungeData, GetOnchainWeddingLoungeResponse, GetOnchainWeddingResponse, GetOnchainWeddingsCreatedData, GetOnchainWeddingsCreatedResponse, GetUserData, GetUserError, GetUserResponse, GetWeddingData, GetWeddingError, GetWeddingMemoryBookData, GetWeddingMemoryBookError, GetWeddingMemoryBookResponse, GetWeddingResponse, GetWeddingSharedPhotoGroupsData, GetWeddingSharedPhotoGroupsError, GetWeddingSharedPhotoGroupsResponse, HeartInvitationData, HeartInvitationResponse, HostCreateCashGiftData, HostCreateCashGiftError, HostCreateCashGiftResponse, InvalidateOnchainCacheData, InvalidateOnchainCacheResponse, ListAdminUserActivitiesData, ListAdminUserActivitiesError, ListAdminUserActivitiesResponse, ListAdminUsersData, ListAdminUsersError, ListAdminUsersResponse, ListAnnouncementsData, ListAnnouncementsError, ListAnnouncementsResponse, ListCashGiftsData, ListCashGiftsError, ListCashGiftsResponse, ListFeedCommentsData, ListFeedCommentsError, ListFeedCommentsResponse, ListFeedData, ListFeedError, ListFeedResponse, ListGuestbookEntriesData, ListGuestbookEntriesError, ListGuestbookEntriesResponse, ListHostInvitesData, ListHostInvitesError, ListHostInvitesResponse, ListInteriorItemsData, ListInteriorItemsError, ListInteriorItemsResponse, ListLoungeCheckInsData, ListLoungeCheckInsError, ListLoungeCheckInsResponse, ListMemoriesData, ListMemoriesError, ListMemoriesResponse, ListMobileInvitationPhotosData, ListMobileInvitationPhotosError, ListMobileInvitationPhotosResponse, ListMyIumsData, ListMyIumsError, ListMyIumsResponse, ListMyMoiItemsData, ListMyMoiItemsError, ListMyMoiItemsResponse, ListRsvpsData, ListRsvpsError, ListRsvpsResponse, ListSharedPhotosData, ListSharedPhotosError, ListSharedPhotosResponse, PlaceInteriorItemData, PlaceInteriorItemError, PlaceInteriorItemResponse, RecordGuestbookMessageViewData, RecordGuestbookMessageViewError, RecordGuestbookMessageViewResponse, ReplaceWeddingMemoryBookPhotosData, ReplaceWeddingMemoryBookPhotosError, ReplaceWeddingMemoryBookPhotosResponse, SendMoiItemData, SendMoiItemError, SendMoiItemResponse, ShareInvitationData, ShareInvitationError, ShareInvitationResponse, ToggleFeedHeartData, ToggleFeedHeartError, ToggleFeedHeartResponse, UnequipMoiItemData, UnequipMoiItemError, UnequipMoiItemResponse, UnplaceInteriorItemData, UnplaceInteriorItemError, UnplaceInteriorItemResponse, UpdateAnnouncementData, UpdateAnnouncementError, UpdateAnnouncementResponse, UpdateCashGiftData, UpdateCashGiftError, UpdateCashGiftResponse, UpdateInvitationData, UpdateInvitationError, UpdateInvitationResponse, UpdateMarketingConsentData, UpdateMarketingConsentError, UpdateMeData, UpdateMeError, UpdateMeResponse, UpdateWeddingData, UpdateWeddingError, UpdateWeddingResponse, UpdateWeddingSuiIdsData, UpdateWeddingSuiIdsError, UpdateWeddingSuiIdsResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -2160,6 +2160,527 @@ export const adminDeleteLoungeCheckInMutation = (options?: Partial<Options<Admin
     const mutationOptions: UseMutationOptions<AdminDeleteLoungeCheckInResponse, AdminDeleteLoungeCheckInError, Options<AdminDeleteLoungeCheckInData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await adminDeleteLoungeCheckIn({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getOnchainWeddingQueryKey = (options: Options<GetOnchainWeddingData>) => createQueryKey('getOnchainWedding', options);
+
+/**
+ * 온체인 Wedding 조회(없으면 null)
+ */
+export const getOnchainWeddingOptions = (options: Options<GetOnchainWeddingData>) => queryOptions<GetOnchainWeddingResponse, DefaultError, GetOnchainWeddingResponse, ReturnType<typeof getOnchainWeddingQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainWedding({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainWeddingQueryKey(options)
+});
+
+export const getOnchainWeddingLoungeQueryKey = (options: Options<GetOnchainWeddingLoungeData>) => createQueryKey('getOnchainWeddingLounge', options);
+
+/**
+ * 온체인 WeddingLounge 조회(없으면 null)
+ */
+export const getOnchainWeddingLoungeOptions = (options: Options<GetOnchainWeddingLoungeData>) => queryOptions<GetOnchainWeddingLoungeResponse, DefaultError, GetOnchainWeddingLoungeResponse, ReturnType<typeof getOnchainWeddingLoungeQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainWeddingLounge({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainWeddingLoungeQueryKey(options)
+});
+
+export const getOnchainVaultQueryKey = (options: Options<GetOnchainVaultData>) => createQueryKey('getOnchainVault', options);
+
+/**
+ * 온체인 CashGiftVault 조회(없으면 null)
+ */
+export const getOnchainVaultOptions = (options: Options<GetOnchainVaultData>) => queryOptions<GetOnchainVaultResponse, DefaultError, GetOnchainVaultResponse, ReturnType<typeof getOnchainVaultQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainVault({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainVaultQueryKey(options)
+});
+
+export const getOnchainMoiQueryKey = (options: Options<GetOnchainMoiData>) => createQueryKey('getOnchainMoi', options);
+
+/**
+ * 온체인 Moi 조회(없으면 null)
+ */
+export const getOnchainMoiOptions = (options: Options<GetOnchainMoiData>) => queryOptions<GetOnchainMoiResponse, DefaultError, GetOnchainMoiResponse, ReturnType<typeof getOnchainMoiQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainMoi({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainMoiQueryKey(options)
+});
+
+export const getOnchainInvitationQueryKey = (options: Options<GetOnchainInvitationData>) => createQueryKey('getOnchainInvitation', options);
+
+/**
+ * 온체인 Invitation 조회(없으면 null)
+ */
+export const getOnchainInvitationOptions = (options: Options<GetOnchainInvitationData>) => queryOptions<GetOnchainInvitationResponse, DefaultError, GetOnchainInvitationResponse, ReturnType<typeof getOnchainInvitationQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainInvitation({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainInvitationQueryKey(options)
+});
+
+export const getOnchainMoiItemQueryKey = (options: Options<GetOnchainMoiItemData>) => createQueryKey('getOnchainMoiItem', options);
+
+/**
+ * 온체인 MoiItem 단건 조회(없으면 null)
+ */
+export const getOnchainMoiItemOptions = (options: Options<GetOnchainMoiItemData>) => queryOptions<GetOnchainMoiItemResponse, DefaultError, GetOnchainMoiItemResponse, ReturnType<typeof getOnchainMoiItemQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainMoiItem({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainMoiItemQueryKey(options)
+});
+
+export const getOnchainOwnedMoiIdsQueryKey = (options: Options<GetOnchainOwnedMoiIdsData>) => createQueryKey('getOnchainOwnedMoiIds', options);
+
+/**
+ * 주소 소유 Moi ID 목록
+ */
+export const getOnchainOwnedMoiIdsOptions = (options: Options<GetOnchainOwnedMoiIdsData>) => queryOptions<GetOnchainOwnedMoiIdsResponse, DefaultError, GetOnchainOwnedMoiIdsResponse, ReturnType<typeof getOnchainOwnedMoiIdsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainOwnedMoiIds({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainOwnedMoiIdsQueryKey(options)
+});
+
+export const getOnchainOwnedMoiItemsQueryKey = (options: Options<GetOnchainOwnedMoiItemsData>) => createQueryKey('getOnchainOwnedMoiItems', options);
+
+/**
+ * 주소 소유 MoiItem 목록
+ */
+export const getOnchainOwnedMoiItemsOptions = (options: Options<GetOnchainOwnedMoiItemsData>) => queryOptions<GetOnchainOwnedMoiItemsResponse, DefaultError, GetOnchainOwnedMoiItemsResponse, ReturnType<typeof getOnchainOwnedMoiItemsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainOwnedMoiItems({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainOwnedMoiItemsQueryKey(options)
+});
+
+export const getOnchainOwnedWeddingCapsQueryKey = (options: Options<GetOnchainOwnedWeddingCapsData>) => createQueryKey('getOnchainOwnedWeddingCaps', options);
+
+/**
+ * 주소 소유 WeddingCap ID 목록
+ */
+export const getOnchainOwnedWeddingCapsOptions = (options: Options<GetOnchainOwnedWeddingCapsData>) => queryOptions<GetOnchainOwnedWeddingCapsResponse, DefaultError, GetOnchainOwnedWeddingCapsResponse, ReturnType<typeof getOnchainOwnedWeddingCapsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainOwnedWeddingCaps({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainOwnedWeddingCapsQueryKey(options)
+});
+
+export const getOnchainWeddingCapQueryKey = (options: Options<GetOnchainWeddingCapData>) => createQueryKey('getOnchainWeddingCap', options);
+
+/**
+ * 특정 weddingId용 WeddingCap(capId 또는 null)
+ */
+export const getOnchainWeddingCapOptions = (options: Options<GetOnchainWeddingCapData>) => queryOptions<GetOnchainWeddingCapResponse, DefaultError, GetOnchainWeddingCapResponse, ReturnType<typeof getOnchainWeddingCapQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainWeddingCap({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainWeddingCapQueryKey(options)
+});
+
+export const getOnchainParticipationQueryKey = (options: Options<GetOnchainParticipationData>) => createQueryKey('getOnchainParticipation', options);
+
+/**
+ * 특정 eventId용 Participation(없으면 null)
+ */
+export const getOnchainParticipationOptions = (options: Options<GetOnchainParticipationData>) => queryOptions<GetOnchainParticipationResponse, DefaultError, GetOnchainParticipationResponse, ReturnType<typeof getOnchainParticipationQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainParticipation({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainParticipationQueryKey(options)
+});
+
+export const getOnchainAnyParticipationQueryKey = (options: Options<GetOnchainAnyParticipationData>) => createQueryKey('getOnchainAnyParticipation', options);
+
+/**
+ * 주소 보유 Participation 아무거나(없으면 null)
+ */
+export const getOnchainAnyParticipationOptions = (options: Options<GetOnchainAnyParticipationData>) => queryOptions<GetOnchainAnyParticipationResponse, DefaultError, GetOnchainAnyParticipationResponse, ReturnType<typeof getOnchainAnyParticipationQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainAnyParticipation({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainAnyParticipationQueryKey(options)
+});
+
+export const getOnchainOwnedIumRequestsQueryKey = (options: Options<GetOnchainOwnedIumRequestsData>) => createQueryKey('getOnchainOwnedIumRequests', options);
+
+/**
+ * 주소 소유 IumRequest 목록
+ */
+export const getOnchainOwnedIumRequestsOptions = (options: Options<GetOnchainOwnedIumRequestsData>) => queryOptions<GetOnchainOwnedIumRequestsResponse, DefaultError, GetOnchainOwnedIumRequestsResponse, ReturnType<typeof getOnchainOwnedIumRequestsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainOwnedIumRequests({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainOwnedIumRequestsQueryKey(options)
+});
+
+export const getOnchainBalanceQueryKey = (options: Options<GetOnchainBalanceData>) => createQueryKey('getOnchainBalance', options);
+
+/**
+ * 주소 SUI 잔액(MIST)
+ */
+export const getOnchainBalanceOptions = (options: Options<GetOnchainBalanceData>) => queryOptions<GetOnchainBalanceResponse, DefaultError, GetOnchainBalanceResponse, ReturnType<typeof getOnchainBalanceQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainBalance({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainBalanceQueryKey(options)
+});
+
+export const getOnchainSignalsQueryKey = (options?: Options<GetOnchainSignalsData>) => createQueryKey('getOnchainSignals', options);
+
+/**
+ * SignalEmitted 전량
+ */
+export const getOnchainSignalsOptions = (options?: Options<GetOnchainSignalsData>) => queryOptions<GetOnchainSignalsResponse, DefaultError, GetOnchainSignalsResponse, ReturnType<typeof getOnchainSignalsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainSignals({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainSignalsQueryKey(options)
+});
+
+export const getOnchainParticipatedQueryKey = (options?: Options<GetOnchainParticipatedData>) => createQueryKey('getOnchainParticipated', options);
+
+/**
+ * Participated 전량
+ */
+export const getOnchainParticipatedOptions = (options?: Options<GetOnchainParticipatedData>) => queryOptions<GetOnchainParticipatedResponse, DefaultError, GetOnchainParticipatedResponse, ReturnType<typeof getOnchainParticipatedQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainParticipated({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainParticipatedQueryKey(options)
+});
+
+export const getOnchainEventCreatedQueryKey = (options?: Options<GetOnchainEventCreatedData>) => createQueryKey('getOnchainEventCreated', options);
+
+/**
+ * EventCreated 전량
+ */
+export const getOnchainEventCreatedOptions = (options?: Options<GetOnchainEventCreatedData>) => queryOptions<GetOnchainEventCreatedResponse, DefaultError, GetOnchainEventCreatedResponse, ReturnType<typeof getOnchainEventCreatedQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainEventCreated({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainEventCreatedQueryKey(options)
+});
+
+export const getOnchainActionLoggedQueryKey = (options?: Options<GetOnchainActionLoggedData>) => createQueryKey('getOnchainActionLogged', options);
+
+/**
+ * ActionLogged 전량
+ */
+export const getOnchainActionLoggedOptions = (options?: Options<GetOnchainActionLoggedData>) => queryOptions<GetOnchainActionLoggedResponse, DefaultError, GetOnchainActionLoggedResponse, ReturnType<typeof getOnchainActionLoggedQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainActionLogged({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainActionLoggedQueryKey(options)
+});
+
+export const getOnchainMoiCreatedQueryKey = (options?: Options<GetOnchainMoiCreatedData>) => createQueryKey('getOnchainMoiCreated', options);
+
+/**
+ * MoiCreated 전량
+ */
+export const getOnchainMoiCreatedOptions = (options?: Options<GetOnchainMoiCreatedData>) => queryOptions<GetOnchainMoiCreatedResponse, DefaultError, GetOnchainMoiCreatedResponse, ReturnType<typeof getOnchainMoiCreatedQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainMoiCreated({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainMoiCreatedQueryKey(options)
+});
+
+export const getOnchainGiftSentQueryKey = (options?: Options<GetOnchainGiftSentData>) => createQueryKey('getOnchainGiftSent', options);
+
+/**
+ * GiftSent 전량
+ */
+export const getOnchainGiftSentOptions = (options?: Options<GetOnchainGiftSentData>) => queryOptions<GetOnchainGiftSentResponse, DefaultError, GetOnchainGiftSentResponse, ReturnType<typeof getOnchainGiftSentQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainGiftSent({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainGiftSentQueryKey(options)
+});
+
+export const getOnchainIumRequestedQueryKey = (options?: Options<GetOnchainIumRequestedData>) => createQueryKey('getOnchainIumRequested', options);
+
+/**
+ * IumRequested 전량
+ */
+export const getOnchainIumRequestedOptions = (options?: Options<GetOnchainIumRequestedData>) => queryOptions<GetOnchainIumRequestedResponse, DefaultError, GetOnchainIumRequestedResponse, ReturnType<typeof getOnchainIumRequestedQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainIumRequested({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainIumRequestedQueryKey(options)
+});
+
+export const getOnchainIumAcceptedQueryKey = (options?: Options<GetOnchainIumAcceptedData>) => createQueryKey('getOnchainIumAccepted', options);
+
+/**
+ * IumAccepted 전량
+ */
+export const getOnchainIumAcceptedOptions = (options?: Options<GetOnchainIumAcceptedData>) => queryOptions<GetOnchainIumAcceptedResponse, DefaultError, GetOnchainIumAcceptedResponse, ReturnType<typeof getOnchainIumAcceptedQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainIumAccepted({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainIumAcceptedQueryKey(options)
+});
+
+export const getOnchainRsvpQueryKey = (options: Options<GetOnchainRsvpData>) => createQueryKey('getOnchainRsvp', options);
+
+/**
+ * RsvpSubmitted(weddingId 필터)
+ */
+export const getOnchainRsvpOptions = (options: Options<GetOnchainRsvpData>) => queryOptions<GetOnchainRsvpResponse, DefaultError, GetOnchainRsvpResponse, ReturnType<typeof getOnchainRsvpQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainRsvp({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainRsvpQueryKey(options)
+});
+
+export const getOnchainNotesSentQueryKey = (options: Options<GetOnchainNotesSentData>) => createQueryKey('getOnchainNotesSent', options);
+
+/**
+ * NoteSent(from/to == address 필터)
+ */
+export const getOnchainNotesSentOptions = (options: Options<GetOnchainNotesSentData>) => queryOptions<GetOnchainNotesSentResponse, DefaultError, GetOnchainNotesSentResponse, ReturnType<typeof getOnchainNotesSentQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainNotesSent({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainNotesSentQueryKey(options)
+});
+
+export const getOnchainNoteBoxesQueryKey = (options: Options<GetOnchainNoteBoxesData>) => createQueryKey('getOnchainNoteBoxes', options);
+
+/**
+ * NoteBoxCreated(participant_a/b == address 필터)
+ */
+export const getOnchainNoteBoxesOptions = (options: Options<GetOnchainNoteBoxesData>) => queryOptions<GetOnchainNoteBoxesResponse, DefaultError, GetOnchainNoteBoxesResponse, ReturnType<typeof getOnchainNoteBoxesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainNoteBoxes({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainNoteBoxesQueryKey(options)
+});
+
+export const getOnchainWeddingsCreatedQueryKey = (options?: Options<GetOnchainWeddingsCreatedData>) => createQueryKey('getOnchainWeddingsCreated', options);
+
+/**
+ * WeddingCreated 전량
+ */
+export const getOnchainWeddingsCreatedOptions = (options?: Options<GetOnchainWeddingsCreatedData>) => queryOptions<GetOnchainWeddingsCreatedResponse, DefaultError, GetOnchainWeddingsCreatedResponse, ReturnType<typeof getOnchainWeddingsCreatedQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainWeddingsCreated({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainWeddingsCreatedQueryKey(options)
+});
+
+export const getOnchainDiscoverQueryKey = (options: Options<GetOnchainDiscoverData>) => createQueryKey('getOnchainDiscover', options);
+
+/**
+ * 유저 발견(MoiCreated+Participated+EventCreated+Signal 4스캔 + BFS degree)
+ */
+export const getOnchainDiscoverOptions = (options: Options<GetOnchainDiscoverData>) => queryOptions<GetOnchainDiscoverResponse, DefaultError, GetOnchainDiscoverResponse, ReturnType<typeof getOnchainDiscoverQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainDiscover({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainDiscoverQueryKey(options)
+});
+
+export const getOnchainInvitationForWeddingQueryKey = (options: Options<GetOnchainInvitationForWeddingData>) => createQueryKey('getOnchainInvitationForWedding', options);
+
+/**
+ * 결혼식의 정당 청첩장(creator=host 검증, 없으면 null)
+ */
+export const getOnchainInvitationForWeddingOptions = (options: Options<GetOnchainInvitationForWeddingData>) => queryOptions<GetOnchainInvitationForWeddingResponse, DefaultError, GetOnchainInvitationForWeddingResponse, ReturnType<typeof getOnchainInvitationForWeddingQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getOnchainInvitationForWedding({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getOnchainInvitationForWeddingQueryKey(options)
+});
+
+/**
+ * TX 성공 후 캐시 무효화(per-user 키 + 전역 이벤트 키 drop)
+ */
+export const invalidateOnchainCacheMutation = (options?: Partial<Options<InvalidateOnchainCacheData>>): UseMutationOptions<InvalidateOnchainCacheResponse, DefaultError, Options<InvalidateOnchainCacheData>> => {
+    const mutationOptions: UseMutationOptions<InvalidateOnchainCacheResponse, DefaultError, Options<InvalidateOnchainCacheData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await invalidateOnchainCache({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

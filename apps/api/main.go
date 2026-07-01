@@ -139,6 +139,12 @@ func main() {
 	// _scenario/2026-05-26-user-consent-onboarding/SCENARIOS.md
 	srv.Consents = api.NewConsentService(pool)
 
+	// 온체인 읽기 프록시(/onchain/*): Sui GraphQL 리더 + 온디맨드 캐시(TTL+single-flight).
+	// 무인증(공개 데이터) — 핸들러가 UserIDFromContext 미호출. _architecture/2026-07-01-onchain-query-go-proxy/
+	srv.Onchain = api.NewCachedReader(api.NewSuiGraphQL(cfg.SuiGraphqlURL))
+	srv.OnchainPkg = cfg.SuiOriginalPackageID
+	log.Printf("Onchain: /onchain/* 프록시 활성 — GraphQL=%s, pkg=%s…", cfg.SuiGraphqlURL, cfg.SuiOriginalPackageID[:10])
+
 	// Admin (운영자 read-only). service_role 키로 auth.users 메타데이터 조회.
 	if cfg.SupabaseServiceRoleKey == "" {
 		log.Println("WARN: SUPABASE_SERVICE_ROLE_KEY 미설정 — admin auth.users 메타(provider/last_sign_in) 조회 비활성")

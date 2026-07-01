@@ -51,6 +51,12 @@ type Config struct {
 	SuiNetwork        string `envconfig:"SUI_NETWORK"        default:"testnet"`
 	SuiPackageID      string `envconfig:"SUI_PACKAGE_ID"`
 
+	// 온체인 읽기 프록시(/onchain/*) — Sui GraphQL 업스트림. 서버-투-서버라 CORS 무관.
+	// gRPC는 이벤트 타입쿼리 불가, JSON-RPC는 2026-07-31 sunset → GraphQL 채택.
+	SuiGraphqlURL string `envconfig:"SUI_GRAPHQL_URL" default:"https://graphql.testnet.sui.io/graphql"`
+	// 이벤트/오브젝트 타입 필터용 original package id(고정 0xf33fba09…). moveCall용 packageId와 구분.
+	SuiOriginalPackageID string `envconfig:"SUI_ORIGINAL_PACKAGE_ID" default:"0xf33fba09dcade57bb0a27bd0f0bbd698a18d358c74ae7273d0a85bcab9b7e77d"`
+
 	// Dev 인증 우회 (localhost·dev 전용). 기본 false. ★prod .env에 절대 넣지 않는다.
 	// true일 때만 X-Dev-Auth 헤더로 고정 DEV_USER_ID 를 인증(Supabase 검증 우회) — 헤드리스 온체인 테스트용.
 	DevAuthBypass bool   `envconfig:"DEV_AUTH_BYPASS" default:"false"`

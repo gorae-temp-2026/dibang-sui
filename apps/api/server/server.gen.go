@@ -244,6 +244,93 @@ type ServerInterface interface {
 	// [미구현·추후 — 재구현 시 §3 소유자 이름 마스킹 필수] [public] 특정 모이 조회
 	// (GET /mois/{moiId})
 	GetMoi(w http.ResponseWriter, r *http.Request, moiId MoiId)
+	// 주소 보유 Participation 아무거나(없으면 null)
+	// (GET /onchain/addresses/{address}/any-participation)
+	GetOnchainAnyParticipation(w http.ResponseWriter, r *http.Request, address string)
+	// 주소 SUI 잔액(MIST)
+	// (GET /onchain/addresses/{address}/balance)
+	GetOnchainBalance(w http.ResponseWriter, r *http.Request, address string)
+	// 주소 소유 IumRequest 목록
+	// (GET /onchain/addresses/{address}/ium-requests)
+	GetOnchainOwnedIumRequests(w http.ResponseWriter, r *http.Request, address string)
+	// 주소 소유 Moi ID 목록
+	// (GET /onchain/addresses/{address}/moi-ids)
+	GetOnchainOwnedMoiIds(w http.ResponseWriter, r *http.Request, address string)
+	// 주소 소유 MoiItem 목록
+	// (GET /onchain/addresses/{address}/moi-items)
+	GetOnchainOwnedMoiItems(w http.ResponseWriter, r *http.Request, address string)
+	// 특정 eventId용 Participation(없으면 null)
+	// (GET /onchain/addresses/{address}/participations)
+	GetOnchainParticipation(w http.ResponseWriter, r *http.Request, address string, params GetOnchainParticipationParams)
+	// 특정 weddingId용 WeddingCap(capId 또는 null)
+	// (GET /onchain/addresses/{address}/wedding-cap)
+	GetOnchainWeddingCap(w http.ResponseWriter, r *http.Request, address string, params GetOnchainWeddingCapParams)
+	// 주소 소유 WeddingCap ID 목록
+	// (GET /onchain/addresses/{address}/wedding-caps)
+	GetOnchainOwnedWeddingCaps(w http.ResponseWriter, r *http.Request, address string)
+	// TX 성공 후 캐시 무효화(per-user 키 + 전역 이벤트 키 drop)
+	// (POST /onchain/cache/invalidate)
+	InvalidateOnchainCache(w http.ResponseWriter, r *http.Request, params InvalidateOnchainCacheParams)
+	// 유저 발견(MoiCreated+Participated+EventCreated+Signal 4스캔 + BFS degree)
+	// (GET /onchain/discover)
+	GetOnchainDiscover(w http.ResponseWriter, r *http.Request, params GetOnchainDiscoverParams)
+	// ActionLogged 전량
+	// (GET /onchain/events/action-logged)
+	GetOnchainActionLogged(w http.ResponseWriter, r *http.Request)
+	// EventCreated 전량
+	// (GET /onchain/events/event-created)
+	GetOnchainEventCreated(w http.ResponseWriter, r *http.Request)
+	// GiftSent 전량
+	// (GET /onchain/events/gift-sent)
+	GetOnchainGiftSent(w http.ResponseWriter, r *http.Request)
+	// IumAccepted 전량
+	// (GET /onchain/events/ium-accepted)
+	GetOnchainIumAccepted(w http.ResponseWriter, r *http.Request)
+	// IumRequested 전량
+	// (GET /onchain/events/ium-requested)
+	GetOnchainIumRequested(w http.ResponseWriter, r *http.Request)
+	// MoiCreated 전량
+	// (GET /onchain/events/moi-created)
+	GetOnchainMoiCreated(w http.ResponseWriter, r *http.Request)
+	// NoteBoxCreated(participant_a/b == address 필터)
+	// (GET /onchain/events/note-boxes)
+	GetOnchainNoteBoxes(w http.ResponseWriter, r *http.Request, params GetOnchainNoteBoxesParams)
+	// NoteSent(from/to == address 필터)
+	// (GET /onchain/events/notes-sent)
+	GetOnchainNotesSent(w http.ResponseWriter, r *http.Request, params GetOnchainNotesSentParams)
+	// Participated 전량
+	// (GET /onchain/events/participated)
+	GetOnchainParticipated(w http.ResponseWriter, r *http.Request)
+	// RsvpSubmitted(weddingId 필터)
+	// (GET /onchain/events/rsvp)
+	GetOnchainRsvp(w http.ResponseWriter, r *http.Request, params GetOnchainRsvpParams)
+	// SignalEmitted 전량
+	// (GET /onchain/events/signals)
+	GetOnchainSignals(w http.ResponseWriter, r *http.Request)
+	// WeddingCreated 전량
+	// (GET /onchain/events/weddings-created)
+	GetOnchainWeddingsCreated(w http.ResponseWriter, r *http.Request)
+	// 온체인 Invitation 조회(없으면 null)
+	// (GET /onchain/invitations/{invitationId})
+	GetOnchainInvitation(w http.ResponseWriter, r *http.Request, invitationId string)
+	// 온체인 WeddingLounge 조회(없으면 null)
+	// (GET /onchain/lounges/{loungeId})
+	GetOnchainWeddingLounge(w http.ResponseWriter, r *http.Request, loungeId string)
+	// 온체인 MoiItem 단건 조회(없으면 null)
+	// (GET /onchain/moi-items/{itemId})
+	GetOnchainMoiItem(w http.ResponseWriter, r *http.Request, itemId string)
+	// 온체인 Moi 조회(없으면 null)
+	// (GET /onchain/mois/{moiId})
+	GetOnchainMoi(w http.ResponseWriter, r *http.Request, moiId string)
+	// 온체인 CashGiftVault 조회(없으면 null)
+	// (GET /onchain/vaults/{vaultId})
+	GetOnchainVault(w http.ResponseWriter, r *http.Request, vaultId string)
+	// 온체인 Wedding 조회(없으면 null)
+	// (GET /onchain/weddings/{weddingId})
+	GetOnchainWedding(w http.ResponseWriter, r *http.Request, weddingId string)
+	// 결혼식의 정당 청첩장(creator=host 검증, 없으면 null)
+	// (GET /onchain/weddings/{weddingId}/invitation)
+	GetOnchainInvitationForWedding(w http.ResponseWriter, r *http.Request, weddingId string)
 	// [authenticated] presigned upload URL 발급. category별 권한 검증 후 Supabase Storage SignedUploadUrl 반환. share는 object_key의 guestUserId를 ctx user로 서버 강제 주입
 	// (POST /uploads/presigned)
 	CreatePresignedUpload(w http.ResponseWriter, r *http.Request)
@@ -787,6 +874,180 @@ func (_ Unimplemented) UnequipMoiItem(w http.ResponseWriter, r *http.Request, it
 // [미구현·추후 — 재구현 시 §3 소유자 이름 마스킹 필수] [public] 특정 모이 조회
 // (GET /mois/{moiId})
 func (_ Unimplemented) GetMoi(w http.ResponseWriter, r *http.Request, moiId MoiId) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 주소 보유 Participation 아무거나(없으면 null)
+// (GET /onchain/addresses/{address}/any-participation)
+func (_ Unimplemented) GetOnchainAnyParticipation(w http.ResponseWriter, r *http.Request, address string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 주소 SUI 잔액(MIST)
+// (GET /onchain/addresses/{address}/balance)
+func (_ Unimplemented) GetOnchainBalance(w http.ResponseWriter, r *http.Request, address string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 주소 소유 IumRequest 목록
+// (GET /onchain/addresses/{address}/ium-requests)
+func (_ Unimplemented) GetOnchainOwnedIumRequests(w http.ResponseWriter, r *http.Request, address string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 주소 소유 Moi ID 목록
+// (GET /onchain/addresses/{address}/moi-ids)
+func (_ Unimplemented) GetOnchainOwnedMoiIds(w http.ResponseWriter, r *http.Request, address string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 주소 소유 MoiItem 목록
+// (GET /onchain/addresses/{address}/moi-items)
+func (_ Unimplemented) GetOnchainOwnedMoiItems(w http.ResponseWriter, r *http.Request, address string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 특정 eventId용 Participation(없으면 null)
+// (GET /onchain/addresses/{address}/participations)
+func (_ Unimplemented) GetOnchainParticipation(w http.ResponseWriter, r *http.Request, address string, params GetOnchainParticipationParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 특정 weddingId용 WeddingCap(capId 또는 null)
+// (GET /onchain/addresses/{address}/wedding-cap)
+func (_ Unimplemented) GetOnchainWeddingCap(w http.ResponseWriter, r *http.Request, address string, params GetOnchainWeddingCapParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 주소 소유 WeddingCap ID 목록
+// (GET /onchain/addresses/{address}/wedding-caps)
+func (_ Unimplemented) GetOnchainOwnedWeddingCaps(w http.ResponseWriter, r *http.Request, address string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// TX 성공 후 캐시 무효화(per-user 키 + 전역 이벤트 키 drop)
+// (POST /onchain/cache/invalidate)
+func (_ Unimplemented) InvalidateOnchainCache(w http.ResponseWriter, r *http.Request, params InvalidateOnchainCacheParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 유저 발견(MoiCreated+Participated+EventCreated+Signal 4스캔 + BFS degree)
+// (GET /onchain/discover)
+func (_ Unimplemented) GetOnchainDiscover(w http.ResponseWriter, r *http.Request, params GetOnchainDiscoverParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// ActionLogged 전량
+// (GET /onchain/events/action-logged)
+func (_ Unimplemented) GetOnchainActionLogged(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// EventCreated 전량
+// (GET /onchain/events/event-created)
+func (_ Unimplemented) GetOnchainEventCreated(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// GiftSent 전량
+// (GET /onchain/events/gift-sent)
+func (_ Unimplemented) GetOnchainGiftSent(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// IumAccepted 전량
+// (GET /onchain/events/ium-accepted)
+func (_ Unimplemented) GetOnchainIumAccepted(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// IumRequested 전량
+// (GET /onchain/events/ium-requested)
+func (_ Unimplemented) GetOnchainIumRequested(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// MoiCreated 전량
+// (GET /onchain/events/moi-created)
+func (_ Unimplemented) GetOnchainMoiCreated(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// NoteBoxCreated(participant_a/b == address 필터)
+// (GET /onchain/events/note-boxes)
+func (_ Unimplemented) GetOnchainNoteBoxes(w http.ResponseWriter, r *http.Request, params GetOnchainNoteBoxesParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// NoteSent(from/to == address 필터)
+// (GET /onchain/events/notes-sent)
+func (_ Unimplemented) GetOnchainNotesSent(w http.ResponseWriter, r *http.Request, params GetOnchainNotesSentParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Participated 전량
+// (GET /onchain/events/participated)
+func (_ Unimplemented) GetOnchainParticipated(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// RsvpSubmitted(weddingId 필터)
+// (GET /onchain/events/rsvp)
+func (_ Unimplemented) GetOnchainRsvp(w http.ResponseWriter, r *http.Request, params GetOnchainRsvpParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// SignalEmitted 전량
+// (GET /onchain/events/signals)
+func (_ Unimplemented) GetOnchainSignals(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// WeddingCreated 전량
+// (GET /onchain/events/weddings-created)
+func (_ Unimplemented) GetOnchainWeddingsCreated(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 온체인 Invitation 조회(없으면 null)
+// (GET /onchain/invitations/{invitationId})
+func (_ Unimplemented) GetOnchainInvitation(w http.ResponseWriter, r *http.Request, invitationId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 온체인 WeddingLounge 조회(없으면 null)
+// (GET /onchain/lounges/{loungeId})
+func (_ Unimplemented) GetOnchainWeddingLounge(w http.ResponseWriter, r *http.Request, loungeId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 온체인 MoiItem 단건 조회(없으면 null)
+// (GET /onchain/moi-items/{itemId})
+func (_ Unimplemented) GetOnchainMoiItem(w http.ResponseWriter, r *http.Request, itemId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 온체인 Moi 조회(없으면 null)
+// (GET /onchain/mois/{moiId})
+func (_ Unimplemented) GetOnchainMoi(w http.ResponseWriter, r *http.Request, moiId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 온체인 CashGiftVault 조회(없으면 null)
+// (GET /onchain/vaults/{vaultId})
+func (_ Unimplemented) GetOnchainVault(w http.ResponseWriter, r *http.Request, vaultId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 온체인 Wedding 조회(없으면 null)
+// (GET /onchain/weddings/{weddingId})
+func (_ Unimplemented) GetOnchainWedding(w http.ResponseWriter, r *http.Request, weddingId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// 결혼식의 정당 청첩장(creator=host 검증, 없으면 null)
+// (GET /onchain/weddings/{weddingId}/invitation)
+func (_ Unimplemented) GetOnchainInvitationForWedding(w http.ResponseWriter, r *http.Request, weddingId string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3466,6 +3727,893 @@ func (siw *ServerInterfaceWrapper) GetMoi(w http.ResponseWriter, r *http.Request
 	handler.ServeHTTP(w, r)
 }
 
+// GetOnchainAnyParticipation operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainAnyParticipation(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "address" -------------
+	var address string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "address", chi.URLParam(r, "address"), &address, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainAnyParticipation(w, r, address)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainBalance operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainBalance(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "address" -------------
+	var address string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "address", chi.URLParam(r, "address"), &address, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainBalance(w, r, address)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainOwnedIumRequests operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainOwnedIumRequests(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "address" -------------
+	var address string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "address", chi.URLParam(r, "address"), &address, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainOwnedIumRequests(w, r, address)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainOwnedMoiIds operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainOwnedMoiIds(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "address" -------------
+	var address string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "address", chi.URLParam(r, "address"), &address, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainOwnedMoiIds(w, r, address)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainOwnedMoiItems operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainOwnedMoiItems(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "address" -------------
+	var address string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "address", chi.URLParam(r, "address"), &address, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainOwnedMoiItems(w, r, address)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainParticipation operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainParticipation(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "address" -------------
+	var address string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "address", chi.URLParam(r, "address"), &address, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetOnchainParticipationParams
+
+	// ------------- Required query parameter "eventId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "eventId", r.URL.Query(), &params.EventId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "eventId"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "eventId", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainParticipation(w, r, address, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainWeddingCap operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainWeddingCap(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "address" -------------
+	var address string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "address", chi.URLParam(r, "address"), &address, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetOnchainWeddingCapParams
+
+	// ------------- Required query parameter "weddingId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "weddingId", r.URL.Query(), &params.WeddingId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "weddingId"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "weddingId", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainWeddingCap(w, r, address, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainOwnedWeddingCaps operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainOwnedWeddingCaps(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "address" -------------
+	var address string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "address", chi.URLParam(r, "address"), &address, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainOwnedWeddingCaps(w, r, address)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// InvalidateOnchainCache operation middleware
+func (siw *ServerInterfaceWrapper) InvalidateOnchainCache(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params InvalidateOnchainCacheParams
+
+	// ------------- Required query parameter "address" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "address", r.URL.Query(), &params.Address, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "address"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.InvalidateOnchainCache(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainDiscover operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainDiscover(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetOnchainDiscoverParams
+
+	// ------------- Required query parameter "address" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "address", r.URL.Query(), &params.Address, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "address"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainDiscover(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainActionLogged operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainActionLogged(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainActionLogged(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainEventCreated operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainEventCreated(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainEventCreated(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainGiftSent operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainGiftSent(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainGiftSent(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainIumAccepted operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainIumAccepted(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainIumAccepted(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainIumRequested operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainIumRequested(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainIumRequested(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainMoiCreated operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainMoiCreated(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainMoiCreated(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainNoteBoxes operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainNoteBoxes(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetOnchainNoteBoxesParams
+
+	// ------------- Required query parameter "address" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "address", r.URL.Query(), &params.Address, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "address"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainNoteBoxes(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainNotesSent operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainNotesSent(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetOnchainNotesSentParams
+
+	// ------------- Required query parameter "address" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "address", r.URL.Query(), &params.Address, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "address"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "address", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainNotesSent(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainParticipated operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainParticipated(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainParticipated(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainRsvp operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainRsvp(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetOnchainRsvpParams
+
+	// ------------- Required query parameter "weddingId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "weddingId", r.URL.Query(), &params.WeddingId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "weddingId"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "weddingId", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainRsvp(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainSignals operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainSignals(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainSignals(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainWeddingsCreated operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainWeddingsCreated(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainWeddingsCreated(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainInvitation operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainInvitation(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "invitationId" -------------
+	var invitationId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "invitationId", chi.URLParam(r, "invitationId"), &invitationId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "invitationId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainInvitation(w, r, invitationId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainWeddingLounge operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainWeddingLounge(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "loungeId" -------------
+	var loungeId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "loungeId", chi.URLParam(r, "loungeId"), &loungeId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "loungeId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainWeddingLounge(w, r, loungeId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainMoiItem operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainMoiItem(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "itemId" -------------
+	var itemId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "itemId", chi.URLParam(r, "itemId"), &itemId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "itemId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainMoiItem(w, r, itemId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainMoi operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainMoi(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "moiId" -------------
+	var moiId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "moiId", chi.URLParam(r, "moiId"), &moiId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "moiId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainMoi(w, r, moiId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainVault operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainVault(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "vaultId" -------------
+	var vaultId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "vaultId", chi.URLParam(r, "vaultId"), &vaultId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "vaultId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainVault(w, r, vaultId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainWedding operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainWedding(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "weddingId" -------------
+	var weddingId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "weddingId", chi.URLParam(r, "weddingId"), &weddingId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "weddingId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainWedding(w, r, weddingId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetOnchainInvitationForWedding operation middleware
+func (siw *ServerInterfaceWrapper) GetOnchainInvitationForWedding(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "weddingId" -------------
+	var weddingId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "weddingId", chi.URLParam(r, "weddingId"), &weddingId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "weddingId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetOnchainInvitationForWedding(w, r, weddingId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreatePresignedUpload operation middleware
 func (siw *ServerInterfaceWrapper) CreatePresignedUpload(w http.ResponseWriter, r *http.Request) {
 
@@ -4800,6 +5948,93 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/mois/{moiId}", wrapper.GetMoi)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/addresses/{address}/any-participation", wrapper.GetOnchainAnyParticipation)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/addresses/{address}/balance", wrapper.GetOnchainBalance)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/addresses/{address}/ium-requests", wrapper.GetOnchainOwnedIumRequests)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/addresses/{address}/moi-ids", wrapper.GetOnchainOwnedMoiIds)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/addresses/{address}/moi-items", wrapper.GetOnchainOwnedMoiItems)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/addresses/{address}/participations", wrapper.GetOnchainParticipation)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/addresses/{address}/wedding-cap", wrapper.GetOnchainWeddingCap)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/addresses/{address}/wedding-caps", wrapper.GetOnchainOwnedWeddingCaps)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/onchain/cache/invalidate", wrapper.InvalidateOnchainCache)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/discover", wrapper.GetOnchainDiscover)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/action-logged", wrapper.GetOnchainActionLogged)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/event-created", wrapper.GetOnchainEventCreated)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/gift-sent", wrapper.GetOnchainGiftSent)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/ium-accepted", wrapper.GetOnchainIumAccepted)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/ium-requested", wrapper.GetOnchainIumRequested)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/moi-created", wrapper.GetOnchainMoiCreated)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/note-boxes", wrapper.GetOnchainNoteBoxes)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/notes-sent", wrapper.GetOnchainNotesSent)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/participated", wrapper.GetOnchainParticipated)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/rsvp", wrapper.GetOnchainRsvp)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/signals", wrapper.GetOnchainSignals)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/events/weddings-created", wrapper.GetOnchainWeddingsCreated)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/invitations/{invitationId}", wrapper.GetOnchainInvitation)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/lounges/{loungeId}", wrapper.GetOnchainWeddingLounge)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/moi-items/{itemId}", wrapper.GetOnchainMoiItem)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/mois/{moiId}", wrapper.GetOnchainMoi)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/vaults/{vaultId}", wrapper.GetOnchainVault)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/weddings/{weddingId}", wrapper.GetOnchainWedding)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/onchain/weddings/{weddingId}/invitation", wrapper.GetOnchainInvitationForWedding)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/uploads/presigned", wrapper.CreatePresignedUpload)
@@ -9053,6 +10288,631 @@ func (response GetMoi404JSONResponse) VisitGetMoiResponse(w http.ResponseWriter)
 	return err
 }
 
+type GetOnchainAnyParticipationRequestObject struct {
+	Address string `json:"address"`
+}
+
+type GetOnchainAnyParticipationResponseObject interface {
+	VisitGetOnchainAnyParticipationResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainAnyParticipation200JSONResponse OnchainParticipation
+
+func (response GetOnchainAnyParticipation200JSONResponse) VisitGetOnchainAnyParticipationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainBalanceRequestObject struct {
+	Address string `json:"address"`
+}
+
+type GetOnchainBalanceResponseObject interface {
+	VisitGetOnchainBalanceResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainBalance200JSONResponse OnchainBalance
+
+func (response GetOnchainBalance200JSONResponse) VisitGetOnchainBalanceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainOwnedIumRequestsRequestObject struct {
+	Address string `json:"address"`
+}
+
+type GetOnchainOwnedIumRequestsResponseObject interface {
+	VisitGetOnchainOwnedIumRequestsResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainOwnedIumRequests200JSONResponse []OnchainOwnedIumRequest
+
+func (response GetOnchainOwnedIumRequests200JSONResponse) VisitGetOnchainOwnedIumRequestsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainOwnedMoiIdsRequestObject struct {
+	Address string `json:"address"`
+}
+
+type GetOnchainOwnedMoiIdsResponseObject interface {
+	VisitGetOnchainOwnedMoiIdsResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainOwnedMoiIds200JSONResponse []string
+
+func (response GetOnchainOwnedMoiIds200JSONResponse) VisitGetOnchainOwnedMoiIdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainOwnedMoiItemsRequestObject struct {
+	Address string `json:"address"`
+}
+
+type GetOnchainOwnedMoiItemsResponseObject interface {
+	VisitGetOnchainOwnedMoiItemsResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainOwnedMoiItems200JSONResponse []OnchainMoiItem
+
+func (response GetOnchainOwnedMoiItems200JSONResponse) VisitGetOnchainOwnedMoiItemsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainParticipationRequestObject struct {
+	Address string `json:"address"`
+	Params  GetOnchainParticipationParams
+}
+
+type GetOnchainParticipationResponseObject interface {
+	VisitGetOnchainParticipationResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainParticipation200JSONResponse OnchainParticipation
+
+func (response GetOnchainParticipation200JSONResponse) VisitGetOnchainParticipationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainWeddingCapRequestObject struct {
+	Address string `json:"address"`
+	Params  GetOnchainWeddingCapParams
+}
+
+type GetOnchainWeddingCapResponseObject interface {
+	VisitGetOnchainWeddingCapResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainWeddingCap200JSONResponse OnchainWeddingCap
+
+func (response GetOnchainWeddingCap200JSONResponse) VisitGetOnchainWeddingCapResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainOwnedWeddingCapsRequestObject struct {
+	Address string `json:"address"`
+}
+
+type GetOnchainOwnedWeddingCapsResponseObject interface {
+	VisitGetOnchainOwnedWeddingCapsResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainOwnedWeddingCaps200JSONResponse []string
+
+func (response GetOnchainOwnedWeddingCaps200JSONResponse) VisitGetOnchainOwnedWeddingCapsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type InvalidateOnchainCacheRequestObject struct {
+	Params InvalidateOnchainCacheParams
+}
+
+type InvalidateOnchainCacheResponseObject interface {
+	VisitInvalidateOnchainCacheResponse(w http.ResponseWriter) error
+}
+
+type InvalidateOnchainCache204Response struct {
+}
+
+func (response InvalidateOnchainCache204Response) VisitInvalidateOnchainCacheResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type GetOnchainDiscoverRequestObject struct {
+	Params GetOnchainDiscoverParams
+}
+
+type GetOnchainDiscoverResponseObject interface {
+	VisitGetOnchainDiscoverResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainDiscover200JSONResponse []OnchainDiscoveredUser
+
+func (response GetOnchainDiscover200JSONResponse) VisitGetOnchainDiscoverResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainActionLoggedRequestObject struct {
+}
+
+type GetOnchainActionLoggedResponseObject interface {
+	VisitGetOnchainActionLoggedResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainActionLogged200JSONResponse []OnchainActionLogged
+
+func (response GetOnchainActionLogged200JSONResponse) VisitGetOnchainActionLoggedResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainEventCreatedRequestObject struct {
+}
+
+type GetOnchainEventCreatedResponseObject interface {
+	VisitGetOnchainEventCreatedResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainEventCreated200JSONResponse []OnchainEventCreated
+
+func (response GetOnchainEventCreated200JSONResponse) VisitGetOnchainEventCreatedResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainGiftSentRequestObject struct {
+}
+
+type GetOnchainGiftSentResponseObject interface {
+	VisitGetOnchainGiftSentResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainGiftSent200JSONResponse []OnchainGiftSent
+
+func (response GetOnchainGiftSent200JSONResponse) VisitGetOnchainGiftSentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainIumAcceptedRequestObject struct {
+}
+
+type GetOnchainIumAcceptedResponseObject interface {
+	VisitGetOnchainIumAcceptedResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainIumAccepted200JSONResponse []OnchainIumAccepted
+
+func (response GetOnchainIumAccepted200JSONResponse) VisitGetOnchainIumAcceptedResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainIumRequestedRequestObject struct {
+}
+
+type GetOnchainIumRequestedResponseObject interface {
+	VisitGetOnchainIumRequestedResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainIumRequested200JSONResponse []OnchainIumRequested
+
+func (response GetOnchainIumRequested200JSONResponse) VisitGetOnchainIumRequestedResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainMoiCreatedRequestObject struct {
+}
+
+type GetOnchainMoiCreatedResponseObject interface {
+	VisitGetOnchainMoiCreatedResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainMoiCreated200JSONResponse []OnchainMoiCreated
+
+func (response GetOnchainMoiCreated200JSONResponse) VisitGetOnchainMoiCreatedResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainNoteBoxesRequestObject struct {
+	Params GetOnchainNoteBoxesParams
+}
+
+type GetOnchainNoteBoxesResponseObject interface {
+	VisitGetOnchainNoteBoxesResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainNoteBoxes200JSONResponse []OnchainNoteBoxCreated
+
+func (response GetOnchainNoteBoxes200JSONResponse) VisitGetOnchainNoteBoxesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainNotesSentRequestObject struct {
+	Params GetOnchainNotesSentParams
+}
+
+type GetOnchainNotesSentResponseObject interface {
+	VisitGetOnchainNotesSentResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainNotesSent200JSONResponse []OnchainNoteSent
+
+func (response GetOnchainNotesSent200JSONResponse) VisitGetOnchainNotesSentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainParticipatedRequestObject struct {
+}
+
+type GetOnchainParticipatedResponseObject interface {
+	VisitGetOnchainParticipatedResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainParticipated200JSONResponse []OnchainParticipated
+
+func (response GetOnchainParticipated200JSONResponse) VisitGetOnchainParticipatedResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainRsvpRequestObject struct {
+	Params GetOnchainRsvpParams
+}
+
+type GetOnchainRsvpResponseObject interface {
+	VisitGetOnchainRsvpResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainRsvp200JSONResponse []OnchainRsvpEvent
+
+func (response GetOnchainRsvp200JSONResponse) VisitGetOnchainRsvpResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainSignalsRequestObject struct {
+}
+
+type GetOnchainSignalsResponseObject interface {
+	VisitGetOnchainSignalsResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainSignals200JSONResponse []OnchainSignal
+
+func (response GetOnchainSignals200JSONResponse) VisitGetOnchainSignalsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainWeddingsCreatedRequestObject struct {
+}
+
+type GetOnchainWeddingsCreatedResponseObject interface {
+	VisitGetOnchainWeddingsCreatedResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainWeddingsCreated200JSONResponse []OnchainWeddingCreated
+
+func (response GetOnchainWeddingsCreated200JSONResponse) VisitGetOnchainWeddingsCreatedResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainInvitationRequestObject struct {
+	InvitationId string `json:"invitationId"`
+}
+
+type GetOnchainInvitationResponseObject interface {
+	VisitGetOnchainInvitationResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainInvitation200JSONResponse OnchainInvitation
+
+func (response GetOnchainInvitation200JSONResponse) VisitGetOnchainInvitationResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainWeddingLoungeRequestObject struct {
+	LoungeId string `json:"loungeId"`
+}
+
+type GetOnchainWeddingLoungeResponseObject interface {
+	VisitGetOnchainWeddingLoungeResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainWeddingLounge200JSONResponse OnchainWeddingLounge
+
+func (response GetOnchainWeddingLounge200JSONResponse) VisitGetOnchainWeddingLoungeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainMoiItemRequestObject struct {
+	ItemId string `json:"itemId"`
+}
+
+type GetOnchainMoiItemResponseObject interface {
+	VisitGetOnchainMoiItemResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainMoiItem200JSONResponse OnchainMoiItem
+
+func (response GetOnchainMoiItem200JSONResponse) VisitGetOnchainMoiItemResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainMoiRequestObject struct {
+	MoiId string `json:"moiId"`
+}
+
+type GetOnchainMoiResponseObject interface {
+	VisitGetOnchainMoiResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainMoi200JSONResponse OnchainMoi
+
+func (response GetOnchainMoi200JSONResponse) VisitGetOnchainMoiResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainVaultRequestObject struct {
+	VaultId string `json:"vaultId"`
+}
+
+type GetOnchainVaultResponseObject interface {
+	VisitGetOnchainVaultResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainVault200JSONResponse OnchainCashGiftVault
+
+func (response GetOnchainVault200JSONResponse) VisitGetOnchainVaultResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainWeddingRequestObject struct {
+	WeddingId string `json:"weddingId"`
+}
+
+type GetOnchainWeddingResponseObject interface {
+	VisitGetOnchainWeddingResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainWedding200JSONResponse OnchainWedding
+
+func (response GetOnchainWedding200JSONResponse) VisitGetOnchainWeddingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetOnchainInvitationForWeddingRequestObject struct {
+	WeddingId string `json:"weddingId"`
+}
+
+type GetOnchainInvitationForWeddingResponseObject interface {
+	VisitGetOnchainInvitationForWeddingResponse(w http.ResponseWriter) error
+}
+
+type GetOnchainInvitationForWedding200JSONResponse OnchainInvitation
+
+func (response GetOnchainInvitationForWedding200JSONResponse) VisitGetOnchainInvitationForWeddingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type CreatePresignedUploadRequestObject struct {
 	Body *CreatePresignedUploadJSONRequestBody
 }
@@ -10980,6 +12840,93 @@ type StrictServerInterface interface {
 	// [미구현·추후 — 재구현 시 §3 소유자 이름 마스킹 필수] [public] 특정 모이 조회
 	// (GET /mois/{moiId})
 	GetMoi(ctx context.Context, request GetMoiRequestObject) (GetMoiResponseObject, error)
+	// 주소 보유 Participation 아무거나(없으면 null)
+	// (GET /onchain/addresses/{address}/any-participation)
+	GetOnchainAnyParticipation(ctx context.Context, request GetOnchainAnyParticipationRequestObject) (GetOnchainAnyParticipationResponseObject, error)
+	// 주소 SUI 잔액(MIST)
+	// (GET /onchain/addresses/{address}/balance)
+	GetOnchainBalance(ctx context.Context, request GetOnchainBalanceRequestObject) (GetOnchainBalanceResponseObject, error)
+	// 주소 소유 IumRequest 목록
+	// (GET /onchain/addresses/{address}/ium-requests)
+	GetOnchainOwnedIumRequests(ctx context.Context, request GetOnchainOwnedIumRequestsRequestObject) (GetOnchainOwnedIumRequestsResponseObject, error)
+	// 주소 소유 Moi ID 목록
+	// (GET /onchain/addresses/{address}/moi-ids)
+	GetOnchainOwnedMoiIds(ctx context.Context, request GetOnchainOwnedMoiIdsRequestObject) (GetOnchainOwnedMoiIdsResponseObject, error)
+	// 주소 소유 MoiItem 목록
+	// (GET /onchain/addresses/{address}/moi-items)
+	GetOnchainOwnedMoiItems(ctx context.Context, request GetOnchainOwnedMoiItemsRequestObject) (GetOnchainOwnedMoiItemsResponseObject, error)
+	// 특정 eventId용 Participation(없으면 null)
+	// (GET /onchain/addresses/{address}/participations)
+	GetOnchainParticipation(ctx context.Context, request GetOnchainParticipationRequestObject) (GetOnchainParticipationResponseObject, error)
+	// 특정 weddingId용 WeddingCap(capId 또는 null)
+	// (GET /onchain/addresses/{address}/wedding-cap)
+	GetOnchainWeddingCap(ctx context.Context, request GetOnchainWeddingCapRequestObject) (GetOnchainWeddingCapResponseObject, error)
+	// 주소 소유 WeddingCap ID 목록
+	// (GET /onchain/addresses/{address}/wedding-caps)
+	GetOnchainOwnedWeddingCaps(ctx context.Context, request GetOnchainOwnedWeddingCapsRequestObject) (GetOnchainOwnedWeddingCapsResponseObject, error)
+	// TX 성공 후 캐시 무효화(per-user 키 + 전역 이벤트 키 drop)
+	// (POST /onchain/cache/invalidate)
+	InvalidateOnchainCache(ctx context.Context, request InvalidateOnchainCacheRequestObject) (InvalidateOnchainCacheResponseObject, error)
+	// 유저 발견(MoiCreated+Participated+EventCreated+Signal 4스캔 + BFS degree)
+	// (GET /onchain/discover)
+	GetOnchainDiscover(ctx context.Context, request GetOnchainDiscoverRequestObject) (GetOnchainDiscoverResponseObject, error)
+	// ActionLogged 전량
+	// (GET /onchain/events/action-logged)
+	GetOnchainActionLogged(ctx context.Context, request GetOnchainActionLoggedRequestObject) (GetOnchainActionLoggedResponseObject, error)
+	// EventCreated 전량
+	// (GET /onchain/events/event-created)
+	GetOnchainEventCreated(ctx context.Context, request GetOnchainEventCreatedRequestObject) (GetOnchainEventCreatedResponseObject, error)
+	// GiftSent 전량
+	// (GET /onchain/events/gift-sent)
+	GetOnchainGiftSent(ctx context.Context, request GetOnchainGiftSentRequestObject) (GetOnchainGiftSentResponseObject, error)
+	// IumAccepted 전량
+	// (GET /onchain/events/ium-accepted)
+	GetOnchainIumAccepted(ctx context.Context, request GetOnchainIumAcceptedRequestObject) (GetOnchainIumAcceptedResponseObject, error)
+	// IumRequested 전량
+	// (GET /onchain/events/ium-requested)
+	GetOnchainIumRequested(ctx context.Context, request GetOnchainIumRequestedRequestObject) (GetOnchainIumRequestedResponseObject, error)
+	// MoiCreated 전량
+	// (GET /onchain/events/moi-created)
+	GetOnchainMoiCreated(ctx context.Context, request GetOnchainMoiCreatedRequestObject) (GetOnchainMoiCreatedResponseObject, error)
+	// NoteBoxCreated(participant_a/b == address 필터)
+	// (GET /onchain/events/note-boxes)
+	GetOnchainNoteBoxes(ctx context.Context, request GetOnchainNoteBoxesRequestObject) (GetOnchainNoteBoxesResponseObject, error)
+	// NoteSent(from/to == address 필터)
+	// (GET /onchain/events/notes-sent)
+	GetOnchainNotesSent(ctx context.Context, request GetOnchainNotesSentRequestObject) (GetOnchainNotesSentResponseObject, error)
+	// Participated 전량
+	// (GET /onchain/events/participated)
+	GetOnchainParticipated(ctx context.Context, request GetOnchainParticipatedRequestObject) (GetOnchainParticipatedResponseObject, error)
+	// RsvpSubmitted(weddingId 필터)
+	// (GET /onchain/events/rsvp)
+	GetOnchainRsvp(ctx context.Context, request GetOnchainRsvpRequestObject) (GetOnchainRsvpResponseObject, error)
+	// SignalEmitted 전량
+	// (GET /onchain/events/signals)
+	GetOnchainSignals(ctx context.Context, request GetOnchainSignalsRequestObject) (GetOnchainSignalsResponseObject, error)
+	// WeddingCreated 전량
+	// (GET /onchain/events/weddings-created)
+	GetOnchainWeddingsCreated(ctx context.Context, request GetOnchainWeddingsCreatedRequestObject) (GetOnchainWeddingsCreatedResponseObject, error)
+	// 온체인 Invitation 조회(없으면 null)
+	// (GET /onchain/invitations/{invitationId})
+	GetOnchainInvitation(ctx context.Context, request GetOnchainInvitationRequestObject) (GetOnchainInvitationResponseObject, error)
+	// 온체인 WeddingLounge 조회(없으면 null)
+	// (GET /onchain/lounges/{loungeId})
+	GetOnchainWeddingLounge(ctx context.Context, request GetOnchainWeddingLoungeRequestObject) (GetOnchainWeddingLoungeResponseObject, error)
+	// 온체인 MoiItem 단건 조회(없으면 null)
+	// (GET /onchain/moi-items/{itemId})
+	GetOnchainMoiItem(ctx context.Context, request GetOnchainMoiItemRequestObject) (GetOnchainMoiItemResponseObject, error)
+	// 온체인 Moi 조회(없으면 null)
+	// (GET /onchain/mois/{moiId})
+	GetOnchainMoi(ctx context.Context, request GetOnchainMoiRequestObject) (GetOnchainMoiResponseObject, error)
+	// 온체인 CashGiftVault 조회(없으면 null)
+	// (GET /onchain/vaults/{vaultId})
+	GetOnchainVault(ctx context.Context, request GetOnchainVaultRequestObject) (GetOnchainVaultResponseObject, error)
+	// 온체인 Wedding 조회(없으면 null)
+	// (GET /onchain/weddings/{weddingId})
+	GetOnchainWedding(ctx context.Context, request GetOnchainWeddingRequestObject) (GetOnchainWeddingResponseObject, error)
+	// 결혼식의 정당 청첩장(creator=host 검증, 없으면 null)
+	// (GET /onchain/weddings/{weddingId}/invitation)
+	GetOnchainInvitationForWedding(ctx context.Context, request GetOnchainInvitationForWeddingRequestObject) (GetOnchainInvitationForWeddingResponseObject, error)
 	// [authenticated] presigned upload URL 발급. category별 권한 검증 후 Supabase Storage SignedUploadUrl 반환. share는 object_key의 guestUserId를 ctx user로 서버 강제 주입
 	// (POST /uploads/presigned)
 	CreatePresignedUpload(ctx context.Context, request CreatePresignedUploadRequestObject) (CreatePresignedUploadResponseObject, error)
@@ -13229,6 +15176,744 @@ func (sh *strictHandler) GetMoi(w http.ResponseWriter, r *http.Request, moiId Mo
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetMoiResponseObject); ok {
 		if err := validResponse.VisitGetMoiResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainAnyParticipation operation middleware
+func (sh *strictHandler) GetOnchainAnyParticipation(w http.ResponseWriter, r *http.Request, address string) {
+	var request GetOnchainAnyParticipationRequestObject
+
+	request.Address = address
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainAnyParticipation(ctx, request.(GetOnchainAnyParticipationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainAnyParticipation")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainAnyParticipationResponseObject); ok {
+		if err := validResponse.VisitGetOnchainAnyParticipationResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainBalance operation middleware
+func (sh *strictHandler) GetOnchainBalance(w http.ResponseWriter, r *http.Request, address string) {
+	var request GetOnchainBalanceRequestObject
+
+	request.Address = address
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainBalance(ctx, request.(GetOnchainBalanceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainBalance")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainBalanceResponseObject); ok {
+		if err := validResponse.VisitGetOnchainBalanceResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainOwnedIumRequests operation middleware
+func (sh *strictHandler) GetOnchainOwnedIumRequests(w http.ResponseWriter, r *http.Request, address string) {
+	var request GetOnchainOwnedIumRequestsRequestObject
+
+	request.Address = address
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainOwnedIumRequests(ctx, request.(GetOnchainOwnedIumRequestsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainOwnedIumRequests")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainOwnedIumRequestsResponseObject); ok {
+		if err := validResponse.VisitGetOnchainOwnedIumRequestsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainOwnedMoiIds operation middleware
+func (sh *strictHandler) GetOnchainOwnedMoiIds(w http.ResponseWriter, r *http.Request, address string) {
+	var request GetOnchainOwnedMoiIdsRequestObject
+
+	request.Address = address
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainOwnedMoiIds(ctx, request.(GetOnchainOwnedMoiIdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainOwnedMoiIds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainOwnedMoiIdsResponseObject); ok {
+		if err := validResponse.VisitGetOnchainOwnedMoiIdsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainOwnedMoiItems operation middleware
+func (sh *strictHandler) GetOnchainOwnedMoiItems(w http.ResponseWriter, r *http.Request, address string) {
+	var request GetOnchainOwnedMoiItemsRequestObject
+
+	request.Address = address
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainOwnedMoiItems(ctx, request.(GetOnchainOwnedMoiItemsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainOwnedMoiItems")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainOwnedMoiItemsResponseObject); ok {
+		if err := validResponse.VisitGetOnchainOwnedMoiItemsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainParticipation operation middleware
+func (sh *strictHandler) GetOnchainParticipation(w http.ResponseWriter, r *http.Request, address string, params GetOnchainParticipationParams) {
+	var request GetOnchainParticipationRequestObject
+
+	request.Address = address
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainParticipation(ctx, request.(GetOnchainParticipationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainParticipation")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainParticipationResponseObject); ok {
+		if err := validResponse.VisitGetOnchainParticipationResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainWeddingCap operation middleware
+func (sh *strictHandler) GetOnchainWeddingCap(w http.ResponseWriter, r *http.Request, address string, params GetOnchainWeddingCapParams) {
+	var request GetOnchainWeddingCapRequestObject
+
+	request.Address = address
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainWeddingCap(ctx, request.(GetOnchainWeddingCapRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainWeddingCap")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainWeddingCapResponseObject); ok {
+		if err := validResponse.VisitGetOnchainWeddingCapResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainOwnedWeddingCaps operation middleware
+func (sh *strictHandler) GetOnchainOwnedWeddingCaps(w http.ResponseWriter, r *http.Request, address string) {
+	var request GetOnchainOwnedWeddingCapsRequestObject
+
+	request.Address = address
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainOwnedWeddingCaps(ctx, request.(GetOnchainOwnedWeddingCapsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainOwnedWeddingCaps")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainOwnedWeddingCapsResponseObject); ok {
+		if err := validResponse.VisitGetOnchainOwnedWeddingCapsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// InvalidateOnchainCache operation middleware
+func (sh *strictHandler) InvalidateOnchainCache(w http.ResponseWriter, r *http.Request, params InvalidateOnchainCacheParams) {
+	var request InvalidateOnchainCacheRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.InvalidateOnchainCache(ctx, request.(InvalidateOnchainCacheRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "InvalidateOnchainCache")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(InvalidateOnchainCacheResponseObject); ok {
+		if err := validResponse.VisitInvalidateOnchainCacheResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainDiscover operation middleware
+func (sh *strictHandler) GetOnchainDiscover(w http.ResponseWriter, r *http.Request, params GetOnchainDiscoverParams) {
+	var request GetOnchainDiscoverRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainDiscover(ctx, request.(GetOnchainDiscoverRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainDiscover")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainDiscoverResponseObject); ok {
+		if err := validResponse.VisitGetOnchainDiscoverResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainActionLogged operation middleware
+func (sh *strictHandler) GetOnchainActionLogged(w http.ResponseWriter, r *http.Request) {
+	var request GetOnchainActionLoggedRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainActionLogged(ctx, request.(GetOnchainActionLoggedRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainActionLogged")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainActionLoggedResponseObject); ok {
+		if err := validResponse.VisitGetOnchainActionLoggedResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainEventCreated operation middleware
+func (sh *strictHandler) GetOnchainEventCreated(w http.ResponseWriter, r *http.Request) {
+	var request GetOnchainEventCreatedRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainEventCreated(ctx, request.(GetOnchainEventCreatedRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainEventCreated")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainEventCreatedResponseObject); ok {
+		if err := validResponse.VisitGetOnchainEventCreatedResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainGiftSent operation middleware
+func (sh *strictHandler) GetOnchainGiftSent(w http.ResponseWriter, r *http.Request) {
+	var request GetOnchainGiftSentRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainGiftSent(ctx, request.(GetOnchainGiftSentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainGiftSent")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainGiftSentResponseObject); ok {
+		if err := validResponse.VisitGetOnchainGiftSentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainIumAccepted operation middleware
+func (sh *strictHandler) GetOnchainIumAccepted(w http.ResponseWriter, r *http.Request) {
+	var request GetOnchainIumAcceptedRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainIumAccepted(ctx, request.(GetOnchainIumAcceptedRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainIumAccepted")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainIumAcceptedResponseObject); ok {
+		if err := validResponse.VisitGetOnchainIumAcceptedResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainIumRequested operation middleware
+func (sh *strictHandler) GetOnchainIumRequested(w http.ResponseWriter, r *http.Request) {
+	var request GetOnchainIumRequestedRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainIumRequested(ctx, request.(GetOnchainIumRequestedRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainIumRequested")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainIumRequestedResponseObject); ok {
+		if err := validResponse.VisitGetOnchainIumRequestedResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainMoiCreated operation middleware
+func (sh *strictHandler) GetOnchainMoiCreated(w http.ResponseWriter, r *http.Request) {
+	var request GetOnchainMoiCreatedRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainMoiCreated(ctx, request.(GetOnchainMoiCreatedRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainMoiCreated")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainMoiCreatedResponseObject); ok {
+		if err := validResponse.VisitGetOnchainMoiCreatedResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainNoteBoxes operation middleware
+func (sh *strictHandler) GetOnchainNoteBoxes(w http.ResponseWriter, r *http.Request, params GetOnchainNoteBoxesParams) {
+	var request GetOnchainNoteBoxesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainNoteBoxes(ctx, request.(GetOnchainNoteBoxesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainNoteBoxes")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainNoteBoxesResponseObject); ok {
+		if err := validResponse.VisitGetOnchainNoteBoxesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainNotesSent operation middleware
+func (sh *strictHandler) GetOnchainNotesSent(w http.ResponseWriter, r *http.Request, params GetOnchainNotesSentParams) {
+	var request GetOnchainNotesSentRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainNotesSent(ctx, request.(GetOnchainNotesSentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainNotesSent")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainNotesSentResponseObject); ok {
+		if err := validResponse.VisitGetOnchainNotesSentResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainParticipated operation middleware
+func (sh *strictHandler) GetOnchainParticipated(w http.ResponseWriter, r *http.Request) {
+	var request GetOnchainParticipatedRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainParticipated(ctx, request.(GetOnchainParticipatedRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainParticipated")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainParticipatedResponseObject); ok {
+		if err := validResponse.VisitGetOnchainParticipatedResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainRsvp operation middleware
+func (sh *strictHandler) GetOnchainRsvp(w http.ResponseWriter, r *http.Request, params GetOnchainRsvpParams) {
+	var request GetOnchainRsvpRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainRsvp(ctx, request.(GetOnchainRsvpRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainRsvp")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainRsvpResponseObject); ok {
+		if err := validResponse.VisitGetOnchainRsvpResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainSignals operation middleware
+func (sh *strictHandler) GetOnchainSignals(w http.ResponseWriter, r *http.Request) {
+	var request GetOnchainSignalsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainSignals(ctx, request.(GetOnchainSignalsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainSignals")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainSignalsResponseObject); ok {
+		if err := validResponse.VisitGetOnchainSignalsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainWeddingsCreated operation middleware
+func (sh *strictHandler) GetOnchainWeddingsCreated(w http.ResponseWriter, r *http.Request) {
+	var request GetOnchainWeddingsCreatedRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainWeddingsCreated(ctx, request.(GetOnchainWeddingsCreatedRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainWeddingsCreated")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainWeddingsCreatedResponseObject); ok {
+		if err := validResponse.VisitGetOnchainWeddingsCreatedResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainInvitation operation middleware
+func (sh *strictHandler) GetOnchainInvitation(w http.ResponseWriter, r *http.Request, invitationId string) {
+	var request GetOnchainInvitationRequestObject
+
+	request.InvitationId = invitationId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainInvitation(ctx, request.(GetOnchainInvitationRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainInvitation")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainInvitationResponseObject); ok {
+		if err := validResponse.VisitGetOnchainInvitationResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainWeddingLounge operation middleware
+func (sh *strictHandler) GetOnchainWeddingLounge(w http.ResponseWriter, r *http.Request, loungeId string) {
+	var request GetOnchainWeddingLoungeRequestObject
+
+	request.LoungeId = loungeId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainWeddingLounge(ctx, request.(GetOnchainWeddingLoungeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainWeddingLounge")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainWeddingLoungeResponseObject); ok {
+		if err := validResponse.VisitGetOnchainWeddingLoungeResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainMoiItem operation middleware
+func (sh *strictHandler) GetOnchainMoiItem(w http.ResponseWriter, r *http.Request, itemId string) {
+	var request GetOnchainMoiItemRequestObject
+
+	request.ItemId = itemId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainMoiItem(ctx, request.(GetOnchainMoiItemRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainMoiItem")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainMoiItemResponseObject); ok {
+		if err := validResponse.VisitGetOnchainMoiItemResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainMoi operation middleware
+func (sh *strictHandler) GetOnchainMoi(w http.ResponseWriter, r *http.Request, moiId string) {
+	var request GetOnchainMoiRequestObject
+
+	request.MoiId = moiId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainMoi(ctx, request.(GetOnchainMoiRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainMoi")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainMoiResponseObject); ok {
+		if err := validResponse.VisitGetOnchainMoiResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainVault operation middleware
+func (sh *strictHandler) GetOnchainVault(w http.ResponseWriter, r *http.Request, vaultId string) {
+	var request GetOnchainVaultRequestObject
+
+	request.VaultId = vaultId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainVault(ctx, request.(GetOnchainVaultRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainVault")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainVaultResponseObject); ok {
+		if err := validResponse.VisitGetOnchainVaultResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainWedding operation middleware
+func (sh *strictHandler) GetOnchainWedding(w http.ResponseWriter, r *http.Request, weddingId string) {
+	var request GetOnchainWeddingRequestObject
+
+	request.WeddingId = weddingId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainWedding(ctx, request.(GetOnchainWeddingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainWedding")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainWeddingResponseObject); ok {
+		if err := validResponse.VisitGetOnchainWeddingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetOnchainInvitationForWedding operation middleware
+func (sh *strictHandler) GetOnchainInvitationForWedding(w http.ResponseWriter, r *http.Request, weddingId string) {
+	var request GetOnchainInvitationForWeddingRequestObject
+
+	request.WeddingId = weddingId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetOnchainInvitationForWedding(ctx, request.(GetOnchainInvitationForWeddingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetOnchainInvitationForWedding")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetOnchainInvitationForWeddingResponseObject); ok {
+		if err := validResponse.VisitGetOnchainInvitationForWeddingResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

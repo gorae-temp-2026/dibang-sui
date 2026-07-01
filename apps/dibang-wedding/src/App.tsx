@@ -6,6 +6,7 @@ import { MainLayout } from './layouts/MainLayout'
 import { DevErrorBoundary } from './components/DevErrorBoundary'
 import { OnboardingGate } from './components/OnboardingGate'
 import { isDevBypass } from './dev/devBypass'
+import { useOnchainInvalidation } from './hooks/useOnchainInvalidation'
 
 // 핵심 라우트 — static import (초기 로드)
 import { LoginPage } from './pages/LoginPage'
@@ -52,6 +53,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  useOnchainInvalidation() // TX 성공 시 온체인 캐시(서버+RQ) 무효화 — 내 행동 즉시 반영
   return (
     <DevErrorBoundary>
     <Suspense fallback={<div className="flex h-screen items-center justify-center"><p className="text-gray-400">로딩 중...</p></div>}>

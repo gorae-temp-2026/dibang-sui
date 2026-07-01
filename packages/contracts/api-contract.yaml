@@ -61,6 +61,8 @@ tags:
     description: 라운지 공유 사진 (wedding 단위 그룹 조회 등)
   - name: Admin
     description: 운영자 전용 read-only API. /admin/* 는 AdminGuard(admin@gorae.dev allowlist)로 보호.
+  - name: Onchain
+    description: 온체인(Sui) 읽기 프록시 /onchain/*. 무인증(공개 데이터). Go가 Sui GraphQL로 읽어 캐시 서빙.
 
 paths:
   # ──────────────────────────────────────
@@ -2306,6 +2308,249 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+
+  # ════════════════════════════════════════
+  # 온체인(Sui) 읽기 프록시 — /onchain/* (무인증, Go→GraphQL→Sui)
+  # 경로 파라미터는 Sui 오브젝트 ID(hex, uuid 아님) → inline string.
+  # nullable 단건은 없을 때 200 null(SDK 반환 계약과 정합).
+  # ════════════════════════════════════════
+
+  # ── A. 단일 오브젝트 ──
+  /onchain/weddings/{weddingId}:
+    get:
+      operationId: getOnchainWedding
+      tags: [Onchain]
+      summary: "온체인 Wedding 조회(없으면 null)"
+      parameters: [{ name: weddingId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { nullable: true, allOf: [{ $ref: '#/components/schemas/OnchainWedding' }] } } } }
+  /onchain/lounges/{loungeId}:
+    get:
+      operationId: getOnchainWeddingLounge
+      tags: [Onchain]
+      summary: "온체인 WeddingLounge 조회(없으면 null)"
+      parameters: [{ name: loungeId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { nullable: true, allOf: [{ $ref: '#/components/schemas/OnchainWeddingLounge' }] } } } }
+  /onchain/vaults/{vaultId}:
+    get:
+      operationId: getOnchainVault
+      tags: [Onchain]
+      summary: "온체인 CashGiftVault 조회(없으면 null)"
+      parameters: [{ name: vaultId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { nullable: true, allOf: [{ $ref: '#/components/schemas/OnchainCashGiftVault' }] } } } }
+  /onchain/mois/{moiId}:
+    get:
+      operationId: getOnchainMoi
+      tags: [Onchain]
+      summary: "온체인 Moi 조회(없으면 null)"
+      parameters: [{ name: moiId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { nullable: true, allOf: [{ $ref: '#/components/schemas/OnchainMoi' }] } } } }
+  /onchain/invitations/{invitationId}:
+    get:
+      operationId: getOnchainInvitation
+      tags: [Onchain]
+      summary: "온체인 Invitation 조회(없으면 null)"
+      parameters: [{ name: invitationId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { nullable: true, allOf: [{ $ref: '#/components/schemas/OnchainInvitation' }] } } } }
+  /onchain/moi-items/{itemId}:
+    get:
+      operationId: getOnchainMoiItem
+      tags: [Onchain]
+      summary: "온체인 MoiItem 단건 조회(없으면 null)"
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { nullable: true, allOf: [{ $ref: '#/components/schemas/OnchainMoiItem' }] } } } }
+
+  # ── B. 소유 오브젝트 + 잔액 ──
+  /onchain/addresses/{address}/moi-ids:
+    get:
+      operationId: getOnchainOwnedMoiIds
+      tags: [Onchain]
+      summary: "주소 소유 Moi ID 목록"
+      parameters: [{ name: address, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { type: string } } } } }
+  /onchain/addresses/{address}/moi-items:
+    get:
+      operationId: getOnchainOwnedMoiItems
+      tags: [Onchain]
+      summary: "주소 소유 MoiItem 목록"
+      parameters: [{ name: address, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainMoiItem' } } } } }
+  /onchain/addresses/{address}/wedding-caps:
+    get:
+      operationId: getOnchainOwnedWeddingCaps
+      tags: [Onchain]
+      summary: "주소 소유 WeddingCap ID 목록"
+      parameters: [{ name: address, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { type: string } } } } }
+  /onchain/addresses/{address}/wedding-cap:
+    get:
+      operationId: getOnchainWeddingCap
+      tags: [Onchain]
+      summary: "특정 weddingId용 WeddingCap(capId 또는 null)"
+      parameters:
+        - { name: address, in: path, required: true, schema: { type: string } }
+        - { name: weddingId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/OnchainWeddingCap' } } } }
+  /onchain/addresses/{address}/participations:
+    get:
+      operationId: getOnchainParticipation
+      tags: [Onchain]
+      summary: "특정 eventId용 Participation(없으면 null)"
+      parameters:
+        - { name: address, in: path, required: true, schema: { type: string } }
+        - { name: eventId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { nullable: true, allOf: [{ $ref: '#/components/schemas/OnchainParticipation' }] } } } }
+  /onchain/addresses/{address}/any-participation:
+    get:
+      operationId: getOnchainAnyParticipation
+      tags: [Onchain]
+      summary: "주소 보유 Participation 아무거나(없으면 null)"
+      parameters: [{ name: address, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { nullable: true, allOf: [{ $ref: '#/components/schemas/OnchainParticipation' }] } } } }
+  /onchain/addresses/{address}/ium-requests:
+    get:
+      operationId: getOnchainOwnedIumRequests
+      tags: [Onchain]
+      summary: "주소 소유 IumRequest 목록"
+      parameters: [{ name: address, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainOwnedIumRequest' } } } } }
+  /onchain/addresses/{address}/balance:
+    get:
+      operationId: getOnchainBalance
+      tags: [Onchain]
+      summary: "주소 SUI 잔액(MIST)"
+      parameters: [{ name: address, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/OnchainBalance' } } } }
+
+  # ── C. 이벤트 타입 스캔 ──
+  /onchain/events/signals:
+    get:
+      operationId: getOnchainSignals
+      tags: [Onchain]
+      summary: "SignalEmitted 전량"
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainSignal' } } } } }
+  /onchain/events/participated:
+    get:
+      operationId: getOnchainParticipated
+      tags: [Onchain]
+      summary: "Participated 전량"
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainParticipated' } } } } }
+  /onchain/events/event-created:
+    get:
+      operationId: getOnchainEventCreated
+      tags: [Onchain]
+      summary: "EventCreated 전량"
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainEventCreated' } } } } }
+  /onchain/events/action-logged:
+    get:
+      operationId: getOnchainActionLogged
+      tags: [Onchain]
+      summary: "ActionLogged 전량"
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainActionLogged' } } } } }
+  /onchain/events/moi-created:
+    get:
+      operationId: getOnchainMoiCreated
+      tags: [Onchain]
+      summary: "MoiCreated 전량"
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainMoiCreated' } } } } }
+  /onchain/events/gift-sent:
+    get:
+      operationId: getOnchainGiftSent
+      tags: [Onchain]
+      summary: "GiftSent 전량"
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainGiftSent' } } } } }
+  /onchain/events/ium-requested:
+    get:
+      operationId: getOnchainIumRequested
+      tags: [Onchain]
+      summary: "IumRequested 전량"
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainIumRequested' } } } } }
+  /onchain/events/ium-accepted:
+    get:
+      operationId: getOnchainIumAccepted
+      tags: [Onchain]
+      summary: "IumAccepted 전량"
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainIumAccepted' } } } } }
+  /onchain/events/rsvp:
+    get:
+      operationId: getOnchainRsvp
+      tags: [Onchain]
+      summary: "RsvpSubmitted(weddingId 필터)"
+      parameters: [{ name: weddingId, in: query, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainRsvpEvent' } } } } }
+  /onchain/events/notes-sent:
+    get:
+      operationId: getOnchainNotesSent
+      tags: [Onchain]
+      summary: "NoteSent(from/to == address 필터)"
+      parameters: [{ name: address, in: query, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainNoteSent' } } } } }
+  /onchain/events/note-boxes:
+    get:
+      operationId: getOnchainNoteBoxes
+      tags: [Onchain]
+      summary: "NoteBoxCreated(participant_a/b == address 필터)"
+      parameters: [{ name: address, in: query, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainNoteBoxCreated' } } } } }
+  /onchain/events/weddings-created:
+    get:
+      operationId: getOnchainWeddingsCreated
+      tags: [Onchain]
+      summary: "WeddingCreated 전량"
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainWeddingCreated' } } } } }
+
+  # ── D. 복합 ──
+  /onchain/discover:
+    get:
+      operationId: getOnchainDiscover
+      tags: [Onchain]
+      summary: "유저 발견(MoiCreated+Participated+EventCreated+Signal 4스캔 + BFS degree)"
+      parameters: [{ name: address, in: query, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OnchainDiscoveredUser' } } } } }
+  /onchain/weddings/{weddingId}/invitation:
+    get:
+      operationId: getOnchainInvitationForWedding
+      tags: [Onchain]
+      summary: "결혼식의 정당 청첩장(creator=host 검증, 없으면 null)"
+      parameters: [{ name: weddingId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { nullable: true, allOf: [{ $ref: '#/components/schemas/OnchainInvitation' }] } } } }
+
+  # ── 캐시 무효화 ──
+  /onchain/cache/invalidate:
+    post:
+      operationId: invalidateOnchainCache
+      tags: [Onchain]
+      summary: "TX 성공 후 캐시 무효화(per-user 키 + 전역 이벤트 키 drop)"
+      parameters: [{ name: address, in: query, required: true, schema: { type: string } }]
+      responses:
+        '204': { description: Invalidated }
 
 # ════════════════════════════════════════
 # Components
@@ -4617,3 +4862,196 @@ components:
         checks:
           type: array
           items: {$ref: '#/components/schemas/AdminHealthCheck'}
+
+    # ──────────────────────────────────────
+    # 온체인(Sui) 읽기 프록시 — /onchain/*
+    # 필드명은 @gorae/sui-sdk queries.ts 반환 타입과 1:1(camelCase). FE 타입 정합 목적.
+    # u64(금액·잔액)는 정밀도 보존 위해 string. 작은 u64(타임스탬프·카운트·코드)는 integer.
+    # ──────────────────────────────────────
+    OnchainWedding:
+      type: object
+      required: [id, status, hosts, eventId]
+      properties:
+        id: {type: string}
+        status: {type: string}
+        hosts: {type: array, items: {type: string}}
+        vaultId: {type: string, nullable: true}
+        eventId: {type: string}
+    OnchainWeddingLounge:
+      type: object
+      required: [id, weddingId]
+      properties:
+        id: {type: string}
+        weddingId: {type: string}
+    OnchainCashGiftVault:
+      type: object
+      required: [id, weddingId, balance]
+      properties:
+        id: {type: string}
+        weddingId: {type: string}
+        balance: {type: string, description: "MIST 잔액(u64 → string)"}
+    OnchainMoi:
+      type: object
+      required: [id, owner, equipped]
+      properties:
+        id: {type: string}
+        owner: {type: string}
+        equipped: {type: object, additionalProperties: {type: string}, description: "slot → MoiItem ID"}
+    OnchainMoiItem:
+      type: object
+      required: [id, name, itemType, slot]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        itemType: {type: string}
+        slot: {type: string}
+    OnchainParticipation:
+      type: object
+      required: [id, eventId, eventType, participant, roleId]
+      properties:
+        id: {type: string}
+        eventId: {type: string}
+        eventType: {type: integer}
+        participant: {type: string}
+        roleId: {type: integer}
+    OnchainInvitation:
+      type: object
+      required: [id, weddingId, creator, slug, groomNameBlobId, brideNameBlobId, date, time, venueName, venueHall, coverPhotoBlobId, greetingBlobId]
+      properties:
+        id: {type: string}
+        weddingId: {type: string}
+        creator: {type: string}
+        slug: {type: string}
+        groomNameBlobId: {type: string}
+        brideNameBlobId: {type: string}
+        date: {type: string}
+        time: {type: string}
+        venueName: {type: string}
+        venueHall: {type: string}
+        coverPhotoBlobId: {type: string}
+        greetingBlobId: {type: string}
+    OnchainWeddingCap:
+      type: object
+      required: [capId]
+      properties:
+        capId: {type: string, nullable: true, description: "매칭 Cap ID, 없으면 null"}
+    OnchainBalance:
+      type: object
+      required: [mist]
+      properties:
+        mist: {type: string, description: "SUI 잔액(MIST, u64 → string)"}
+    OnchainRsvpEvent:
+      type: object
+      required: [weddingId, submitter, recipientSlot, attendance, companionCount, meal, submittedAt]
+      properties:
+        weddingId: {type: string}
+        submitter: {type: string}
+        recipientSlot: {type: integer}
+        attendance: {type: integer}
+        companionCount: {type: integer}
+        meal: {type: integer}
+        submittedAt: {type: integer, format: int64}
+    OnchainActionLogged:
+      type: object
+      required: [eventId, actionType, actor, roleId, amount, ts]
+      properties:
+        eventId: {type: string}
+        actionType: {type: integer}
+        actor: {type: string}
+        target: {type: string, nullable: true}
+        roleId: {type: integer}
+        amount: {type: integer, format: int64}
+        ts: {type: integer, format: int64}
+    OnchainEventCreated:
+      type: object
+      required: [eventId, eventType, creator]
+      properties:
+        eventId: {type: string}
+        eventType: {type: integer}
+        creator: {type: string}
+    OnchainParticipated:
+      type: object
+      required: [eventId, participant, roleId]
+      properties:
+        eventId: {type: string}
+        participant: {type: string}
+        roleId: {type: integer}
+    OnchainSignal:
+      type: object
+      required: [eventId, kind, resourceId, source, from, to, magnitude, ts]
+      properties:
+        eventId: {type: string}
+        kind: {type: integer}
+        resourceId: {type: integer}
+        source: {type: integer}
+        from: {type: string}
+        to: {type: string}
+        magnitude: {type: integer, format: int64}
+        ts: {type: integer, format: int64}
+    OnchainMoiCreated:
+      type: object
+      required: [moiId, owner]
+      properties:
+        moiId: {type: string}
+        owner: {type: string}
+    OnchainDiscoveredUser:
+      type: object
+      required: [address, moiId, sharedEventIds, mutualCount, degree]
+      properties:
+        address: {type: string}
+        moiId: {type: string}
+        sharedEventIds: {type: array, items: {type: string}}
+        mutualCount: {type: integer}
+        degree: {type: integer}
+    OnchainGiftSent:
+      type: object
+      required: [itemId, itemName, from, to]
+      properties:
+        itemId: {type: string}
+        itemName: {type: string}
+        from: {type: string}
+        to: {type: string}
+    OnchainIumRequested:
+      type: object
+      required: [eventId, initiator, toUser]
+      properties:
+        eventId: {type: string}
+        initiator: {type: string}
+        toUser: {type: string}
+    OnchainIumAccepted:
+      type: object
+      required: [eventId, initiator, receiver]
+      properties:
+        eventId: {type: string}
+        initiator: {type: string}
+        receiver: {type: string}
+    OnchainOwnedIumRequest:
+      type: object
+      required: [requestId, eventId, initiator]
+      properties:
+        requestId: {type: string}
+        eventId: {type: string}
+        initiator: {type: string}
+    OnchainNoteSent:
+      type: object
+      required: [noteBoxId, from, to, blobId, ts]
+      properties:
+        noteBoxId: {type: string}
+        from: {type: string}
+        to: {type: string}
+        blobId: {type: string}
+        ts: {type: integer, format: int64}
+    OnchainNoteBoxCreated:
+      type: object
+      required: [noteBoxId, participantA, participantB]
+      properties:
+        noteBoxId: {type: string}
+        participantA: {type: string}
+        participantB: {type: string}
+    OnchainWeddingCreated:
+      type: object
+      required: [eventId, weddingId, loungeId]
+      properties:
+        eventId: {type: string}
+        weddingId: {type: string}
+        loungeId: {type: string}

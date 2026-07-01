@@ -3,8 +3,10 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { useMachine, useSelector } from '@xstate/react'
 import { fromPromise } from 'xstate'
-import { getConfig, createJsonRpcClient, getOwnedMoiIds, getOwnedMoiItems, getMoi, discoverUsers, getSignalEvents, getActionLoggedEvents, type SuiNetwork, type SignalQuery, type ActionLoggedQuery } from '@gorae/sui-sdk'
-import { env } from '../env'
+import { getConfig } from '@gorae/sui-sdk'
+// 온체인 읽기: SDK 직접(fullnode) → Go API 프록시(/onchain/*).
+import { getOnchainOwnedMoiIds, getOnchainOwnedMoiItems, getOnchainMoi, getOnchainMoiItem, getOnchainDiscover, getOnchainBalance, getOnchainSignals, getOnchainActionLogged } from '@gorae/contracts/sdk.gen'
+import type { OnchainSignal, OnchainActionLogged } from '@gorae/contracts'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { giftActor } from '../machines/gift.machine'
 import { ArrowLeft, ShoppingBag } from 'lucide-react'
@@ -41,8 +43,8 @@ function addrShort(addr: string) {
 function buildOnchainProfile(
   addr: string,
   isSelf: boolean,
-  signals: SignalQuery[],
-  actions: ActionLoggedQuery[],
+  signals: OnchainSignal[],
+  actions: OnchainActionLogged[],
   t: (key: string, vars?: Record<string, string | number>) => string,
 ): ProfileData {
   // isSelf: 나와 관련된 모든 신호/액션. !isSelf: addr은 상대, 나↔상대 간만.
@@ -147,12 +149,13 @@ export function MoiGatherPage() {
     (itemId: string) => {
       send({ type: 'EQUIP', itemId })
       if (!address) return
-      const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-      const client = createJsonRpcClient(network)
-      Promise.all([getOwnedMoiIds(client, address), getOwnedMoiItems(client, address)])
-        .then(([moiIds, items]) => {
-          const moiId = moiIds[0]
-          const suiItem = items.find((i) => i.name === itemId || i.itemType === itemId)
+      Promise.all([
+        getOnchainOwnedMoiIds({ path: { address }, throwOnError: true }),
+        getOnchainOwnedMoiItems({ path: { address }, throwOnError: true }),
+      ])
+        .then(([idsRes, itemsRes]) => {
+          const moiId = (idsRes.data ?? [])[0]
+          const suiItem = (itemsRes.data ?? []).find((i) => i.name === itemId || i.itemType === itemId)
           if (moiId && suiItem) return equipItem({ moiId, itemId: suiItem.id })
         })
         .catch(() => {})
@@ -163,11 +166,9 @@ export function MoiGatherPage() {
     (slot: EquipSlot) => {
       send({ type: 'UNEQUIP', slot })
       if (!address) return
-      const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-      const client = createJsonRpcClient(network)
-      getOwnedMoiIds(client, address)
-        .then((moiIds) => {
-          const moiId = moiIds[0]
+      getOnchainOwnedMoiIds({ path: { address }, throwOnError: true })
+        .then((res) => {
+          const moiId = (res.data ?? [])[0]
           if (moiId) return unequipItem({ moiId, slot })
         })
         .catch(() => {})
@@ -178,27 +179,28 @@ export function MoiGatherPage() {
   // 온체인 보유 아이템 + 장착 상태 hydrate
   useEffect(() => {
     if (!address) return
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    const client = createJsonRpcClient(network)
-    Promise.all([getOwnedMoiItems(client, address), getOwnedMoiIds(client, address)])
-      .then(async ([items, moiIds]) => {
+    Promise.all([
+      getOnchainOwnedMoiItems({ path: { address }, throwOnError: true }),
+      getOnchainOwnedMoiIds({ path: { address }, throwOnError: true }),
+    ])
+      .then(async ([itemsRes, idsRes]) => {
+        const items = itemsRes.data ?? []
+        const moiIds = idsRes.data ?? []
         const ids = items
           .map((i) => ITEM_BY_NAME[i.name]?.id)
           .filter((id): id is string => !!id)
         if (ids.length) send({ type: 'GRANT_OWNED', ids })
         // 장착 상태: Moi 오브젝트의 equipped VecMap → 각 아이템 name으로 로컬 ID 매핑
         if (moiIds.length === 0) return
-        const moi = await getMoi(client, moiIds[0])
+        const { data: moi } = await getOnchainMoi({ path: { moiId: moiIds[0] } })
         if (!moi || Object.keys(moi.equipped).length === 0) return
         const equippedLocal: Partial<Record<EquipSlot, string>> = {}
         const equippedItemIds = Object.values(moi.equipped)
         for (const itemObjId of equippedItemIds) {
-          const obj = await client.getObject({ id: itemObjId, options: { showContent: true } })
-          const content = obj.data?.content
-          if (content && content.dataType === 'moveObject') {
-            const f = content.fields as Record<string, unknown>
-            const name = String(f.name ?? '')
-            const slot = String(f.slot ?? '')
+          const { data: item } = await getOnchainMoiItem({ path: { itemId: itemObjId } })
+          if (item) {
+            const name = item.name
+            const slot = item.slot
             const localItem = ITEM_BY_NAME[name]
             if (localItem?.slot && (slot === 'head' || slot === 'body' || slot === 'acc')) {
               equippedLocal[slot as EquipSlot] = localItem.id
@@ -216,10 +218,9 @@ export function MoiGatherPage() {
   const [crowd, setCrowd] = useState<PlazaMoi[]>([])
   useEffect(() => {
     if (!address) return
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    const client = createJsonRpcClient(network)
-    discoverUsers(client, address)
-      .then((discovered) => {
+    getOnchainDiscover({ query: { address }, throwOnError: true })
+      .then((res) => {
+        const discovered = res.data ?? []
         const me: PlazaMoi = {
           id: 'me', name: t('page.moiGather.me'), role: t('page.moiGather.myMoi'),
           x: 0.5, y: 0.92, head: DEFAULT_HEAD, body: DEFAULT_BODY, color: 0x9ec8e8, me: true,
@@ -257,10 +258,8 @@ export function MoiGatherPage() {
   const [suiBalance, setSuiBalance] = useState<string | null>(null)
   useEffect(() => {
     if (!address) return
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    const client = createJsonRpcClient(network)
-    client.getBalance({ owner: address })
-      .then((bal) => setSuiBalance((Number(bal.totalBalance) / 1e9).toFixed(3)))
+    getOnchainBalance({ path: { address }, throwOnError: true })
+      .then((res) => setSuiBalance((Number(res.data?.mist ?? '0') / 1e9).toFixed(3)))
       .catch(() => {})
   }, [address])
 
@@ -292,10 +291,13 @@ export function MoiGatherPage() {
     }
     const isSelf = !!profileMoi.me
     const targetAddr = isSelf ? address : profileMoi.id
-    const network = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-    const client = createJsonRpcClient(network)
-    Promise.all([getSignalEvents(client), getActionLoggedEvents(client)])
-      .then(([allSignals, allActions]) => {
+    Promise.all([
+      getOnchainSignals({ throwOnError: true }),
+      getOnchainActionLogged({ throwOnError: true }),
+    ])
+      .then(([sigRes, actRes]) => {
+        const allSignals = sigRes.data ?? []
+        const allActions = actRes.data ?? []
         if (isSelf) {
           setProfileData(buildOnchainProfile(address, true, allSignals, allActions, t))
         } else {

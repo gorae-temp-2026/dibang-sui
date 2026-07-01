@@ -12,21 +12,16 @@
  *       → 온체인 Wedding → eventId → participation 확보 → executeOnchain(create_memory).
  */
 import { useCallback } from 'react'
-import { getLounge, getWedding } from '@gorae/contracts/sdk.gen'
+// getWedding/getLounge = DB(Go API 기존). getOnchainWedding/Participation = 온체인 프록시(/onchain/*).
+import { getLounge, getWedding, getOnchainWedding, getOnchainParticipation } from '@gorae/contracts/sdk.gen'
 import {
   buildCreateMemoryTx,
   walrusStore,
   walrusStoreString,
-  getWedding as getOnchainWedding,
-  getParticipationForEvent,
-  createJsonRpcClient,
-  configureSui,
   ONCHAIN_BLOB_EPOCHS,
-  type SuiNetwork,
 } from '@gorae/sui-sdk'
 import { useZkLogin } from '../providers/ZkLoginProvider'
 import { compressImageForUpload } from '../lib/compress-image'
-import { env } from '../env'
 
 export interface OnchainMemoryInput {
   text: string
@@ -47,13 +42,10 @@ export function useOnchainMemory(loungeId: string) {
         const { data: wedding } = await getWedding({ path: { weddingId }, throwOnError: true })
         const suiWeddingId = wedding?.sui_wedding_id
         if (!suiWeddingId) return null
-        // 2) 온체인 Wedding → eventId + participation 확보
-        const net = (env.VITE_SUI_NETWORK as SuiNetwork) ?? 'testnet'
-        if (env.VITE_SUI_PACKAGE_ID) configureSui({ network: net, packageId: env.VITE_SUI_PACKAGE_ID, originalPackageId: env.VITE_SUI_ORIGINAL_PACKAGE_ID })
-        const client = createJsonRpcClient(net)
-        const ow = await getOnchainWedding(client, suiWeddingId)
+        // 2) 온체인 Wedding → eventId + participation 확보 (Go API 프록시)
+        const ow = (await getOnchainWedding({ path: { weddingId: suiWeddingId }, throwOnError: true })).data
         if (!ow?.eventId) return null
-        const part = await getParticipationForEvent(client, address, ow.eventId)
+        const part = (await getOnchainParticipation({ path: { address }, query: { eventId: ow.eventId }, throwOnError: true })).data
         if (!part?.id) return null
         // 3) 사진·글을 Walrus에 올려 blobId만 확보(온체인 평문 회피).
         let photoBlobId = ''
